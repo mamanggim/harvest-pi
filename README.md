@@ -1,4 +1,4 @@
-# My Harvest Farm
+# Pioneer Farm
 
 A farming game integrated with Pi Network.
 

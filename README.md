@@ -10,14 +10,14 @@ A farming game integrated with Pi Network.
 - `firebase/`: Firebase integration.
 
 ## Setup
-1. Clone the repo: `git clone https://github.com/mamanggim/my-harvest-farm.git`
+1. Clone the repo: `git clone https://github.com/mamanggim/pioneer-farm.git`
 2. Set up Firebase:
    - Create a Firebase project.
    - Enable Anonymous Authentication and Firestore.
    - Update `firebase-config.js` with your credentials.
 3. Deploy to GitHub Pages:
    - Push to `gh-pages` branch.
-   - Access at `https://mamamnggim.github.io/my-harvest-farm`.
+   - Access at `https://mamamnggim.github.io/pioneer-farm`.
 
 ## Features
 - Plant, water, and harvest crops.

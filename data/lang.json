@@ -1,6 +1,6 @@
 {
   "en": {
-    "title": "Pi Harvest Farm",
+    "title": "Pioneer Farm",
     "startBtn": "Start Game",
     "farmTab": "Farm",
     "shopTab": "Shop",
@@ -62,7 +62,7 @@
     "voiceVolumeLabel": "Voice/SFX Volume:"
   },
   "id": {
-    "title": "Pi Harvest Farm",
+    "title": "Pioneer Farm",
     "startBtn": "Mulai Permainan",
     "farmTab": "Ladang",
     "shopTab": "Toko",

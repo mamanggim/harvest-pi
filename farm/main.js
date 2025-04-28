@@ -105,31 +105,41 @@ function updateVolumes() {
 
 // Load data from JSON files
 async function loadData() {
+  console.log('Starting to load data...'); // Debug
   try {
+    console.log('Fetching lang.json...');
     const langRes = await fetch('/harvest-pi/data/lang.json');
     if (!langRes.ok) throw new Error(`Failed to fetch lang.json: ${langRes.status}`);
     langData = await langRes.json();
+    console.log('lang.json loaded successfully:', langData);
   } catch (e) {
+    console.log('Error loading lang.json:', e.message);
     alert('Error loading lang.json: ' + e.message);
     langData = { en: { title: "Harvest Pi", startBtn: "Start Game", coinLabel: "Coins", waterLabel: "Water", needsWater: "Needs Water", planted: "Planted!", noSeeds: "No Seeds!", watered: "Watered!", notEnoughWater: "Not Enough Water!", readyToHarvest: "Ready to Harvest", growing: "Growing", harvested: "Harvested!", farmPriceLabel: "Farm Price", piPriceLabel: "PI Price", buyLabel: "Buy", noItems: "No items available", notEnoughCoins: "Not Enough Coins!", notEnoughPi: "Not Enough PI!", quantityLabel: "Quantity", sellPriceLabel: "Sell Price", sellLabel: "Sell", levelUp: "Level Up!", invalidAmount: "Invalid amount!", exchanged: "Exchanged!", waitLabel: "Wait", toClaimAgain: "to claim again!", achievementUnlocked: "Achievement Unlocked!", achievementHarvest: "Harvest Master", achievementHarvestDesc: "Harvest 10 crops", achievementCoins: "Coin Collector", achievementCoinsDesc: "Collect 1000 coins", farmTab: "Farm", shopTab: "Shop", upgradesTab: "Upgrades", inventoryTab: "Inventory", exchangeTab: "Exchange", leaderboardTab: "Leaderboard", achievementsTab: "Achievements", claimRewardBtn: "Claim Reward", comingSoon: "Coming soon...", exchangeRateLabel: "1 PI = 1,000,000 Coins", enterPiAmount: "Enter PI amount", exchangeBtn: "Exchange", sellItemsLabel: "Sell Items", settingsLabel: "Settings", musicVolumeLabel: "Music Volume:", voiceVolumeLabel: "Voice/SFX Volume:", switchLangLabel: "Switch Language (EN/ID)" }, id: { title: "Harvest Pi", startBtn: "Mulai Permainan", coinLabel: "Koin", waterLabel: "Air", needsWater: "Butuh Air", planted: "Ditanam!", noSeeds: "Tidak Ada Biji!", watered: "Disiram!", notEnoughWater: "Air Tidak Cukup!", readyToHarvest: "Siap Panen", growing: "Tumbuh", harvested: "Dipanen!", farmPriceLabel: "Harga Koin", piPriceLabel: "Harga PI", buyLabel: "Beli", noItems: "Tidak ada item tersedia", notEnoughCoins: "Koin Tidak Cukup!", notEnoughPi: "PI Tidak Cukup!", quantityLabel: "Jumlah", sellPriceLabel: "Harga Jual", sellLabel: "Jual", levelUp: "Naik Level!", invalidAmount: "Jumlah tidak valid!", exchanged: "Ditukar!", waitLabel: "Tunggu", toClaimAgain: "untuk klaim kembali!", achievementUnlocked: "Pencapaian Terbuka!", achievementHarvest: "Master Panen", achievementHarvestDesc: "Panen 10 tanaman", achievementCoins: "Pengumpul Koin", achievementCoinsDesc: "Kumpulkan 1000 koin", farmTab: "Ladang", shopTab: "Toko", upgradesTab: "Peningkatan", inventoryTab: "Inventaris", exchangeTab: "Tukar", leaderboardTab: "Papan Peringkat", achievementsTab: "Pencapaian", claimRewardBtn: "Klaim Hadiah", comingSoon: "Segera hadir...", exchangeRateLabel: "1 PI = 1,000,000 Koin", enterPiAmount: "Masukkan jumlah PI", exchangeBtn: "Tukar", sellItemsLabel: "Jual Item", settingsLabel: "Pengaturan", musicVolumeLabel: "Volume Musik:", voiceVolumeLabel: "Volume Suara/SFX:", switchLangLabel: "Ganti Bahasa (EN/ID)" } };
   }
 
   try {
+    console.log('Fetching vegetables.json...');
     const vegRes = await fetch('/harvest-pi/data/vegetables.json');
     if (!vegRes.ok) throw new Error(`Failed to fetch vegetables.json: ${vegRes.status}`);
     const vegData = await vegRes.json();
     vegetables = vegData.vegetables || [];
+    console.log('vegetables.json loaded successfully:', vegetables);
   } catch (e) {
+    console.log('Error loading vegetables.json:', e.message);
     alert('Error loading vegetables.json: ' + e.message);
     vegetables = [];
   }
+  console.log('Finished loading data.');
 }
 
 // Load player data from Firebase
 async function loadPlayerData() {
+  console.log('Starting to load player data from Firebase...'); // Debug
   try {
     const userCredential = await signInAnonymously(auth);
     userId = userCredential.user.uid;
+    console.log('Signed in anonymously with userId:', userId);
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
       const data = snapshot.val();
@@ -143,6 +153,7 @@ async function loadPlayerData() {
         harvestCount = data.harvestCount || 0;
         localStorage.setItem('musicVolume', data.musicVolume || 50);
         localStorage.setItem('voiceVolume', data.voiceVolume || 50);
+        console.log('Player data loaded from Firebase:', data);
       } else {
         const initialData = {
           farmCoins: 0,
@@ -164,6 +175,7 @@ async function loadPlayerData() {
         xp = 0;
         inventory = [];
         harvestCount = 0;
+        console.log('Initialized new player data:', initialData);
       }
       updateWallet();
       updateVolumes();
@@ -175,9 +187,11 @@ async function loadPlayerData() {
       checkDailyReward();
     }, { onlyOnce: false });
   } catch (error) {
+    console.log('Error loading player data from Firebase:', error.message);
     alert('Error loading player data: ' + error.message);
     showNotification('Failed to connect to Firebase');
   }
+  console.log('Finished loading player data.');
 }
 
 // Save player data to Firebase
@@ -742,9 +756,6 @@ claimModalBtn.addEventListener('click', () => {
     });
 });
 
-// Hapus event touchstart biar gak dobel
-// claimModalBtn.addEventListener('touchstart', () => { ... }); // Dihapus
-
 closeModal.addEventListener('click', () => {
   rewardModal.style.display = 'none';
   playMenuSound();
@@ -950,26 +961,29 @@ function checkDailyReward() {
 
 // Initialize game
 async function initializeGame() {
+  console.log('Starting game initialization...'); // Debug
   try {
     await loadData();
+    console.log('loadData() completed.');
     await loadPlayerData();
+    console.log('loadPlayerData() completed.');
     initializeSettings();
-    setTimeout(() => {
-      const loadingScreen = document.getElementById('loading-screen');
-      const startScreen = document.getElementById('start-screen');
-      if (loadingScreen && startScreen) {
-        loadingScreen.style.display = 'none';
-        startScreen.style.display = 'block';
-      }
-    }, 1000);
+    console.log('initializeSettings() completed.');
   } catch (error) {
+    console.log('Error during game initialization:', error.message);
     alert('Error initializing game: ' + error.message);
+  } finally {
+    // Pastiin loading screen disembunyiin meskipun ada error
+    console.log('Hiding loading screen...');
     setTimeout(() => {
       const loadingScreen = document.getElementById('loading-screen');
       const startScreen = document.getElementById('start-screen');
       if (loadingScreen && startScreen) {
         loadingScreen.style.display = 'none';
         startScreen.style.display = 'block';
+        console.log('Loading screen hidden, start screen shown.');
+      } else {
+        console.log('Error: loading-screen or start-screen element not found.');
       }
     }, 1000);
   }

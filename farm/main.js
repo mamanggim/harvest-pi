@@ -1,7 +1,7 @@
 // Ambil database dan auth dari window.firebaseConfig (dari firebase-config.js)
 const { database, auth } = window.firebaseConfig;
 import { ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import { signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Global variables
 let farmCoins = 0;
@@ -15,7 +15,7 @@ let langData = {};
 let currentLang = 'en';
 let farmPlots = [];
 let harvestCount = 0;
-let userEmail = null; // Ganti userId jadi userEmail
+let userId = null; // ID dari anonymous login
 const plotCount = 4;
 const piToFarmRate = 1000000;
 
@@ -135,33 +135,17 @@ async function loadData() {
   console.log('Finished loading data.');
 }
 
-// Load player data with Pi Network authentication
+// Load player data with anonymous login
 async function loadPlayerData() {
-  console.log('Starting to load player data with Pi Network...');
+  console.log('Starting to load player data with anonymous login...');
   try {
-    // Inisialisasi Pi Network SDK
-    const Pi = window.Pi;
-    if (!Pi) throw new Error('Pi Network SDK not loaded');
+    // Login ke Firebase pake anonymous login
+    const userCredential = await signInAnonymously(auth);
+    userId = userCredential.user.uid;
+    console.log('Signed in to Firebase anonymously, userId:', userId);
 
-    // Autentikasi user via Pi Network
-    const authResult = await Pi.authenticate({
-      appId: 'YOUR_PI_APP_ID', // Ganti dengan App ID dari Pi Developer Portal
-      scope: ['email'] // Minta akses ke email user
-    });
-
-    // Ambil email dari Pi Network
-    userEmail = authResult.user.email;
-    console.log('Authenticated with Pi Network, email:', userEmail);
-
-    // Buat custom token (simulasi, idealnya pake server)
-    const customToken = await simulateCustomToken(userEmail);
-
-    // Login ke Firebase pake custom token
-    await signInWithCustomToken(auth, customToken);
-    console.log('Signed in to Firebase with custom token');
-
-    // Simpan data player di Firebase pake email sebagai key
-    const playerRef = ref(database, `players/${userEmail.replace('.', '_')}`);
+    // Simpan data player di Firebase pake userId
+    const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -208,22 +192,17 @@ async function loadPlayerData() {
       checkDailyReward();
     }, { onlyOnce: false });
   } catch (error) {
-    console.log('Error loading player data with Pi Network:', error.message);
+    console.log('Error loading player data with anonymous login:', error.message);
     alert('Error loading player data: ' + error.message);
-    showNotification('Failed to connect to Pi Network or Firebase');
+    showNotification('Failed to connect to Firebase');
   }
   console.log('Finished loading player data.');
 }
 
-// Simulasi pembuatan custom token (seharusnya pake server)
-async function simulateCustomToken(email) {
-  return `custom-token-${email}`; // Placeholder, ganti dengan token asli dari server
-}
-
 // Save player data to Firebase
 function savePlayerData() {
-  if (!userEmail) return;
-  const playerRef = ref(database, `players/${userEmail.replace('.', '_')}`);
+  if (!userId) return;
+  const playerRef = ref(database, `players/${userId}`);
   set(playerRef, {
     farmCoins,
     pi,
@@ -422,7 +401,7 @@ function handlePlotClick(index) {
       showNotification(langData[currentLang].notEnoughWater);
     }
   } else if (plot.currentFrame >= plot.vegetable.frames || plotElement.classList.contains('ready')) {
-    const yieldAmount = plot.vegetable.yield || 1; // Sekarang yield selalu 1
+    const yieldAmount = plot.vegetable.yield || 1;
     inventory.push({ vegetable: plot.vegetable, quantity: yieldAmount });
     savePlayerData();
   
@@ -612,7 +591,7 @@ function renderInventory() {
   });
 }
 
-// Render sell section (UPDATE: Pake sellPrice dari vegetables.json)
+// Render sell section
 function renderSellSection() {
   const sellContent = document.getElementById('sell-content');
   sellContent.innerHTML = '';
@@ -620,7 +599,7 @@ function renderSellSection() {
     if (item && item.vegetable) {
       const sellItem = document.createElement('div');
       sellItem.classList.add('sell-item');
-      const sellPrice = item.vegetable.sellPrice || Math.floor(item.vegetable.farmPrice * 0.5); // Pake sellPrice, fallback ke farmPrice * 0.5 kalau sellPrice gak ada
+      const sellPrice = item.vegetable.sellPrice || Math.floor(item.vegetable.farmPrice * 0.5);
       sellItem.innerHTML = `
         <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
         <h3>${item.vegetable.name[currentLang]}</h3>
@@ -644,12 +623,12 @@ function renderSellSection() {
   });
 }
 
-// Sell item (UPDATE: Pake sellPrice dari vegetables.json)
+// Sell item
 function sellItem(index) {
   const item = inventory[index];
   if (!item || !item.vegetable) return;
 
-  const sellPrice = item.vegetable.sellPrice || Math.floor(item.vegetable.farmPrice * 0.5); // Pake sellPrice, fallback ke farmPrice * 0.5
+  const sellPrice = item.vegetable.sellPrice || Math.floor(item.vegetable.farmPrice * 0.5);
   farmCoins += sellPrice * item.quantity;
   xp += 10;
   checkLevelUp();
@@ -751,7 +730,7 @@ claimModalBtn.addEventListener('click', () => {
   water += 50;
   console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
   localStorage.setItem('lastClaim', Date.now());
-  const playerRef = ref(database, `players/${userEmail.replace('.', '_')}`);
+  const playerRef = ref(database, `players/${userId}`);
   set(playerRef, {
     farmCoins,
     pi,
@@ -792,7 +771,7 @@ closeModal.addEventListener('touchstart', () => {
 
 // Claim daily reward
 function claimDailyReward() {
-  const playerRef = ref(database, `players/${userEmail.replace('.', '_')}/lastClaim`);
+  const playerRef = ref(database, `players/${userId}/lastClaim`);
   onValue(playerRef, (snapshot) => {
     const lastClaim = snapshot.val() || parseInt(localStorage.getItem('lastClaim'));
     const now = Date.now();
@@ -973,7 +952,7 @@ function initializeSettings() {
 
 // Check daily reward availability
 function checkDailyReward() {
-  const playerRef = ref(database, `players/${userEmail.replace('.', '_')}/lastClaim`);
+  const playerRef = ref(database, `players/${userId}/lastClaim`);
   onValue(playerRef, (snapshot) => {
     const lastClaim = snapshot.val() || parseInt(localStorage.getItem('lastClaim'));
     const now = Date.now();
@@ -1053,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('lang-toggle')?.addEventListener('touchstart', toggleLanguage);
   document.getElementById('settings-btn')?.addEventListener('click', openSettings);
   document.getElementById('settings-btn')?.addEventListener('touchstart', openSettings);
-  document.getElementById('claim-reward-btn')?.addEventListener('claimDailyReward', claimDailyReward);
+  document.getElementById('claim-reward-btn')?.addEventListener('click', claimDailyReward);
   document.getElementById('claim-reward-btn')?.addEventListener('touchstart', claimDailyReward);
   document.getElementById('game-lang-toggle')?.addEventListener('click', toggleLanguage);
   document.getElementById('game-lang-toggle')?.addEventListener('touchstart', toggleLanguage);

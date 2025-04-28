@@ -1,6 +1,7 @@
-import { database, auth } from '../firebase/firebase-config.js';
-import { ref, onValue, set } from 'firebase/database';
-import { signInAnonymously } from 'firebase/auth';
+// Ambil database dan auth dari window.firebaseConfig (dari index.html)
+const { database, auth } = window.firebaseConfig;
+import { ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Global variables
 let farmCoins = 0;
@@ -70,7 +71,8 @@ function updateVolumes() {
 // Load data from JSON files
 async function loadData() {
   try {
-    const langRes = await fetch('./data/lang.json');
+    // Path absolut karena GitHub Pages
+    const langRes = await fetch('/data/lang.json');
     langData = langRes.ok ? await langRes.json() : { en: {}, id: {} };
   } catch (e) {
     alert('Error loading lang.json: ' + e.message);
@@ -78,7 +80,7 @@ async function loadData() {
   }
 
   try {
-    const vegRes = await fetch('./data/vegetables.json');
+    const vegRes = await fetch('/data/vegetables.json');
     vegetables = vegRes.ok ? await vegRes.json().vegetables : [];
   } catch (e) {
     alert('Error loading vegetables.json: ' + e.message);
@@ -89,7 +91,7 @@ async function loadData() {
 // Load player data from Firebase
 async function loadPlayerData() {
   try {
-    const userCredential = await signInAnonymously(auth);
+    const user Credential = await signInAnonymously(auth);
     userId = userCredential.user.uid;
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
@@ -114,7 +116,7 @@ async function loadPlayerData() {
           inventory: [],
           harvestCount: 0,
           lastClaim: null,
-          musicdnVolume: 50,
+          musicVolume: 50,
           voiceVolume: 50
         };
         set(playerRef, initialData);
@@ -314,7 +316,7 @@ function handlePlotClick(index) {
               plotContent.appendChild(plantImg);
             }
             plantImg.classList.remove('loaded');
-            plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+            plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
             setTimeout(() => {
               plantImg.classList.add('loaded');
             }, 50);
@@ -915,6 +917,7 @@ async function initializeGame() {
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
+  alert('main.js loaded successfully!');
   const startText = document.getElementById('start-text');
   if (startText) {
     startText.addEventListener('click', () => {

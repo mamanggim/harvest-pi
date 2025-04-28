@@ -706,22 +706,46 @@ document.getElementById('claim-reward-btn').addEventListener('touchstart', () =>
 claimModalBtn.addEventListener('click', () => {
   farmCoins += 100;
   water += 50;
+  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`); // Debug
   localStorage.setItem('lastClaim', Date.now());
-  set(ref(database, `players/${userId}/lastClaim`), Date.now());
-  updateWallet();
-  showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-  playCoinSound();
-  rewardModal.style.display = 'none';
+  set(ref(database, `players/${userId}/lastClaim`), Date.now())
+    .then(() => {
+      console.log('lastClaim saved to Firebase');
+      updateWallet();
+      showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+      playCoinSound();
+      rewardModal.style.display = 'none';
+    })
+    .catch(error => {
+      console.log('Error saving lastClaim to Firebase:', error.message);
+      updateWallet(); // Tetep update UI meskipun Firebase error
+      showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+      playCoinSound();
+      rewardModal.style.display = 'none';
+      showNotification('Failed to save claim time, but rewards added.');
+    });
 });
 claimModalBtn.addEventListener('touchstart', () => {
   farmCoins += 100;
   water += 50;
+  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`); // Debug
   localStorage.setItem('lastClaim', Date.now());
-  set(ref(database, `players/${userId}/lastClaim`), Date.now());
-  updateWallet();
-  showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-  playCoinSound();
-  rewardModal.style.display = 'none';
+  set(ref(database, `players/${userId}/lastClaim`), Date.now())
+    .then(() => {
+      console.log('lastClaim saved to Firebase');
+      updateWallet();
+      showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+      playCoinSound();
+      rewardModal.style.display = 'none';
+    })
+    .catch(error => {
+      console.log('Error saving lastClaim to Firebase:', error.message);
+      updateWallet(); // Tetep update UI meskipun Firebase error
+      showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+      playCoinSound();
+      rewardModal.style.display = 'none';
+      showNotification('Failed to save claim time, but rewards added.');
+    });
 });
 
 closeModal.addEventListener('click', () => {

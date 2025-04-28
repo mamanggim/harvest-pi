@@ -2,7 +2,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
   authDomain: "harvest-pi.firebaseapp.com",
-  databaseURL: "https://harvest-pi-default-rtdb.firebaseio.com",
+  databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "harvest-pi",
   storageBucket: "harvest-pi.firebasestorage.app",
   messagingSenderId: "650006770674",

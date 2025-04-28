@@ -2,103 +2,164 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harvest Pi</title>
-  <link rel="stylesheet" href="/harvest-pi/farm/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title id="title">Harvest Pi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="farm/style.css?v=40">
+  <style>
+    #start-text {
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      padding: 15px;
+      font-size: 18px;
+      user-select: none;
+    }
+    #start-text:active {
+      transform: scale(0.95);
+    }
+  </style>
 </head>
 <body>
-  <div id="loading-screen" style="display: block;">
-    <h1>Loading...</h1>
+  <div id="loading-screen">
+    <h1>Harvest Pi</h1>
+    <div class="loading-animation">Loading...</div>
   </div>
+
   <div id="start-screen" style="display: none;">
     <h1 id="title">Harvest Pi</h1>
-    <button id="start-text">Start Game</button>
-    <button id="lang-toggle">Switch Language (EN/ID)</button>
-    <button id="settings-btn">Settings</button>
+    <div id="start-text" class="start-text">Start Game</div>
+    <div class="corner-buttons">
+      <button id="lang-toggle">Switch Language (EN/ID)</button>
+      <button id="settings-btn">⚙️</button>
+    </div>
+    <div id="settings-modal" class="modal">
+      <div class="modal-content">
+        <span id="close-settings" class="close">×</span>
+        <h2 id="settings-title">Settings</h2>
+        <label id="music-volume-label" for="music-volume">Music Volume:</label>
+        <input type="range" id="music-volume" min="0" max="100" value="50">
+        <label id="voice-volume-label" for="voice-volume">Voice/SFX Volume:</label>
+        <input type="range" id="voice-volume" min="0" max="100" value="50">
+      </div>
+    </div>
   </div>
+
   <div id="game-screen" style="display: none;">
-    <!-- Game UI seperti tab farm, shop, dll. -->
+    <div class="corner-buttons">
+      <button id="game-lang-toggle">Switch Language (EN/ID)</button>
+      <button id="game-settings-btn">⚙️</button>
+      <button id="exit-game-btn">Exit</button>
+    </div>
     <h1 id="game-title">Harvest Pi</h1>
-    <button id="game-lang-toggle">Switch Language (EN/ID)</button>
-    <button id="game-settings-btn">Settings</button>
-    <button id="exit-game-btn">Exit</button>
-    <div id="farm-coins">0 Coins</div>
-    <div id="pi-coins">0 PI</div>
-    <div id="water">0 Water</div>
-    <div id="level">Level: 1 | XP: 0</div>
-    <div id="xp-bar"><div id="xp-fill"></div></div>
-    <button id="claim-reward-btn">Claim Reward</button>
-    <div id="notification" style="display: none;"></div>
+    <div id="wallet">
+      <span id="farm-coins">0 Farm Coins</span> | 
+      <span id="pi-coins">0.00 PI</span> | 
+      <span id="water">0 Water</span>
+      <div id="level">Level: 1 | XP: 0</div>
+      <div id="xp-bar"><div id="xp-fill"></div></div>
+    </div>
     <div class="tabs">
       <button class="tab-btn active" data-tab="farm">Farm</button>
       <button class="tab-btn" data-tab="shop">Shop</button>
       <button class="tab-btn" data-tab="upgrades">Upgrades</button>
       <button class="tab-btn" data-tab="inventory">Inventory</button>
       <button class="tab-btn" data-tab="exchange">Exchange</button>
+      <button id="deposit-pi-btn">Deposit Pi Coin</button>
       <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
       <button class="tab-btn" data-tab="achievements">Achievements</button>
     </div>
     <div id="farm" class="tab-content active">
       <div id="farm-area"></div>
+      <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
+    </div>
+    <div id="reward-modal" class="modal">
+      <div class="modal-content">
+        <span id="reward-modal-close" class="close">×</span>
+        <h2>Daily Reward</h2>
+        <p>You got +100 Farm Coins & +50 Water!</p>
+        <button id="claim-modal-btn" aria-label="Claim Reward">Claim</button>
+      </div>
     </div>
     <div id="shop" class="tab-content">
-      <h2>Shop</h2>
+      <div id="shop-content"></div>
       <div id="sell-section">
-        <h3 id="sell-section-title">Sell Items</h3>
+        <h2 id="sell-section-title">Sell Items</h2>
         <div id="sell-content"></div>
       </div>
-      <div id="shop-content"></div>
     </div>
     <div id="upgrades" class="tab-content">
       <h2 id="upgrades-title">Upgrades</h2>
-      <div id="upgrades-content">Coming soon...</div>
+      <p id="upgrades-content">Coming soon...</p>
     </div>
     <div id="inventory" class="tab-content">
-      <h2>Inventory</h2>
       <div id="inventory-content"></div>
     </div>
     <div id="exchange" class="tab-content">
       <h2 id="exchange-title">Exchange</h2>
-      <p id="exchange-rate">1 PI = 1000000 Coins</p>
+      <p id="exchange-rate">1 PI = 1,000,000 Farm Coins</p>
       <input type="number" id="exchange-amount" placeholder="Enter PI amount">
-      <p>Result: <span id="exchange-result">0</span> Coins</p>
-      <button id="exchange-btn">Exchange</button>
+      <p><span id="exchange-result-label">Farm Coins:</span> <span id="exchange-result">0</span></p>
+      <button id="exchange-btn">Exchange to Farm Coins</button>
     </div>
     <div id="leaderboard" class="tab-content">
       <h2 id="leaderboard-title">Leaderboard</h2>
-      <div id="leaderboard-content">Coming soon...</div>
+      <p id="leaderboard-content">Coming soon...</p>
     </div>
     <div id="achievements" class="tab-content">
-      <h2>Achievements</h2>
       <div id="achievements-content"></div>
     </div>
-    <div id="reward-modal" style="display: none;">
-      <div class="modal-content">
-        <span id="reward-modal-close">&times;</span>
-        <h2>Daily Reward</h2>
-        <p>Claim your daily reward: 100 Coins + 50 Water</p>
-        <button id="claim-modal-btn">Claim</button>
-      </div>
-    </div>
-    <div id="settings-modal" style="display: none;">
-      <div class="modal-content">
-        <span id="close-settings">&times;</span>
-        <h2 id="settings-title">Settings</h2>
-        <label id="music-volume-label">Music Volume:</label>
-        <input type="range" id="music-volume" min="0" max="100">
-        <label id="voice-volume-label">Voice/SFX Volume:</label>
-        <input type="range" id="voice-volume" min="0" max="100">
-      </div>
-    </div>
+    <div id="notification"></div>
   </div>
-  <audio id="bg-music" loop src="/harvest-pi/assets/audio/background_music.mp3"></audio>
-  <audio id="bg-voice" loop src="/harvest-pi/assets/audio/background_voice.mp3"></audio>
-  <audio id="harvest-sound" src="/harvest-pi/assets/audio/harvest.mp3"></audio>
-  <audio id="watering-sound" src="/harvest-pi/assets/audio/watering.mp3"></audio>
-  <audio id="menu-sound" src="/harvest-pi/assets/audio/menu.mp3"></audio>
-  <audio id="buying-sound" src="/harvest-pi/assets/audio/buying.mp3"></audio>
-  <audio id="coin-sound" src="/harvest-pi/assets/audio/coin.mp3"></audio>
-  <script src="/harvest-pi/farm/firebase-config.js"></script>
-  <script type="module" src="/harvest-pi/farm/main.js"></script>
+
+  <audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
+  <audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
+  <audio id="harvest-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
+  <audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3"></audio>
+  <audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3"></audio>
+  <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
+  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
+
+  <!-- Firebase SDK (Modular) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
+      authDomain: "harvest-pi.firebaseapp.com",
+      databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "harvest-pi",
+      storageBucket: "harvest-pi.firebasestorage.app",
+      messagingSenderId: "650006770674",
+      appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth(app);
+
+    window.firebaseConfig = { database, auth };
+  </script>
+
+  <!-- Pi SDK -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+  <!-- Main Script -->
+  <script type="module" src="farm/main.js?v=40"></script>
+
+  <!-- Fallback -->
+  <script>
+    window.addEventListener('error', (event) => {
+      alert('Main script failed to load: ' + event.message);
+      const loadingScreen = document.getElementById('loading-screen');
+      const startScreen = document.getElementById('start-screen');
+      if (loadingScreen && startScreen) {
+        loadingScreen.style.display = 'none';
+        startScreen.style.display = 'block';
+      }
+    });
+  </script>
 </body>
 </html>

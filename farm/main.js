@@ -107,8 +107,9 @@ function updateVolumes() {
 async function loadData() {
   console.log('Starting to load data...'); // Debug
   try {
-    console.log('Fetching lang.json...');
+    console.log('Fetching lang.json from /harvest-pi/data/lang.json...');
     const langRes = await fetch('/harvest-pi/data/lang.json');
+    console.log('lang.json fetch response status:', langRes.status);
     if (!langRes.ok) throw new Error(`Failed to fetch lang.json: ${langRes.status}`);
     langData = await langRes.json();
     console.log('lang.json loaded successfully:', langData);
@@ -119,8 +120,9 @@ async function loadData() {
   }
 
   try {
-    console.log('Fetching vegetables.json...');
+    console.log('Fetching vegetables.json from /harvest-pi/data/vegetables.json...');
     const vegRes = await fetch('/harvest-pi/data/vegetables.json');
+    console.log('vegetables.json fetch response status:', vegRes.status);
     if (!vegRes.ok) throw new Error(`Failed to fetch vegetables.json: ${vegRes.status}`);
     const vegData = await vegRes.json();
     vegetables = vegData.vegetables || [];
@@ -950,6 +952,7 @@ function initializeSettings() {
 function checkDailyReward() {
   const playerRef = ref(database, `players/${userId}/lastClaim`);
   onValue(playerRef, (snapshot) => {
+    removeref = snapshot.ref;
     const lastClaim = snapshot.val() || parseInt(localStorage.getItem('lastClaim'));
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
@@ -962,28 +965,46 @@ function checkDailyReward() {
 // Initialize game
 async function initializeGame() {
   console.log('Starting game initialization...'); // Debug
+  let loadingScreen, startScreen;
+  
   try {
+    console.log('Checking DOM elements...');
+    loadingScreen = document.getElementById('loading-screen');
+    startScreen = document.getElementById('start-screen');
+    if (!loadingScreen || !startScreen) {
+      console.log('DOM elements missing: loadingScreen =', loadingScreen, ', startScreen =', startScreen);
+      throw new Error('Loading screen or start screen element not found in DOM');
+    }
+
+    console.log('Calling loadData()...');
     await loadData();
     console.log('loadData() completed.');
+
+    console.log('Calling loadPlayerData()...');
     await loadPlayerData();
     console.log('loadPlayerData() completed.');
+
+    console.log('Calling initializeSettings()...');
     initializeSettings();
     console.log('initializeSettings() completed.');
+
   } catch (error) {
     console.log('Error during game initialization:', error.message);
     alert('Error initializing game: ' + error.message);
   } finally {
     // Pastiin loading screen disembunyiin meskipun ada error
-    console.log('Hiding loading screen...');
+    console.log('Hiding loading screen in finally block...');
     setTimeout(() => {
-      const loadingScreen = document.getElementById('loading-screen');
-      const startScreen = document.getElementById('start-screen');
+      loadingScreen = document.getElementById('loading-screen');
+      startScreen = document.getElementById('start-screen');
       if (loadingScreen && startScreen) {
+        console.log('Setting loadingScreen display to none...');
         loadingScreen.style.display = 'none';
+        console.log('Setting startScreen display to block...');
         startScreen.style.display = 'block';
         console.log('Loading screen hidden, start screen shown.');
       } else {
-        console.log('Error: loading-screen or start-screen element not found.');
+        console.log('Error in finally block: loadingScreen =', loadingScreen, ', startScreen =', startScreen);
       }
     }, 1000);
   }

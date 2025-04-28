@@ -106,7 +106,7 @@ function updateVolumes() {
 // Load data from JSON files
 async function loadData() {
   try {
-    const langRes = await fetch('/data/lang.json');
+    const langRes = await fetch('/harvest-pi/data/lang.json'); // Ubah path ke /harvest-pi/data/
     if (!langRes.ok) throw new Error(`Failed to fetch lang.json: ${langRes.status}`);
     langData = await langRes.json();
   } catch (e) {
@@ -115,7 +115,7 @@ async function loadData() {
   }
 
   try {
-    const vegRes = await fetch('/data/vegetables.json');
+    const vegRes = await fetch('/harvest-pi/data/vegetables.json'); // Ubah path ke /harvest-pi/data/
     if (!vegRes.ok) throw new Error(`Failed to fetch vegetables.json: ${vegRes.status}`);
     const vegData = await vegRes.json();
     vegetables = vegData.vegetables || [];

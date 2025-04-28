@@ -107,16 +107,47 @@
   <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
   <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-  <script src="firebase/firebase-config.js"></script>
+  <!-- Firebase SDK (Modular) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
+      authDomain: "harvest-pi.firebaseapp.com",
+      databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "harvest-pi",
+      storageBucket: "harvest-pi.firebasestorage.app",
+      messagingSenderId: "650006770674",
+      appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth(app);
+
+    // Export ke window biar bisa diakses main.js
+    window.firebaseConfig = { database, auth };
+  </script>
 
   <!-- Pi SDK -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
   <!-- Main Script -->
-  <script src="farm/main.js?v=40"></script>
+  <script type="module" src="farm/main.js?v=40"></script>
+
+  <!-- Fallback kalau main.js gagal -->
+  <script>
+    window.addEventListener('error', (event) => {
+      console.error('Script error:', event.message, event.filename);
+      const loadingScreen = document.getElementById('loading-screen');
+      const startScreen = document.getElementById('start-screen');
+      if (loadingScreen && startScreen) {
+        loadingScreen.style.display = 'none';
+        startScreen.style.display = 'block';
+      }
+    });
+  </script>
 </body>
 </html>

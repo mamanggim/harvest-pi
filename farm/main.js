@@ -1,5 +1,7 @@
 import { database } from '../firebase/firebase-config.js'; // Sesuaikan path
 console.log('Firebase connected:', database);
+import { ref, onValue, set } from 'firebase/database';
+import { signInAnonymously } from 'firebase/auth';
 
 // Global variables
 let farmCoins = 0;
@@ -93,18 +95,63 @@ async function loadData() {
   initializeGame();
 }
 
-// Load player data
-function loadPlayerData() {
-  farmCoins = localStorage.getItem('farmCoins') ? parseInt(localStorage.getItem('farmCoins')) : 0;
-  pi = localStorage.getItem('pi') ? parseFloat(localStorage.getItem('pi')) : 0;
-  water = localStorage.getItem('water') ? parseInt(localStorage.getItem('water')) : 0;
-  level = localStorage.getItem('level') ? parseInt(localStorage.getItem('level')) : 1;
-  xp = localStorage.getItem('xp') ? parseInt(localStorage.getItem('xp')) : 0;
-  inventory = JSON.parse(localStorage.getItem('inventory')) || [];
-  harvestCount = localStorage.getItem('harvestCount') ? parseInt(localStorage.getItem('harvestCount')) : 0;
+import { database, auth } from '../firebase/firebase-config.js';
+import { ref, onValue, set } from 'firebase/database';
+import { signInAnonymously } from 'firebase/auth';
 
-  localStorage.setItem('farmCoins', farmCoins);
-  localStorage.setItem('water', water);
+let userId = null;
+
+async function loadPlayerData() {
+  // Login anonymous
+  try {
+    const userCredential = await signInAnonymously(auth);
+    userId = userCredential.user.uid;
+    console.log('Logged in as:', userId);
+
+    // Ambil data pemain
+    const playerRef = ref(database, `players/${userId}`);
+    onValue(playerRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        farmCoins = data.farmCoins || 0;
+        pi = data.pi || 0;
+        water = data.water || 0;
+        level = data.level || 1;
+        xp = data.xp || 0;
+        inventory = data.inventory || [];
+        harvestCount = data.harvestCount || 0;
+        // Settings
+        localStorage.setItem('musicVolume', data.musicVolume || 50); // Tetap di localStorage untuk UI
+        localStorage.setItem('voiceVolume', data.voiceVolume || 50);
+      } else {
+        // Data baru untuk pemain baru
+        const initialData = {
+          farmCoins: 0,
+          pi: 0,
+          water: 0,
+          level: 1,
+          xp: 0,
+          inventory: [],
+          harvestCount: 0,
+          lastClaim: null,
+          musicVolume: 50,
+          voiceVolume: 50
+        };
+        set(playerRef, initialData);
+        farmCoins = 0;
+        pi = 0;
+        water = 0;
+        level = 1;
+        xp = 0;
+        inventory = [];
+        harvestCount = 0;
+      }
+      updateWallet();
+      updateVolumes();
+    });
+  } catch (error) {
+    console.error('Error loading player data:', error);
+  }
 }
 
 // Update wallet UI
@@ -115,12 +162,23 @@ function updateWallet() {
   document.getElementById('level').textContent = `Level: ${level} | XP: ${xp}`;
   const xpPercentage = (xp / (level * 100)) * 100;
   document.getElementById('xp-fill').style.width = `${xpPercentage}%`;
-  localStorage.setItem('farmCoins', farmCoins);
-  localStorage.setItem('pi', pi);
-  localStorage.setItem('water', water);
-  localStorage.setItem('level', level);
-  localStorage.setItem('xp', xp);
-  localStorage.setItem('inventory', JSON.stringify(inventory));
+  function savePlayerData() {
+  if (!userId) return;
+  const playerRef = ref(database, `players/${userId}`);
+  set(playerRef, {
+    farmCoins,
+    pi,
+    water,
+    level,
+    xp,
+    inventory,
+    harvestCount,
+    lastClaim: localStorage.getItem('lastClaim'), // Tetap ambil dari localStorage untuk compatibility
+    musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
+    voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
+  }).catch(error => {
+    console.error('Error saving player data:', error);
+  });
 }
 
 // Initialize farm plots
@@ -619,20 +677,35 @@ closeModal.addEventListener('click', () => {
 
 // Claim daily reward
 function claimDailyReward() {
-  const lastClaim = localStorage.getItem('lastClaim');
-  const now = Date.now();
-  const oneDay = 24 * 60 * 60 * 1000;
+  const playerRef = ref(database, `players/${userId}/lastClaim`);
+  onValue(playerRef, (snapshot) => {
+    const lastClaim = snapshot.val();
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
 
-  if (lastClaim && now - lastClaim < oneDay) {
-    const timeLeft = oneDay - (now - lastClaim);
-    const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
-    const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
-    showNotification(`${langData[currentLang].waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m ${langData[currentLang].toClaimAgain || 'to claim again!'}`);
-    return;
-  }
-
-  rewardModal.style.display = 'block';
+    if (lastClaim && now - lastClaim < oneDay) {
+      const timeLeft = oneDay - (now - lastClaim);
+      const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+      const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+      showNotification(`${langData[currentLang].waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m ${langData[currentLang].toClaimAgain || 'to claim again!'}`);
+      document.getElementById('claim-reward-btn').disabled = true;
+    } else {
+      rewardModal.style.display = 'block';
+    }
+  }, { onlyOnce: true });
 }
+
+// Update claimModalBtn
+claimModalBtn.addEventListener('click', () => {
+  farmCoins += 100;
+  water += 50;
+  set(ref(database, `players/${userId}/lastClaim`), Date.now());
+  document.getElementById('claim-reward-btn').disabled = true;
+  updateWallet();
+  showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+  playCoinSound();
+  rewardModal.style.display = 'none';
+});
 
 // Check harvest achievement
 function checkHarvestAchievement() {

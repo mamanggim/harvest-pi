@@ -379,7 +379,7 @@ function handlePlotClick(index) {
           plotStatus.innerHTML = langData[currentLang].readyToHarvest || 'Ready to Harvest';
           return;
         }
-
+        
         if (plot.watered) {
           plot.countdown--;
           const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
@@ -422,10 +422,10 @@ function handlePlotClick(index) {
       showNotification(langData[currentLang].notEnoughWater);
     }
   } else if (plot.currentFrame >= plot.vegetable.frames || plotElement.classList.contains('ready')) {
-    const yieldAmount = plot.vegetable.yield;
+    const yieldAmount = plot.vegetable.yield || 1; // Sekarang yield selalu 1
     inventory.push({ vegetable: plot.vegetable, quantity: yieldAmount });
     savePlayerData();
-
+  
     const flyImage = document.createElement('img');
     flyImage.src = plot.vegetable.shopImage;
     flyImage.classList.add('plant-fly');
@@ -612,7 +612,7 @@ function renderInventory() {
   });
 }
 
-// Render sell section
+// Render sell section (UPDATE: Pake sellPrice dari vegetables.json)
 function renderSellSection() {
   const sellContent = document.getElementById('sell-content');
   sellContent.innerHTML = '';
@@ -620,7 +620,7 @@ function renderSellSection() {
     if (item && item.vegetable) {
       const sellItem = document.createElement('div');
       sellItem.classList.add('sell-item');
-      const sellPrice = Math.floor(item.vegetable.farmPrice * 0.5);
+      const sellPrice = item.vegetable.sellPrice || Math.floor(item.vegetable.farmPrice * 0.5); // Pake sellPrice, fallback ke farmPrice * 0.5 kalau sellPrice gak ada
       sellItem.innerHTML = `
         <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
         <h3>${item.vegetable.name[currentLang]}</h3>
@@ -644,12 +644,12 @@ function renderSellSection() {
   });
 }
 
-// Sell item
+// Sell item (UPDATE: Pake sellPrice dari vegetables.json)
 function sellItem(index) {
   const item = inventory[index];
   if (!item || !item.vegetable) return;
 
-  const sellPrice = Math.floor(item.vegetable.farmPrice * 0.5);
+  const sellPrice = item.vegetable.sellPrice || Math.floor(item.vegetable.farmPrice * 0.5); // Pake sellPrice, fallback ke farmPrice * 0.5
   farmCoins += sellPrice * item.quantity;
   xp += 10;
   checkLevelUp();
@@ -988,7 +988,7 @@ function checkDailyReward() {
 async function initializeGame() {
   console.log('Starting game initialization...');
   let loadingScreen, startScreen;
-
+  
   try {
     console.log('Checking DOM elements...');
     loadingScreen = document.getElementById('loading-screen');
@@ -1064,17 +1064,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('exchange-btn')?.addEventListener('click', exchangePi);
   document.getElementById('exchange-btn')?.addEventListener('touchstart', exchangePi);
   document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
-
-  document.getElementById('play-audio-btn')?.addEventListener('click', () => {
-    playBgMusic();
-    playBgVoice();
-    showNotification('Playing audio...');
-  });
-  document.getElementById('play-audio-btn')?.addEventListener('touchstart', () => {
-    playBgMusic();
-    playBgVoice();
-    showNotification('Playing audio...');
-  });
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {

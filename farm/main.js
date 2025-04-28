@@ -15,7 +15,7 @@ let langData = {};
 let currentLang = 'en';
 let farmPlots = [];
 let harvestCount = 0;
-let achievements = { harvest: false, coins: false }; // Tambah untuk simpan status achievement
+let achievements = { harvest: false, coins: false };
 let userId = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
@@ -393,7 +393,7 @@ function handlePlotClick(index) {
           plotStatus.innerHTML = langData[currentLang].readyToHarvest || 'Ready to Harvest';
           return;
         }
-        
+
         if (plot.watered) {
           plot.countdown--;
           const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
@@ -767,43 +767,70 @@ claimModalBtn.addEventListener('click', () => {
   water += 50;
   console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
   localStorage.setItem('lastClaim', Date.now());
-  set(ref(database, `players/${userId}/lastClaim`), Date.now())
+  const playerRef = ref(database, `players/${userId}`);
+  set(playerRef, {
+    farmCoins,
+    pi,
+    water,
+    level,
+    xp,
+    inventory,
+    harvestCount,
+    achievements,
+    lastClaim: Date.now(),
+    musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
+    voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
+  })
     .then(() => {
-      console.log('lastClaim saved to Firebase');
+      console.log('Claim data saved to Firebase');
       updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
     })
     .catch(error => {
-      console.error('Error saving lastClaim to Firebase:', error.message);
+      console.error('Error saving claim data to Firebase:', error.message);
       updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
-      showNotification('Failed to save claim time, but rewards added.');
+      showNotification('Failed to save claim data, but rewards added.');
     });
 });
+
 claimModalBtn.addEventListener('touchstart', () => {
   farmCoins += 100;
   water += 50;
   console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
   localStorage.setItem('lastClaim', Date.now());
-  set(ref(database, `players/${userId}/lastClaim`), Date.now())
+  const playerRef = ref(database, `players/${userId}`);
+  set(playerRef, {
+    farmCoins,
+    pi,
+    water,
+    level,
+    xp,
+    inventory,
+    harvestCount,
+    achievements,
+    lastClaim: Date.now(),
+    musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
+    voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
+  })
     .then(() => {
-      console.log('lastClaim saved to Firebase');
+      console.log('Claim data saved to Firebase');
       updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
     })
     .catch(error => {
-      console.error('Error saving lastClaim to Firebase:', error.message);
+      console.error('Error saving claim data to Firebase:', error.message);
       updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
-      showNotification('Failed to save claim time, but rewards added.');
+      showNotification('Failed to save claim data, but rewards added.');
     });
 });
 

@@ -15,7 +15,7 @@ let langData = {};
 let currentLang = 'en';
 let farmPlots = [];
 let harvestCount = 0;
-let userId = null; // ID dari anonymous login
+let userId = null;
 const plotCount = 4;
 const piToFarmRate = 1000000;
 
@@ -115,8 +115,110 @@ async function loadData() {
     console.log('lang.json loaded successfully:', langData);
   } catch (e) {
     console.log('Error loading lang.json:', e.message);
-    alert('Error loading lang.json: ' + e.message);
-    langData = { en: { /* fallback data sama seperti sebelumnya */ }, id: { /* fallback data sama seperti sebelumnya */ } };
+    // Tambah alert biar error keliatan
+    showNotification('Error loading lang.json: ' + e.message);
+    langData = {
+      en: {
+        title: "Harvest Pi",
+        startBtn: "Start Game",
+        switchLangLabel: "Switch Language (EN/ID)",
+        coinLabel: "Coins",
+        waterLabel: "Water",
+        farmTab: "Farm",
+        shopTab: "Shop",
+        upgradesTab: "Upgrades",
+        inventoryTab: "Inventory",
+        exchangeTab: "Exchange",
+        leaderboardTab: "Leaderboard",
+        achievementsTab: "Achievements",
+        claimRewardBtn: "Claim Reward",
+        needsWater: "Needs Water",
+        growing: "Growing",
+        readyToHarvest: "Ready to Harvest",
+        planted: "Planted!",
+        watered: "Watered!",
+        harvested: "Harvested!",
+        noSeeds: "No Seeds in inventory!",
+        notEnoughWater: "Not enough water!",
+        noItems: "No items available in shop.",
+        farmPriceLabel: "Farm Price",
+        piPriceLabel: "PI Price",
+        buyLabel: "Buy",
+        notEnoughCoins: "Not enough coins!",
+        notEnoughPi: "Not enough PI!",
+        quantityLabel: "Quantity",
+        sellPriceLabel: "Sell Price",
+        sellLabel: "Sell",
+        levelUp: "Level Up! New Level:",
+        exchanged: "Exchanged successfully!",
+        invalidAmount: "Invalid amount!",
+        waitLabel: "Wait",
+        toClaimAgain: "to claim again!",
+        comingSoon: "Coming soon...",
+        achievementHarvest: "Harvest Master",
+        achievementHarvestDesc: "Harvest 10 crops",
+        achievementCoins: "Coin Collector",
+        achievementCoinsDesc: "Collect 1000 coins",
+        achievementUnlocked: "Achievement Unlocked!",
+        exchangeRateLabel: "1 PI = 1000000 Coins",
+        enterPiAmount: "Enter PI amount",
+        exchangeBtn: "Exchange",
+        sellItemsLabel: "Sell Items",
+        settingsLabel: "Settings",
+        musicVolumeLabel: "Music Volume:",
+        voiceVolumeLabel: "Voice/SFX Volume:"
+      },
+      id: {
+        title: "Harvest Pi",
+        startBtn: "Mulai Permainan",
+        switchLangLabel: "Ganti Bahasa (EN/ID)",
+        coinLabel: "Koin",
+        waterLabel: "Air",
+        farmTab: "Ladang",
+        shopTab: "Toko",
+        upgradesTab: "Peningkatan",
+        inventoryTab: "Inventaris",
+        exchangeTab: "Tukar",
+        leaderboardTab: "Papan Peringkat",
+        achievementsTab: "Pencapaian",
+        claimRewardBtn: "Klaim Hadiah",
+        needsWater: "Butuh Air",
+        growing: "Tumbuh",
+        readyToHarvest: "Siap Dipanen",
+        planted: "Ditanam!",
+        watered: "Disiram!",
+        harvested: "Dipanen!",
+        noSeeds: "Tidak ada benih di inventaris!",
+        notEnoughWater: "Air tidak cukup!",
+        noItems: "Tidak ada item di toko.",
+        farmPriceLabel: "Harga Ladang",
+        piPriceLabel: "Harga PI",
+        buyLabel: "Beli",
+        notEnoughCoins: "Koin tidak cukup!",
+        notEnoughPi: "PI tidak cukup!",
+        quantityLabel: "Jumlah",
+        sellPriceLabel: "Harga Jual",
+        sellLabel: "Jual",
+        levelUp: "Naik Level! Level Baru:",
+        exchanged: "Berhasil ditukar!",
+        invalidAmount: "Jumlah tidak valid!",
+        waitLabel: "Tunggu",
+        toClaimAgain: "untuk klaim lagi!",
+        comingSoon: "Segera hadir...",
+        achievementHarvest: "Master Panen",
+        achievementHarvestDesc: "Panen 10 tanaman",
+        achievementCoins: "Pengumpul Koin",
+        achievementCoinsDesc: "Kumpulkan 1000 koin",
+        achievementUnlocked: "Pencapaian Terbuka!",
+        exchangeRateLabel: "1 PI = 1000000 Koin",
+        enterPiAmount: "Masukkan jumlah PI",
+        exchangeBtn: "Tukar",
+        sellItemsLabel: "Jual Item",
+        settingsLabel: "Pengaturan",
+        musicVolumeLabel: "Volume Musik:",
+        voiceVolumeLabel: "Volume Suara/SFX:"
+      }
+    };
   }
 
   try {
@@ -129,7 +231,8 @@ async function loadData() {
     console.log('vegetables.json loaded successfully:', vegetables);
   } catch (e) {
     console.log('Error loading vegetables.json:', e.message);
-    alert('Error loading vegetables.json: ' + e.message);
+    // Tambah alert biar error keliatan
+    showNotification('Error loading vegetables.json: ' + e.message);
     vegetables = [];
   }
   console.log('Finished loading data.');
@@ -139,12 +242,10 @@ async function loadData() {
 async function loadPlayerData() {
   console.log('Starting to load player data with anonymous login...');
   try {
-    // Login ke Firebase pake anonymous login
     const userCredential = await signInAnonymously(auth);
     userId = userCredential.user.uid;
     console.log('Signed in to Firebase anonymously, userId:', userId);
 
-    // Simpan data player di Firebase pake userId
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
       const data = snapshot.val();
@@ -193,8 +294,25 @@ async function loadPlayerData() {
     }, { onlyOnce: false });
   } catch (error) {
     console.log('Error loading player data with anonymous login:', error.message);
-    alert('Error loading player data: ' + error.message);
-    showNotification('Failed to connect to Firebase');
+    showNotification('Error loading player data: ' + error.message);
+    // Fallback lokal kalau Firebase gagal
+    farmCoins = 0;
+    pi = 0;
+    water = 0;
+    level = 1;
+    xp = 0;
+    inventory = [];
+    harvestCount = 0;
+    localStorage.setItem('musicVolume', 50);
+    localStorage.setItem('voiceVolume', 50);
+    updateWallet();
+    updateVolumes();
+    initializePlots();
+    renderShop();
+    renderInventory();
+    renderSellSection();
+    renderAchievements();
+    checkDailyReward();
   }
   console.log('Finished loading player data.');
 }
@@ -234,7 +352,8 @@ function updateWallet() {
 function initializePlots() {
   const farmArea = document.getElementById('farm-area');
   if (!farmArea) {
-    alert('farm-area element not found');
+    console.log('farm-area element not found');
+    showNotification('farm-area element not found');
     return;
   }
 
@@ -447,7 +566,8 @@ function handlePlotClick(index) {
 function renderShop() {
   const shopContent = document.getElementById('shop-content');
   if (!shopContent) {
-    alert('shop-content element not found');
+    console.log('shop-content element not found');
+    showNotification('shop-content element not found');
     return;
   }
 
@@ -837,6 +957,8 @@ function showNotification(message) {
     setTimeout(() => {
       notification.style.display = 'none';
     }, 2000);
+  } else {
+    console.log('Notification element not found, message:', message);
   }
 }
 
@@ -855,36 +977,85 @@ function showTransactionAnimation(amount, isPositive, element) {
 
 // Update UI text based on langData
 function updateUIText() {
-  document.getElementById('title').textContent = langData[currentLang].title || 'Harvest Pi';
-  document.getElementById('start-text').textContent = langData[currentLang].startBtn || 'Start Game';
-  document.getElementById('lang-toggle').textContent = langData[currentLang].switchLangLabel || 'Switch Language (EN/ID)';
-  document.getElementById('game-lang-toggle').textContent = langData[currentLang].switchLangLabel || 'Switch Language (EN/ID)';
-  document.getElementById('game-title').textContent = langData[currentLang].title || 'Harvest Pi';
-  document.querySelector('.tab-btn[data-tab="farm"]').textContent = langData[currentLang].farmTab || 'Farm';
-  document.querySelector('.tab-btn[data-tab="shop"]').textContent = langData[currentLang].shopTab || 'Shop';
-  document.querySelector('.tab-btn[data-tab="upgrades"]').textContent = langData[currentLang].upgradesTab || 'Upgrades';
-  document.querySelector('.tab-btn[data-tab="inventory"]').textContent = langData[currentLang].inventoryTab || 'Inventory';
-  document.querySelector('.tab-btn[data-tab="exchange"]').textContent = langData[currentLang].exchangeTab || 'Exchange';
-  document.querySelector('.tab-btn[data-tab="leaderboard"]').textContent = langData[currentLang].leaderboardTab || 'Leaderboard';
-  document.querySelector('.tab-btn[data-tab="achievements"]').textContent = langData[currentLang].achievementsTab || 'Achievements';
-  document.getElementById('claim-reward-btn').textContent = langData[currentLang].claimRewardBtn || 'Claim Reward';
-  document.getElementById('upgrades-title').textContent = langData[currentLang].upgradesTab || 'Upgrades';
-  document.getElementById('upgrades-content').textContent = langData[currentLang].comingSoon || 'Coming soon...';
-  document.getElementById('leaderboard-title').textContent = langData[currentLang].leaderboardTab || 'Leaderboard';
-  document.getElementById('leaderboard-content').textContent = langData[currentLang].comingSoon || 'Coming soon...';
-  document.getElementById('exchange-title').textContent = langData[currentLang].exchangeTab || 'Exchange';
-  document.getElementById('exchange-rate').textContent = langData[currentLang].exchangeRateLabel || `1 PI = ${piToFarmRate} Coins`;
-  document.getElementById('exchange-amount').placeholder = langData[currentLang].enterPiAmount || 'Enter PI amount';
-  document.getElementById('exchange-btn').textContent = langData[currentLang].exchangeBtn || 'Exchange';
-  document.getElementById('sell-section-title').textContent = langData[currentLang].sellItemsLabel || 'Sell Items';
-  document.getElementById('settings-title').textContent = langData[currentLang].settingsLabel || 'Settings';
-  document.getElementById('music-volume-label').textContent = langData[currentLang].musicVolumeLabel || 'Music Volume:';
-  document.getElementById('voice-volume-label').textContent = langData[currentLang].voiceVolumeLabel || 'Voice/SFX Volume:';
+  const titleElement = document.getElementById('title');
+  if (titleElement) titleElement.textContent = langData[currentLang].title || 'Harvest Pi';
+  
+  const startTextElement = document.getElementById('start-text');
+  if (startTextElement) startTextElement.textContent = langData[currentLang].startBtn || 'Start Game';
+  
+  const langToggleElement = document.getElementById('lang-toggle');
+  if (langToggleElement) langToggleElement.textContent = langData[currentLang].switchLangLabel || 'Switch Language (EN/ID)';
+  
+  const gameLangToggleElement = document.getElementById('game-lang-toggle');
+  if (gameLangToggleElement) gameLangToggleElement.textContent = langData[currentLang].switchLangLabel || 'Switch Language (EN/ID)';
+  
+  const gameTitleElement = document.getElementById('game-title');
+  if (gameTitleElement) gameTitleElement.textContent = langData[currentLang].title || 'Harvest Pi';
+  
+  const farmTabElement = document.querySelector('.tab-btn[data-tab="farm"]');
+  if (farmTabElement) farmTabElement.textContent = langData[currentLang].farmTab || 'Farm';
+  
+  const shopTabElement = document.querySelector('.tab-btn[data-tab="shop"]');
+  if (shopTabElement) shopTabElement.textContent = langData[currentLang].shopTab || 'Shop';
+  
+  const upgradesTabElement = document.querySelector('.tab-btn[data-tab="upgrades"]');
+  if (upgradesTabElement) upgradesTabElement.textContent = langData[currentLang].upgradesTab || 'Upgrades';
+  
+  const inventoryTabElement = document.querySelector('.tab-btn[data-tab="inventory"]');
+  if (inventoryTabElement) inventoryTabElement.textContent = langData[currentLang].inventoryTab || 'Inventory';
+  
+  const exchangeTabElement = document.querySelector('.tab-btn[data-tab="exchange"]');
+  if (exchangeTabElement) exchangeTabElement.textContent = langData[currentLang].exchangeTab || 'Exchange';
+  
+  const leaderboardTabElement = document.querySelector('.tab-btn[data-tab="leaderboard"]');
+  if (leaderboardTabElement) leaderboardTabElement.textContent = langData[currentLang].leaderboardTab || 'Leaderboard';
+  
+  const achievementsTabElement = document.querySelector('.tab-btn[data-tab="achievements"]');
+  if (achievementsTabElement) achievementsTabElement.textContent = langData[currentLang].achievementsTab || 'Achievements';
+  
+  const claimRewardBtnElement = document.getElementById('claim-reward-btn');
+  if (claimRewardBtnElement) claimRewardBtnElement.textContent = langData[currentLang].claimRewardBtn || 'Claim Reward';
+  
+  const upgradesTitleElement = document.getElementById('upgrades-title');
+  if (upgradesTitleElement) upgradesTitleElement.textContent = langData[currentLang].upgradesTab || 'Upgrades';
+  
+  const upgradesContentElement = document.getElementById('upgrades-content');
+  if (upgradesContentElement) upgradesContentElement.textContent = langData[currentLang].comingSoon || 'Coming soon...';
+  
+  const leaderboardTitleElement = document.getElementById('leaderboard-title');
+  if (leaderboardTitleElement) leaderboardTitleElement.textContent = langData[currentLang].leaderboardTab || 'Leaderboard';
+  
+  const leaderboardContentElement = document.getElementById('leaderboard-content');
+  if (leaderboardContentElement) leaderboardContentElement.textContent = langData[currentLang].comingSoon || 'Coming soon...';
+  
+  const exchangeTitleElement = document.getElementById('exchange-title');
+  if (exchangeTitleElement) exchangeTitleElement.textContent = langData[currentLang].exchangeTab || 'Exchange';
+  
+  const exchangeRateElement = document.getElementById('exchange-rate');
+  if (exchangeRateElement) exchangeRateElement.textContent = langData[currentLang].exchangeRateLabel || `1 PI = ${piToFarmRate} Coins`;
+  
+  const exchangeAmountElement = document.getElementById('exchange-amount');
+  if (exchangeAmountElement) exchangeAmountElement.placeholder = langData[currentLang].enterPiAmount || 'Enter PI amount';
+  
+  const exchangeBtnElement = document.getElementById('exchange-btn');
+  if (exchangeBtnElement) exchangeBtnElement.textContent = langData[currentLang].exchangeBtn || 'Exchange';
+  
+  const sellSectionTitleElement = document.getElementById('sell-section-title');
+  if (sellSectionTitleElement) sellSectionTitleElement.textContent = langData[currentLang].sellItemsLabel || 'Sell Items';
+  
+  const settingsTitleElement = document.getElementById('settings-title');
+  if (settingsTitleElement) settingsTitleElement.textContent = langData[currentLang].settingsLabel || 'Settings';
+  
+  const musicVolumeLabelElement = document.getElementById('music-volume-label');
+  if (musicVolumeLabelElement) musicVolumeLabelElement.textContent = langData[currentLang].musicVolumeLabel || 'Music Volume:';
+  
+  const voiceVolumeLabelElement = document.getElementById('voice-volume-label');
+  if (voiceVolumeLabelElement) voiceVolumeLabelElement.textContent = langData[currentLang].voiceVolumeLabel || 'Voice/SFX Volume:';
 }
 
 // Start game
 function startGame() {
-  alert('Start Game clicked!');
+  console.log('Start Game clicked!');
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
   setTimeout(() => {
@@ -991,7 +1162,7 @@ async function initializeGame() {
 
   } catch (error) {
     console.log('Error during game initialization:', error.message);
-    alert('Error initializing game: ' + error.message);
+    showNotification('Error initializing game: ' + error.message);
   } finally {
     console.log('Hiding loading screen in finally block...');
     setTimeout(() => {
@@ -1005,6 +1176,7 @@ async function initializeGame() {
         console.log('Loading screen hidden, start screen shown.');
       } else {
         console.log('Error in finally block: loadingScreen =', loadingScreen, ', startScreen =', startScreen);
+        showNotification('Error: Loading screen or start screen not found');
       }
     }, 1000);
   }
@@ -1012,48 +1184,24 @@ async function initializeGame() {
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
-  alert('main.js loaded successfully!');
+  console.log('main.js loaded successfully!');
   const startText = document.getElementById('start-text');
   if (startText) {
     startText.addEventListener('click', () => {
-      alert('Click event triggered on Start Game');
+      console.log('Click event triggered on Start Game');
       startGame();
     });
     startText.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      alert('Touch event triggered on Start Game');
+      console.log('Touch event triggered on Start Game');
       startGame();
     });
   } else {
-    alert('start-text element not found');
+    console.log('start-text element not found');
+    showNotification('start-text element not found');
   }
 
-  document.getElementById('lang-toggle')?.addEventListener('click', toggleLanguage);
-  document.getElementById('lang-toggle')?.addEventListener('touchstart', toggleLanguage);
-  document.getElementById('settings-btn')?.addEventListener('click', openSettings);
-  document.getElementById('settings-btn')?.addEventListener('touchstart', openSettings);
-  document.getElementById('claim-reward-btn')?.addEventListener('click', claimDailyReward);
-  document.getElementById('claim-reward-btn')?.addEventListener('touchstart', claimDailyReward);
-  document.getElementById('game-lang-toggle')?.addEventListener('click', toggleLanguage);
-  document.getElementById('game-lang-toggle')?.addEventListener('touchstart', toggleLanguage);
-  document.getElementById('game-settings-btn')?.addEventListener('click', openSettings);
-  document.getElementById('game-settings-btn')?.addEventListener('touchstart', openSettings);
-  document.getElementById('exit-game-btn')?.addEventListener('click', exitGame);
-  document.getElementById('exit-game-btn')?.addEventListener('touchstart', exitGame);
-  document.getElementById('exchange-btn')?.addEventListener('click', exchangePi);
-  document.getElementById('exchange-btn')?.addEventListener('touchstart', exchangePi);
-  document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
-
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.getAttribute('data-tab');
-      switchTab(tab);
-    });
-    btn.addEventListener('touchstart', () => {
-      const tab = btn.getAttribute('data-tab');
-      switchTab(tab);
-    });
-  });
-
-  initializeGame();
-});
+  const langToggle = document.getElementById('lang-toggle');
+  if (langToggle) {
+    langToggle.addEventListener('click', toggleLanguage);
+    langToggle.addEventListener('touch

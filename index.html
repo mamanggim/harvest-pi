@@ -4,61 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Harvest Pi</title>
-  <link rel="stylesheet" href="farm/style.css">
+  <link rel="stylesheet" href="/harvest-pi/farm/style.css">
 </head>
 <body>
-  <!-- Audio elements -->
-  <audio id="bg-music" loop>
-    <source src="assets/sfx/music/main-bgm.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="bg-voice" loop>
-    <source src="assets/sfx/voice/main-bgv.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="harvest-sound">
-    <source src="assets/sfx/voice/harvesting-bgv.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="watering-sound">
-    <source src="assets/sfx/voice/watering-bgv.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="menu-sound">
-    <source src="assets/sfx/voice/menu-bgv.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="buying-sound">
-    <source src="assets/sfx/voice/buying-bgv.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="coin-sound">
-    <source src="assets/sfx/voice/coin-bgv.mp3" type="audio/mpeg">
-  </audio>
-
-  <!-- Loading Screen -->
-  <div id="loading-screen">
+  <div id="loading-screen" style="display: block;">
     <h1>Loading...</h1>
   </div>
-
-  <!-- Start Screen -->
-  <div id="start-screen">
+  <div id="start-screen" style="display: none;">
     <h1 id="title">Harvest Pi</h1>
     <button id="start-text">Start Game</button>
     <button id="lang-toggle">Switch Language (EN/ID)</button>
-    <button id="settings-btn">⚙️</button>
+    <button id="settings-btn">Settings</button>
   </div>
-
-  <!-- Game Screen -->
   <div id="game-screen" style="display: none;">
-    <div class="game-header">
-      <h1 id="game-title">Harvest Pi</h1>
-      <button id="game-lang-toggle">Switch Language (EN/ID)</button>
-      <button id="game-settings-btn">⚙️</button>
-      <button id="play-audio-btn">Play Audio</button>
-      <button id="exit-game-btn">Exit</button>
-    </div>
-    <div class="wallet">
-      <span id="farm-coins">0 Coins</span>
-      <span id="pi-coins">0.00 PI</span>
-      <span id="water">0 Water</span>
-      <span id="level">Level: 1 | XP: 0</span>
-      <div class="xp-bar"><div id="xp-fill" class="xp-fill"></div></div>
-    </div>
+    <!-- Game UI seperti tab farm, shop, dll. -->
+    <h1 id="game-title">Harvest Pi</h1>
+    <button id="game-lang-toggle">Switch Language (EN/ID)</button>
+    <button id="game-settings-btn">Settings</button>
+    <button id="exit-game-btn">Exit</button>
+    <div id="farm-coins">0 Coins</div>
+    <div id="pi-coins">0 PI</div>
+    <div id="water">0 Water</div>
+    <div id="level">Level: 1 | XP: 0</div>
+    <div id="xp-bar"><div id="xp-fill"></div></div>
+    <button id="claim-reward-btn">Claim Reward</button>
+    <div id="notification" style="display: none;"></div>
     <div class="tabs">
       <button class="tab-btn active" data-tab="farm">Farm</button>
       <button class="tab-btn" data-tab="shop">Shop</button>
@@ -67,29 +37,31 @@
       <button class="tab-btn" data-tab="exchange">Exchange</button>
       <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
       <button class="tab-btn" data-tab="achievements">Achievements</button>
-      <button id="claim-reward-btn">Claim Reward</button>
     </div>
-    <div id="notification" style="display: none;"></div>
     <div id="farm" class="tab-content active">
-      <div id="farm-area" class="farm-area"></div>
+      <div id="farm-area"></div>
     </div>
     <div id="shop" class="tab-content">
+      <h2>Shop</h2>
+      <div id="sell-section">
+        <h3 id="sell-section-title">Sell Items</h3>
+        <div id="sell-content"></div>
+      </div>
       <div id="shop-content"></div>
-      <h2 id="sell-section-title">Sell Items</h2>
-      <div id="sell-content"></div>
     </div>
     <div id="upgrades" class="tab-content">
       <h2 id="upgrades-title">Upgrades</h2>
       <div id="upgrades-content">Coming soon...</div>
     </div>
     <div id="inventory" class="tab-content">
+      <h2>Inventory</h2>
       <div id="inventory-content"></div>
     </div>
     <div id="exchange" class="tab-content">
       <h2 id="exchange-title">Exchange</h2>
-      <p id="exchange-rate">1 PI = 1,000,000 Coins</p>
-      <input type="number" id="exchange-amount" placeholder="Enter PI amount" step="0.0001">
-      <p>= <span id="exchange-result">0</span> Coins</p>
+      <p id="exchange-rate">1 PI = 1000000 Coins</p>
+      <input type="number" id="exchange-amount" placeholder="Enter PI amount">
+      <p>Result: <span id="exchange-result">0</span> Coins</p>
       <button id="exchange-btn">Exchange</button>
     </div>
     <div id="leaderboard" class="tab-content">
@@ -97,43 +69,36 @@
       <div id="leaderboard-content">Coming soon...</div>
     </div>
     <div id="achievements" class="tab-content">
+      <h2>Achievements</h2>
       <div id="achievements-content"></div>
     </div>
-  </div>
-
-  <!-- Reward Modal -->
-  <div id="reward-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <span id="reward-modal-close">×</span>
-      <h2>Daily Reward</h2>
-      <p>Claim your daily reward: 100 Coins + 50 Water!</p>
-      <button id="claim-modal-btn">Claim</button>
+    <div id="reward-modal" style="display: none;">
+      <div class="modal-content">
+        <span id="reward-modal-close">&times;</span>
+        <h2>Daily Reward</h2>
+        <p>Claim your daily reward: 100 Coins + 50 Water</p>
+        <button id="claim-modal-btn">Claim</button>
+      </div>
+    </div>
+    <div id="settings-modal" style="display: none;">
+      <div class="modal-content">
+        <span id="close-settings">&times;</span>
+        <h2 id="settings-title">Settings</h2>
+        <label id="music-volume-label">Music Volume:</label>
+        <input type="range" id="music-volume" min="0" max="100">
+        <label id="voice-volume-label">Voice/SFX Volume:</label>
+        <input type="range" id="voice-volume" min="0" max="100">
+      </div>
     </div>
   </div>
-
-  <!-- Settings Modal -->
-  <div id="settings-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <span id="close-settings">×</span>
-      <h2 id="settings-title">Settings</h2>
-      <label id="music-volume-label" for="music-volume">Music Volume:</label>
-      <input type="range" id="music-volume" min="0" max="100" value="50">
-      <label id="voice-volume-label" for="voice-volume">Voice/SFX Volume:</label>
-      <input type="range" id="voice-volume" min="0" max="100" value="50">
-    </div>
-  </div>
-
-  <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-  <script src="firebase/firebase-config.js"></script>
-  <script src="firebase/firebase-functions.js"></script>
- 
-  <!-- Pi Network Scripts -->
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-  <!-- Game Scripts -->
-  <script src="farm/main.js"></script>
+  <audio id="bg-music" loop src="/harvest-pi/assets/audio/background_music.mp3"></audio>
+  <audio id="bg-voice" loop src="/harvest-pi/assets/audio/background_voice.mp3"></audio>
+  <audio id="harvest-sound" src="/harvest-pi/assets/audio/harvest.mp3"></audio>
+  <audio id="watering-sound" src="/harvest-pi/assets/audio/watering.mp3"></audio>
+  <audio id="menu-sound" src="/harvest-pi/assets/audio/menu.mp3"></audio>
+  <audio id="buying-sound" src="/harvest-pi/assets/audio/buying.mp3"></audio>
+  <audio id="coin-sound" src="/harvest-pi/assets/audio/coin.mp3"></audio>
+  <script src="/harvest-pi/farm/firebase-config.js"></script>
+  <script type="module" src="/harvest-pi/farm/main.js"></script>
 </body>
 </html>

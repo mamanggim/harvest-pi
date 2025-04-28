@@ -111,7 +111,7 @@ async function loadData() {
     langData = await langRes.json();
   } catch (e) {
     alert('Error loading lang.json: ' + e.message);
-    langData = { en: { title: "Harvest Pi", startBtn: "Start Game", coinLabel: "Coins", waterLabel: "Water", needsWater: "Needs Water", planted: "Planted!", noSeeds: "No Seeds!", watered: "Watered!", notEnoughWater: "Not Enough Water!", readyToHarvest: "Ready to Harvest", growing: "Growing", harvested: "Harvested!", farmPriceLabel: "Farm Price", piPriceLabel: "PI Price", buyLabel: "Buy", noItems: "No items available", notEnoughCoins: "Not Enough Coins!", notEnoughPi: "Not Enough PI!", quantityLabel: "Quantity", sellPriceLabel: "Sell Price", sellLabel: "Sell", levelUp: "Level Up!", invalidAmount: "Invalid amount!", exchanged: "Exchanged!", waitLabel: "Wait", toClaimAgain: "to claim again!", achievementUnlocked: "Achievement Unlocked!", achievementHarvest: "Harvest Master", achievementHarvestDesc: "Harvest 10 crops", achievementCoins: "Coin Collector", achievementCoinsDesc: "Collect 1000 coins", farmTab: "Farm", shopTab: "Shop", upgradesTab: "Upgrades", inventoryTab: "Inventory", exchangeTab: "Exchange", leaderboardTab: "Leaderboard", achievementsTab: "Achievements", claimRewardBtn: "Claim Reward", comingSoon: "Coming soon...", exchangeRateLabel: "1 PI = 1,000,000 Coins", enterPiAmount: "Enter PI amount", exchangeBtn: "Exchange", sellItemsLabel: "Sell Items", settingsLabel: "Settings", musicVolumeLabel: "Music Volume:", voiceVolumeLabel: "Voice/SFX Volume:", switchLangLabel: "Switch Language (EN/ID)" }, id: { title: "Harvest Pi", startBtn: "Mulai Permainan", coinLabel: "Koin", waterLabel: "Air", needsWater: "Butuh Air", planted: "Ditanam!", noSeeds: "Tidak Ada Biji!", watered: "Disiram!", notEnoughWater: "Air Tidak Cukup!", readyToHarvest: "Siap Panen", growing: "Tumbuh", harvested: "Dipanen!", farmPriceLabel: "Harga Koin", piPriceLabel: "Harga PI", buyLabel: "Beli", noItems: "Tidak ada item tersedia", notEnoughCoins: "Koin Tidak Cukup!", notEnoughPi: "PI Tidak Cukup!", quantityLabel: "Jumlah", sellPriceLabel: "Harga Jual", sellLabel: "Jual", levelUp: "Naik Level!", invalidAmount: "Jumlah tidak valid!", exchanged: "Ditukar!", waitLabel: "Tunggu", toClaimAgain: "untuk klaim lagi!", achievementUnlocked: "Pencapaian Terbuka!", achievementHarvest: "Master Panen", achievementHarvestDesc: "Panen 10 tanaman", achievementCoins: "Pengumpul Koin", achievementCoinsDesc: "Kumpulkan 1000 koin", farmTab: "Ladang", shopTab: "Toko", upgradesTab: "Peningkatan", inventoryTab: "Inventaris", exchangeTab: "Tukar", leaderboardTab: "Papan Peringkat", achievementsTab: "Pencapaian", claimRewardBtn: "Klaim Hadiah", comingSoon: "Segera hadir...", exchangeRateLabel: "1 PI = 1,000,000 Koin", enterPiAmount: "Masukkan jumlah PI", exchangeBtn: "Tukar", sellItemsLabel: "Jual Item", settingsLabel: "Pengaturan", musicVolumeLabel: "Volume Musik:", voiceVolumeLabel: "Volume Suara/SFX:", switchLangLabel: "Ganti Bahasa (EN/ID)" } };
+    langData = { en: { title: "Harvest Pi", startBtn: "Start Game", coinLabel: "Coins", waterLabel: "Water", needsWater: "Needs Water", planted: "Planted!", noSeeds: "No Seeds!", watered: "Watered!", notEnoughWater: "Not Enough Water!", readyToHarvest: "Ready to Harvest", growing: "Growing", harvested: "Harvested!", farmPriceLabel: "Farm Price", piPriceLabel: "PI Price", buyLabel: "Buy", noItems: "No items available", notEnoughCoins: "Not Enough Coins!", notEnoughPi: "Not Enough PI!", quantityLabel: "Quantity", sellPriceLabel: "Sell Price", sellLabel: "Sell", levelUp: "Level Up!", invalidAmount: "Invalid amount!", exchanged: "Exchanged!", waitLabel: "Wait", toClaimAgain: "to claim again!", achievementUnlocked: "Achievement Unlocked!", achievementHarvest: "Harvest Master", achievementHarvestDesc: "Harvest 10 crops", achievementCoins: "Coin Collector", achievementCoinsDesc: "Collect 1000 coins", farmTab: "Farm", shopTab: "Shop", upgradesTab: "Upgrades", inventoryTab: "Inventory", exchangeTab: "Exchange", leaderboardTab: "Leaderboard", achievementsTab: "Achievements", claimRewardBtn: "Claim Reward", comingSoon: "Coming soon...", exchangeRateLabel: "1 PI = 1,000,000 Coins", enterPiAmount: "Enter PI amount", exchangeBtn: "Exchange", sellItemsLabel: "Sell Items", settingsLabel: "Settings", musicVolumeLabel: "Music Volume:", voiceVolumeLabel: "Voice/SFX Volume:", switchLangLabel: "Switch Language (EN/ID)" }, id: { title: "Harvest Pi", startBtn: "Mulai Permainan", coinLabel: "Koin", waterLabel: "Air", needsWater: "Butuh Air", planted: "Ditanam!", noSeeds: "Tidak Ada Biji!", watered: "Disiram!", notEnoughWater: "Air Tidak Cukup!", readyToHarvest: "Siap Panen", growing: "Tumbuh", harvested: "Dipanen!", farmPriceLabel: "Harga Koin", piPriceLabel: "Harga PI", buyLabel: "Beli", noItems: "Tidak ada item tersedia", notEnoughCoins: "Koin Tidak Cukup!", notEnoughPi: "PI Tidak Cukup!", quantityLabel: "Jumlah", sellPriceLabel: "Harga Jual", sellLabel: "Jual", levelUp: "Naik Level!", invalidAmount: "Jumlah tidak valid!", exchanged: "Ditukar!", waitLabel: "Tunggu", toClaimAgain: "untuk klaim kembali!", achievementUnlocked: "Pencapaian Terbuka!", achievementHarvest: "Master Panen", achievementHarvestDesc: "Panen 10 tanaman", achievementCoins: "Pengumpul Koin", achievementCoinsDesc: "Kumpulkan 1000 koin", farmTab: "Ladang", shopTab: "Toko", upgradesTab: "Peningkatan", inventoryTab: "Inventaris", exchangeTab: "Tukar", leaderboardTab: "Papan Peringkat", achievementsTab: "Pencapaian", claimRewardBtn: "Klaim Hadiah", comingSoon: "Segera hadir...", exchangeRateLabel: "1 PI = 1,000,000 Koin", enterPiAmount: "Masukkan jumlah PI", exchangeBtn: "Tukar", sellItemsLabel: "Jual Item", settingsLabel: "Pengaturan", musicVolumeLabel: "Volume Musik:", voiceVolumeLabel: "Volume Suara/SFX:", switchLangLabel: "Ganti Bahasa (EN/ID)" } };
   }
 
   try {
@@ -251,6 +251,7 @@ function handlePlotClick(index) {
   if (!plot.planted) {
     const seedIndex = inventory.findIndex(item => item && typeof item === 'string' && item.includes('Seed'));
     if (seedIndex !== -1) {
+      console.log(`Before planting: inventory = ${JSON.stringify(inventory)}`); // Debug
       const seed = inventory[seedIndex];
       const vegId = seed.split(' ')[0].toLowerCase();
       const vegetable = vegetables.find(v => v.id === vegId) || vegetables[Math.floor(Math.random() * vegetables.length)];
@@ -284,13 +285,16 @@ function handlePlotClick(index) {
         setTimeout(() => {
           plantImg.classList.add('loaded');
         }, 50);
+
+        // Hapus benih dari inventory setelah animasi selesai
+        inventory.splice(seedIndex, 1);
+        console.log(`After planting: inventory = ${JSON.stringify(inventory)}`); // Debug
+        savePlayerData();
       }, 800);
 
       plotStatus.innerHTML = langData[currentLang].needsWater || 'Needs Water';
       countdownFill.style.width = '0%';
 
-      inventory.splice(seedIndex, 1);
-      savePlayerData();
       showNotification(langData[currentLang].planted);
       playBuyingSound();
     } else {
@@ -737,40 +741,9 @@ claimModalBtn.addEventListener('click', () => {
       showNotification('Failed to save claim data, but rewards added.');
     });
 });
-claimModalBtn.addEventListener('touchstart', () => {
-  farmCoins += 100;
-  water += 50;
-  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`); // Debug
-  localStorage.setItem('lastClaim', Date.now());
-  const playerRef = ref(database, `players/${userId}`);
-  set(playerRef, {
-    farmCoins,
-    pi,
-    water,
-    level,
-    xp,
-    inventory,
-    harvestCount,
-    lastClaim: Date.now(),
-    musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
-    voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
-  })
-    .then(() => {
-      console.log('Player data saved to Firebase after claim');
-      updateWallet();
-      showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-      playCoinSound();
-      rewardModal.style.display = 'none';
-    })
-    .catch(error => {
-      console.log('Error saving player data to Firebase:', error.message);
-      updateWallet(); // Tetep update UI meskipun Firebase error
-      showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-      playCoinSound();
-      rewardModal.style.display = 'none';
-      showNotification('Failed to save claim data, but rewards added.');
-    });
-});
+
+// Hapus event touchstart biar gak dobel
+// claimModalBtn.addEventListener('touchstart', () => { ... }); // Dihapus
 
 closeModal.addEventListener('click', () => {
   rewardModal.style.display = 'none';

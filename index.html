@@ -127,13 +127,13 @@
     import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
+      apiKey: "YOUR_API_KEY",
       authDomain: "harvest-pi.firebaseapp.com",
-      databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
+      databaseURL: "https://harvest-pi-default-rtdb.firebaseio.com",
       projectId: "harvest-pi",
-      storageBucket: "harvest-pi.firebasestorage.app",
-      messagingSenderId: "650006770674",
-      appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
+      storageBucket: "harvest-pi.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -152,7 +152,7 @@
   <!-- Fallback -->
   <script>
     window.addEventListener('error', (event) => {
-      alert('Error: ' + event.message);
+      alert('Main script failed to load: ' + event.message);
       const loadingScreen = document.getElementById('loading-screen');
       const startScreen = document.getElementById('start-screen');
       if (loadingScreen && startScreen) {

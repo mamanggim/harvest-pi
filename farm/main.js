@@ -67,6 +67,64 @@ function updateVolumes() {
   if (coinSound) coinSound.volume = voiceVolume / 100;
 }
 
+// Atur environment (sandbox untuk test)
+Pi.init({ version: "2.0", sandbox: true });
+
+// Fungsi autentikasi Pi
+async function authenticatePiUser() {
+  try {
+    const authResult = await Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
+    console.log('Pi user authenticated:', authResult);
+    return authResult;
+  } catch (error) {
+    console.error('Pi authentication failed:', error);
+    showNotification('Failed to connect to Pi Network');
+    return null;
+  }
+}
+
+// Callback untuk incomplete payments
+function onIncompletePaymentFound(payment) {
+  console.log('Incomplete payment found:', payment);
+  // Handle kalau ada transaksi gantung (nanti di Langkah 4)
+  return { paymentId: payment.identifier };
+}
+
+document.getElementById('deposit-pi-btn')?.addEventListener('click', async () => {
+  const authResult = await authenticatePiUser();
+  if (!authResult) return;
+
+  const paymentData = {
+    amount: parseFloat(document.getElementById('exchange-amount').value) || 0.001,
+    memo: "Deposit to Harvest Pi",
+    metadata: { userId, type: "deposit" }
+  };
+
+  Pi.createPayment(paymentData, {
+    onReadyForServerApproval: (paymentId) => {
+      console.log('Payment ready for approval:', paymentId);
+      // Kirim paymentId ke server lu (nanti di Langkah 4)
+      showNotification('Payment submitted, waiting for approval...');
+    },
+    onReadyForServerCompletion: (paymentId, txid) => {
+      console.log('Payment completed:', paymentId, txid);
+      // Update saldo Pi di Firebase
+      pi += paymentData.amount;
+      updateWallet();
+      showNotification('Deposit successful!');
+      playCoinSound();
+    },
+    onCancel: () => {
+      console.log('Payment cancelled');
+      showNotification('Deposit cancelled');
+    },
+    onError: (error) => {
+      console.error('Payment error:', error);
+      showNotification('Deposit failed');
+    }
+  });
+});
+
 // Load data from JSON files
 async function loadData() {
   try {

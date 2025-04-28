@@ -9,8 +9,8 @@
       "frames": 13,
       "yield": 1,
       "sellPrice": 385,
-      "baseImage": "./assets/img/plant/beet/beet_",
-      "shopImage": "./assets/img/plant/beet/beet_13.png",
+      "baseImage": "../assets/img/plant/beet/beet_",
+      "shopImage": "../assets/img/plant/beet/beet_13.png",
       "waterNeeded": 2
     },
     {
@@ -22,8 +22,8 @@
       "frames": 20,
       "yield": 1,
       "sellPrice": 850,
-      "baseImage": "./assets/img/plant/cabbage/cabbage_",
-      "shopImage": "./assets/img/plant/cabbage/cabbage_20.png",
+      "baseImage": "../assets/img/plant/cabbage/cabbage_",
+      "shopImage": "../assets/img/plant/cabbage/cabbage_20.png",
       "waterNeeded": 3
     },
     {
@@ -35,8 +35,8 @@
       "frames": 16,
       "yield": 1,
       "sellPrice": 350,
-      "baseImage": "./assets/img/plant/carrot/carrot_",
-      "shopImage": "./assets/img/plant/carrot/carrot_16.png",
+      "baseImage": "../assets/img/plant/carrot/carrot_",
+      "shopImage": "../assets/img/plant/carrot/carrot_16.png",
       "waterNeeded": 1
     },
     {
@@ -48,8 +48,8 @@
       "frames": 20,
       "yield": 1,
       "sellPrice": 915,
-      "baseImage": "./assets/img/plant/corn/corn_",
-      "shopImage": "./assets/img/plant/corn/corn_20.png",
+      "baseImage": "../assets/img/plant/corn/corn_",
+      "shopImage": "../assets/img/plant/corn/corn_20.png",
       "waterNeeded": 3
     },
     {
@@ -61,8 +61,8 @@
       "frames": 20,
       "yield": 1,
       "sellPrice": 625,
-      "baseImage": "./assets/img/plant/cucumber/cucumber_",
-      "shopImage": "./assets/img/plant/cucumber/cucumber_20.png",
+      "baseImage": "../assets/img/plant/cucumber/cucumber_",
+      "shopImage": "../assets/img/plant/cucumber/cucumber_20.png",
       "waterNeeded": 2
     },
     {
@@ -74,8 +74,8 @@
       "frames": 9,
       "yield": 1,
       "sellPrice": 455,
-      "baseImage": "./assets/img/plant/eggplant/eggplant_",
-      "shopImage": "./assets/img/plant/eggplant/eggplant_9.png",
+      "baseImage": "../assets/img/plant/eggplant/eggplant_",
+      "shopImage": "../assets/img/plant/eggplant/eggplant_9.png",
       "waterNeeded": 2
     },
     {
@@ -87,8 +87,8 @@
       "frames": 6,
       "yield": 1,
       "sellPrice": 210,
-      "baseImage": "./assets/img/plant/onion/onion_",
-      "shopImage": "./assets/img/plant/onion/onion_6.png",
+      "baseImage": "../assets/img/plant/onion/onion_",
+      "shopImage": "../assets/img/plant/onion/onion_6.png",
       "waterNeeded": 1
     },
     {
@@ -100,8 +100,8 @@
       "frames": 8,
       "yield": 1,
       "sellPrice": 280,
-      "baseImage": "./assets/img/plant/peas/peas_",
-      "shopImage": "./assets/img/plant/peas/peas_8.png",
+      "baseImage": "../assets/img/plant/peas/peas_",
+      "shopImage": "../assets/img/plant/peas/peas_8.png",
       "waterNeeded": 1
     },
     {
@@ -113,8 +113,8 @@
       "frames": 12,
       "yield": 1,
       "sellPrice": 490,
-      "baseImage": "./assets/img/plant/pepper/pepper_",
-      "shopImage": "./assets/img/plant/pepper/pepper_12.png",
+      "baseImage": "../assets/img/plant/pepper/pepper_",
+      "shopImage": "../assets/img/plant/pepper/pepper_12.png",
       "waterNeeded": 2
     },
     {
@@ -126,8 +126,8 @@
       "frames": 7,
       "yield": 1,
       "sellPrice": 365,
-      "baseImage": "./assets/img/plant/potato/potato_",
-      "shopImage": "./assets/img/plant/potato/potato_7.png",
+      "baseImage": "../assets/img/plant/potato/potato_",
+      "shopImage": "../assets/img/plant/potato/potato_7.png",
       "waterNeeded": 2
     },
     {
@@ -139,8 +139,8 @@
       "frames": 20,
       "yield": 1,
       "sellPrice": 975,
-      "baseImage": "./assets/img/plant/pumpkin/pumpkin_",
-      "shopImage": "./assets/img/plant/pumpkin/pumpkin_20.png",
+      "baseImage": "../assets/img/plant/pumpkin/pumpkin_",
+      "shopImage": "../assets/img/plant/pumpkin/pumpkin_20.png",
       "waterNeeded": 3
     },
     {
@@ -152,8 +152,8 @@
       "frames": 8,
       "yield": 1,
       "sellPrice": 230,
-      "baseImage": "./assets/img/plant/radish/radish_",
-      "shopImage": "./assets/img/plant/radish/radish_8.png",
+      "baseImage": "../assets/img/plant/radish/radish_",
+      "shopImage": "../assets/img/plant/radish/radish_8.png",
       "waterNeeded": 1
     },
     {
@@ -165,8 +165,8 @@
       "frames": 7,
       "yield": 1,
       "sellPrice": 260,
-      "baseImage": "./assets/img/plant/lettuce/lettuce_",
-      "shopImage": "./assets/img/plant/lettuce/lettuce_7.png",
+      "baseImage": "../assets/img/plant/lettuce/lettuce_",
+      "shopImage": "../assets/img/plant/lettuce/lettuce_7.png",
       "waterNeeded": 1
     },
     {
@@ -178,8 +178,8 @@
       "frames": 5,
       "yield": 1,
       "sellPrice": 175,
-      "baseImage": "./assets/img/plant/spinach/spinach_",
-      "shopImage": "./assets/img/plant/spinach/spinach_5.png",
+      "baseImage": "../assets/img/plant/spinach/spinach_",
+      "shopImage": "../assets/img/plant/spinach/spinach_5.png",
       "waterNeeded": 1
     },
     {
@@ -191,8 +191,8 @@
       "frames": 20,
       "yield": 1,
       "sellPrice": 625,
-      "baseImage": "./assets/img/plant/tomato/tomato_",
-      "shopImage": "./assets/img/plant/tomato/tomato_20.png",
+      "baseImage": "../assets/img/plant/tomato/tomato_",
+      "shopImage": "../assets/img/plant/tomato/tomato_20.png",
       "waterNeeded": 2
     },
     {
@@ -204,8 +204,8 @@
       "frames": 19,
       "yield": 1,
       "sellPrice": 1200,
-      "baseImage": "./assets/img/plant/watermelon/watermelon_",
-      "shopImage": "./assets/img/plant/watermelon/watermelon_19.png",
+      "baseImage": "../assets/img/plant/watermelon/watermelon_",
+      "shopImage": "../assets/img/plant/watermelon/watermelon_19.png",
       "waterNeeded": 4
     },
     {
@@ -217,8 +217,8 @@
       "frames": 7,
       "yield": 1,
       "sellPrice": 415,
-      "baseImage": "./assets/img/plant/wheat/wheat_",
-      "shopImage": "./assets/img/plant/wheat/wheat_7.png",
+      "baseImage": "../assets/img/plant/wheat/wheat_",
+      "shopImage": "../assets/img/plant/wheat/wheat_7.png",
       "waterNeeded": 2
     }
   ]

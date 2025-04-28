@@ -83,6 +83,21 @@ async function authenticatePiUser() {
   }
 }
 
+// Cek KYC
+async function checkKycStatus() {
+  const authResult = await authenticatePiUser();
+  return !!authResult; // True kalau autentikasi sukses
+}
+
+// Validasi Deposit
+document.getElementById('deposit-pi-btn')?.addEventListener('click', async () => {
+  if (!(await checkKycStatus())) {
+    showNotification('Please complete KYC in Pi Network');
+    return;
+  }
+  // Lanjut ke logic deposit
+});
+
 // Callback untuk incomplete payments
 function onIncompletePaymentFound(payment) {
   console.log('Incomplete payment found:', payment);

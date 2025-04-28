@@ -91,7 +91,7 @@ async function loadData() {
 // Load player data from Firebase
 async function loadPlayerData() {
   try {
-    const user Credential = await signInAnonymously(auth);
+    const userCredential = await signInAnonymously(auth); // Fix typo: user Credential -> userCredential
     userId = userCredential.user.uid;
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {

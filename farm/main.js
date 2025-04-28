@@ -15,6 +15,7 @@ let langData = {};
 let currentLang = 'en';
 let farmPlots = [];
 let harvestCount = 0;
+let achievements = { harvest: false, coins: false }; // Tambah untuk simpan status achievement
 let userId = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
@@ -106,20 +107,65 @@ function updateVolumes() {
 // Load data from JSON files
 async function loadData() {
   try {
-    const langRes = await fetch('/harvest-pi/data/lang.json'); // Ubah path ke /harvest-pi/data/
+    console.log('Fetching lang.json from /harvest-pi/data/lang.json...');
+    const langRes = await fetch('/harvest-pi/data/lang.json');
+    console.log('lang.json fetch response status:', langRes.status);
     if (!langRes.ok) throw new Error(`Failed to fetch lang.json: ${langRes.status}`);
     langData = await langRes.json();
+    console.log('lang.json loaded successfully');
   } catch (e) {
+    console.error('Error loading lang.json:', e.message);
     alert('Error loading lang.json: ' + e.message);
-    langData = { en: { title: "Harvest Pi", startBtn: "Start Game", coinLabel: "Coins", waterLabel: "Water", needsWater: "Needs Water", planted: "Planted!", noSeeds: "No Seeds!", watered: "Watered!", notEnoughWater: "Not Enough Water!", readyToHarvest: "Ready to Harvest", growing: "Growing", harvested: "Harvested!", farmPriceLabel: "Farm Price", piPriceLabel: "PI Price", buyLabel: "Buy", noItems: "No items available", notEnoughCoins: "Not Enough Coins!", notEnoughPi: "Not Enough PI!", quantityLabel: "Quantity", sellPriceLabel: "Sell Price", sellLabel: "Sell", levelUp: "Level Up!", invalidAmount: "Invalid amount!", exchanged: "Exchanged!", waitLabel: "Wait", toClaimAgain: "to claim again!", achievementUnlocked: "Achievement Unlocked!", achievementHarvest: "Harvest Master", achievementHarvestDesc: "Harvest 10 crops", achievementCoins: "Coin Collector", achievementCoinsDesc: "Collect 1000 coins", farmTab: "Farm", shopTab: "Shop", upgradesTab: "Upgrades", inventoryTab: "Inventory", exchangeTab: "Exchange", leaderboardTab: "Leaderboard", achievementsTab: "Achievements", claimRewardBtn: "Claim Reward", comingSoon: "Coming soon...", exchangeRateLabel: "1 PI = 1,000,000 Coins", enterPiAmount: "Enter PI amount", exchangeBtn: "Exchange", sellItemsLabel: "Sell Items", settingsLabel: "Settings", musicVolumeLabel: "Music Volume:", voiceVolumeLabel: "Voice/SFX Volume:", switchLangLabel: "Switch Language (EN/ID)" }, id: { title: "Harvest Pi", startBtn: "Mulai Permainan", coinLabel: "Koin", waterLabel: "Air", needsWater: "Butuh Air", planted: "Ditanam!", noSeeds: "Tidak Ada Biji!", watered: "Disiram!", notEnoughWater: "Air Tidak Cukup!", readyToHarvest: "Siap Panen", growing: "Tumbuh", harvested: "Dipanen!", farmPriceLabel: "Harga Koin", piPriceLabel: "Harga PI", buyLabel: "Beli", noItems: "Tidak ada item tersedia", notEnoughCoins: "Koin Tidak Cukup!", notEnoughPi: "PI Tidak Cukup!", quantityLabel: "Jumlah", sellPriceLabel: "Harga Jual", sellLabel: "Jual", levelUp: "Naik Level!", invalidAmount: "Jumlah tidak valid!", exchanged: "Ditukar!", waitLabel: "Tunggu", toClaimAgain: "untuk klaim lagi!", achievementUnlocked: "Pencapaian Terbuka!", achievementHarvest: "Master Panen", achievementHarvestDesc: "Panen 10 tanaman", achievementCoins: "Pengumpul Koin", achievementCoinsDesc: "Kumpulkan 1000 koin", farmTab: "Ladang", shopTab: "Toko", upgradesTab: "Peningkatan", inventoryTab: "Inventaris", exchangeTab: "Tukar", leaderboardTab: "Papan Peringkat", achievementsTab: "Pencapaian", claimRewardBtn: "Klaim Hadiah", comingSoon: "Segera hadir...", exchangeRateLabel: "1 PI = 1,000,000 Koin", enterPiAmount: "Masukkan jumlah PI", exchangeBtn: "Tukar", sellItemsLabel: "Jual Item", settingsLabel: "Pengaturan", musicVolumeLabel: "Volume Musik:", voiceVolumeLabel: "Volume Suara/SFX:", switchLangLabel: "Ganti Bahasa (EN/ID)" } };
+    langData = {
+      en: {
+        title: "Harvest Pi", startBtn: "Start Game", coinLabel: "Coins", waterLabel: "Water",
+        needsWater: "Needs Water", planted: "Planted!", noSeeds: "No Seeds!", watered: "Watered!",
+        notEnoughWater: "Net Enough Water!", readyToHarvest: "Ready to Harvest", growing: "Growing",
+        harvested: "Harvested!", farmPriceLabel: "Farm Price", piPriceLabel: "PI Price", buyLabel: "Buy",
+        noItems: "No items available", notEnoughCoins: "Not Enough Coins!", notEnoughPi: "Not Enough PI!",
+        quantityLabel: "Quantity", sellPriceLabel: "Sell Price", sellLabel: "Sell", levelUp: "Level Up!",
+        invalidAmount: "Invalid amount!", exchanged: "Exchanged!", waitLabel: "Wait",
+        toClaimAgain: "to claim again!", achievementUnlocked: "Achievement Unlocked!",
+        achievementHarvest: "Harvest Master", achievementHarvestDesc: "Harvest 10 crops",
+        achievementCoins: "Coin Collector", achievementCoinsDesc: "Collect 1000 coins",
+        farmTab: "Farm", shopTab: "Shop", upgradesTab: "Upgrades", inventoryTab: "Inventory",
+        exchangeTab: "Exchange", leaderboardTab: "Leaderboard", achievementsTab: "Achievements",
+        claimRewardBtn: "Claim Reward", comingSoon: "Coming soon...", exchangeRateLabel: "1 PI = 1,000,000 Coins",
+        enterPiAmount: "Enter PI amount", exchangeBtn: "Exchange", sellItemsLabel: "Sell Items",
+        settingsLabel: "Settings", musicVolumeLabel: "Music Volume:", voiceVolumeLabel: "Voice/SFX Volume:",
+        switchLangLabel: "Switch Language (EN/ID)"
+      },
+      id: {
+        title: "Harvest Pi", startBtn: "Mulai Permainan", coinLabel: "Koin", waterLabel: "Air",
+        needsWater: "Butuh Air", planted: "Ditanam!", noSeeds: "Tidak Ada Biji!", watered: "Disiram!",
+        notEnoughWater: "Air Tidak Cukup!", readyToHarvest: "Siap Panen", growing: "Tumbuh",
+        harvested: "Dipanen!", farmPriceLabel: "Harga Koin", piPriceLabel: "Harga PI", buyLabel: "Beli",
+        noItems: "Tidak ada item tersedia", notEnoughCoins: "Koin Tidak Cukup!", notEnoughPi: "PI Tidak Cukup!",
+        quantityLabel: "Jumlah", sellPriceLabel: "Harga Jual", sellLabel: "Jual", levelUp: "Naik Level!",
+        invalidAmount: "Jumlah tidak valid!", exchanged: "Ditukar!", waitLabel: "Tunggu",
+        toClaimAgain: "untuk klaim lagi!", achievementUnlocked: "Pencapaian Terbuka!",
+        achievementHarvest: "Master Panen", achievementHarvestDesc: "Panen 10 tanaman",
+        achievementCoins: "Pengumpul Koin", achievementCoinsDesc: "Kumpulkan 1000 koin",
+        farmTab: "Ladang", shopTab: "Toko", upgradesTab: "Peningkatan", inventoryTab: "Inventaris",
+        exchangeTab: "Tukar", leaderboardTab: "Papan Peringkat", achievementsTab: "Pencapaian",
+        claimRewardBtn: "Klaim Hadiah", comingSoon: "Segera hadir...", exchangeRateLabel: "1 PI = 1,000,000 Koin",
+        enterPiAmount: "Masukkan jumlah PI", exchangeBtn: "Tukar", sellItemsLabel: "Jual Item",
+        settingsLabel: "Pengaturan", musicVolumeLabel: "Volume Musik:", voiceVolumeLabel: "Volume Suara/SFX:",
+        switchLangLabel: "Ganti Bahasa (EN/ID)"
+      }
+    };
   }
 
   try {
-    const vegRes = await fetch('/harvest-pi/data/vegetables.json'); // Ubah path ke /harvest-pi/data/
+    console.log('Fetching vegetables.json from /harvest-pi/data/vegetables.json...');
+    const vegRes = await fetch('/harvest-pi/data/vegetables.json');
+    console.log('vegetables.json fetch response status:', vegRes.status);
     if (!vegRes.ok) throw new Error(`Failed to fetch vegetables.json: ${vegRes.status}`);
     const vegData = await vegRes.json();
     vegetables = vegData.vegetables || [];
+    console.log('vegetables.json loaded successfully');
   } catch (e) {
+    console.error('Error loading vegetables.json:', e.message);
     alert('Error loading vegetables.json: ' + e.message);
     vegetables = [];
   }
@@ -130,6 +176,7 @@ async function loadPlayerData() {
   try {
     const userCredential = await signInAnonymously(auth);
     userId = userCredential.user.uid;
+    console.log('Signed in to Firebase anonymously, userId:', userId);
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
       const data = snapshot.val();
@@ -141,6 +188,7 @@ async function loadPlayerData() {
         xp = data.xp || 0;
         inventory = data.inventory || [];
         harvestCount = data.harvestCount || 0;
+        achievements = data.achievements || { harvest: false, coins: false };
         localStorage.setItem('musicVolume', data.musicVolume || 50);
         localStorage.setItem('voiceVolume', data.voiceVolume || 50);
       } else {
@@ -152,6 +200,7 @@ async function loadPlayerData() {
           xp: 0,
           inventory: [],
           harvestCount: 0,
+          achievements: { harvest: false, coins: false },
           lastClaim: null,
           musicVolume: 50,
           voiceVolume: 50
@@ -164,6 +213,7 @@ async function loadPlayerData() {
         xp = 0;
         inventory = [];
         harvestCount = 0;
+        achievements = { harvest: false, coins: false };
       }
       updateWallet();
       updateVolumes();
@@ -175,6 +225,7 @@ async function loadPlayerData() {
       checkDailyReward();
     }, { onlyOnce: false });
   } catch (error) {
+    console.error('Error loading player data:', error.message);
     alert('Error loading player data: ' + error.message);
     showNotification('Failed to connect to Firebase');
   }
@@ -192,10 +243,12 @@ function savePlayerData() {
     xp,
     inventory,
     harvestCount,
+    achievements,
     lastClaim: localStorage.getItem('lastClaim'),
     musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
     voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
   }).catch(error => {
+    console.error('Error saving player data:', error.message);
     alert('Error saving player data: ' + error.message);
   });
 }
@@ -215,6 +268,7 @@ function updateWallet() {
 function initializePlots() {
   const farmArea = document.getElementById('farm-area');
   if (!farmArea) {
+    console.error('farm-area element not found');
     alert('farm-area element not found');
     return;
   }
@@ -249,11 +303,10 @@ function handlePlotClick(index) {
   const countdownFill = plotElement.querySelector('.countdown-fill');
 
   if (!plot.planted) {
-    const seedIndex = inventory.findIndex(item => item && typeof item === 'string' && item.includes('Seed'));
+    const seedIndex = inventory.findIndex(item => item && item.type === 'seed');
     if (seedIndex !== -1) {
       const seed = inventory[seedIndex];
-      const vegId = seed.split(' ')[0].toLowerCase();
-      const vegetable = vegetables.find(v => v.id === vegId) || vegetables[Math.floor(Math.random() * vegetables.length)];
+      const vegetable = seed.vegetable;
       plot.planted = true;
       plot.vegetable = vegetable;
       plot.progress = 0;
@@ -289,8 +342,12 @@ function handlePlotClick(index) {
       plotStatus.innerHTML = langData[currentLang].needsWater || 'Needs Water';
       countdownFill.style.width = '0%';
 
-      inventory.splice(seedIndex, 1);
+      inventory[seedIndex].quantity -= 1;
+      if (inventory[seedIndex].quantity <= 0) {
+        inventory.splice(seedIndex, 1);
+      }
       savePlayerData();
+      renderInventory();
       showNotification(langData[currentLang].planted);
       playBuyingSound();
     } else {
@@ -353,7 +410,7 @@ function handlePlotClick(index) {
               plotContent.appendChild(plantImg);
             }
             plantImg.classList.remove('loaded');
-            plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+            plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
             setTimeout(() => {
               plantImg.classList.add('loaded');
             }, 50);
@@ -380,9 +437,9 @@ function handlePlotClick(index) {
     }
   } else if (plot.currentFrame >= plot.vegetable.frames || plotElement.classList.contains('ready')) {
     const yieldAmount = plot.vegetable.yield;
-    inventory.push({ vegetable: plot.vegetable, quantity: yieldAmount });
+    inventory.push({ type: 'harvest', vegetable: plot.vegetable, quantity: yieldAmount });
     savePlayerData();
-  
+
     const flyImage = document.createElement('img');
     flyImage.src = plot.vegetable.shopImage;
     flyImage.classList.add('plant-fly');
@@ -425,6 +482,7 @@ function handlePlotClick(index) {
 function renderShop() {
   const shopContent = document.getElementById('shop-content');
   if (!shopContent) {
+    console.error('shop-content element not found');
     alert('shop-content element not found');
     return;
   }
@@ -518,7 +576,7 @@ function buyVegetable(id, currency) {
   if (currency === 'farm') {
     if (farmCoins >= veg.farmPrice) {
       farmCoins -= veg.farmPrice;
-      inventory.push(`${veg.name[currentLang]} ${langData[currentLang].seedLabel || 'Seed'}`);
+      inventory.push({ type: 'seed', vegetable: veg, quantity: 1 });
       savePlayerData();
       updateWallet();
       showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
@@ -529,7 +587,7 @@ function buyVegetable(id, currency) {
   } else {
     if (pi >= veg.piPrice) {
       pi -= veg.piPrice;
-      inventory.push(`${veg.name[currentLang]} ${langData[currentLang].seedLabel || 'Seed'}`);
+      inventory.push({ type: 'seed', vegetable: veg, quantity: 1 });
       savePlayerData();
       updateWallet();
       showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
@@ -538,6 +596,7 @@ function buyVegetable(id, currency) {
       showNotification(langData[currentLang].notEnoughPi);
     }
   }
+  renderInventory();
 }
 
 // Render inventory
@@ -545,23 +604,23 @@ function renderInventory() {
   const inventoryContent = document.getElementById('inventory-content');
   inventoryContent.innerHTML = '';
   inventory.forEach((item, index) => {
-    if (typeof item === 'string' && item.includes('Seed')) {
-      const vegName = item.split(' ')[0];
-      const veg = vegetables.find(v => v.name[currentLang] === vegName);
+    if (item && item.type === 'seed') {
+      const veg = item.vegetable;
       const invItem = document.createElement('div');
       invItem.classList.add('inventory-item');
       invItem.innerHTML = `
-        <img src="${veg ? veg.shopImage : 'assets/img/ui/seed.png'}" alt="${item}" class="shop-item-img">
-        <h3>${item}</h3>
-        <p>${langData[currentLang].quantityLabel || 'Quantity'}: 1</p>
+        <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img">
+        <h3>${veg.name[currentLang]} Seed</h3>
+        <p>${langData[currentLang].quantityLabel || 'Quantity'}: ${item.quantity}</p>
       `;
       inventoryContent.appendChild(invItem);
-    } else if (item && item.vegetable) {
+    } else if (item && item.type === 'harvest') {
+      const veg = item.vegetable;
       const invItem = document.createElement('div');
       invItem.classList.add('inventory-item');
       invItem.innerHTML = `
-        <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
-        <h3>${item.vegetable.name[currentLang]}</h3>
+        <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img">
+        <h3>${veg.name[currentLang]}</h3>
         <p>${langData[currentLang].quantityLabel || 'Quantity'}: ${item.quantity}</p>
       `;
       inventoryContent.appendChild(invItem);
@@ -574,7 +633,7 @@ function renderSellSection() {
   const sellContent = document.getElementById('sell-content');
   sellContent.innerHTML = '';
   inventory.forEach((item, index) => {
-    if (item && item.vegetable) {
+    if (item && item.type === 'harvest') {
       const sellItem = document.createElement('div');
       sellItem.classList.add('sell-item');
       const sellPrice = Math.floor(item.vegetable.farmPrice * 0.5);
@@ -604,7 +663,7 @@ function renderSellSection() {
 // Sell item
 function sellItem(index) {
   const item = inventory[index];
-  if (!item || !item.vegetable) return;
+  if (!item || item.type !== 'harvest') return;
 
   const sellPrice = Math.floor(item.vegetable.farmPrice * 0.5);
   farmCoins += sellPrice * item.quantity;
@@ -706,7 +765,7 @@ document.getElementById('claim-reward-btn').addEventListener('touchstart', () =>
 claimModalBtn.addEventListener('click', () => {
   farmCoins += 100;
   water += 50;
-  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`); // Debug
+  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
   localStorage.setItem('lastClaim', Date.now());
   set(ref(database, `players/${userId}/lastClaim`), Date.now())
     .then(() => {
@@ -717,8 +776,8 @@ claimModalBtn.addEventListener('click', () => {
       rewardModal.style.display = 'none';
     })
     .catch(error => {
-      console.log('Error saving lastClaim to Firebase:', error.message);
-      updateWallet(); // Tetep update UI meskipun Firebase error
+      console.error('Error saving lastClaim to Firebase:', error.message);
+      updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
@@ -728,7 +787,7 @@ claimModalBtn.addEventListener('click', () => {
 claimModalBtn.addEventListener('touchstart', () => {
   farmCoins += 100;
   water += 50;
-  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`); // Debug
+  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
   localStorage.setItem('lastClaim', Date.now());
   set(ref(database, `players/${userId}/lastClaim`), Date.now())
     .then(() => {
@@ -739,8 +798,8 @@ claimModalBtn.addEventListener('touchstart', () => {
       rewardModal.style.display = 'none';
     })
     .catch(error => {
-      console.log('Error saving lastClaim to Firebase:', error.message);
-      updateWallet(); // Tetep update UI meskipun Firebase error
+      console.error('Error saving lastClaim to Firebase:', error.message);
+      updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
@@ -779,25 +838,23 @@ function claimDailyReward() {
 
 // Check harvest achievement
 function checkHarvestAchievement() {
-  if (harvestCount >= 10) {
-    const achievement = document.querySelector('.achievement[data-id="harvest"]');
-    if (achievement && !achievement.classList.contains('completed')) {
-      achievement.classList.add('completed');
-      showNotification(langData[currentLang].achievementUnlocked);
-      playCoinSound();
-    }
+  if (harvestCount >= 10 && !achievements.harvest) {
+    achievements.harvest = true;
+    savePlayerData();
+    showNotification(langData[currentLang].achievementUnlocked);
+    playCoinSound();
+    renderAchievements();
   }
 }
 
 // Check coin achievement
 function checkCoinAchievement() {
-  if (farmCoins >= 1000) {
-    const achievement = document.querySelector('.achievement[data-id="coins"]');
-    if (achievement && !achievement.classList.contains('completed')) {
-      achievement.classList.add('completed');
-      showNotification(langData[currentLang].achievementUnlocked);
-      playCoinSound();
-    }
+  if (farmCoins >= 1000 && !achievements.coins) {
+    achievements.coins = true;
+    savePlayerData();
+    showNotification(langData[currentLang].achievementUnlocked);
+    playCoinSound();
+    renderAchievements();
   }
 }
 
@@ -805,11 +862,11 @@ function checkCoinAchievement() {
 function renderAchievements() {
   const achievementsContent = document.getElementById('achievements-content');
   achievementsContent.innerHTML = `
-    <div class="achievement ${harvestCount >= 10 ? 'completed' : ''}" data-id="harvest">
+    <div class="achievement ${achievements.harvest ? 'completed' : ''}" data-id="harvest">
       <h3>${langData[currentLang].achievementHarvest}</h3>
       <p>${langData[currentLang].achievementHarvestDesc}</p>
     </div>
-    <div class="achievement ${farmCoins >= 1000 ? 'completed' : ''}" data-id="coins">
+    <div class="achievement ${achievements.coins ? 'completed' : ''}" data-id="coins">
       <h3>${langData[currentLang].achievementCoins}</h3>
       <p>${langData[currentLang].achievementCoinsDesc}</p>
     </div>
@@ -875,10 +932,8 @@ function startGame() {
   alert('Start Game clicked!');
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
-  setTimeout(() => {
-    playBgMusic();
-    playBgVoice();
-  }, 100); // Delay kecil biar browser ngizinin audio
+  playBgMusic();
+  playBgVoice();
   switchTab('farm');
 }
 
@@ -966,6 +1021,7 @@ async function initializeGame() {
       }
     }, 1000);
   } catch (error) {
+    console.error('Error initializing game:', error.message);
     alert('Error initializing game: ' + error.message);
     setTimeout(() => {
       const loadingScreen = document.getElementById('loading-screen');
@@ -993,6 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startGame();
     });
   } else {
+    console.error('start-text element not found');
     alert('start-text element not found');
   }
 

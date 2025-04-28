@@ -1,3 +1,6 @@
+import { database } from '../firebase/firebase-config.js'; // Sesuaikan path
+console.log('Firebase connected:', database);
+
 // Global variables
 let farmCoins = 0;
 let pi = 0;

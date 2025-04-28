@@ -29,31 +29,66 @@ const buyingSound = document.getElementById('buying-sound');
 const coinSound = document.getElementById('coin-sound');
 
 function playBgMusic() {
-  if (bgMusic) bgMusic.play().catch(e => alert('BG Music failed: ' + e.message));
+  if (bgMusic) {
+    const playPromise = bgMusic.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.log('BG Music failed:', e.message));
+    }
+  }
 }
 
 function playBgVoice() {
-  if (bgVoice) bgVoice.play().catch(e => alert('BG Voice failed: ' + e.message));
+  if (bgVoice) {
+    const playPromise = bgVoice.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.log('BG Voice failed:', e.message));
+    }
+  }
 }
 
 function playHarvestSound() {
-  if (harvestSound) harvestSound.play().catch(e => alert('Harvest sound failed: ' + e.message));
+  if (harvestSound) {
+    const playPromise = harvestSound.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.log('Harvest sound failed:', e.message));
+    }
+  }
 }
 
 function playWateringSound() {
-  if (wateringSound) wateringSound.play().catch(e => alert('Watering sound failed: ' + e.message));
+  if (wateringSound) {
+    const playPromise = wateringSound.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.log('Watering sound failed:', e.message));
+    }
+  }
 }
 
 function playMenuSound() {
-  if (menuSound) menuSound.play().catch(e => alert('Menu sound failed: ' + e.message));
+  if (menuSound) {
+    const playPromise = menuSound.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.log('Menu sound failed:', e.message));
+    }
+  }
 }
 
 function playBuyingSound() {
-  if (buyingSound) buyingSound.play().catch(e => alert('Buying sound failed: ' + e.message));
+  if (buyingSound) {
+    const playPromise = buyingSound.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.log('Buying sound failed:', e.message));
+    }
+  }
 }
 
 function playCoinSound() {
-  if (coinSound) coinSound.play().catch(e => alert('Coin sound failed: ' + e.message));
+  if (coinSound) {
+    const playPromise = coinSound.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.log('Coin sound failed:', e.message));
+    }
+  }
 }
 
 function updateVolumes() {
@@ -71,9 +106,9 @@ function updateVolumes() {
 // Load data from JSON files
 async function loadData() {
   try {
-    // Path absolut karena GitHub Pages
     const langRes = await fetch('/data/lang.json');
-    langData = langRes.ok ? await langRes.json() : { en: {}, id: {} };
+    if (!langRes.ok) throw new Error(`Failed to fetch lang.json: ${langRes.status}`);
+    langData = await langRes.json();
   } catch (e) {
     alert('Error loading lang.json: ' + e.message);
     langData = { en: { title: "Harvest Pi", startBtn: "Start Game", coinLabel: "Coins", waterLabel: "Water", needsWater: "Needs Water", planted: "Planted!", noSeeds: "No Seeds!", watered: "Watered!", notEnoughWater: "Not Enough Water!", readyToHarvest: "Ready to Harvest", growing: "Growing", harvested: "Harvested!", farmPriceLabel: "Farm Price", piPriceLabel: "PI Price", buyLabel: "Buy", noItems: "No items available", notEnoughCoins: "Not Enough Coins!", notEnoughPi: "Not Enough PI!", quantityLabel: "Quantity", sellPriceLabel: "Sell Price", sellLabel: "Sell", levelUp: "Level Up!", invalidAmount: "Invalid amount!", exchanged: "Exchanged!", waitLabel: "Wait", toClaimAgain: "to claim again!", achievementUnlocked: "Achievement Unlocked!", achievementHarvest: "Harvest Master", achievementHarvestDesc: "Harvest 10 crops", achievementCoins: "Coin Collector", achievementCoinsDesc: "Collect 1000 coins", farmTab: "Farm", shopTab: "Shop", upgradesTab: "Upgrades", inventoryTab: "Inventory", exchangeTab: "Exchange", leaderboardTab: "Leaderboard", achievementsTab: "Achievements", claimRewardBtn: "Claim Reward", comingSoon: "Coming soon...", exchangeRateLabel: "1 PI = 1,000,000 Coins", enterPiAmount: "Enter PI amount", exchangeBtn: "Exchange", sellItemsLabel: "Sell Items", settingsLabel: "Settings", musicVolumeLabel: "Music Volume:", voiceVolumeLabel: "Voice/SFX Volume:", switchLangLabel: "Switch Language (EN/ID)" }, id: { title: "Harvest Pi", startBtn: "Mulai Permainan", coinLabel: "Koin", waterLabel: "Air", needsWater: "Butuh Air", planted: "Ditanam!", noSeeds: "Tidak Ada Biji!", watered: "Disiram!", notEnoughWater: "Air Tidak Cukup!", readyToHarvest: "Siap Panen", growing: "Tumbuh", harvested: "Dipanen!", farmPriceLabel: "Harga Koin", piPriceLabel: "Harga PI", buyLabel: "Beli", noItems: "Tidak ada item tersedia", notEnoughCoins: "Koin Tidak Cukup!", notEnoughPi: "PI Tidak Cukup!", quantityLabel: "Jumlah", sellPriceLabel: "Harga Jual", sellLabel: "Jual", levelUp: "Naik Level!", invalidAmount: "Jumlah tidak valid!", exchanged: "Ditukar!", waitLabel: "Tunggu", toClaimAgain: "untuk klaim lagi!", achievementUnlocked: "Pencapaian Terbuka!", achievementHarvest: "Master Panen", achievementHarvestDesc: "Panen 10 tanaman", achievementCoins: "Pengumpul Koin", achievementCoinsDesc: "Kumpulkan 1000 koin", farmTab: "Ladang", shopTab: "Toko", upgradesTab: "Peningkatan", inventoryTab: "Inventaris", exchangeTab: "Tukar", leaderboardTab: "Papan Peringkat", achievementsTab: "Pencapaian", claimRewardBtn: "Klaim Hadiah", comingSoon: "Segera hadir...", exchangeRateLabel: "1 PI = 1,000,000 Koin", enterPiAmount: "Masukkan jumlah PI", exchangeBtn: "Tukar", sellItemsLabel: "Jual Item", settingsLabel: "Pengaturan", musicVolumeLabel: "Volume Musik:", voiceVolumeLabel: "Volume Suara/SFX:", switchLangLabel: "Ganti Bahasa (EN/ID)" } };
@@ -81,7 +116,9 @@ async function loadData() {
 
   try {
     const vegRes = await fetch('/data/vegetables.json');
-    vegetables = vegRes.ok ? await vegRes.json().vegetables : [];
+    if (!vegRes.ok) throw new Error(`Failed to fetch vegetables.json: ${vegRes.status}`);
+    const vegData = await vegRes.json();
+    vegetables = vegData.vegetables || [];
   } catch (e) {
     alert('Error loading vegetables.json: ' + e.message);
     vegetables = [];
@@ -91,7 +128,7 @@ async function loadData() {
 // Load player data from Firebase
 async function loadPlayerData() {
   try {
-    const userCredential = await signInAnonymously(auth); // Fix typo: user Credential -> userCredential
+    const userCredential = await signInAnonymously(auth);
     userId = userCredential.user.uid;
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
@@ -814,8 +851,10 @@ function startGame() {
   alert('Start Game clicked!');
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
-  playBgMusic();
-  playBgVoice();
+  setTimeout(() => {
+    playBgMusic();
+    playBgVoice();
+  }, 100); // Delay kecil biar browser ngizinin audio
   switchTab('farm');
 }
 

@@ -1,4 +1,4 @@
-// Ambil database dan auth dari window.firebaseConfig (dari index.html)
+// Ambil database dan auth dari window.firebaseConfig (dari firebase-config.js)
 const { database, auth } = window.firebaseConfig;
 import { ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -106,7 +106,7 @@ function updateVolumes() {
 // Load data from JSON files
 async function loadData() {
   try {
-    const langRes = await fetch('/harvest-pi/data/lang.json'); // Ubah path ke /harvest-pi/data/
+    const langRes = await fetch('/harvest-pi/data/lang.json');
     if (!langRes.ok) throw new Error(`Failed to fetch lang.json: ${langRes.status}`);
     langData = await langRes.json();
   } catch (e) {
@@ -115,7 +115,7 @@ async function loadData() {
   }
 
   try {
-    const vegRes = await fetch('/harvest-pi/data/vegetables.json'); // Ubah path ke /harvest-pi/data/
+    const vegRes = await fetch('/harvest-pi/data/vegetables.json');
     if (!vegRes.ok) throw new Error(`Failed to fetch vegetables.json: ${vegRes.status}`);
     const vegData = await vegRes.json();
     vegetables = vegData.vegetables || [];
@@ -196,7 +196,7 @@ function savePlayerData() {
     musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
     voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
   }).catch(error => {
-    alert('Error saving player data: ' + error.message);
+    console.log('Error saving player data to Firebase:', error.message);
   });
 }
 
@@ -708,21 +708,33 @@ claimModalBtn.addEventListener('click', () => {
   water += 50;
   console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`); // Debug
   localStorage.setItem('lastClaim', Date.now());
-  set(ref(database, `players/${userId}/lastClaim`), Date.now())
+  const playerRef = ref(database, `players/${userId}`);
+  set(playerRef, {
+    farmCoins,
+    pi,
+    water,
+    level,
+    xp,
+    inventory,
+    harvestCount,
+    lastClaim: Date.now(),
+    musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
+    voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
+  })
     .then(() => {
-      console.log('lastClaim saved to Firebase');
+      console.log('Player data saved to Firebase after claim');
       updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
     })
     .catch(error => {
-      console.log('Error saving lastClaim to Firebase:', error.message);
+      console.log('Error saving player data to Firebase:', error.message);
       updateWallet(); // Tetep update UI meskipun Firebase error
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
-      showNotification('Failed to save claim time, but rewards added.');
+      showNotification('Failed to save claim data, but rewards added.');
     });
 });
 claimModalBtn.addEventListener('touchstart', () => {
@@ -730,21 +742,33 @@ claimModalBtn.addEventListener('touchstart', () => {
   water += 50;
   console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`); // Debug
   localStorage.setItem('lastClaim', Date.now());
-  set(ref(database, `players/${userId}/lastClaim`), Date.now())
+  const playerRef = ref(database, `players/${userId}`);
+  set(playerRef, {
+    farmCoins,
+    pi,
+    water,
+    level,
+    xp,
+    inventory,
+    harvestCount,
+    lastClaim: Date.now(),
+    musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
+    voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
+  })
     .then(() => {
-      console.log('lastClaim saved to Firebase');
+      console.log('Player data saved to Firebase after claim');
       updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
     })
     .catch(error => {
-      console.log('Error saving lastClaim to Firebase:', error.message);
+      console.log('Error saving player data to Firebase:', error.message);
       updateWallet(); // Tetep update UI meskipun Firebase error
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
-      showNotification('Failed to save claim time, but rewards added.');
+      showNotification('Failed to save claim data, but rewards added.');
     });
 });
 
@@ -1000,7 +1024,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('lang-toggle')?.addEventListener('touchstart', toggleLanguage);
   document.getElementById('settings-btn')?.addEventListener('click', openSettings);
   document.getElementById('settings-btn')?.addEventListener('touchstart', openSettings);
-  document.getElementById('claim-reward-btn')?.addEventListener('click', claimDailyReward);
+  document.getElementById('claim-reward-btn')?.addEventListener('claimDailyReward', claimDailyReward);
   document.getElementById('claim-reward-btn')?.addEventListener('touchstart', claimDailyReward);
   document.getElementById('game-lang-toggle')?.addEventListener('click', toggleLanguage);
   document.getElementById('game-lang-toggle')?.addEventListener('touchstart', toggleLanguage);
@@ -1011,6 +1035,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('exchange-btn')?.addEventListener('click', exchangePi);
   document.getElementById('exchange-btn')?.addEventListener('touchstart', exchangePi);
   document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
+
+  // Tambah event listener buat tombol Play Audio
+  document.getElementById('play-audio-btn')?.addEventListener('click', () => {
+    playBgMusic();
+    playBgVoice();
+    showNotification('Playing audio...');
+  });
+  document.getElementById('play-audio-btn')?.addEventListener('touchstart', () => {
+    playBgMusic();
+    playBgVoice();
+    showNotification('Playing audio...');
+  });
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {

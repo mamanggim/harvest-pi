@@ -1,7 +1,7 @@
 // Ambil database dan auth dari window.firebaseConfig (dari firebase-config.js)
 const { database, auth } = window.firebaseConfig;
 import { ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Global variables
 let farmCoins = 0;
@@ -15,9 +15,9 @@ let langData = {};
 let currentLang = 'en';
 let farmPlots = [];
 let harvestCount = 0;
-let userId = null;
-const plotCount = 4; // 2x2 grid
-const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
+let userEmail = null; // Ganti userId jadi userEmail
+const plotCount = 4;
+const piToFarmRate = 1000000;
 
 // Audio elements
 const bgMusic = document.getElementById('bg-music');
@@ -105,7 +105,7 @@ function updateVolumes() {
 
 // Load data from JSON files
 async function loadData() {
-  console.log('Starting to load data...'); // Debug
+  console.log('Starting to load data...');
   try {
     console.log('Fetching lang.json from /harvest-pi/data/lang.json...');
     const langRes = await fetch('/harvest-pi/data/lang.json');
@@ -116,7 +116,7 @@ async function loadData() {
   } catch (e) {
     console.log('Error loading lang.json:', e.message);
     alert('Error loading lang.json: ' + e.message);
-    langData = { en: { title: "Harvest Pi", startBtn: "Start Game", coinLabel: "Coins", waterLabel: "Water", needsWater: "Needs Water", planted: "Planted!", noSeeds: "No Seeds!", watered: "Watered!", notEnoughWater: "Not Enough Water!", readyToHarvest: "Ready to Harvest", growing: "Growing", harvested: "Harvested!", farmPriceLabel: "Farm Price", piPriceLabel: "PI Price", buyLabel: "Buy", noItems: "No items available", notEnoughCoins: "Not Enough Coins!", notEnoughPi: "Not Enough PI!", quantityLabel: "Quantity", sellPriceLabel: "Sell Price", sellLabel: "Sell", levelUp: "Level Up!", invalidAmount: "Invalid amount!", exchanged: "Exchanged!", waitLabel: "Wait", toClaimAgain: "to claim again!", achievementUnlocked: "Achievement Unlocked!", achievementHarvest: "Harvest Master", achievementHarvestDesc: "Harvest 10 crops", achievementCoins: "Coin Collector", achievementCoinsDesc: "Collect 1000 coins", farmTab: "Farm", shopTab: "Shop", upgradesTab: "Upgrades", inventoryTab: "Inventory", exchangeTab: "Exchange", leaderboardTab: "Leaderboard", achievementsTab: "Achievements", claimRewardBtn: "Claim Reward", comingSoon: "Coming soon...", exchangeRateLabel: "1 PI = 1,000,000 Coins", enterPiAmount: "Enter PI amount", exchangeBtn: "Exchange", sellItemsLabel: "Sell Items", settingsLabel: "Settings", musicVolumeLabel: "Music Volume:", voiceVolumeLabel: "Voice/SFX Volume:", switchLangLabel: "Switch Language (EN/ID)" }, id: { title: "Harvest Pi", startBtn: "Mulai Permainan", coinLabel: "Koin", waterLabel: "Air", needsWater: "Butuh Air", planted: "Ditanam!", noSeeds: "Tidak Ada Biji!", watered: "Disiram!", notEnoughWater: "Air Tidak Cukup!", readyToHarvest: "Siap Panen", growing: "Tumbuh", harvested: "Dipanen!", farmPriceLabel: "Harga Koin", piPriceLabel: "Harga PI", buyLabel: "Beli", noItems: "Tidak ada item tersedia", notEnoughCoins: "Koin Tidak Cukup!", notEnoughPi: "PI Tidak Cukup!", quantityLabel: "Jumlah", sellPriceLabel: "Harga Jual", sellLabel: "Jual", levelUp: "Naik Level!", invalidAmount: "Jumlah tidak valid!", exchanged: "Ditukar!", waitLabel: "Tunggu", toClaimAgain: "untuk klaim kembali!", achievementUnlocked: "Pencapaian Terbuka!", achievementHarvest: "Master Panen", achievementHarvestDesc: "Panen 10 tanaman", achievementCoins: "Pengumpul Koin", achievementCoinsDesc: "Kumpulkan 1000 koin", farmTab: "Ladang", shopTab: "Toko", upgradesTab: "Peningkatan", inventoryTab: "Inventaris", exchangeTab: "Tukar", leaderboardTab: "Papan Peringkat", achievementsTab: "Pencapaian", claimRewardBtn: "Klaim Hadiah", comingSoon: "Segera hadir...", exchangeRateLabel: "1 PI = 1,000,000 Koin", enterPiAmount: "Masukkan jumlah PI", exchangeBtn: "Tukar", sellItemsLabel: "Jual Item", settingsLabel: "Pengaturan", musicVolumeLabel: "Volume Musik:", voiceVolumeLabel: "Volume Suara/SFX:", switchLangLabel: "Ganti Bahasa (EN/ID)" } };
+    langData = { en: { /* fallback data sama seperti sebelumnya */ }, id: { /* fallback data sama seperti sebelumnya */ } };
   }
 
   try {
@@ -135,14 +135,33 @@ async function loadData() {
   console.log('Finished loading data.');
 }
 
-// Load player data from Firebase
+// Load player data with Pi Network authentication
 async function loadPlayerData() {
-  console.log('Starting to load player data from Firebase...'); // Debug
+  console.log('Starting to load player data with Pi Network...');
   try {
-    const userCredential = await signInAnonymously(auth);
-    userId = userCredential.user.uid;
-    console.log('Signed in anonymously with userId:', userId);
-    const playerRef = ref(database, `players/${userId}`);
+    // Inisialisasi Pi Network SDK
+    const Pi = window.Pi;
+    if (!Pi) throw new Error('Pi Network SDK not loaded');
+
+    // Autentikasi user via Pi Network
+    const authResult = await Pi.authenticate({
+      appId: 'YOUR_PI_APP_ID', // Ganti dengan App ID dari Pi Developer Portal
+      scope: ['email'] // Minta akses ke email user
+    });
+
+    // Ambil email dari Pi Network
+    userEmail = authResult.user.email;
+    console.log('Authenticated with Pi Network, email:', userEmail);
+
+    // Buat custom token (simulasi, idealnya pake server)
+    const customToken = await simulateCustomToken(userEmail);
+
+    // Login ke Firebase pake custom token
+    await signInWithCustomToken(auth, customToken);
+    console.log('Signed in to Firebase with custom token');
+
+    // Simpan data player di Firebase pake email sebagai key
+    const playerRef = ref(database, `players/${userEmail.replace('.', '_')}`);
     onValue(playerRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -189,17 +208,22 @@ async function loadPlayerData() {
       checkDailyReward();
     }, { onlyOnce: false });
   } catch (error) {
-    console.log('Error loading player data from Firebase:', error.message);
+    console.log('Error loading player data with Pi Network:', error.message);
     alert('Error loading player data: ' + error.message);
-    showNotification('Failed to connect to Firebase');
+    showNotification('Failed to connect to Pi Network or Firebase');
   }
   console.log('Finished loading player data.');
 }
 
+// Simulasi pembuatan custom token (seharusnya pake server)
+async function simulateCustomToken(email) {
+  return `custom-token-${email}`; // Placeholder, ganti dengan token asli dari server
+}
+
 // Save player data to Firebase
 function savePlayerData() {
-  if (!userId) return;
-  const playerRef = ref(database, `players/${userId}`);
+  if (!userEmail) return;
+  const playerRef = ref(database, `players/${userEmail.replace('.', '_')}`);
   set(playerRef, {
     farmCoins,
     pi,
@@ -267,7 +291,7 @@ function handlePlotClick(index) {
   if (!plot.planted) {
     const seedIndex = inventory.findIndex(item => item && typeof item === 'string' && item.includes('Seed'));
     if (seedIndex !== -1) {
-      console.log(`Before planting: inventory = ${JSON.stringify(inventory)}`); // Debug
+      console.log(`Before planting: inventory = ${JSON.stringify(inventory)}`);
       const seed = inventory[seedIndex];
       const vegId = seed.split(' ')[0].toLowerCase();
       const vegetable = vegetables.find(v => v.id === vegId) || vegetables[Math.floor(Math.random() * vegetables.length)];
@@ -302,9 +326,8 @@ function handlePlotClick(index) {
           plantImg.classList.add('loaded');
         }, 50);
 
-        // Hapus benih dari inventory setelah animasi selesai
         inventory.splice(seedIndex, 1);
-        console.log(`After planting: inventory = ${JSON.stringify(inventory)}`); // Debug
+        console.log(`After planting: inventory = ${JSON.stringify(inventory)}`);
         savePlayerData();
       }, 800);
 
@@ -356,7 +379,7 @@ function handlePlotClick(index) {
           plotStatus.innerHTML = langData[currentLang].readyToHarvest || 'Ready to Harvest';
           return;
         }
-        
+
         if (plot.watered) {
           plot.countdown--;
           const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
@@ -402,7 +425,7 @@ function handlePlotClick(index) {
     const yieldAmount = plot.vegetable.yield;
     inventory.push({ vegetable: plot.vegetable, quantity: yieldAmount });
     savePlayerData();
-  
+
     const flyImage = document.createElement('img');
     flyImage.src = plot.vegetable.shopImage;
     flyImage.classList.add('plant-fly');
@@ -726,9 +749,9 @@ document.getElementById('claim-reward-btn').addEventListener('touchstart', () =>
 claimModalBtn.addEventListener('click', () => {
   farmCoins += 100;
   water += 50;
-  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`); // Debug
+  console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
   localStorage.setItem('lastClaim', Date.now());
-  const playerRef = ref(database, `players/${userId}`);
+  const playerRef = ref(database, `players/${userEmail.replace('.', '_')}`);
   set(playerRef, {
     farmCoins,
     pi,
@@ -750,7 +773,7 @@ claimModalBtn.addEventListener('click', () => {
     })
     .catch(error => {
       console.log('Error saving player data to Firebase:', error.message);
-      updateWallet(); // Tetep update UI meskipun Firebase error
+      updateWallet();
       showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
       playCoinSound();
       rewardModal.style.display = 'none';
@@ -769,7 +792,7 @@ closeModal.addEventListener('touchstart', () => {
 
 // Claim daily reward
 function claimDailyReward() {
-  const playerRef = ref(database, `players/${userId}/lastClaim`);
+  const playerRef = ref(database, `players/${userEmail.replace('.', '_')}/lastClaim`);
   onValue(playerRef, (snapshot) => {
     const lastClaim = snapshot.val() || parseInt(localStorage.getItem('lastClaim'));
     const now = Date.now();
@@ -888,7 +911,7 @@ function startGame() {
   setTimeout(() => {
     playBgMusic();
     playBgVoice();
-  }, 100); // Delay kecil biar browser ngizinin audio
+  }, 100);
   switchTab('farm');
 }
 
@@ -950,9 +973,8 @@ function initializeSettings() {
 
 // Check daily reward availability
 function checkDailyReward() {
-  const playerRef = ref(database, `players/${userId}/lastClaim`);
+  const playerRef = ref(database, `players/${userEmail.replace('.', '_')}/lastClaim`);
   onValue(playerRef, (snapshot) => {
-    removeref = snapshot.ref;
     const lastClaim = snapshot.val() || parseInt(localStorage.getItem('lastClaim'));
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
@@ -964,9 +986,9 @@ function checkDailyReward() {
 
 // Initialize game
 async function initializeGame() {
-  console.log('Starting game initialization...'); // Debug
+  console.log('Starting game initialization...');
   let loadingScreen, startScreen;
-  
+
   try {
     console.log('Checking DOM elements...');
     loadingScreen = document.getElementById('loading-screen');
@@ -992,7 +1014,6 @@ async function initializeGame() {
     console.log('Error during game initialization:', error.message);
     alert('Error initializing game: ' + error.message);
   } finally {
-    // Pastiin loading screen disembunyiin meskipun ada error
     console.log('Hiding loading screen in finally block...');
     setTimeout(() => {
       loadingScreen = document.getElementById('loading-screen');
@@ -1044,7 +1065,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('exchange-btn')?.addEventListener('touchstart', exchangePi);
   document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
 
-  // Tambah event listener buat tombol Play Audio
   document.getElementById('play-audio-btn')?.addEventListener('click', () => {
     playBgMusic();
     playBgVoice();

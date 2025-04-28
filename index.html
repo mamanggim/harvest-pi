@@ -2,10 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title id="title">Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="farm/style.css?v=40">
+  <style>
+    #start-text {
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      padding: 15px;
+      font-size: 18px;
+      user-select: none;
+    }
+    #start-text:active {
+      transform: scale(0.95);
+    }
+  </style>
 </head>
 <body>
   <div id="loading-screen">
@@ -114,20 +127,19 @@
     import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
+      apiKey: "YOUR_API_KEY",
       authDomain: "harvest-pi.firebaseapp.com",
-      databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
+      databaseURL: "https://harvest-pi-default-rtdb.firebaseio.com",
       projectId: "harvest-pi",
-      storageBucket: "harvest-pi.firebasestorage.app",
-      messagingSenderId: "650006770674",
-      appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
+      storageBucket: "harvest-pi.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth(app);
 
-    // Export ke window biar bisa diakses main.js
     window.firebaseConfig = { database, auth };
   </script>
 
@@ -137,10 +149,10 @@
   <!-- Main Script -->
   <script type="module" src="farm/main.js?v=40"></script>
 
-  <!-- Fallback kalau main.js gagal -->
+  <!-- Fallback -->
   <script>
     window.addEventListener('error', (event) => {
-      console.error('Script error:', event.message, event.filename);
+      alert('Error: ' + event.message);
       const loadingScreen = document.getElementById('loading-screen');
       const startScreen = document.getElementById('start-screen');
       if (loadingScreen && startScreen) {

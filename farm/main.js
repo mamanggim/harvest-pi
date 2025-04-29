@@ -25,8 +25,9 @@ let isAudioPlaying = false; // Flag to track audio state
 // Audio elements
 const bgMusic = document.getElementById('bg-music');
 const bgVoice = document.getElementById('bg-voice');
-const harvestSound = document.getElementById('harvest-sound');
+const harvestingSound = document.getElementById('harvesting-sound');
 const wateringSound = document.getElementById('watering-sound');
+const plantingSound = document.getElementById('planting-sound');
 const menuSound = document.getElementById('menu-sound');
 const buyingSound = document.getElementById('buying-sound');
 const coinSound = document.getElementById('coin-sound');
@@ -75,9 +76,9 @@ function playBgVoice() {
     }
 }
 
-function playHarvestSound() {
-    if (harvestSound) {
-        const playPromise = harvestSound.play();
+function playHarvestingSound() {
+    if (harvestingSound) {
+        const playPromise = harvestingSound.play();
         if (playPromise !== undefined) {
             playPromise.catch(e => console.log('Harvest sound failed:', e.message));
         }
@@ -89,6 +90,15 @@ function playWateringSound() {
         const playPromise = wateringSound.play();
         if (playPromise !== undefined) {
             playPromise.catch(e => console.log('Watering sound failed:', e.message));
+        }
+    }
+}
+
+function playPlantingSound() {
+    if (plantingSound) {
+        const playPromise = plantingSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Planting sound failed:', e.message));
         }
     }
 }
@@ -125,8 +135,9 @@ function updateVolumes() {
     const voiceVolume = localStorage.getItem('voiceVolume') || 50;
     if (bgMusic) bgMusic.volume = musicVolume / 100;
     if (bgVoice) bgVoice.volume = voiceVolume / 100;
-    if (harvestSound) harvestSound.volume = voiceVolume / 100;
+    if (harvestingSound) harvestingSound.volume = voiceVolume / 100;
     if (wateringSound) wateringSound.volume = voiceVolume / 100;
+    if (plantingSound) plantingSound.volume = voiceVolume / 100;
     if (menuSound) menuSound.volume = voiceVolume / 100;
     if (buyingSound) buyingSound.volume = voiceVolume / 100;
     if (coinSound) coinSound.volume = voiceVolume / 100;
@@ -343,7 +354,7 @@ function handlePlotClick(index) {
             savePlayerData();
             renderInventory();
             showNotification(langData[currentLang]?.planted || 'Planted!');
-            playHarvestSound();
+            playPlantingSound();
             return;
         } else {
             showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
@@ -468,7 +479,7 @@ function handlePlotClick(index) {
         savePlayerData();
         checkHarvestAchievement();
         showNotification(langData[currentLang]?.harvested || 'Harvested!');
-        playHarvestSound();
+        playHarvestingSound();
         renderInventory();
         renderSellSection();
     }

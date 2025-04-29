@@ -374,6 +374,7 @@ function handlePlotClick(index) {
             updateWallet();
             showNotification(langData[currentLang]?.watered || 'Watered!');
             playWateringSound();
+            return;
 
             const countdownInterval = setInterval(() => {
                 if (!plot.planted) {

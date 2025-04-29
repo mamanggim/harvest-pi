@@ -132,101 +132,26 @@ function updateVolumes() {
     if (coinSound) coinSound.volume = voiceVolume / 100;
 }
 
-// Load data from JSON files with fallback
+// START loadData fix
 async function loadData() {
     try {
-        console.log('Fetching lang.json from /data/lang.json...');
-        // Ubah path jadi relatif dari root domain
         const langRes = await fetch('/data/lang.json');
-        console.log('lang.json fetch response status:', langRes.status);
-        if (!langRes.ok) throw new Error(`Failed to fetch lang.json: ${langRes.status}`);
+        if (!langRes.ok) throw new Error('lang.json fetch failed');
         langData = await langRes.json();
-        console.log('lang.json loaded successfully');
-    } catch (e) {
-        console.error('Error loading lang.json:', e.message);
-        showNotification('Error loading lang.json: ' + e.message);
-        // Fallback data
-        langData = {
-            en: {
-                title: "Harvest Pi", startBtn: "Start Game", coinLabel: "Coins", waterLabel: "Water",
-                needsWater: "Needs Water", planted: "Planted!", noSeeds: "No Seeds!", watered: "Watered!",
-                notEnoughWater: "Not Enough Water!", readyToHarvest: "Ready to Harvest", growing: "Growing",
-                harvested: "Harvested!", farmPriceLabel: "Farm Price", piPriceLabel: "PI Price", buyLabel: "Buy",
-                noItems: "No items available", notEnoughCoins: "Not Enough Coins!", notEnoughPi: "Not Enough PI!",
-                quantityLabel: "Quantity", sellPriceLabel: "Sell Price", sellLabel: "Sell", levelUp: "Level Up!",
-                invalidAmount: "Invalid amount!", exchanged: "Exchanged!", waitLabel: "Wait",
-                toClaimAgain: "to claim again!", achievementUnlocked: "Achievement Unlocked!",
-                achievementHarvest: "Harvest Master", achievementHarvestDesc: "Harvest 10 crops",
-                achievementCoins: "Coin Collector", achievementCoinsDesc: "Collect 1000 coins",
-                farmTab: "Farm", shopTab: "Shop", upgradesTab: "Upgrades", inventoryTab: "Inventory",
-                exchangeTab: "Exchange", leaderboardTab: "Leaderboard", achievementsTab: "Achievements",
-                claimRewardBtn: "Claim Reward", comingSoon: "Coming soon...", exchangeRateLabel: "1 PI = 1,000,000 Coins",
-                enterPiAmount: "Enter PI amount", exchangeBtn: "Exchange", sellItemsLabel: "Sell Items",
-                settingsLabel: "Settings", musicVolumeLabel: "Music Volume:", voiceVolumeLabel: "Voice/SFX Volume:",
-                switchLangLabel: "Switch Language (EN/ID)"
-            },
-            id: {
-                title: "Harvest Pi", startBtn: "Mulai Permainan", coinLabel: "Koin", waterLabel: "Air",
-                needsWater: "Butuh Air", planted: "Ditanam!", noSeeds: "Tidak Ada Biji!", watered: "Disiram!",
-                notEnoughWater: "Air Tidak Cukup!", readyToHarvest: "Siap Panen", growing: "Tumbuh",
-                harvested: "Dipanen!", farmPriceLabel: "Harga Koin", piPriceLabel: "Harga PI", buyLabel: "Beli",
-                noItems: "Tidak ada item tersedia", notEnoughCoins: "Koin Tidak Cukup!", notEnoughPi: "PI Tidak Cukup!",
-                quantityLabel: "Jumlah", sellPriceLabel: "Harga Jual", sellLabel: "Jual", levelUp: "Naik Level!",
-                invalidAmount: "Jumlah tidak valid!", exchanged: "Ditukar!", waitLabel: "Tunggu",
-                toClaimAgain: "untuk klaim lagi!", achievementUnlocked: "Pencapaian Terbuka!",
-                achievementHarvest: "Master Panen", achievementHarvestDesc: "Panen 10 tanaman",
-                achievementCoins: "Pengumpul Koin", achievementCoinsDesc: "Kumpulkan 1000 koin",
-                farmTab: "Ladang", shopTab: "Toko", upgradesTab: "Peningkatan", inventoryTab: "Inventaris",
-                exchangeTab: "Tukar", leaderboardTab: "Papan Peringkat", achievementsTab: "Pencapaian",
-                claimRewardBtn: "Klaim Hadiah", comingSoon: "Segera hadir...", exchangeRateLabel: "1 PI = 1,000,000 Koin",
-                enterPiAmount: "Masukkan jumlah PI", exchangeBtn: "Tukar", sellItemsLabel: "Jual Item",
-                settingsLabel: "Pengaturan", musicVolumeLabel: "Volume Musik:", voiceVolumeLabel: "Volume Suara/SFX:",
-                switchLangLabel: "Ganti Bahasa (EN/ID)"
-            }
-        };
-    }
 
-    try {
-        console.log('Fetching vegetables.json from /data/vegetables.json...');
-        // Ubah path jadi relatif dari root domain
         const vegRes = await fetch('/data/vegetables.json');
-        console.log('vegetables.json fetch response status:', vegRes.status);
-        if (!vegRes.ok) throw new Error(`Failed to fetch vegetables.json: ${vegRes.status}`);
+        if (!vegRes.ok) throw new Error('vegetables.json fetch failed');
         const vegData = await vegRes.json();
-        vegetables = vegData.vegetables || [];
-        console.log('vegetables.json loaded successfully');
+
+        if (!Array.isArray(vegData.vegetables)) throw new Error('Invalid vegetable data format');
+        vegetables = vegData.vegetables;
+
     } catch (e) {
-        console.error('Error loading vegetables.json:', e.message);
-        showNotification('Error loading vegetables.json: ' + e.message);
-        // Fallback data
-        vegetables = [
-            {
-                id: "carrot",
-                name: { en: "Carrot", id: "Wortel" },
-                shopImage: "assets/img/plant/carrot/carrot_seed.png",
-                baseImage: "assets/img/plant/carrot/carrot_",
-                frames: 3,
-                growthTime: 60, // seconds
-                waterNeeded: 1,
-                yield: 2,
-                farmPrice: 50,
-                piPrice: 0.00005
-            },
-            {
-                id: "cabbage",
-                name: { en: "Cabbage", id: "Kol" },
-                shopImage: "assets/img/plant/cabbage/cabbage_seed.png",
-                baseImage: "assets/img/plant/cabbage/cabbage_",
-                frames: 3,
-                growthTime: 90, // seconds
-                waterNeeded: 2,
-                yield: 3,
-                farmPrice: 75,
-                piPrice: 0.00007
-            }
-        ];
+        console.error('loadData error:', e.message);
+        showNotification('Data gagal dimuat: ' + e.message);
     }
 }
+// END loadData fix
 
 // Load player data from Firebase
 async function loadPlayerData() {
@@ -698,48 +623,32 @@ function renderInventory() {
     });
 }
 
-// Render sell section
+// START renderSellSection fix
 function renderSellSection() {
     const sellContent = document.getElementById('sell-content');
     sellContent.innerHTML = '';
+
     inventory.forEach((item, index) => {
         if (item && item.type === 'harvest') {
             const sellItem = document.createElement('div');
             sellItem.classList.add('sell-item');
-            function showTransactionAnimation(text, isGain, targetElement) {
-  if (!targetElement) return; // Prevent error if element not found
 
-  const rect = targetElement.getBoundingClientRect();
-  const anim = document.createElement('div');
-  anim.classList.add('transaction-animation');
-  anim.textContent = text;
-  anim.style.position = 'absolute';
-  anim.style.left = `${rect.left + window.scrollX + rect.width / 2}px`;
-  anim.style.top = `${rect.top + window.scrollY}px`;
-  anim.style.color = isGain ? 'green' : 'red';
-  document.body.appendChild(anim);
-
-  setTimeout(() => {
-    anim.remove();
-  }, 1000);
-}
             const sellPrice = item.vegetable.sellPrice;
-const isSellable = typeof sellPrice === 'number';
+            const isSellable = typeof sellPrice === 'number';
 
-sellItem.innerHTML = `
-  <img src="${item.vegetable.shopImage}" ...>
-  <h3>${item.vegetable.name[currentLang]}</h3>
-  <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-  <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${isSellable ? sellPrice : '???'}</p>
-  ${isSellable ? `<button class="sell-btn" data-index="${index}">Sell</button>` : '<span style="color:red;">Cannot sell</span>'}
-`;
+            if (!isSellable) {
+                console.warn(`Missing sellPrice for ${item.vegetable.id}, skipping.`);
+                return;
+            }
+
             sellItem.innerHTML = `
-                <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+                <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
                 <h3>${item.vegetable.name[currentLang]}</h3>
-                <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-                <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${sellPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
-                <button class="sell-btn" data-index="${index}">${langData[currentLang]?.sellLabel || 'Sell'}</button>
+                <p>${langData[currentLang]?.quantityLabel}: ${item.quantity}</p>
+                <p>${langData[currentLang]?.sellPriceLabel}: ${sellPrice} ${langData[currentLang]?.coinLabel}</p>
+                <button class="sell-btn" data-index="${index}">${langData[currentLang]?.sellLabel}</button>
             `;
+
             sellContent.appendChild(sellItem);
         }
     });
@@ -755,13 +664,19 @@ sellItem.innerHTML = `
         });
     });
 }
+// END renderSellSection fix
 
-// Sell item
+// START sellItem fix
 function sellItem(index) {
     const item = inventory[index];
     if (!item || item.type !== 'harvest') return;
 
-    const sellPrice = Math.floor(item.vegetable.farmPrice * 0.5);
+    const sellPrice = item.vegetable.sellPrice;
+    if (typeof sellPrice !== 'number') {
+        showNotification('Cannot sell: Missing sellPrice data.');
+        return;
+    }
+
     farmCoins += sellPrice * item.quantity;
     xp += 10;
     checkLevelUp();
@@ -770,10 +685,16 @@ function sellItem(index) {
     updateWallet();
     renderInventory();
     renderSellSection();
-    showTransactionAnimation(`+${sellPrice * item.quantity}`, true, document.querySelector(`.sell-btn[data-index="${index}"]`));
+
+    const btnElement = document.querySelector(`.sell-btn[data-index="${index}"]`);
+    if (btnElement) {
+        showTransactionAnimation(`+${sellPrice * item.quantity}`, true, btnElement);
+    }
+    
     playCoinSound();
     checkCoinAchievement();
 }
+// END sellItem fix
 
 // Check level up
 function checkLevelUp() {

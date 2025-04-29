@@ -358,59 +358,60 @@ function handlePlotClick(index) {
     const countdownFill = plotElement.querySelector('.countdown-fill');
 
     if (!plot.planted) {
-    const seedIndex = inventory.findIndex(item => item && item.type === 'seed' && item.quantity > 0);
-    if (seedIndex !== -1) {
-      const seed = inventory[seedIndex];
-      const vegetable = seed.vegetable;
-      plot.planted = true;
-      plot.vegetable = vegetable;
-      plot.progress = 0;
-      plot.watered = false;
-      plot.currentFrame = 1;
-      plot.countdown = vegetable.growthTime;
-      plot.totalCountdown = vegetable.growthTime;
+        const seedIndex = inventory.findIndex(item => item && item.type === 'seed' && item.quantity > 0);
+        if (seedIndex !== -1) {
+            const seed = inventory[seedIndex];
+            const vegetable = seed.vegetable;
 
-      const flyImage = document.createElement('img');
-      flyImage.src = vegetable.shopImage;
-      flyImage.classList.add('plant-fly');
-      flyImage.style.width = '60px';
-      plotContent.appendChild(flyImage);
+            plot.planted = true;
+            plot.vegetable = vegetable;
+            plot.progress = 0;
+            plot.watered = false;
+            plot.currentFrame = 1;
+            plot.countdown = vegetable.growthTime;
+            plot.totalCountdown = vegetable.growthTime;
 
-      const amountText = document.createElement('div');
-      amountText.textContent = '-1';
-      amountText.classList.add('amount-text', 'negative');
-      plotContent.appendChild(amountText);
+            const flyImage = document.createElement('img');
+            flyImage.src = vegetable.shopImage;
+            flyImage.classList.add('plant-fly');
+            flyImage.style.width = '60px';
+            plotContent.appendChild(flyImage);
 
-      setTimeout(() => {
-        flyImage.remove();
-        amountText.remove();
-        plotContent.innerHTML = '';
-        const plantImg = document.createElement('img');
-        plantImg.classList.add('plant-img');
-        plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
-        plotContent.appendChild(plantImg);
-        setTimeout(() => {
-          plantImg.classList.add('loaded');
-          console.log('Plant image added - frame:', plot.currentFrame, 'src:', vegetable.baseImage + plot.currentFrame + '.png', 'plotContent children:', plotContent.children.length);
-        }, 50);
-      }, 800);
+            const amountText = document.createElement('div');
+            amountText.textContent = '-1';
+            amountText.classList.add('amount-text', 'negative');
+            plotContent.appendChild(amountText);
 
-        plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
-        countdownFill.style.width = '0%';
+            setTimeout(() => {
+                flyImage.remove();
+                amountText.remove();
+                plotContent.innerHTML = '';
+                const plantImg = document.createElement('img');
+                plantImg.classList.add('plant-img');
+                plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+                plotContent.appendChild(plantImg);
+                setTimeout(() => {
+                    plantImg.classList.add('loaded');
+                }, 50);
+            }, 800);
 
-        // Update inventory
-        inventory[seedIndex].quantity -= 1;
-        if (inventory[seedIndex].quantity <= 0) {
-            inventory.splice(seedIndex, 1);
+            plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+            countdownFill.style.width = '0%';
+
+            inventory[seedIndex].quantity -= 1;
+            if (inventory[seedIndex].quantity <= 0) {
+                inventory.splice(seedIndex, 1);
+            }
+
+            savePlayerData();
+            renderInventory();
+            showNotification(langData[currentLang]?.planted || 'Planted!');
+            playBuyingSound();
+        } else {
+            showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
         }
-        savePlayerData();
-        renderInventory();
-        showNotification(langData[currentLang]?.planted || 'Planted!');
-        playBuyingSound();
-    } else {
-        showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
-    }
-} else if (plot.planted && !plot.watered && plot.currentFrame < plot.vegetable.frames) {
+
+    } else if (plot.planted && !plot.watered && plot.currentFrame < plot.vegetable.frames) {
         const waterNeeded = plot.vegetable.waterNeeded || 1;
         if (water >= waterNeeded) {
             water -= waterNeeded;
@@ -489,16 +490,24 @@ function handlePlotClick(index) {
                     countdownFill.style.width = '0%';
                 }
             }, 1000);
+
         } else {
             showNotification(langData[currentLang]?.notEnoughWater || 'Not Enough Water!');
         }
+
     } else if (plot.currentFrame >= plot.vegetable.frames || plotElement.classList.contains('ready')) {
         const yieldAmount = plot.vegetable.yield;
         inventory.push({ type: 'harvest', vegetable: plot.vegetable, quantity: yieldAmount });
-        savePlayerData();
+        plot.planted = false;
+        plot.vegetable = null;
+        plot.progress = 0;
+        plot.watered = false;
+        plot.currentFrame = 1;
+        plot.countdown = 0;
+        plot.totalCountdown = 0;
 
         const flyImage = document.createElement('img');
-        flyImage.src = plot.vegetable.shopImage;
+        flyImage.src = plot.vegetable?.shopImage;
         flyImage.classList.add('plant-fly');
         flyImage.style.width = '60px';
         plotContent.appendChild(flyImage);
@@ -516,14 +525,6 @@ function handlePlotClick(index) {
             countdownFill.style.width = '0%';
             plotElement.classList.remove('ready');
         }, 800);
-
-        plot.planted = false;
-        plot.vegetable = null;
-        plot.progress = 0;
-        plot.watered = false;
-        plot.currentFrame = 1;
-        plot.countdown = 0;
-        plot.totalCountdown = 0;
 
         harvestCount++;
         savePlayerData();

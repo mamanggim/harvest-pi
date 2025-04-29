@@ -706,6 +706,23 @@ function renderSellSection() {
         if (item && item.type === 'harvest') {
             const sellItem = document.createElement('div');
             sellItem.classList.add('sell-item');
+            function showTransactionAnimation(text, isGain, targetElement) {
+  if (!targetElement) return; // Prevent error if element not found
+
+  const rect = targetElement.getBoundingClientRect();
+  const anim = document.createElement('div');
+  anim.classList.add('transaction-animation');
+  anim.textContent = text;
+  anim.style.position = 'absolute';
+  anim.style.left = `${rect.left + window.scrollX + rect.width / 2}px`;
+  anim.style.top = `${rect.top + window.scrollY}px`;
+  anim.style.color = isGain ? 'green' : 'red';
+  document.body.appendChild(anim);
+
+  setTimeout(() => {
+    anim.remove();
+  }, 1000);
+}
             const sellPrice = item.vegetable.sellPrice;
 const isSellable = typeof sellPrice === 'number';
 

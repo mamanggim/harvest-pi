@@ -370,36 +370,29 @@ function handlePlotClick(index) {
         plot.countdown = vegetable.growthTime;
         plot.totalCountdown = vegetable.growthTime;
 
-        // Clear plot content
-        plotContent.innerHTML = '';
+        const flyImage = document.createElement('img');
+        flyImage.src = vegetable.shopImage;
+        flyImage.classList.add('plant-fly');
+        flyImage.style.width = '60px';
+        plotContent.appendChild(flyImage);
 
-        // Pastiin plot-content punya ukuran dan posisi
-        plotContent.style.position = 'relative';
-        plotContent.style.width = '100%';
-        plotContent.style.height = '100%';
-        const plotRect = plotContent.getBoundingClientRect();
-        showNotification(`Plot size: ${plotRect.width}x${plotRect.height}`);
+        const amountText = document.createElement('div');
+        amountText.textContent = '-1';
+        amountText.classList.add('amount-text', 'negative');
+        plotContent.appendChild(amountText);
 
-        // Langsung render tanaman
-        const plantImg = document.createElement('img');
-        plantImg.classList.add('plant-img');
-        const imagePath = `${vegetable.baseImage}${plot.currentFrame}.png`;
-        plantImg.src = imagePath;
-        plantImg.style.width = '100%'; // Pastiin gambar keliatan
-        plantImg.style.height = '100%';
-        plantImg.style.display = 'block'; // Pastiin gak hidden
-        plantImg.style.position = 'absolute'; // Pastiin posisi bener
-        plantImg.style.top = '0';
-        plantImg.style.left = '0';
-        plotContent.appendChild(plantImg);
         setTimeout(() => {
-            plantImg.classList.add('loaded');
-            const computedStyle = window.getComputedStyle(plantImg);
-            const isVisible = computedStyle.display !== 'none' && 
-                             computedStyle.visibility !== 'hidden' && 
-                             computedStyle.opacity !== '0';
-            showNotification(`Plant visible after loaded: ${isVisible}`);
-        }, 50);
+            flyImage.remove();
+            amountText.remove();
+            plotContent.innerHTML = '';
+            const plantImg = document.createElement('img');
+            plantImg.classList.add('plant-img');
+            plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+            plotContent.appendChild(plantImg);
+            setTimeout(() => {
+                plantImg.classList.add('loaded');
+            }, 50);
+        }, 800);
 
         plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
         countdownFill.style.width = '0%';

@@ -706,7 +706,16 @@ function renderSellSection() {
         if (item && item.type === 'harvest') {
             const sellItem = document.createElement('div');
             sellItem.classList.add('sell-item');
-            const sellPrice = Math.floor(item.vegetable.farmPrice * 0.5);
+            const sellPrice = item.vegetable.sellPrice;
+const isSellable = typeof sellPrice === 'number';
+
+sellItem.innerHTML = `
+  <img src="${item.vegetable.shopImage}" ...>
+  <h3>${item.vegetable.name[currentLang]}</h3>
+  <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
+  <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${isSellable ? sellPrice : '???'}</p>
+  ${isSellable ? `<button class="sell-btn" data-index="${index}">Sell</button>` : '<span style="color:red;">Cannot sell</span>'}
+`;
             sellItem.innerHTML = `
                 <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
                 <h3>${item.vegetable.name[currentLang]}</h3>

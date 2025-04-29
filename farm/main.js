@@ -35,9 +35,21 @@ function playBgMusic() {
     if (bgMusic && !isAudioPlaying) {
         const playPromise = bgMusic.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('BG Music failed:', e.message));
+            playPromise
+                .then(() => {
+                    console.log('Background music started successfully');
+                    isAudioPlaying = true;
+                })
+                .catch(e => {
+                    console.log('BG Music failed to start:', e.message);
+                    // Coba play lagi setelah delay kecil
+                    setTimeout(() => {
+                        bgMusic.play().catch(err => console.log('Retry BG Music failed:', err.message));
+                    }, 100);
+                });
         }
-        isAudioPlaying = true;
+    } else {
+        console.log('BG Music already playing or bgMusic not found:', bgMusic, isAudioPlaying);
     }
 }
 
@@ -45,8 +57,20 @@ function playBgVoice() {
     if (bgVoice && !isAudioPlaying) {
         const playPromise = bgVoice.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('BG Voice failed:', e.message));
+            playPromise
+                .then(() => {
+                    console.log('Background voice started successfully');
+                })
+                .catch(e => {
+                    console.log('BG Voice failed to start:', e.message);
+                    // Coba play lagi setelah delay kecil
+                    setTimeout(() => {
+                        bgVoice.play().catch(err => console.log('Retry BG Voice failed:', err.message));
+                    }, 100);
+                });
         }
+    } else {
+        console.log('BG Voice already playing or bgVoice not found:', bgVoice, isAudioPlaying);
     }
 }
 
@@ -957,8 +981,11 @@ function updateUIText() {
 
 // Start game
 function startGame() {
+    console.log('Starting game...');
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'block';
+    isAudioPlaying = false; // Reset flag biar audio bisa play
+    console.log('Attempting to play audio...');
     playBgMusic();
     playBgVoice();
     switchTab('farm');
@@ -966,10 +993,19 @@ function startGame() {
 
 // Exit game
 function exitGame() {
+    console.log('Exiting game...');
     document.getElementById('game-screen').style.display = 'none';
     document.getElementById('start-screen').style.display = 'block';
-    if (bgMusic) bgMusic.pause();
-    if (bgVoice) bgVoice.pause();
+    if (bgMusic) {
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+        console.log('BG Music stopped');
+    }
+    if (bgVoice) {
+        bgVoice.pause();
+        bgVoice.currentTime = 0;
+        console.log('BG Voice stopped');
+    }
     isAudioPlaying = false;
 }
 

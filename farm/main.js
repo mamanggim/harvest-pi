@@ -373,40 +373,21 @@ function handlePlotClick(index) {
         // Clear plot content
         plotContent.innerHTML = '';
 
-        // Cek apakah vegetable dan baseImage ada
-        if (!vegetable || !vegetable.baseImage) {
-            showNotification('Error: No vegetable data!');
-            return;
-        }
-
-        // Pastiin plot-content punya ukuran dan posisi
-        plotContent.style.position = 'relative';
-        plotContent.style.width = '100%';
-        plotContent.style.height = '100%';
-        const plotRect = plotContent.getBoundingClientRect();
-        showNotification(`Plot size: ${plotRect.width}x${plotRect.height}`);
-
-        // Langsung render tanaman
+        // Langsung render tanaman (tanpa animasi fly dulu)
         const plantImg = document.createElement('img');
         plantImg.classList.add('plant-img');
         const imagePath = `${vegetable.baseImage}${plot.currentFrame}.png`;
         plantImg.src = imagePath;
-        plantImg.style.width = '100%'; // Pastiin gambar keliatan
-        plantImg.style.height = '100%';
-        plantImg.style.display = 'block'; // Pastiin gak hidden
-        plantImg.style.position = 'absolute'; // Pastiin posisi bener
-        plantImg.style.top = '0';
-        plantImg.style.left = '0';
-        plantImg.style.zIndex = '1'; // Pastiin gambar di depan
-        plantImg.style.opacity = '1'; // Pastiin gak transparan
-        plantImg.onerror = () => {
-            showNotification(`Failed to load: ${imagePath}`);
-            plantImg.src = 'assets/img/ui/placeholder.png'; // Fallback image
-        };
-        plantImg.onload = () => {
-            showNotification(`Loaded: ${imagePath}`);
-        };
         plotContent.appendChild(plantImg);
+        setTimeout(() => {
+            plantImg.classList.add('loaded');
+            // Debug: cek apakah loaded ngaruh
+            const computedStyle = window.getComputedStyle(plantImg);
+            const isVisible = computedStyle.display !== 'none' && 
+                             computedStyle.visibility !== 'hidden' && 
+                             computedStyle.opacity !== '0';
+            showNotification(`Plant visible after loaded: ${isVisible}`);
+        }, 50);
 
         plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
         countdownFill.style.width = '0%';
@@ -423,7 +404,7 @@ function handlePlotClick(index) {
     } else {
         showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
     }
-  } else if (plot.planted && !plot.watered && plot.currentFrame < plot.vegetable.frames) {
+} else if (plot.planted && !plot.watered && plot.currentFrame < plot.vegetable.frames) {
         const waterNeeded = plot.vegetable.waterNeeded || 1;
         if (water >= waterNeeded) {
             water -= waterNeeded;

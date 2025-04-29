@@ -814,6 +814,7 @@ document.getElementById('claim-reward-btn').addEventListener('click', () => {
     rewardModal.style.display = 'block';
     playMenuSound();
 });
+
 document.getElementById('claim-reward-btn').addEventListener('touchstart', () => {
     rewardModal.style.display = 'block';
     playMenuSound();
@@ -829,30 +830,19 @@ claimModalBtn.addEventListener('click', () => {
         water += 50;
         console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
         localStorage.setItem('lastClaim', Date.now());
-        const playerRef = ref(database, `players/${userId}`);
-              savePlayerData();
-              updateWallet();
-              showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-              playCoinSound();
-              rewardModal.style.display = 'none';
-            })
-            if (!lastClaim || (now - lastClaim >= oneDay)) {
-              farmCoins += 100;
-              water += 50;
-              console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
-              localStorage.setItem('lastClaim', Date.now());
-                savePlayerData(); // Nyimpan semua data player
-                updateWallet();
-                showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-                playCoinSound();
-                rewardModal.style.display = 'none';
-              }
-          });
+        savePlayerData(); // Simpan semua data player
+        updateWallet();
+        showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+        playCoinSound();
+        rewardModal.style.display = 'none';
+    }
+});
 
 closeModal.addEventListener('click', () => {
     rewardModal.style.display = 'none';
     playMenuSound();
 });
+
 closeModal.addEventListener('touchstart', () => {
     rewardModal.style.display = 'none';
     playMenuSound();

@@ -373,15 +373,27 @@ function handlePlotClick(index) {
         // Clear plot content
         plotContent.innerHTML = '';
 
-        // Langsung render tanaman (tanpa animasi fly dulu)
+        // Pastiin plot-content punya ukuran dan posisi
+        plotContent.style.position = 'relative';
+        plotContent.style.width = '100%';
+        plotContent.style.height = '100%';
+        const plotRect = plotContent.getBoundingClientRect();
+        showNotification(`Plot size: ${plotRect.width}x${plotRect.height}`);
+
+        // Langsung render tanaman
         const plantImg = document.createElement('img');
         plantImg.classList.add('plant-img');
         const imagePath = `${vegetable.baseImage}${plot.currentFrame}.png`;
         plantImg.src = imagePath;
+        plantImg.style.width = '100%'; // Pastiin gambar keliatan
+        plantImg.style.height = '100%';
+        plantImg.style.display = 'block'; // Pastiin gak hidden
+        plantImg.style.position = 'absolute'; // Pastiin posisi bener
+        plantImg.style.top = '0';
+        plantImg.style.left = '0';
         plotContent.appendChild(plantImg);
         setTimeout(() => {
             plantImg.classList.add('loaded');
-            // Debug: cek apakah loaded ngaruh
             const computedStyle = window.getComputedStyle(plantImg);
             const isVisible = computedStyle.display !== 'none' && 
                              computedStyle.visibility !== 'hidden' && 

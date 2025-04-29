@@ -358,41 +358,43 @@ function handlePlotClick(index) {
     const countdownFill = plotElement.querySelector('.countdown-fill');
 
     if (!plot.planted) {
-    const seedIndex = inventory.findIndex(item => item && item.type === 'seed');
+    const seedIndex = inventory.findIndex(item => item && typeof item === 'string' && item.includes('Seed'));
     if (seedIndex !== -1) {
-        const seed = inventory[seedIndex];
-        const vegetable = seed.vegetable;
-        plot.planted = true;
-        plot.vegetable = vegetable;
-        plot.progress = 0;
-        plot.watered = false;
-        plot.currentFrame = 1;
-        plot.countdown = vegetable.growthTime;
-        plot.totalCountdown = vegetable.growthTime;
+      const seed = inventory[seedIndex];
+      const vegId = seed.split(' ')[0].toLowerCase();
+      const vegetable = vegetables.find(v => v.id === vegId) || vegetables[Math.floor(Math.random() * vegetables.length)];
+      plot.planted = true;
+      plot.vegetable = vegetable;
+      plot.progress = 0;
+      plot.watered = false;
+      plot.currentFrame = 1;
+      plot.countdown = vegetable.growthTime;
+      plot.totalCountdown = vegetable.growthTime;
 
-        const flyImage = document.createElement('img');
-        flyImage.src = vegetable.shopImage;
-        flyImage.classList.add('plant-fly');
-        flyImage.style.width = '60px';
-        plotContent.appendChild(flyImage);
+      const flyImage = document.createElement('img');
+      flyImage.src = vegetable.shopImage;
+      flyImage.classList.add('plant-fly');
+      flyImage.style.width = '60px';
+      plotContent.appendChild(flyImage);
 
-        const amountText = document.createElement('div');
-        amountText.textContent = '-1';
-        amountText.classList.add('amount-text', 'negative');
-        plotContent.appendChild(amountText);
+      const amountText = document.createElement('div');
+      amountText.textContent = '-1';
+      amountText.classList.add('amount-text', 'negative');
+      plotContent.appendChild(amountText);
 
+      setTimeout(() => {
+        flyImage.remove();
+        amountText.remove();
+        plotContent.innerHTML = '';
+        const plantImg = document.createElement('img');
+        plantImg.classList.add('plant-img');
+        plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+        plotContent.appendChild(plantImg);
         setTimeout(() => {
-            flyImage.remove();
-            amountText.remove();
-            plotContent.innerHTML = '';
-            const plantImg = document.createElement('img');
-            plantImg.classList.add('plant-img');
-            plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
-            plotContent.appendChild(plantImg);
-            setTimeout(() => {
-                plantImg.classList.add('loaded');
-            }, 50);
-        }, 800);
+          plantImg.classList.add('loaded');
+          console.log('Plant image added - frame:', plot.currentFrame, 'src:', vegetable.baseImage + plot.currentFrame + '.png', 'plotContent children:', plotContent.children.length);
+        }, 50);
+      }, 800);
 
         plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
         countdownFill.style.width = '0%';

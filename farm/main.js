@@ -288,24 +288,30 @@ async function loadPlayerData() {
 
 // Save player data to Firebase
 function savePlayerData() {
-    if (!userId) return;
-    const playerRef = ref(database, `players/${userId}`);
-    set(playerRef, {
-        farmCoins,
-        pi,
-        water,
-        level,
-        xp,
-        inventory,
-        harvestCount,
-        achievements,
-        lastClaim: localStorage.getItem('lastClaim'),
-        musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
-        voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
-    }).catch(error => {
-        console.error('Error saving player data:', error.message);
-        showNotification('Error saving player data: ' + error.message);
-    });
+  if (!userId) return;
+  const playerRef = ref(database, `players/${userId}`);
+  const lastClaimValue = parseInt(localStorage.getItem('lastClaim')) || null;
+
+  const dataToSave = {
+    farmCoins,
+    pi,
+    water,
+    level,
+    xp,
+    inventory,
+    harvestCount,
+    achievements,
+    lastClaim: lastClaimValue,
+    musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
+    voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
+  };
+
+  console.log('Saving to Firebase:', JSON.stringify(dataToSave));
+
+  set(playerRef, dataToSave).catch(error => {
+    console.error('Error saving player data:', error.message);
+    showNotification('Error saving player data: ' + error.message);
+  });
 }
 
 // Update wallet UI

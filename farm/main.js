@@ -343,7 +343,7 @@ function handlePlotClick(index) {
             savePlayerData();
             renderInventory();
             showNotification(langData[currentLang]?.planted || 'Planted!');
-            playHarvestingSound();
+            playHarvestSound();
             return;
         } else {
             showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');

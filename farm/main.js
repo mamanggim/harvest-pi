@@ -3,6 +3,24 @@ const { database, auth } = window.firebaseConfig;
 import { ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
+// START addSafeClickListener helper
+function addSafeClickListener(element, callback) {
+    let isLocked = false;
+    element.addEventListener('click', (e) => {
+        if (isLocked) return;
+        isLocked = true;
+        callback(e);
+        setTimeout(() => isLocked = false, 300);
+    });
+    element.addEventListener('touchstart', (e) => {
+        if (isLocked) return;
+        isLocked = true;
+        callback(e);
+        setTimeout(() => isLocked = false, 300);
+    });
+}
+// END addSafeClickListener helper
+
 // Global variables
 let isDataLoaded = false;
 let farmCoins = 0;
@@ -528,26 +546,19 @@ function renderShop() {
     shopContent.appendChild(waterItem);
 
     document.querySelectorAll('.buy-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = e.target.getAttribute('data-id');
-            buyVegetable(id, 'farm');
-        });
-        btn.addEventListener('touchstart', (e) => {
-            const id = e.target.getAttribute('data-id');
-            buyVegetable(id, 'farm');
-        });
+    addSafeClickListener(btn, (e) => {
+        const id = btn.getAttribute('data-id');
+        buyVegetable(id, 'farm');
     });
+});
 
     document.querySelectorAll('.buy-pi-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = e.target.getAttribute('data-id');
-            buyVegetable(id, 'pi');
-        });
-        btn.addEventListener('touchstart', (e) => {
-            const id = e.target.getAttribute('data-id');
-            buyVegetable(id, 'pi');
-        });
+    addSafeClickListener(btn, () => {
+        const id = btn.getAttribute('data-id');
+        buyVegetable(id, 'pi');
     });
+});
+    
 }
 
 // Buy vegetable or water
@@ -666,15 +677,12 @@ function renderSellSection() {
     });
 
     document.querySelectorAll('.sell-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const index = parseInt(e.target.getAttribute('data-index'));
-            sellItem(index);
-        });
-        btn.addEventListener('touchstart', (e) => {
-            const index = parseInt(e.target.getAttribute('data-index'));
-            sellItem(index);
-        });
+    addSafeClickListener(btn, () => {
+        const index = parseInt(btn.getAttribute('data-index'));
+        sellItem(index);
     });
+});
+    
 }
 // END renderSellSection fix
 
@@ -782,12 +790,7 @@ const rewardModal = document.getElementById('reward-modal');
 const claimModalBtn = document.getElementById('claim-modal-btn');
 const closeModal = document.getElementById('reward-modal-close');
 
-document.getElementById('claim-reward-btn').addEventListener('click', () => {
-    rewardModal.style.display = 'block';
-    playMenuSound();
-});
-
-document.getElementById('claim-reward-btn').addEventListener('touchstart', () => {
+addSafeClickListener(document.getElementById('claim-reward-btn'), () => {
     rewardModal.style.display = 'block';
     playMenuSound();
 });
@@ -810,12 +813,7 @@ claimModalBtn.addEventListener('click', () => {
     }
 });
 
-closeModal.addEventListener('click', () => {
-    rewardModal.style.display = 'none';
-    playMenuSound();
-});
-
-closeModal.addEventListener('touchstart', () => {
+addSafeClickListener(closeModal, () => {
     rewardModal.style.display = 'none';
     playMenuSound();
 });
@@ -999,14 +997,11 @@ function initializeSettings() {
         updateVolumes();
     });
 
-    closeSettings.addEventListener('click', () => {
-        document.getElementById('settings-modal').style.display = 'none';
-        playMenuSound();
-    });
-    closeSettings.addEventListener('touchstart', () => {
-        document.getElementById('settings-modal').style.display = 'none';
-        playMenuSound();
-    });
+    addSafeClickListener(closeSettings, () => {
+    document.getElementById('settings-modal').style.display = 'none';
+    playMenuSound();
+});
+    
 }
 
 // Check daily reward availability
@@ -1054,13 +1049,7 @@ async function initializeGame() {
 document.addEventListener('DOMContentLoaded', () => {
     const startText = document.getElementById('start-text');
     if (startText) {
-        startText.addEventListener('click', () => {
-            startGame();
-        });
-        startText.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            startGame();
-        });
+        addSafeClickListener(startText, () => startGame());
     } else {
         console.error('start-text element not found');
         showNotification('start-text element not found');
@@ -1083,15 +1072,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tab = btn.getAttribute('data-tab');
-            switchTab(tab);
-        });
-        btn.addEventListener('touchstart', () => {
-            const tab = btn.getAttribute('data-tab');
-            switchTab(tab);
-        });
+    addSafeClickListener(btn, () => {
+        const tab = btn.getAttribute('data-tab');
+        switchTab(tab);
     });
+});
 
     initializeGame();
 });

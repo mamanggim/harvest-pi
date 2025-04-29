@@ -343,7 +343,8 @@ function handlePlotClick(index) {
             savePlayerData();
             renderInventory();
             showNotification(langData[currentLang]?.planted || 'Planted!');
-            playBuyingSound();
+            playHarvestingSound();
+            return;
         } else {
             showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
         }
@@ -374,7 +375,6 @@ function handlePlotClick(index) {
             updateWallet();
             showNotification(langData[currentLang]?.watered || 'Watered!');
             playWateringSound();
-            return;
 
             const countdownInterval = setInterval(() => {
                 if (!plot.planted) {

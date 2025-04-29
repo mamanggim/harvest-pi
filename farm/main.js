@@ -358,57 +358,73 @@ function handlePlotClick(index) {
     const countdownFill = plotElement.querySelector('.countdown-fill');
 
     if (!plot.planted) {
-        const seedIndex = inventory.findIndex(item => item && item.type === 'seed');
-        if (seedIndex !== -1) {
-            const seed = inventory[seedIndex];
-            const vegetable = seed.vegetable;
-            plot.planted = true;
-            plot.vegetable = vegetable;
-            plot.progress = 0;
-            plot.watered = false;
-            plot.currentFrame = 1;
-            plot.countdown = vegetable.growthTime;
-            plot.totalCountdown = vegetable.growthTime;
+    const seedIndex = inventory.findIndex(item => item && item.type === 'seed');
+    if (seedIndex !== -1) {
+        const seed = inventory[seedIndex];
+        const vegetable = seed.vegetable;
+        plot.planted = true;
+        plot.vegetable = vegetable;
+        plot.progress = 0;
+        plot.watered = false;
+        plot.currentFrame = 1;
+        plot.countdown = vegetable.growthTime;
+        plot.totalCountdown = vegetable.growthTime;
 
-            const flyImage = document.createElement('img');
-            flyImage.src = vegetable.shopImage;
-            flyImage.classList.add('plant-fly');
-            flyImage.style.width = '60px';
-            plotContent.appendChild(flyImage);
+        console.log(`Planting ${vegetable.name[currentLang]} on plot ${index}`);
 
-            const amountText = document.createElement('div');
-            amountText.textContent = '-1';
-            amountText.classList.add('amount-text', 'negative');
-            plotContent.appendChild(amountText);
+        // Clear plot content first
+        plotContent.innerHTML = '';
 
+        // Show seed planting animation
+        const flyImage = document.createElement('img');
+        flyImage.src = vegetable.shopImage;
+        flyImage.classList.add('plant-fly');
+        flyImage.style.width = '60px';
+        plotContent.appendChild(flyImage);
+
+        const amountText = document.createElement('div');
+        amountText.textContent = '-1';
+        amountText.classList.add('amount-text', 'negative');
+        plotContent.appendChild(amountText);
+
+        // After animation, show the plant
+        setTimeout(() => {
+            flyImage.remove();
+            amountText.remove();
+            plotContent.innerHTML = ''; // Clear lagi biar gak tumpuk
+
+            const plantImg = document.createElement('img');
+            plantImg.classList.add('plant-img');
+            plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+            plantImg.onerror = () => {
+                console.error(`Failed to load plant image: ${vegetable.baseImage}${plot.currentFrame}.png`);
+                plantImg.src = 'assets/img/ui/placeholder.png'; // Fallback image
+            };
+            plotContent.appendChild(plantImg);
+
+            // Pastiin animasi loaded jalan
             setTimeout(() => {
-                flyImage.remove();
-                amountText.remove();
-                plotContent.innerHTML = '';
-                const plantImg = document.createElement('img');
-                plantImg.classList.add('plant-img');
-                plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
-                plotContent.appendChild(plantImg);
-                setTimeout(() => {
-                    plantImg.classList.add('loaded');
-                }, 50);
-            }, 800);
+                plantImg.classList.add('loaded');
+                console.log(`Plant image loaded on plot ${index}: ${plantImg.src}`);
+            }, 50);
+        }, 800);
 
-            plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
-            countdownFill.style.width = '0%';
+        plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+        countdownFill.style.width = '0%';
 
-            inventory[seedIndex].quantity -= 1;
-            if (inventory[seedIndex].quantity <= 0) {
-                inventory.splice(seedIndex, 1);
-            }
-            savePlayerData();
-            renderInventory();
-            showNotification(langData[currentLang]?.planted || 'Planted!');
-            playBuyingSound();
-        } else {
-            showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
+        // Update inventory
+        inventory[seedIndex].quantity -= 1;
+        if (inventory[seedIndex].quantity <= 0) {
+            inventory.splice(seedIndex, 1);
         }
-    } else if (plot.planted && !plot.watered && plot.currentFrame < plot.vegetable.frames) {
+        savePlayerData();
+        renderInventory();
+        showNotification(langData[currentLang]?.planted || 'Planted!');
+        playBuyingSound();
+    } else {
+        showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
+    }
+  } else if (plot.planted && !plot.watered && plot.currentFrame < plot.vegetable.frames) {
         const waterNeeded = plot.vegetable.waterNeeded || 1;
         if (water >= waterNeeded) {
             water -= waterNeeded;

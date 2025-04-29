@@ -358,11 +358,10 @@ function handlePlotClick(index) {
     const countdownFill = plotElement.querySelector('.countdown-fill');
 
     if (!plot.planted) {
-    const seedIndex = inventory.findIndex(item => item && typeof item === 'string' && item.includes('Seed'));
+    const seedIndex = inventory.findIndex(item => item && item.type === 'seed' && item.quantity > 0);
     if (seedIndex !== -1) {
       const seed = inventory[seedIndex];
-      const vegId = seed.split(' ')[0].toLowerCase();
-      const vegetable = vegetables.find(v => v.id === vegId) || vegetables[Math.floor(Math.random() * vegetables.length)];
+      const vegetable = seed.vegetable;
       plot.planted = true;
       plot.vegetable = vegetable;
       plot.progress = 0;

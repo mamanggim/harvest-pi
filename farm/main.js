@@ -830,13 +830,11 @@ claimModalBtn.addEventListener('click', () => {
         console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
         localStorage.setItem('lastClaim', Date.now());
         const playerRef = ref(database, `players/${userId}`);
-        savePlayerData();
-            .then(() => {
-                console.log('Claim data saved to Firebase');
-                updateWallet();
-                showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-                playCoinSound();
-                rewardModal.style.display = 'none';
+              savePlayerData();
+              updateWallet();
+              showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+              playCoinSound();
+              rewardModal.style.display = 'none';
             })
             .catch(error => {
                 console.error('Error saving claim data to Firebase:', error.message);

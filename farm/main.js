@@ -830,19 +830,7 @@ claimModalBtn.addEventListener('click', () => {
         console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
         localStorage.setItem('lastClaim', Date.now());
         const playerRef = ref(database, `players/${userId}`);
-        set(playerRef, {
-            farmCoins,
-            pi,
-            water,
-            level,
-            xp,
-            inventory,
-            harvestCount,
-            achievements,
-            lastClaim: Date.now(),
-            musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
-            voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
-        })
+        savePlayerData();
             .then(() => {
                 console.log('Claim data saved to Firebase');
                 updateWallet();

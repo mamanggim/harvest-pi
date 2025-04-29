@@ -4,6 +4,7 @@ import { ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.12.2/fi
 import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Global variables
+let isDataLoaded = false;
 let farmCoins = 0;
 let pi = 0;
 let water = 0;
@@ -229,61 +230,66 @@ async function loadData() {
 
 // Load player data from Firebase
 async function loadPlayerData() {
-    try {
-        const userCredential = await signInAnonymously(auth);
-        userId = userCredential.user.uid;
-        console.log('Signed in to Firebase anonymously, userId:', userId);
-        const playerRef = ref(database, `players/${userId}`);
-        onValue(playerRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                farmCoins = data.farmCoins || 0;
-                pi = data.pi || 0;
-                water = data.water || 0;
-                level = data.level || 1;
-                xp = data.xp || 0;
-                inventory = data.inventory || [];
-                harvestCount = data.harvestCount || 0;
-                achievements = data.achievements || { harvest: false, coins: false };
-                localStorage.setItem('musicVolume', data.musicVolume || 50);
-                localStorage.setItem('voiceVolume', data.voiceVolume || 50);
-            } else {
-                const initialData = {
-                    farmCoins: 0,
-                    pi: 0,
-                    water: 0,
-                    level: 1,
-                    xp: 0,
-                    inventory: [],
-                    harvestCount: 0,
-                    achievements: { harvest: false, coins: false },
-                    lastClaim: null,
-                    musicVolume: 50,
-                    voiceVolume: 50
-                };
-                set(playerRef, initialData);
-                farmCoins = 0;
-                pi = 0;
-                water = 0;
-                level = 1;
-                xp = 0;
-                inventory = [];
-                harvestCount = 0;
-                achievements = { harvest: false, coins: false };
-            }
-            updateWallet();
-            updateVolumes();
-            initializePlots();
-            renderShop();
-            renderInventory();
-            renderSellSection();
-            renderAchievements();
-            checkDailyReward();
-        }, { onlyOnce: false });
-    } catch (error) {
-        console.error('Error loading player data:', error.message);
-        showNotification('Failed to connect to Firebase');
-    }
+  try {
+    const userCredential = await signInAnonymously(auth);
+    userId = userCredential.user.uid;
+    console.log('Signed in to Firebase anonymously, userId:', userId);
+    const playerRef = ref(database, `players/${userId}`);
+
+    onValue(playerRef, (snapshot) => {
+      if (isDataLoaded) return; // cegah overwrite saat main game
+      const data = snapshot.val();
+      if (data) {
+        farmCoins = data.farmCoins || 0;
+        pi = data.pi || 0;
+        water = data.water || 0;
+        level = data.level || 1;
+        xp = data.xp || 0;
+        inventory = data.inventory || [];
+        harvestCount = data.harvestCount || 0;
+        achievements = data.achievements || { harvest: false, coins: false };
+        localStorage.setItem('lastClaim', data.lastClaim || null);
+        localStorage.setItem('musicVolume', data.musicVolume || 50);
+        localStorage.setItem('voiceVolume', data.voiceVolume || 50);
+      } else {
+        const initialData = {
+          farmCoins: 0,
+          pi: 0,
+          water: 0,
+          level: 1,
+          xp: 0,
+          inventory: [],
+          harvestCount: 0,
+          achievements: { harvest: false, coins: false },
+          lastClaim: null,
+          musicVolume: 50,
+          voiceVolume: 50
+        };
+        set(playerRef, initialData);
+        farmCoins = 0;
+        pi = 0;
+        water = 0;
+        level = 1;
+        xp = 0;
+        inventory = [];
+        harvestCount = 0;
+        achievements = { harvest: false, coins: false };
+      }
+
+      isDataLoaded = true; // supaya gak di-overwrite lagi
+      updateWallet();
+      updateVolumes();
+      initializePlots();
+      renderShop();
+      renderInventory();
+      renderSellSection();
+      renderAchievements();
+      checkDailyReward();
+    }, { onlyOnce: false });
+  } catch (error) {
+    console.error('Error loading player data:', error.message);
+    showNotification('Failed to connect to Firebase');
+  }
 }
 
 // Save player data to Firebase

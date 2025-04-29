@@ -836,16 +836,18 @@ claimModalBtn.addEventListener('click', () => {
               playCoinSound();
               rewardModal.style.display = 'none';
             })
-            .catch(error => {
-                console.error('Error saving claim data to Firebase:', error.message);
+            if (!lastClaim || (now - lastClaim >= oneDay)) {
+              farmCoins += 100;
+              water += 50;
+              console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
+              localStorage.setItem('lastClaim', Date.now());
+                savePlayerData(); // Nyimpan semua data player
                 updateWallet();
                 showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
                 playCoinSound();
                 rewardModal.style.display = 'none';
-                showNotification('Failed to save claim data, but rewards added.');
-            });
-    }
-});
+              }
+          });
 
 closeModal.addEventListener('click', () => {
     rewardModal.style.display = 'none';

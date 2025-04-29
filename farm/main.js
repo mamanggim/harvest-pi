@@ -370,44 +370,25 @@ function handlePlotClick(index) {
         plot.countdown = vegetable.growthTime;
         plot.totalCountdown = vegetable.growthTime;
 
-        console.log(`Planting ${vegetable.name[currentLang]} on plot ${index}`);
-
-        // Clear plot content first
+        // Clear plot content
         plotContent.innerHTML = '';
 
-        // Show seed planting animation
-        const flyImage = document.createElement('img');
-        flyImage.src = vegetable.shopImage;
-        flyImage.classList.add('plant-fly');
-        flyImage.style.width = '60px';
-        plotContent.appendChild(flyImage);
-
-        const amountText = document.createElement('div');
-        amountText.textContent = '-1';
-        amountText.classList.add('amount-text', 'negative');
-        plotContent.appendChild(amountText);
-
-        // After animation, show the plant
-        setTimeout(() => {
-            flyImage.remove();
-            amountText.remove();
-            plotContent.innerHTML = ''; // Clear lagi biar gak tumpuk
-
-            const plantImg = document.createElement('img');
-            plantImg.classList.add('plant-img');
-            plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
-            plantImg.onerror = () => {
-                console.error(`Failed to load plant image: ${vegetable.baseImage}${plot.currentFrame}.png`);
-                plantImg.src = 'assets/img/ui/placeholder.png'; // Fallback image
-            };
-            plotContent.appendChild(plantImg);
-
-            // Pastiin animasi loaded jalan
-            setTimeout(() => {
-                plantImg.classList.add('loaded');
-                console.log(`Plant image loaded on plot ${index}: ${plantImg.src}`);
-            }, 50);
-        }, 800);
+        // Langsung render tanaman tanpa animasi dulu
+        const plantImg = document.createElement('img');
+        plantImg.classList.add('plant-img');
+        const imagePath = `${vegetable.baseImage}${plot.currentFrame}.png`;
+        plantImg.src = imagePath;
+        plantImg.style.width = '100%'; // Pastiin gambar keliatan
+        plantImg.style.height = '100%';
+        plantImg.style.display = 'block'; // Pastiin gak hidden
+        plantImg.onerror = () => {
+            showNotification(`Failed to load image: ${imagePath}`);
+            plantImg.src = 'assets/img/ui/placeholder.png'; // Fallback image
+        };
+        plantImg.onload = () => {
+            showNotification(`Image loaded: ${imagePath}`);
+        };
+        plotContent.appendChild(plantImg);
 
         plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
         countdownFill.style.width = '0%';

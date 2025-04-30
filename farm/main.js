@@ -1230,52 +1230,61 @@ function isFullScreen() {
   return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
 }
 
+// Toggle Full Screen 
+function toggleFullscreen() {
+  const elem = document.documentElement;
+  if (!document.fullscreenElement) {
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  }
+}
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const startText = document.getElementById('start-text');
-    if (startText) {
-        addSafeClickListener(startText, () => startGame());
-    } else {
-        console.error('start-text element not found');
-        showNotification('start-text element not found');
-    }
-
-    const fullscreenBtn = document.getElementById('toggle-fullscreen-btn');
-      addSafeClickListener(fullscreenBtn, () => {
-    if (isFullScreen()) {
-      exitFullScreen();
-    fullscreenBtn.textContent = 'Enter Fullscreen';
+  const startText = document.getElementById('start-text');
+  if (startText) {
+    addSafeClickListener(startText, () => startGame());
   } else {
-    enterFullScreen();
-    fullscreenBtn.textContent = 'Exit Fullscreen';
+    console.error('start-text element not found');
+    showNotification('start-text element not found');
   }
-  playMenuSound();
-});
 
-// Update teks saat status fullscreen berubah (misal tekan tombol F11 manual)
-document.addEventListener('fullscreenchange', () => {
-  if (fullscreenBtn) {
-    fullscreenBtn.textContent = isFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen';
-  }
-});
+  addSafeClickListener(document.getElementById('lang-toggle'), toggleLanguage);
+  addSafeClickListener(document.getElementById('settings-btn'), openSettings);
+  addSafeClickListener(document.getElementById('claim-reward-btn'), claimDailyReward);
+  addSafeClickListener(document.getElementById('game-lang-toggle'), toggleLanguage);
+  addSafeClickListener(document.getElementById('game-settings-btn'), openSettings);
+  addSafeClickListener(document.getElementById('exit-game-btn'), exitGame);
+  addSafeClickListener(document.getElementById('exchange-btn'), exchangePi);
+  document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
 
-    addSafeClickListener(document.getElementById('lang-toggle'), toggleLanguage);
-    addSafeClickListener(document.getElementById('settings-btn'), openSettings);
-    addSafeClickListener(document.getElementById('claim-reward-btn'), claimDailyReward);
-    addSafeClickListener(document.getElementById('game-lang-toggle'), toggleLanguage);
-    addSafeClickListener(document.getElementById('game-settings-btn'), openSettings);
-    addSafeClickListener(document.getElementById('exit-game-btn'), exitGame);
-    addSafeClickListener(document.getElementById('exchange-btn'), exchangePi);
-    document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
     addSafeClickListener(btn, () => {
-        const tab = btn.getAttribute('data-tab');
-        switchTab(tab);
+      const tab = btn.getAttribute('data-tab');
+      switchTab(tab);
     });
-});
+  });
 
-    initializeGame();
+  // === Tambahan untuk Fullscreen Button ===
+  const fullscreenToggle = document.getElementById('fullscreen-toggle');
+  if (fullscreenToggle) {
+    fullscreenToggle.addEventListener('click', toggleFullscreen);
+  }
+
+  initializeGame();
 });
 
 // Stop audio on page unload to prevent overlap

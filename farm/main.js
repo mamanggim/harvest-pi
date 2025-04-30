@@ -1252,6 +1252,14 @@ function toggleFullscreen() {
   }
 }
 
+function updateFullscreenButtonText() {
+  const fullscreenToggle = document.getElementById('fullscreen-toggle');
+  if (!fullscreenToggle) return;
+
+  const isFullscreen = !!document.fullscreenElement;
+  fullscreenToggle.textContent = isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
+}
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
   const startText = document.getElementById('start-text');
@@ -1285,6 +1293,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initializeGame();
+
+document.addEventListener('fullscreenchange', updateFullscreenButtonText);
+
+updateFullscreenButtonText();
 });
 
 // Stop audio on page unload to prevent overlap

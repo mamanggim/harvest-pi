@@ -1054,20 +1054,13 @@ document.addEventListener('DOMContentLoaded', () => {
         showNotification('start-text element not found');
     }
 
-    document.getElementById('lang-toggle')?.addEventListener('click', toggleLanguage);
-    document.getElementById('lang-toggle')?.addEventListener('touchstart', toggleLanguage);
-    document.getElementById('settings-btn')?.addEventListener('click', openSettings);
-    document.getElementById('settings-btn')?.addEventListener('touchstart', openSettings);
-    document.getElementById('claim-reward-btn')?.addEventListener('click', claimDailyReward);
-    document.getElementById('claim-reward-btn')?.addEventListener('touchstart', claimDailyReward);
-    document.getElementById('game-lang-toggle')?.addEventListener('click', toggleLanguage);
-    document.getElementById('game-lang-toggle')?.addEventListener('touchstart', toggleLanguage);
-    document.getElementById('game-settings-btn')?.addEventListener('click', openSettings);
-    document.getElementById('game-settings-btn')?.addEventListener('touchstart', openSettings);
-    document.getElementById('exit-game-btn')?.addEventListener('click', exitGame);
-    document.getElementById('exit-game-btn')?.addEventListener('touchstart', exitGame);
-    document.getElementById('exchange-btn')?.addEventListener('click', exchangePi);
-    document.getElementById('exchange-btn')?.addEventListener('touchstart', exchangePi);
+    addSafeClickListener(document.getElementById('lang-toggle'), toggleLanguage);
+    addSafeClickListener(document.getElementById('settings-btn'), openSettings);
+    addSafeClickListener(document.getElementById('claim-reward-btn'), claimDailyReward);
+    addSafeClickListener(document.getElementById('game-lang-toggle'), toggleLanguage);
+    addSafeClickListener(document.getElementById('game-settings-btn'), openSettings);
+    addSafeClickListener(document.getElementById('exit-game-btn'), exitGame);
+    addSafeClickListener(document.getElementById('exchange-btn'), exchangePi);
     document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
 
     document.querySelectorAll('.tab-btn').forEach(btn => {

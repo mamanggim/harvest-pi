@@ -511,27 +511,37 @@ function renderShop() {
         return;
     }
 
+    if (!langData[currentLang]) {
+        console.error('Language data missing');
+        return;
+    }
+
     shopContent.innerHTML = '';
     if (!vegetables || vegetables.length === 0) {
         shopContent.innerHTML = `<p>${langData[currentLang]?.noItems || 'No items available in shop. Please check vegetables.json.'}</p>`;
         return;
     }
 
+    // Render each vegetable item
     vegetables.forEach(veg => {
         const vegItem = document.createElement('div');
         vegItem.classList.add('shop-item');
-        const farmPrice = veg.farmPrice !== undefined ? veg.farmPrice : 0;
+
+        const farmPrice = typeof veg.farmPrice === 'number' ? veg.farmPrice : 0;
+        const piPrice = typeof veg.piPrice === 'number' ? veg.piPrice : 0;
+
         vegItem.innerHTML = `
             <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
             <h3>${veg.name[currentLang]}</h3>
             <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${farmPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
-            <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${veg.piPrice} PI</p>
+            <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${piPrice} PI</p>
             <button class="buy-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
             <button class="buy-pi-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
         `;
         shopContent.appendChild(vegItem);
     });
 
+    // Render water item separately
     const waterItem = document.createElement('div');
     waterItem.classList.add('shop-item');
     waterItem.innerHTML = `
@@ -544,20 +554,21 @@ function renderShop() {
     `;
     shopContent.appendChild(waterItem);
 
+    // Event listener untuk semua tombol beli farm
     document.querySelectorAll('.buy-btn').forEach(btn => {
-    addSafeClickListener(btn, (e) => {
-        const id = btn.getAttribute('data-id');
-        buyVegetable(id, 'farm');
+        addSafeClickListener(btn, () => {
+            const id = btn.getAttribute('data-id');
+            buyVegetable(id, 'farm');
+        });
     });
-});
 
+    // Event listener untuk semua tombol beli PI
     document.querySelectorAll('.buy-pi-btn').forEach(btn => {
-    addSafeClickListener(btn, () => {
-        const id = btn.getAttribute('data-id');
-        buyVegetable(id, 'pi');
+        addSafeClickListener(btn, () => {
+            const id = btn.getAttribute('data-id');
+            buyVegetable(id, 'pi');
+        });
     });
-});
-    
 }
 
 // Buy vegetable or water
@@ -593,56 +604,75 @@ function buyVegetable(id, currency) {
     if (currency === 'farm') {
         if (farmCoins >= veg.farmPrice) {
             farmCoins -= veg.farmPrice;
-            inventory.push({ type: 'seed', vegetable: veg, quantity: 1 });
-            savePlayerData();
-            updateWallet();
+            addToInventory('seed', veg, 1);
             showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
             playBuyingSound();
         } else {
             showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
+            return;
         }
     } else {
         if (pi >= veg.piPrice) {
             pi -= veg.piPrice;
-            inventory.push({ type: 'seed', vegetable: veg, quantity: 1 });
-            savePlayerData();
-            updateWallet();
+            addToInventory('seed', veg, 1);
             showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
             playBuyingSound();
         } else {
             showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
+            return;
         }
     }
+
+    // Hanya sekali di akhir
+    savePlayerData();
+    updateWallet();
     renderInventory();
 }
 
 // Render inventory
 function renderInventory() {
     const inventoryContent = document.getElementById('inventory-content');
+    if (!inventoryContent) {
+        console.error('inventory-content element not found');
+        showNotification('inventory-content element not found');
+        return;
+    }
+
+    if (!langData[currentLang]) {
+        console.error('Language data not loaded');
+        return;
+    }
+
     inventoryContent.innerHTML = '';
-    inventory.forEach((item, index) => {
-        if (item && item.type === 'seed') {
-            const veg = item.vegetable;
-            const invItem = document.createElement('div');
-            invItem.classList.add('inventory-item');
-            invItem.innerHTML = `
-                <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img">
-                <h3>${veg.name[currentLang]} Seed</h3>
-                <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-            `;
-            inventoryContent.appendChild(invItem);
-        } else if (item && item.type === 'harvest') {
-            const veg = item.vegetable;
-            const invItem = document.createElement('div');
-            invItem.classList.add('inventory-item');
-            invItem.innerHTML = `
-                <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img">
-                <h3>${veg.name[currentLang]}</h3>
-                <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-            `;
-            inventoryContent.appendChild(invItem);
-        }
+
+    inventory.forEach(item => {
+        if (!item || !item.vegetable) return;
+
+        const veg = item.vegetable;
+        const invItem = document.createElement('div');
+        invItem.classList.add('inventory-item');
+
+        const isSeed = item.type === 'seed';
+        const title = isSeed ? `${veg.name[currentLang]} Seed` : veg.name[currentLang];
+
+        invItem.innerHTML = `
+            <img src="${veg.shopImage}" alt="${title}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+            <h3>${title}</h3>
+            <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
+        `;
+
+        inventoryContent.appendChild(invItem);
     });
+    
+        const sellButton = document.createElement('button');
+        sellButton.textContent = langData[currentLang]?.sellToShop || 'Sell to Shop';
+        sellButton.classList.add('sell-to-shop-btn');
+        addSafeClickListener(sellButton, () => {
+        switchTab('sell');
+        playMenuSound();
+    });
+
+    inventoryContent.appendChild(sellButton);
 }
 
 // START renderSellSection fix

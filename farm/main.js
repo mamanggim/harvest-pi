@@ -1075,6 +1075,8 @@ function exitGame() {
     console.log('Exiting game...');
     document.getElementById('game-screen').style.display = 'none';
     document.getElementById('start-screen').style.display = 'block';
+    document.getElementById('settings-modal').style.display = 'none';
+    document.getElementById('exit-game-btn').style.display = 'none';
     if (bgMusic) {
         bgMusic.pause();
         bgMusic.currentTime = 0;

@@ -171,7 +171,8 @@ async function loadData() {
 
     // 2. Muat daftar sayur
     const vegRes = await fetch('/data/vegetables.json');
-    vegetables = await vegRes.json();
+    const vegJson = await vegRes.json();
+    vegetables = vegJson.vegetables;
     console.log('Vegetables data loaded:', vegetables);
   } catch (error) {
     console.error('Error loading data:', error.message);

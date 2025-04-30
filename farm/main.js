@@ -1064,6 +1064,9 @@ function startGame() {
     playBgMusic();
     playBgVoice();
     switchTab('farm');
+
+    // Auto Full Screen
+    enterFullScreen();
 }
 
 // Exit game
@@ -1193,13 +1196,39 @@ async function initializeGame() {
   }
 }
 
-// === SETTINGS HANDLER ===
+// Settings Handler
 addSafeClickListener(document.getElementById('settings-btn'), openSettings);
 addSafeClickListener(document.getElementById('game-settings-btn'), openSettings);
 addSafeClickListener(document.getElementById('close-settings'), () => {
   document.getElementById('settings-modal').style.display = 'none';
   playMenuSound();
 });
+
+// Full Screen Bray
+function enterFullScreen() {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) {
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) {
+    elem.msRequestFullscreen();
+  }
+}
+
+function exitFullScreen() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) {
+    document.msExitFullscreen();
+  }
+}
+
+function isFullScreen() {
+  return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+}
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -1210,6 +1239,25 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('start-text element not found');
         showNotification('start-text element not found');
     }
+
+    const fullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+      addSafeClickListener(fullscreenBtn, () => {
+    if (isFullScreen()) {
+      exitFullScreen();
+    fullscreenBtn.textContent = 'Enter Fullscreen';
+  } else {
+    enterFullScreen();
+    fullscreenBtn.textContent = 'Exit Fullscreen';
+  }
+  playMenuSound();
+});
+
+// Update teks saat status fullscreen berubah (misal tekan tombol F11 manual)
+document.addEventListener('fullscreenchange', () => {
+  if (fullscreenBtn) {
+    fullscreenBtn.textContent = isFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen';
+  }
+});
 
     addSafeClickListener(document.getElementById('lang-toggle'), toggleLanguage);
     addSafeClickListener(document.getElementById('settings-btn'), openSettings);

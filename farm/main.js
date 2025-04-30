@@ -1171,6 +1171,16 @@ async function initializeGame() {
   }
 }
 
+function openSettings() {
+  const modal = document.getElementById('settings-modal');
+  if (modal) {
+    modal.style.display = 'block';
+    playMenuSound();
+  } else {
+    console.error('Settings modal not found!');
+  }
+}
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
     const startText = document.getElementById('start-text');

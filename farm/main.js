@@ -808,6 +808,13 @@ addSafeClickListener(claimModalBtn, () => {
         updateWallet();
         showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
         playCoinSound();
+        
+        // Langsung update tombol utama
+        const claimBtn = document.getElementById('claim-reward-btn');
+        claimBtn.disabled = true;
+        claimBtn.classList.add('claimed');
+        claimBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
+        
         rewardModal.style.display = 'none';
     }
 });

@@ -1115,30 +1115,41 @@ function checkDailyReward() {
 
 // Initialize game
 async function initializeGame() {
-    try {
-        await loadData();
-        await loadPlayerData();
-        initializeSettings();
-        setTimeout(() => {
-            const loadingScreen = document.getElementById('loading-screen');
-            const startScreen = document.getElementById('start-screen');
-            if (loadingScreen && startScreen) {
-                loadingScreen.style.display = 'none';
-                startScreen.style.display = 'block';
-            }
-        }, 1000);
-    } catch (error) {
-        console.error('Error initializing game:', error.message);
-        showNotification('Error initializing game: ' + error.message);
-        setTimeout(() => {
-            const loadingScreen = document.getElementById('loading-screen');
-            const startScreen = document.getElementById('start-screen');
-            if (loadingScreen && startScreen) {
-                loadingScreen.style.display = 'none';
-                startScreen.style.display = 'block';
-            }
-        }, 1000);
-    }
+  try {
+    await loadData();           // Muat langData, vegetables, dll
+    await loadPlayerData();     // Ambil data player dari Firebase / local
+
+    initializeSettings();       // Volume dll
+    initializePlots();          // Siapkan lahan
+    updateWallet();             // Tampilkan koin, air, pi
+    renderInventory();          // Tampilkan isi inventori
+    renderShop();               // Tampilkan isi toko
+    renderSellSection();        // Tampilkan menu jual
+    checkLevelUp();             // Cek XP untuk naik level
+    checkDailyReward();         // Cek apakah reward harian udah diklaim
+    updateExchangeResult();     // Kalkulasi PI → koin
+
+    setTimeout(() => {
+      const loadingScreen = document.getElementById('loading-screen');
+      const startScreen = document.getElementById('start-screen');
+      if (loadingScreen && startScreen) {
+        loadingScreen.style.display = 'none';
+        startScreen.style.display = 'block';
+      }
+    }, 1000);
+
+  } catch (error) {
+    console.error('Error initializing game:', error.message);
+    showNotification('Error initializing game: ' + error.message);
+    setTimeout(() => {
+      const loadingScreen = document.getElementById('loading-screen');
+      const startScreen = document.getElementById('start-screen');
+      if (loadingScreen && startScreen) {
+        loadingScreen.style.display = 'none';
+        startScreen.style.display = 'block';
+      }
+    }, 1000);
+  }
 }
 
 // DOM Content Loaded

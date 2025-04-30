@@ -554,7 +554,6 @@ function renderShop() {
 
     shopContent.appendChild(vegItem);
   });
-}
 
   // Tambahkan item air (water)
   const waterItem = document.createElement('div');

@@ -716,9 +716,9 @@ function renderInventory() {
   sellButton.textContent = langData[currentLang]?.sellToShop || 'Sell to Shop';
   sellButton.classList.add('sell-to-shop-btn');
   addSafeClickListener(sellButton, () => {
-    switchTab('sell');
-    playMenuSound();
-  });
+  openSellTab();
+  playMenuSound();
+});
 
   inventoryContent.appendChild(sellButton);
 }
@@ -811,6 +811,24 @@ function sellItem(index) {
   checkCoinAchievement();
 }
 // END sellItem fix
+
+// Fungsi untuk langsung buka tab Sell di dalam Shop
+function openSellTab() {
+  switchTab('shop');
+
+  const buyTab = document.getElementById('shop-buy-tab');
+  const sellTab = document.getElementById('shop-sell-tab');
+  const shopContent = document.getElementById('shop-content');
+  const sellContent = document.getElementById('sell-section');
+
+  if (sellTab && buyTab && shopContent && sellContent) {
+    sellTab.classList.add('active');
+    buyTab.classList.remove('active');
+    shopContent.style.display = 'none';
+    sellContent.style.display = 'block';
+    renderSellSection();
+  }
+}
 
 // Check level up
 function checkLevelUp() {

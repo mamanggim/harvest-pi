@@ -794,7 +794,7 @@ addSafeClickListener(document.getElementById('claim-reward-btn'), () => {
     playMenuSound();
 });
 
-claimModalBtn.addEventListener('click', () => {
+addSafeClickListener(claimModalBtn, () => {
     const lastClaim = parseInt(localStorage.getItem('lastClaim'));
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;

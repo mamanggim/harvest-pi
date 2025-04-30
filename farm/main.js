@@ -1175,6 +1175,14 @@ async function initializeGame() {
   }
 }
 
+// === SETTINGS HANDLER ===
+addSafeClickListener(document.getElementById('settings-btn'), openSettings);
+addSafeClickListener(document.getElementById('game-settings-btn'), openSettings);
+addSafeClickListener(document.getElementById('close-settings'), () => {
+  document.getElementById('settings-modal').style.display = 'none';
+  playMenuSound();
+});
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
     const startText = document.getElementById('start-text');

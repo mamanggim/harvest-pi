@@ -571,6 +571,25 @@ function renderShop() {
   });
 }
 
+// Tambah item ke inventory, atau update jumlah jika sudah ada
+function addToInventory(type, veg, qty = 1) {
+    const existing = inventory.find(item =>
+        item.type === type &&
+        item.vegetable &&
+        item.vegetable.id === veg.id
+    );
+
+    if (existing) {
+        existing.quantity += qty;
+    } else {
+        inventory.push({
+            type: type,
+            vegetable: veg,
+            quantity: qty
+        });
+    }
+}
+
 // Buy vegetable or water
 function buyVegetable(id, currency) {
   if (id === 'water') {

@@ -38,6 +38,12 @@ h1 {
   50% { opacity: 0.5; }
 }
 
+#settings-modal button {
+  margin-top: 10px;
+  display: block;
+  width: 100%;
+}
+
 .corner-buttons {
   position: fixed;
   top: 10px;

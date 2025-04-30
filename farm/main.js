@@ -1080,9 +1080,13 @@ function toggleLanguage() {
 
 // Open settings
 function openSettings() {
-    const modal = document.getElementById('settings-modal');
+  const modal = document.getElementById('settings-modal');
+  if (modal) {
     modal.style.display = 'block';
     playMenuSound();
+  } else {
+    console.error('Settings modal not found!');
+  }
 }
 
 // Initialize settings
@@ -1168,16 +1172,6 @@ async function initializeGame() {
         startScreen.style.display = 'block';
       }
     }, 1000);
-  }
-}
-
-function openSettings() {
-  const modal = document.getElementById('settings-modal');
-  if (modal) {
-    modal.style.display = 'block';
-    playMenuSound();
-  } else {
-    console.error('Settings modal not found!');
   }
 }
 

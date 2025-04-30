@@ -504,244 +504,277 @@ function handlePlotClick(index) {
 
 // Render shop with Water item
 function renderShop() {
-    const shopContent = document.getElementById('shop-content');
-    if (!shopContent) {
-        console.error('shop-content element not found');
-        showNotification('shop-content element not found');
-        return;
-    }
+  const shopContent = document.getElementById('shop-content');
+  if (!shopContent) {
+    console.error('shop-content element not found');
+    return;
+  }
 
-    if (!langData[currentLang]) {
-        console.error('Language data missing');
-        return;
-    }
+  if (!langData[currentLang]) {
+    console.warn('Language data missing, skipping renderShop');
+    shopContent.innerHTML = `<p style="color:red;">Language data not loaded. Please reload.</p>`;
+    return;
+  }
 
-    shopContent.innerHTML = '';
-    if (!vegetables || vegetables.length === 0) {
-        shopContent.innerHTML = `<p>${langData[currentLang]?.noItems || 'No items available in shop. Please check vegetables.json.'}</p>`;
-        return;
-    }
+  if (!Array.isArray(vegetables)) {
+    console.warn('Vegetables not loaded or invalid');
+    shopContent.innerHTML = `<p>${langData[currentLang]?.noItems || 'No items available in shop.'}</p>`;
+    return;
+  }
 
-    // Render each vegetable item
-    vegetables.forEach(veg => {
-        const vegItem = document.createElement('div');
-        vegItem.classList.add('shop-item');
+  shopContent.innerHTML = '';
 
-        const farmPrice = typeof veg.farmPrice === 'number' ? veg.farmPrice : 0;
-        const piPrice = typeof veg.piPrice === 'number' ? veg.piPrice : 0;
+  // Tampilkan semua sayur
+  vegetables.forEach(veg => {
+    const vegItem = document.createElement('div');
+    vegItem.classList.add('shop-item');
 
-        vegItem.innerHTML = `
-            <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
-            <h3>${veg.name[currentLang]}</h3>
-            <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${farmPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
-            <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${piPrice} PI</p>
-            <button class="buy-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
-            <button class="buy-pi-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
-        `;
-        shopContent.appendChild(vegItem);
-    });
+    const farmPrice = typeof veg.farmPrice === 'number' ? veg.farmPrice : 0;
+    const piPrice = typeof veg.piPrice === 'number' ? veg.piPrice : 0;
 
-    // Render water item separately
-    const waterItem = document.createElement('div');
-    waterItem.classList.add('shop-item');
-    waterItem.innerHTML = `
-        <img src="assets/img/ui/water.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
-        <h3>${langData[currentLang]?.waterLabel || 'Water'}</h3>
-        <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 ${langData[currentLang]?.coinLabel || 'Coins'}</p>
-        <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: 0.0001 PI</p>
-        <button class="buy-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
-        <button class="buy-pi-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
+    vegItem.innerHTML = `
+      <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+      <h3>${veg.name[currentLang]}</h3>
+      <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${farmPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
+      <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${piPrice} PI</p>
+      <button class="buy-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
+      <button class="buy-pi-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
     `;
-    shopContent.appendChild(waterItem);
+    shopContent.appendChild(vegItem);
+  });
 
-    // Event listener untuk semua tombol beli farm
-    document.querySelectorAll('.buy-btn').forEach(btn => {
-        addSafeClickListener(btn, () => {
-            const id = btn.getAttribute('data-id');
-            buyVegetable(id, 'farm');
-        });
-    });
+  // Tambah item Water
+  const waterItem = document.createElement('div');
+  waterItem.classList.add('shop-item');
+  waterItem.innerHTML = `
+    <img src="assets/img/ui/water.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+    <h3>${langData[currentLang]?.waterLabel || 'Water'}</h3>
+    <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 ${langData[currentLang]?.coinLabel || 'Coins'}</p>
+    <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: 0.0001 PI</p>
+    <button class="buy-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
+    <button class="buy-pi-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
+  `;
+  shopContent.appendChild(waterItem);
 
-    // Event listener untuk semua tombol beli PI
-    document.querySelectorAll('.buy-pi-btn').forEach(btn => {
-        addSafeClickListener(btn, () => {
-            const id = btn.getAttribute('data-id');
-            buyVegetable(id, 'pi');
-        });
+  // Aktifkan semua tombol beli
+  document.querySelectorAll('.buy-btn').forEach(btn => {
+    addSafeClickListener(btn, () => {
+      const id = btn.getAttribute('data-id');
+      buyVegetable(id, 'farm');
     });
+  });
+
+  document.querySelectorAll('.buy-pi-btn').forEach(btn => {
+    addSafeClickListener(btn, () => {
+      const id = btn.getAttribute('data-id');
+      buyVegetable(id, 'pi');
+    });
+  });
 }
 
 // Buy vegetable or water
 function buyVegetable(id, currency) {
-    if (id === 'water') {
-        if (currency === 'farm') {
-            if (farmCoins >= 100) {
-                farmCoins -= 100;
-                water += 10;
-                updateWallet();
-                showTransactionAnimation(`-100`, false, document.querySelector(`.buy-btn[data-id="water"]`));
-                playBuyingSound();
-            } else {
-                showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
-            }
-        } else {
-            if (pi >= 0.0001) {
-                pi -= 0.0001;
-                water += 10;
-                updateWallet();
-                showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
-                playBuyingSound();
-            } else {
-                showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
-            }
-        }
-        return;
-    }
-
-    const veg = vegetables.find(v => v.id === id);
-    if (!veg) return;
-
+  if (id === 'water') {
     if (currency === 'farm') {
-        if (farmCoins >= veg.farmPrice) {
-            farmCoins -= veg.farmPrice;
-            addToInventory('seed', veg, 1);
-            showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
-            playBuyingSound();
-        } else {
-            showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
-            return;
-        }
+      if (farmCoins >= 100) {
+        farmCoins -= 100;
+        water += 10;
+        updateWallet();
+        showTransactionAnimation(`-100`, false, document.querySelector(`.buy-btn[data-id="water"]`));
+        playBuyingSound();
+      } else {
+        showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
+      }
     } else {
-        if (pi >= veg.piPrice) {
-            pi -= veg.piPrice;
-            addToInventory('seed', veg, 1);
-            showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
-            playBuyingSound();
-        } else {
-            showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
-            return;
-        }
+      if (pi >= 0.0001) {
+        pi -= 0.0001;
+        water += 10;
+        updateWallet();
+        showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
+        playBuyingSound();
+      } else {
+        showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
+      }
     }
+    return;
+  }
 
-    // Hanya sekali di akhir
+  const veg = vegetables.find(v => v.id === id);
+  if (!veg) {
+    console.warn(`Vegetable with id ${id} not found`);
+    return;
+  }
+
+  let canBuy = false;
+
+  if (currency === 'farm') {
+    if (farmCoins >= veg.farmPrice) {
+      farmCoins -= veg.farmPrice;
+      canBuy = true;
+      showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
+    } else {
+      showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
+    }
+  } else {
+    if (pi >= veg.piPrice) {
+      pi -= veg.piPrice;
+      canBuy = true;
+      showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
+    } else {
+      showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
+    }
+  }
+
+  if (canBuy) {
+    addToInventory('seed', veg, 1);
     savePlayerData();
     updateWallet();
     renderInventory();
+    playBuyingSound();
+  }
 }
 
 // Render inventory
 function renderInventory() {
-    const inventoryContent = document.getElementById('inventory-content');
-    if (!inventoryContent) {
-        console.error('inventory-content element not found');
-        showNotification('inventory-content element not found');
-        return;
-    }
+  const inventoryContent = document.getElementById('inventory-content');
+  if (!inventoryContent) {
+    console.error('inventory-content element not found');
+    showNotification('inventory-content element not found');
+    return;
+  }
 
-    if (!langData[currentLang]) {
-        console.error('Language data not loaded');
-        return;
-    }
+  if (!langData[currentLang]) {
+    console.error('Language data not loaded');
+    return;
+  }
 
-    inventoryContent.innerHTML = '';
+  inventoryContent.innerHTML = '';
 
-    inventory.forEach(item => {
-        if (!item || !item.vegetable) return;
+  let hasItems = false;
 
-        const veg = item.vegetable;
-        const invItem = document.createElement('div');
-        invItem.classList.add('inventory-item');
+  inventory.forEach(item => {
+    if (!item || !item.vegetable) return;
 
-        const isSeed = item.type === 'seed';
-        const title = isSeed ? `${veg.name[currentLang]} Seed` : veg.name[currentLang];
+    const veg = item.vegetable;
+    const invItem = document.createElement('div');
+    invItem.classList.add('inventory-item');
 
-        invItem.innerHTML = `
-            <img src="${veg.shopImage}" alt="${title}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
-            <h3>${title}</h3>
-            <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-        `;
+    const isSeed = item.type === 'seed';
+    const title = isSeed ? `${veg.name[currentLang]} Seed` : veg.name[currentLang];
 
-        inventoryContent.appendChild(invItem);
-    });
-    
-        const sellButton = document.createElement('button');
-        sellButton.textContent = langData[currentLang]?.sellToShop || 'Sell to Shop';
-        sellButton.classList.add('sell-to-shop-btn');
-        addSafeClickListener(sellButton, () => {
-        switchTab('sell');
-        playMenuSound();
-    });
+    invItem.innerHTML = `
+      <img src="${veg.shopImage}" alt="${title}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+      <h3>${title}</h3>
+      <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
+    `;
 
-    inventoryContent.appendChild(sellButton);
+    inventoryContent.appendChild(invItem);
+    hasItems = true;
+  });
+
+  if (!hasItems) {
+    const noItemText = document.createElement('p');
+    noItemText.textContent = langData[currentLang]?.noInventory || 'No items in inventory.';
+    inventoryContent.appendChild(noItemText);
+  }
+
+  const sellButton = document.createElement('button');
+  sellButton.textContent = langData[currentLang]?.sellToShop || 'Sell to Shop';
+  sellButton.classList.add('sell-to-shop-btn');
+  addSafeClickListener(sellButton, () => {
+    switchTab('sell');
+    playMenuSound();
+  });
+
+  inventoryContent.appendChild(sellButton);
 }
 
 // START renderSellSection fix
 function renderSellSection() {
-    const sellContent = document.getElementById('sell-content');
-    sellContent.innerHTML = '';
+  const sellContent = document.getElementById('sell-content');
+  if (!sellContent) {
+    console.error('sell-content element not found');
+    return;
+  }
 
-    inventory.forEach((item, index) => {
-        if (item && item.type === 'harvest') {
-            const sellItem = document.createElement('div');
-            sellItem.classList.add('sell-item');
+  if (!langData[currentLang]) {
+    console.warn('Language data missing');
+    sellContent.innerHTML = '<p style="color:red;">Language data not loaded</p>';
+    return;
+  }
 
-            const sellPrice = item.vegetable.sellPrice;
-            const isSellable = typeof sellPrice === 'number';
+  sellContent.innerHTML = '';
 
-            if (!isSellable) {
-                console.warn(`Missing sellPrice for ${item.vegetable.id}, skipping.`);
-                return;
-            }
+  let hasItems = false;
 
-            sellItem.innerHTML = `
-                <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
-                <h3>${item.vegetable.name[currentLang]}</h3>
-                <p>${langData[currentLang]?.quantityLabel}: ${item.quantity}</p>
-                <p>${langData[currentLang]?.sellPriceLabel}: ${sellPrice} ${langData[currentLang]?.coinLabel}</p>
-                <button class="sell-btn" data-index="${index}">${langData[currentLang]?.sellLabel}</button>
-            `;
+  inventory.forEach((item, index) => {
+    if (item && item.type === 'harvest') {
+      const sellDiv = document.createElement('div'); // ganti dari sellItem
+      sellDiv.classList.add('sell-item');
 
-            sellContent.appendChild(sellItem);
-        }
-    });
+      const sellPrice = item.vegetable.sellPrice;
+      const isSellable = typeof sellPrice === 'number';
 
-    document.querySelectorAll('.sell-btn').forEach(btn => {
+      if (!isSellable) {
+        console.warn(`Missing sellPrice for ${item.vegetable.id}, skipping.`);
+        return;
+      }
+
+      sellDiv.innerHTML = `
+        <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
+        <h3>${item.vegetable.name[currentLang]}</h3>
+        <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
+        <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${sellPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
+        <button class="sell-btn" data-index="${index}">${langData[currentLang]?.sellLabel || 'Sell'}</button>
+      `;
+
+      sellContent.appendChild(sellDiv);
+      hasItems = true;
+    }
+  });
+
+  if (!hasItems) {
+    sellContent.innerHTML = `<p>${langData[currentLang]?.noSellableItems || 'No items to sell.'}</p>`;
+  }
+
+  document.querySelectorAll('.sell-btn').forEach(btn => {
     addSafeClickListener(btn, () => {
-        const index = parseInt(btn.getAttribute('data-index'));
-        sellItem(index);
+      const index = parseInt(btn.getAttribute('data-index'));
+      sellItem(index); // ini fungsi, aman karena udah gak bentrok
     });
-});
-    
+  });
 }
 // END renderSellSection fix
 
 // START sellItem fix
 function sellItem(index) {
-    const item = inventory[index];
-    if (!item || item.type !== 'harvest') return;
+  const item = inventory[index];
+  if (!item || item.type !== 'harvest') return;
 
-    const sellPrice = item.vegetable.sellPrice;
-    if (typeof sellPrice !== 'number') {
-        showNotification('Cannot sell: Missing sellPrice data.');
-        return;
-    }
+  const sellPrice = item.vegetable.sellPrice;
+  if (typeof sellPrice !== 'number') {
+    showNotification('Cannot sell: Missing sellPrice data.');
+    return;
+  }
 
-    farmCoins += sellPrice * item.quantity;
-    xp += 10;
-    checkLevelUp();
-    inventory.splice(index, 1);
-    savePlayerData();
-    updateWallet();
-    renderInventory();
-    renderSellSection();
+  const totalGain = sellPrice * item.quantity;
+  farmCoins += totalGain;
+  xp += 10;
 
-    const btnElement = document.querySelector(`.sell-btn[data-index="${index}"]`);
-    if (btnElement) {
-        showTransactionAnimation(`+${sellPrice * item.quantity}`, true, btnElement);
-    }
-    
-    playCoinSound();
-    checkCoinAchievement();
+  // Show animation duluan sebelum inventory diubah
+  const btnElement = document.querySelector(`.sell-btn[data-index="${index}"]`);
+  if (btnElement) {
+    showTransactionAnimation(`+${totalGain}`, true, btnElement);
+  }
+
+  inventory.splice(index, 1); // hapus dari inventori
+  savePlayerData();
+  updateWallet();
+  renderInventory();
+  renderSellSection();
+  playCoinSound();
+  checkLevelUp();
+  checkCoinAchievement();
 }
 // END sellItem fix
 

@@ -501,7 +501,12 @@ function handlePlotClick(index) {
     }
 }
 
-// Render shop with Water item
+// Fungsi paksa layout agar grid langsung kebentuk
+function forceReflow(el) {
+  void el.offsetHeight;
+}
+
+// Render shop dengan item sayuran
 function renderShop() {
   const shopContent = document.getElementById('shop-content');
   if (!shopContent) {
@@ -509,21 +514,28 @@ function renderShop() {
     return;
   }
 
+  // Paksa reflow untuk perbaiki layout grid kalau tab baru saja dibuka
+  forceReflow(shopContent);
+  shopContent.style.display = 'grid'; // Pastikan display-nya grid
+
+  // Cek data bahasa
   if (!langData[currentLang]) {
     console.warn('Language data missing, skipping renderShop');
     shopContent.innerHTML = `<p style="color:red;">Language data not loaded. Please reload.</p>`;
     return;
   }
 
-  if (!Array.isArray(vegetables)) {
+  // Cek data sayuran
+  if (!Array.isArray(vegetables) || vegetables.length === 0) {
     console.warn('Vegetables not loaded or invalid');
     shopContent.innerHTML = `<p>${langData[currentLang]?.noItems || 'No items available in shop.'}</p>`;
     return;
   }
 
-  shopContent.innerHTML = ''; // Kosongkan konten sebelumnya
+  // Kosongkan isi sebelumnya
+  shopContent.innerHTML = '';
 
-  // Tampilkan semua sayuran
+  // Loop semua sayuran
   vegetables.forEach(veg => {
     const vegItem = document.createElement('div');
     vegItem.classList.add('shop-item');
@@ -539,8 +551,10 @@ function renderShop() {
       <button class="buy-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
       <button class="buy-pi-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
     `;
+
     shopContent.appendChild(vegItem);
   });
+}
 
   // Tambahkan item air (water)
   const waterItem = document.createElement('div');

@@ -846,18 +846,25 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(content => {
     content.classList.remove('active');
   });
+
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.remove('active');
   });
 
   const tabContent = document.getElementById(tab);
   const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+
   if (tabContent && tabBtn) {
     tabContent.classList.add('active');
     tabBtn.classList.add('active');
+  } else {
+    console.warn('Tab or tab button not found:', tab);
   }
 
-  if (tab === 'inventory') {
+  if (tab === 'shop') {
+    renderShop();
+    renderSellSection();
+  } else if (tab === 'inventory') {
     renderInventory();
   } else if (tab === 'achievements') {
     renderAchievements();

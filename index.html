@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title id="title">Harvest Pi</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="farm/style.css?v=40">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="farm/style.css?v=40" />
   <style>
     #start-text {
       cursor: pointer;
@@ -38,9 +38,9 @@
         <span id="close-settings" class="close">×</span>
         <h2 id="settings-title">Settings</h2>
         <label id="music-volume-label" for="music-volume">Music Volume:</label>
-        <input type="range" id="music-volume" min="0" max="100" value="50">
+        <input type="range" id="music-volume" min="0" max="100" value="50" />
         <label id="voice-volume-label" for="voice-volume">Voice/SFX Volume:</label>
-        <input type="range" id="voice-volume" min="0" max="100" value="50">
+        <input type="range" id="voice-volume" min="0" max="100" value="50" />
       </div>
     </div>
   </div>
@@ -53,8 +53,8 @@
     </div>
     <h1 id="game-title">Harvest Pi</h1>
     <div id="wallet">
-      <span id="farm-coins">0 Farm Coins</span> | 
-      <span id="pi-coins">0.00 PI</span> | 
+      <span id="farm-coins">0 Farm Coins</span> |
+      <span id="pi-coins">0.00 PI</span> |
       <span id="water">0 Water</span>
       <div id="level">Level: 1 | XP: 0</div>
       <div id="xp-bar"><div id="xp-fill"></div></div>
@@ -69,10 +69,14 @@
       <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
       <button class="tab-btn" data-tab="achievements">Achievements</button>
     </div>
+
+    <!-- FARM -->
     <div id="farm" class="tab-content active">
       <div id="farm-area"></div>
       <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
     </div>
+
+    <!-- REWARD MODAL -->
     <div id="reward-modal" class="modal">
       <div class="modal-content">
         <span id="reward-modal-close" class="close">×</span>
@@ -81,37 +85,56 @@
         <button id="claim-modal-btn" aria-label="Claim Reward">Claim</button>
       </div>
     </div>
+
+    <!-- SHOP -->
     <div id="shop" class="tab-content">
+      <div class="shop-switch">
+        <button id="shop-buy-tab" class="shop-tab-btn active">Buy</button>
+        <button id="shop-sell-tab" class="shop-tab-btn">Sell</button>
+      </div>
       <div id="shop-content"></div>
-      <div id="sell-section">
+      <div id="sell-section" style="display: none;">
         <h2 id="sell-section-title">Sell Items</h2>
         <div id="sell-content"></div>
       </div>
     </div>
+
+    <!-- UPGRADES -->
     <div id="upgrades" class="tab-content">
       <h2 id="upgrades-title">Upgrades</h2>
       <p id="upgrades-content">Coming soon...</p>
     </div>
+
+    <!-- INVENTORY -->
     <div id="inventory" class="tab-content">
       <div id="inventory-content"></div>
     </div>
+
+    <!-- EXCHANGE -->
     <div id="exchange" class="tab-content">
       <h2 id="exchange-title">Exchange</h2>
       <p id="exchange-rate">1 PI = 1,000,000 Farm Coins</p>
-      <input type="number" id="exchange-amount" placeholder="Enter PI amount">
+      <input type="number" id="exchange-amount" placeholder="Enter PI amount" />
       <p><span id="exchange-result-label">Farm Coins:</span> <span id="exchange-result">0</span></p>
       <button id="exchange-btn">Exchange to Farm Coins</button>
     </div>
+
+    <!-- LEADERBOARD -->
     <div id="leaderboard" class="tab-content">
       <h2 id="leaderboard-title">Leaderboard</h2>
       <p id="leaderboard-content">Coming soon...</p>
     </div>
+
+    <!-- ACHIEVEMENTS -->
     <div id="achievements" class="tab-content">
       <div id="achievements-content"></div>
     </div>
+
+    <!-- NOTIF -->
     <div id="notification"></div>
   </div>
 
+  <!-- AUDIO -->
   <audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
   <audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
   <audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
@@ -121,7 +144,7 @@
   <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
   <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
 
-  <!-- Firebase SDK (Modular) -->
+  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
@@ -132,7 +155,7 @@
       authDomain: "harvest-pi.firebaseapp.com",
       databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "harvest-pi",
-      storageBucket: "harvest-pi.firebasestorage.app",
+      storageBucket: "harvest-pi.appspot.com",
       messagingSenderId: "650006770674",
       appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
     };
@@ -140,7 +163,6 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth(app);
-
     window.firebaseConfig = { database, auth };
   </script>
 

@@ -132,6 +132,27 @@ h1 {
   display: block;
 }
 
+.sell-to-shop-btn {
+    margin-top: 16px;
+    padding: 10px 20px;
+    font-weight: bold;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    transition: background 0.3s;
+}
+
+.sell-to-shop-btn:hover {
+    background-color: #45a049;
+}
+
 #farm-area {
   display: grid;
   grid-template-columns: repeat(2, 160px);

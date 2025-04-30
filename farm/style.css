@@ -235,6 +235,10 @@ h1 {
   background: #666;
   cursor: not-allowed;
 }
+#claim-reward-btn.claimed {
+  background: #888;
+  opacity: 0.6;
+}
 
 .modal-content {
   background: #333;

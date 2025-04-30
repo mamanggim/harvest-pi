@@ -772,8 +772,10 @@ function switchTab(tab) {
         tabBtn.classList.add('active');
     }
 
+    // Panggil fungsi render sesuai tab
     if (tab === 'shop') {
         renderShop();
+    } else if (tab === 'sell') {
         renderSellSection();
     } else if (tab === 'inventory') {
         renderInventory();

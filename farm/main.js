@@ -830,10 +830,17 @@ function claimDailyReward() {
             const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
             const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
             showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m ${langData[currentLang]?.toClaimAgain || 'to claim again!'}`);
-            document.getElementById('claim-reward-btn').disabled = true;
-        } else {
-            rewardModal.style.display = 'block';
-        }
+            const btn = document.getElementById('claim-reward-btn');
+            btn.disabled = true;
+            btn.classList.add('claimed');
+            btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+    } else {
+          const btn = document.getElementById('claim-reward-btn');
+          btn.disabled = false;
+          btn.classList.remove('claimed');
+          btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
+          rewardModal.style.display = 'block';
+       }
     }, { onlyOnce: true });
 }
 

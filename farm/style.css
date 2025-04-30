@@ -38,6 +38,17 @@ h1 {
   50% { opacity: 0.5; }
 }
 
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999; /* lebih tinggi dari corner-buttons */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
 #settings-modal button {
   margin-top: 10px;
   display: block;

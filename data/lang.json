@@ -30,7 +30,7 @@
     "quantityLabel": "Quantity",
     "sellPriceLabel": "Sell Price",
     "sellLabel": "Sell",
-    "sellToShop": "Sell to Shop"
+    "sellToShop": "Sell to Shop",
     "levelUp": "Level Up! New Level:",
     "exchanged": "Exchanged successfully!",
     "invalidAmount": "Invalid amount!",
@@ -81,7 +81,7 @@
     "quantityLabel": "Jumlah",
     "sellPriceLabel": "Harga Jual",
     "sellLabel": "Jual",
-    "sellToShop": "Jual ke Toko"
+    "sellToShop": "Jual ke Toko",
     "levelUp": "Naik Level! Level Baru:",
     "exchanged": "Berhasil ditukar!",
     "invalidAmount": "Jumlah tidak valid!",

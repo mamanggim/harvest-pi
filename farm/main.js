@@ -521,9 +521,9 @@ function renderShop() {
     return;
   }
 
-  shopContent.innerHTML = '';
+  shopContent.innerHTML = ''; // Kosongkan konten sebelumnya
 
-  // Tampilkan semua sayur
+  // Tampilkan semua sayuran
   vegetables.forEach(veg => {
     const vegItem = document.createElement('div');
     vegItem.classList.add('shop-item');
@@ -542,7 +542,7 @@ function renderShop() {
     shopContent.appendChild(vegItem);
   });
 
-  // Tambah item Water
+  // Tambahkan item air (water)
   const waterItem = document.createElement('div');
   waterItem.classList.add('shop-item');
   waterItem.innerHTML = `
@@ -555,7 +555,10 @@ function renderShop() {
   `;
   shopContent.appendChild(waterItem);
 
-  // Aktifkan semua tombol beli
+  // Tampilkan ulang shop setelah semua dimasukkan
+  shopContent.style.display = 'flex';
+
+  // Event tombol beli
   document.querySelectorAll('.buy-btn').forEach(btn => {
     addSafeClickListener(btn, () => {
       const id = btn.getAttribute('data-id');
@@ -571,24 +574,23 @@ function renderShop() {
   });
 }
 
-// Tambah item ke inventory, atau update jumlah jika sudah ada
+// Tambahkan ke inventory
 function addToInventory(type, veg, qty = 1) {
-    const existing = inventory.find(item =>
-        item.type === type &&
-        item.vegetable &&
-        item.vegetable.id === veg.id
-    );
+  const existing = inventory.find(item =>
+    item.type === type &&
+    item.vegetable &&
+    item.vegetable.id === veg.id
+  );
 
-    if (existing) {
-        existing.quantity += qty;
-    } else {
-        inventory.push({
-            type: type,
-            vegetable: veg,
-            quantity: qty
-        });
-    }
-    document.getElementById('shop-content').style.display = 'flex';
+  if (existing) {
+    existing.quantity += qty;
+  } else {
+    inventory.push({
+      type: type,
+      vegetable: veg,
+      quantity: qty
+    });
+  }
 }
 
 // Buy vegetable or water

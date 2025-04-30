@@ -1017,8 +1017,16 @@ function checkDailyReward() {
         const lastClaim = snapshot.val() || parseInt(localStorage.getItem('lastClaim'));
         const now = Date.now();
         const oneDay = 24 * 60 * 60 * 1000;
+        const btn = document.getElementById('claim-reward-btn');
+
         if (lastClaim && now - lastClaim < oneDay) {
-            document.getElementById('claim-reward-btn').disabled = true;
+            btn.disabled = true;
+            btn.classList.add('claimed');
+            btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('claimed');
+            btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
         }
     }, { onlyOnce: true });
 }

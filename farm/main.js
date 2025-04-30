@@ -165,12 +165,12 @@ function updateVolumes() {
 async function loadData() {
   try {
     // 1. Muat bahasa
-    const langRes = await fetch('harvest-pi/data/lang.json');
+    const langRes = await fetch('/data/lang.json');
     langData = await langRes.json();
     console.log('Language data loaded:', langData);
 
     // 2. Muat daftar sayur
-    const vegRes = await fetch('harvest-pi/data/vegetables.json');
+    const vegRes = await fetch('/data/vegetables.json');
     vegetables = await vegRes.json();
     console.log('Vegetables data loaded:', vegetables);
   } catch (error) {

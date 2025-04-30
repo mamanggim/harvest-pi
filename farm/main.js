@@ -1059,6 +1059,7 @@ function startGame() {
     console.log('Starting game...');
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'block';
+    document.getElementById('exit-game-btn').style.display = 'block';
     isAudioPlaying = false; // Reset flag biar audio bisa play
     console.log('Attempting to play audio...');
     playBgMusic();
@@ -1297,6 +1298,9 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('fullscreenchange', updateFullscreenButtonText);
 
 updateFullscreenButtonText();
+
+// Sembunyikan tombol exit saat di start screen
+document.getElementById('exit-game-btn').style.display = 'none';
 });
 
 // Stop audio on page unload to prevent overlap

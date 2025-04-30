@@ -163,22 +163,20 @@ function updateVolumes() {
 
 // START loadData fix
 async function loadData() {
-    try {
-        const langRes = await fetch('/data/lang.json');
-        if (!langRes.ok) throw new Error('lang.json fetch failed');
-        langData = await langRes.json();
+  try {
+    // 1. Muat bahasa
+    const langRes = await fetch('data/lang.json');
+    langData = await langRes.json();
+    console.log('Language data loaded:', langData);
 
-        const vegRes = await fetch('/data/vegetables.json');
-        if (!vegRes.ok) throw new Error('vegetables.json fetch failed');
-        const vegData = await vegRes.json();
-
-        if (!Array.isArray(vegData.vegetables)) throw new Error('Invalid vegetable data format');
-        vegetables = vegData.vegetables;
-
-    } catch (e) {
-        console.error('loadData error:', e.message);
-        showNotification('Data gagal dimuat: ' + e.message);
-    }
+    // 2. Muat daftar sayur
+    const vegRes = await fetch('data/vegetables.json');
+    vegetables = await vegRes.json();
+    console.log('Vegetables data loaded:', vegetables);
+  } catch (error) {
+    console.error('Error loading data:', error.message);
+    showNotification('Error loading game data.');
+  }
 }
 // END loadData fix
 

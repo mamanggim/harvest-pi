@@ -11,6 +11,7 @@ body {
   flex-direction: column;
   justify-content: center;
   box-sizing: border-box;
+  align-items: center;
 }
 
 h1 {
@@ -116,6 +117,15 @@ h1 {
 
 #game-screen {
   padding-top: 180px; /* biar kontennya gak ketiban judul dan tab */
+}
+
+#game-screen.fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 #wallet {
@@ -864,4 +874,13 @@ button:hover {
     transform: translateX(-50%) translateY(-40px) scale(1); /* Balik normal, keluar */
     opacity: 0;
   }
+}
+#game-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 120px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
 }

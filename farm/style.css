@@ -713,6 +713,18 @@ button:hover {
     font-size: 9px;
   }
 
+  .shop-item {
+  box-sizing: border-box;
+  overflow: hidden;
+  word-break: break-word;
+  }
+
+  .shop-item-img {
+  max-width: 100%;
+  max-height: 60px;
+  object-fit: contain;
+  }
+
   button {
     padding: 6px 10px;
     font-size: 10px;

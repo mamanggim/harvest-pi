@@ -758,34 +758,51 @@ function checkLevelUp() {
 
 // Switch tabs
 function switchTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+  // Reset semua tab
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
 
-    const tabContent = document.getElementById(tab);
-    const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-    if (tabContent && tabBtn) {
-        tabContent.classList.add('active');
-        tabBtn.classList.add('active');
+  // Aktifkan tab yg dipilih
+  const tabContent = document.getElementById(tab);
+  const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+  if (tabContent && tabBtn) {
+    tabContent.classList.add('active');
+    tabBtn.classList.add('active');
+  }
+
+  // Render konten sesuai tab
+  if (tab === 'farm') {
+    renderFarm();
+  } else if (tab === 'shop') {
+    renderShop(); // Render bagian Buy
+
+    // Default aktifkan tampilan Buy
+    const buyBtn = document.getElementById('shop-buy-tab');
+    const sellBtn = document.getElementById('shop-sell-tab');
+    const shopContent = document.getElementById('shop-content');
+    const sellSection = document.getElementById('sell-section');
+
+    if (buyBtn && sellBtn && shopContent && sellSection) {
+      buyBtn.classList.add('active');
+      sellBtn.classList.remove('active');
+      shopContent.style.display = 'block';
+      sellSection.style.display = 'none';
     }
+  } else if (tab === 'inventory') {
+    renderInventory();
+  } else if (tab === 'sell') {
+    renderSellSection();
+  } else if (tab === 'achievements') {
+    renderAchievements();
+  } else if (tab === 'exchange') {
+    updateExchangeResult();
+  }
 
-    // Panggil fungsi render sesuai tab
-    if (tab === 'shop') {
-        renderShop();
-    } else if (tab === 'sell') {
-        renderSellSection();
-    } else if (tab === 'inventory') {
-        renderInventory();
-    } else if (tab === 'achievements') {
-        renderAchievements();
-    } else if (tab === 'exchange') {
-        updateExchangeResult();
-    }
-
-    playMenuSound();
+  playMenuSound();
 }
 
 // Exchange PI to Farm Coins

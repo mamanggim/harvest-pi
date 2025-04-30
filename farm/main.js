@@ -165,12 +165,12 @@ function updateVolumes() {
 async function loadData() {
   try {
     // 1. Muat bahasa
-    const langRes = await fetch('data/lang.json');
+    const langRes = await fetch('harvest-pi/data/lang.json');
     langData = await langRes.json();
     console.log('Language data loaded:', langData);
 
     // 2. Muat daftar sayur
-    const vegRes = await fetch('data/vegetables.json');
+    const vegRes = await fetch('harvest-pi/data/vegetables.json');
     vegetables = await vegRes.json();
     console.log('Vegetables data loaded:', vegetables);
   } catch (error) {
@@ -1111,31 +1111,12 @@ function checkDailyReward() {
     }, { onlyOnce: true });
 }
 
-//Lang.json
-function loadLanguage() {
-  fetch('data/lang.json')
-    .then(res => res.json())
-    .then(data => {
-      langData = data;
-      console.log('Language data loaded:', langData);
-
-      updateUIText();
-      renderShop();
-      renderInventory();
-      renderSellSection();
-    })
-    .catch(err => {
-      console.error('Failed to load language data:', err);
-      showNotification('Failed to load language file');
-    });
-}
-
 // Initialize game
 async function initializeGame() {
   try {
     await loadData();           // Muat langData, vegetables, dll
     await loadPlayerData();     // Ambil data player dari Firebase / local
-    loadLanguage();
+
     initializeSettings();       // Volume dll
     initializePlots();          // Siapkan lahan
     updateWallet();             // Tampilkan koin, air, pi

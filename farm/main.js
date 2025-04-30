@@ -839,23 +839,8 @@ function switchTab(tab) {
     tabBtn.classList.add('active');
   }
 
-  if (tab === 'shop') {
-    renderShop();
-    const buyBtn = document.getElementById('shop-buy-tab');
-    const sellBtn = document.getElementById('shop-sell-tab');
-    const shopContent = document.getElementById('shop-content');
-    const sellSection = document.getElementById('sell-section');
-
-    if (buyBtn && sellBtn && shopContent && sellSection) {
-      buyBtn.classList.add('active');
-      sellBtn.classList.remove('active');
-      shopContent.style.display = 'block';
-      sellSection.style.display = 'none';
-    }
-  } else if (tab === 'inventory') {
+  if (tab === 'inventory') {
     renderInventory();
-  } else if (tab === 'sell') {
-    renderSellSection();
   } else if (tab === 'achievements') {
     renderAchievements();
   } else if (tab === 'exchange') {
@@ -1241,4 +1226,26 @@ window.addEventListener('beforeunload', () => {
     if (bgMusic) bgMusic.pause();
     if (bgVoice) bgVoice.pause();
     isAudioPlaying = false;
+});
+
+//Buy Sell Shop Section
+const shopBuyBtn = document.getElementById('shop-buy-tab');
+const shopSellBtn = document.getElementById('shop-sell-tab');
+const shopContent = document.getElementById('shop-content');
+const sellSection = document.getElementById('sell-section');
+
+addSafeClickListener(shopBuyBtn, () => {
+  shopBuyBtn.classList.add('active');
+  shopSellBtn.classList.remove('active');
+  shopContent.style.display = 'flex';
+  sellSection.style.display = 'none';
+  renderShop();
+});
+
+addSafeClickListener(shopSellBtn, () => {
+  shopSellBtn.classList.add('active');
+  shopBuyBtn.classList.remove('active');
+  shopContent.style.display = 'none';
+  sellSection.style.display = 'block';
+  renderSellSection();
 });

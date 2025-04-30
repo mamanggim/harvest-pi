@@ -588,6 +588,7 @@ function addToInventory(type, veg, qty = 1) {
             quantity: qty
         });
     }
+    document.getElementById('shop-content').style.display = 'flex';
 }
 
 // Buy vegetable or water

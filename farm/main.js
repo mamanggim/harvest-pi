@@ -306,8 +306,7 @@ function initializePlots() {
             </div>
             <div class="plot-status"></div>
         `;
-        plot.addEventListener('click', () => handlePlotClick(i));
-        plot.addEventListener('touchstart', () => handlePlotClick(i));
+        addSafeClickListener(plot, () => handlePlotClick(i));
         farmArea.appendChild(plot);
         farmPlots.push({ planted: false, vegetable: null, progress: 0, watered: false, currentFrame: 1, countdown: 0, totalCountdown: 0 });
     }

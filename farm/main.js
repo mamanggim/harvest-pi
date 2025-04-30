@@ -1065,7 +1065,9 @@ function updateUIText() {
 function startGame() {
     console.log('Starting game...');
     document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('game-screen').style.display = 'block';
+    const gameScreen = document.getElementById('game-screen');
+    gameScreen.style.display = 'flex';
+    gameScreen.classList.add('fade-in');
     document.getElementById('exit-game-btn').style.display = 'block';
     isAudioPlaying = false; // Reset flag biar audio bisa play
     console.log('Attempting to play audio...');

@@ -85,6 +85,39 @@ h1 {
   z-index: 1001 !important;
 }
 
+#game-title, .tabs {
+  position: fixed;
+  top: 50px; /* judul di bawah tombol pojok */
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 5px 10px;
+  border-bottom: 2px solid #fff;
+}
+
+.tabs {
+  top: 100px; /* tab di bawah judul */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 900;
+}
+
+#game-title {
+  text-align: center;
+  font-size: 24px;
+  color: #ffeb3b;
+  margin: 0;
+}
+
+#game-screen {
+  padding-top: 160px; /* biar kontennya gak ketiban judul dan tab */
+}
+
 #wallet {
   margin: 10px auto;
   font-size: 14px;

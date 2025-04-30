@@ -758,7 +758,6 @@ function checkLevelUp() {
 
 // Switch tabs
 function switchTab(tab) {
-  // Reset semua tab
   document.querySelectorAll('.tab-content').forEach(content => {
     content.classList.remove('active');
   });
@@ -766,7 +765,6 @@ function switchTab(tab) {
     btn.classList.remove('active');
   });
 
-  // Aktifkan tab yg dipilih
   const tabContent = document.getElementById(tab);
   const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
   if (tabContent && tabBtn) {
@@ -774,13 +772,8 @@ function switchTab(tab) {
     tabBtn.classList.add('active');
   }
 
-  // Render konten sesuai tab
-  if (tab === 'farm') {
-    renderFarm();
-  } else if (tab === 'shop') {
-    renderShop(); // Render bagian Buy
-
-    // Default aktifkan tampilan Buy
+  if (tab === 'shop') {
+    renderShop();
     const buyBtn = document.getElementById('shop-buy-tab');
     const sellBtn = document.getElementById('shop-sell-tab');
     const shopContent = document.getElementById('shop-content');

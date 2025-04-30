@@ -1127,6 +1127,27 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeGame();
 });
 
+const shopBuyBtn = document.getElementById('shop-buy-tab');
+const shopSellBtn = document.getElementById('shop-sell-tab');
+const shopContent = document.getElementById('shop-content');
+const sellSection = document.getElementById('sell-section');
+
+addSafeClickListener(shopBuyBtn, () => {
+  shopBuyBtn.classList.add('active');
+  shopSellBtn.classList.remove('active');
+  shopContent.style.display = 'block';
+  sellSection.style.display = 'none';
+  renderShop();
+});
+
+addSafeClickListener(shopSellBtn, () => {
+  shopSellBtn.classList.add('active');
+  shopBuyBtn.classList.remove('active');
+  shopContent.style.display = 'none';
+  sellSection.style.display = 'block';
+  renderSellSection();
+});
+
 // Stop audio on page unload to prevent overlap
 window.addEventListener('beforeunload', () => {
     if (bgMusic) bgMusic.pause();

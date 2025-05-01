@@ -1312,7 +1312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab(tab);
       });
     });
-  } // Kurung tutup ekstra dihapus di sini
+  }
 
   initializeGame();
 
@@ -1320,8 +1320,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateFullscreenButtonText();
 
-  // Sembunyikan tombol exit saat di start screen
-  document.getElementById('exit-game-btn').style.display = 'none';
+  // Sembunyikan tombol exit saat di start screen (tambah pengecekan)
+  const exitGameBtn = document.getElementById('exit-game-btn');
+  if (exitGameBtn) exitGameBtn.style.display = 'none';
 });
 
 // Stop audio on page unload to prevent overlap

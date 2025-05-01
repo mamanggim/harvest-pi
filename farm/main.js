@@ -1353,7 +1353,6 @@ document.addEventListener('DOMContentLoaded', () => {
       switchTab(tab);
     });
   });
-});
 
   // === Tambahan untuk Fullscreen Button ===
   const fullscreenToggle = document.getElementById('fullscreen-toggle');

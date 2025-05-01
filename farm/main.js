@@ -1315,7 +1315,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initializeGame();
-}); // <-- pastikan kurung tutup ini ADA dan PAS
 
   document.addEventListener('fullscreenchange', updateFullscreenButtonText);
 

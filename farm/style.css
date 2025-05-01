@@ -140,9 +140,8 @@ input[type="number"] {
 }
 
 .tab-content {
-  display: none;
   width: 100%;
-  max-width: 480px;
+  max-width: 700px; /* atau 100% juga bisa kalau mau full screen */
   margin: 0 auto;
   padding: 15px;
   box-sizing: border-box;
@@ -416,7 +415,7 @@ input[type="range"] {
   background: #8b4513;
   padding: 100px 30px 30px 30px;
   border-radius: 10px;
-  width: 100%;
+  width: 600%;
   max-width: 100%;
   height: 360px;
   margin: 0 auto;

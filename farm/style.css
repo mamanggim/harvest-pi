@@ -11,13 +11,17 @@ body {
   background-size: cover;
   font-family: 'Press Start 2P', cursive;
   color: #fff;
-  text-align: center;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+h1#title {
+  font-size: 36px;
+  color: #8BC34A; /* Hijau daun */
+  text-shadow: 0 0 5px #8BC34A, 0 0 10px #558B2F;
+  margin-bottom: 20px;
 }
 
 button {
@@ -140,8 +144,9 @@ input[type="number"] {
 }
 
 .tab-content {
+  display: none;
   width: 100%;
-  max-width: 700px; /* atau 100% juga bisa kalau mau full screen */
+  max-width: 480px;
   margin: 0 auto;
   padding: 15px;
   box-sizing: border-box;
@@ -408,16 +413,16 @@ input[type="range"] {
   display: grid;
   grid-template-columns: repeat(2, 160px);
   grid-template-rows: repeat(2, 16px);
-  row-gap: 80px;
-  column-gap: 80px;
+  row-gap: 60px;
+  column-gap: 60px;
   justify-content: center;
   align-content: space-around;
   background: #8b4513;
   padding: 100px 30px 30px 30px;
   border-radius: 10px;
-  width: 600%;
-  max-width: 100%;
-  height: 360px;
+  width: 100%;
+  max-width: 90%;
+  height: 300px;
   margin: 0 auto;
 }
 
@@ -936,14 +941,18 @@ input[type="range"] {
 }
 
 #start-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.8); /* bisa diubah sesuai style kamu */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  background: rgba(0,0,0,0.6);
   text-align: center;
+  z-index: 3000;
 }
 
 #start-screen h1#title {
@@ -957,11 +966,4 @@ input[type="range"] {
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.05); opacity: 0.85; }
   100% { transform: scale(1); opacity: 1; }
-}
-
-.center-screen {
-  display: flex !important;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }

@@ -131,7 +131,7 @@ h1 {
 #wallet {
   margin: 10px auto;
   font-size: 14px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   padding: 10px;
   border-radius: 8px;
   width: fit-content;
@@ -248,8 +248,8 @@ h1 {
   background: #8b4513;
   padding: 100px 30px 30px 30px;
   border-radius: 10px;
-  width: 90%;
-  max-width: 460px;
+  width: 100%;
+  max-width: 90%;
   height: 300px;
   margin: 0 auto;
 }
@@ -875,7 +875,20 @@ button:hover {
     opacity: 0;
   }
 }
+
+#game-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.2); /* transparan */
+  backdrop-filter: blur(4px); /* biar elegan */
+  z-index: 1000;
+  padding: 10px 0;
+}
+
 #game-screen {
+  padding-top: 180px; /* menyesuaikan tinggi header */
   display: none;
   flex-direction: column;
   align-items: center;

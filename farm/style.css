@@ -407,32 +407,30 @@ input[type="range"] {
 
 #farm-area {
   display: grid;
-  grid-template-columns: repeat(2, 200px);
-  row-gap: 70px;
-  column-gap: 70px;
-  justify-content: center;
-  align-content: center;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 40px;
+  justify-items: center;
+  align-items: center;
   background: #8b4513;
-  padding: 60px 30px;
+  padding: 60px 20px;
   border-radius: 12px;
+  max-width: 480px;
   width: 100%;
-  max-width: 580px;
-  min-height: 420px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .plot {
   background: #654321;
   border: 2px solid #fff;
-  border-radius: 140% / 100%; /* tetap elips */
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border-radius: 140% / 140%;
+  width: 180px;
+  height: 24px;
   position: relative;
-  width: 200px;
-  height: 40px;
   cursor: pointer;
-  transition: transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .plot-content {

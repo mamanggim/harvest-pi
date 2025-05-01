@@ -1193,7 +1193,7 @@ async function initializeGame() {
       const startScreen = document.getElementById('start-screen');
       if (loadingScreen && startScreen) {
         loadingScreen.style.display = 'none';
-        startScreen.style.display = 'block';
+        startScreen.style.display = 'flex';
       }
     }, 1000);
 

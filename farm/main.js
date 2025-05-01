@@ -1315,6 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initializeGame();
+});
 
   document.addEventListener('fullscreenchange', updateFullscreenButtonText);
 

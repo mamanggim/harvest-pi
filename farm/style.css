@@ -959,3 +959,24 @@ input[type="range"] {
   50% { transform: scale(1.05); opacity: 0.85; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/*-- Tambahan Biar Lebar --*/
+#farm.tab-content {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+#farm-area {
+  width: 100% !important;
+  max-width: 640px; /* Ukuran sesuai XP bar / wallet */
+  height: 400px;
+  margin: 0 auto;
+  padding: 80px 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 200px);
+  grid-template-rows: repeat(2, 24px);
+  gap: 80px;
+  justify-content: center;
+  background: #8b4513;
+  border-radius: 10px;
+}

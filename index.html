@@ -27,56 +27,58 @@
   </div>
 
   <!-- START SCREEN -->
-<div id="start-screen" style="display: none;">
-  <h1 id="title">Harvest Pi</h1>
-  <div id="start-text" class="start-text">Start Game</div>
-  <div class="corner-buttons">
-    <button id="lang-toggle">Switch Language (EN/ID)</button>
-    <button id="settings-btn">⚙️</button>
-  </div>
-</div>
-
-<!-- GAME SCREEN -->
-<div id="game-screen" style="display: none;">
-
-  <!-- Fixed Header -->
-  <div id="game-header">
+  <div id="start-screen" style="display: none;">
+    <h1 id="title">Harvest Pi</h1>
+    <div id="start-text" class="start-text">Start Game</div>
     <div class="corner-buttons">
-      <button id="game-settings-btn">⚙️</button>
-    </div>
-    <h1 id="game-title">Harvest Pi</h1>
-    <div id="wallet">
-      <span id="farm-coins">0 Farm Coins</span> |
-      <span id="pi-coins">0.00 PI</span> |
-      <span id="water">0 Water</span>
-      <div id="level">Level: 1 | XP: 0</div>
-      <div id="xp-bar"><div id="xp-fill"></div></div>
-    </div>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="farm">Farm</button>
-      <button class="tab-btn" data-tab="shop">Shop</button>
-      <button class="tab-btn" data-tab="upgrades">Upgrades</button>
-      <button class="tab-btn" data-tab="inventory">Inventory</button>
-      <button class="tab-btn" data-tab="exchange">Exchange</button>
-      <button class="tab-btn" data-tab="depositPi">Deposit Pi Coin</button>
-      <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
-      <button class="tab-btn" data-tab="achievements">Achievements</button>
+      <button id="lang-toggle">Switch Language (EN/ID)</button>
+      <button id="settings-btn">⚙️</button>
     </div>
   </div>
 
-  <!-- KONTEN SCROLLABLE -->
-  <div id="farm" class="tab-content active">
-    <div id="farm-area"></div>
-    <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
-  </div>
-  <div id="shop" class="tab-content"><div id="shop-content"></div><div id="sell-section"></div></div>
-  <div id="upgrades" class="tab-content"><h2>Upgrades</h2><p>Coming soon...</p></div>
-  <div id="inventory" class="tab-content"><div id="inventory-content"></div></div>
-  <div id="exchange" class="tab-content">...</div>
-  <div id="leaderboard" class="tab-content">...</div>
-  <div id="achievements" class="tab-content"><div id="achievements-content"></div></div>
+  <!-- GAME SCREEN -->
+  <div id="game-screen" style="display: none; flex-direction: column;">
 
-</div>
+    <!-- HEADER FIXED -->
+    <div id="game-header">
+      <div class="corner-buttons">
+        <button id="game-settings-btn">⚙️</button>
+      </div>
+      <h1 id="game-title">Harvest Pi</h1>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="farm">Farm</button>
+        <button class="tab-btn" data-tab="shop">Shop</button>
+        <button class="tab-btn" data-tab="upgrades">Upgrades</button>
+        <button class="tab-btn" data-tab="inventory">Inventory</button>
+        <button class="tab-btn" data-tab="exchange">Exchange</button>
+        <button class="tab-btn" data-tab="depositPi">Deposit Pi Coin</button>
+        <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
+        <button class="tab-btn" data-tab="achievements">Achievements</button>
+      </div>
+      <div id="wallet">
+        <span id="farm-coins">0 Farm Coins</span> |
+        <span id="pi-coins">0.00 PI</span> |
+        <span id="water">0 Water</span>
+        <div id="level">Level: 1 | XP: 0</div>
+        <div id="xp-bar"><div id="xp-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- KONTEN GAME SCROLLABLE -->
+    <div id="game-content" style="flex: 1; overflow-y: auto; width: 100%;">
+      <div id="farm" class="tab-content active">
+        <div id="farm-area"></div>
+        <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
+      </div>
+      <div id="shop" class="tab-content"><div id="shop-content"></div><div id="sell-section"></div></div>
+      <div id="upgrades" class="tab-content"><h2>Upgrades</h2><p>Coming soon...</p></div>
+      <div id="inventory" class="tab-content"><div id="inventory-content"></div></div>
+      <div id="exchange" class="tab-content"><p>Exchange content...</p></div>
+      <div id="leaderboard" class="tab-content"><p>Leaderboard content...</p></div>
+      <div id="achievements" class="tab-content"><div id="achievements-content"></div></div>
+    </div>
+
+  </div>
   
     <!-- FARM -->
     <div id="farm" class="tab-content active">

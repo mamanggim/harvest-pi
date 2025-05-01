@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title id="title">Harvest Pi</title>
+  <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="farm/style.css?v=40" />
   <style>
@@ -21,12 +21,14 @@
   </style>
 </head>
 <body>
-  <div id="loading-screen">
-    <h1>Harvest Pi</h1>
-    <div class="loading-animation">Loading...</div>
-  </div>
 
-  <!-- START SCREEN -->
+<!-- LOADING -->
+<div id="loading-screen">
+  <h1>Harvest Pi</h1>
+  <div class="loading-animation">Loading...</div>
+</div>
+
+<!-- START SCREEN -->
 <div id="start-screen">
   <h1 id="title">Harvest Pi</h1>
   <div id="start-text" class="start-text">Start Game</div>
@@ -36,7 +38,7 @@
   </div>
 </div>
 
-<!-- GAME SCREEN -->
+  <!-- GAME SCREEN -->
 <div id="game-screen" style="display: none;">
   <div id="game-header">
     <div class="corner-buttons">
@@ -62,12 +64,13 @@
     </div>
   </div>
 
-  <!-- Semua konten tab disini -->
+  <!-- FARM -->
   <div id="farm" class="tab-content active">
     <div id="farm-area"></div>
     <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
   </div>
 
+  <!-- SHOP -->
   <div id="shop" class="tab-content">
     <div class="shop-switch">
       <button id="shop-buy-tab" class="shop-tab-btn active">Buy</button>
@@ -80,15 +83,18 @@
     </div>
   </div>
 
+  <!-- UPGRADES -->
   <div id="upgrades" class="tab-content">
     <h2 id="upgrades-title">Upgrades</h2>
     <p id="upgrades-content">Coming soon...</p>
   </div>
 
+  <!-- INVENTORY -->
   <div id="inventory" class="tab-content">
     <div id="inventory-content"></div>
   </div>
 
+  <!-- EXCHANGE -->
   <div id="exchange" class="tab-content">
     <h2 id="exchange-title">Exchange</h2>
     <p id="exchange-rate">1 PI = 1,000,000 Farm Coins</p>
@@ -97,132 +103,29 @@
     <button id="exchange-btn">Exchange to Farm Coins</button>
   </div>
 
+  <!-- LEADERBOARD -->
   <div id="leaderboard" class="tab-content">
     <h2 id="leaderboard-title">Leaderboard</h2>
     <p id="leaderboard-content">Coming soon...</p>
   </div>
 
+  <!-- ACHIEVEMENTS -->
   <div id="achievements" class="tab-content">
     <div id="achievements-content"></div>
   </div>
 </div>
-  
-    <!-- FARM -->
-    <div id="farm" class="tab-content active">
-      <div id="farm-area"></div>
-      <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
-    </div>
 
-    <!-- REWARD MODAL -->
-    <div id="reward-modal" class="modal">
-      <div class="modal-content">
-        <span id="reward-modal-close" class="close">×</span>
-        <h2>Daily Reward</h2>
-        <p>You got +100 Farm Coins & +50 Water!</p>
-        <button id="claim-modal-btn" aria-label="Claim Reward">Claim</button>
-      </div>
-    </div>
-
-    <!-- SHOP -->
-    <div id="shop" class="tab-content">
-      <div class="shop-switch">
-        <button id="shop-buy-tab" class="shop-tab-btn active">Buy</button>
-        <button id="shop-sell-tab" class="shop-tab-btn">Sell</button>
-      </div>
-      <div id="shop-content"></div>
-      <div id="sell-section" style="display: none;">
-        <h2 id="sell-section-title">Sell Items</h2>
-        <div id="sell-content"></div>
-      </div>
-    </div>
-
-    <!-- UPGRADES -->
-    <div id="upgrades" class="tab-content">
-      <h2 id="upgrades-title">Upgrades</h2>
-      <p id="upgrades-content">Coming soon...</p>
-    </div>
-
-    <!-- INVENTORY -->
-    <div id="inventory" class="tab-content">
-      <div id="inventory-content"></div>
-    </div>
-
-    <!-- EXCHANGE -->
-    <div id="exchange" class="tab-content">
-      <h2 id="exchange-title">Exchange</h2>
-      <p id="exchange-rate">1 PI = 1,000,000 Farm Coins</p>
-      <input type="number" id="exchange-amount" placeholder="Enter PI amount" />
-      <p><span id="exchange-result-label">Farm Coins:</span> <span id="exchange-result">0</span></p>
-      <button id="exchange-btn">Exchange to Farm Coins</button>
-    </div>
-
-    <!-- LEADERBOARD -->
-    <div id="leaderboard" class="tab-content">
-      <h2 id="leaderboard-title">Leaderboard</h2>
-      <p id="leaderboard-content">Coming soon...</p>
-    </div>
-
-    <!-- ACHIEVEMENTS -->
-    <div id="achievements" class="tab-content">
-      <div id="achievements-content"></div>
-    </div>
-
-    <!-- NOTIF -->
-    <div id="notification"></div>
+  <!-- MODAL REWARD -->
+<div id="reward-modal" class="modal">
+  <div class="modal-content">
+    <span id="reward-modal-close" class="close">×</span>
+    <h2>Daily Reward</h2>
+    <p>You got +100 Farm Coins & +50 Water!</p>
+    <button id="claim-modal-btn" aria-label="Claim Reward">Claim</button>
   </div>
+</div>
 
-  <!-- AUDIO -->
-  <audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
-  <audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
-  <audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
-  <audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3"></audio>
-  <audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3"></audio>
-  <audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3"></audio>
-  <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
-  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
-
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
-      authDomain: "harvest-pi.firebaseapp.com",
-      databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "harvest-pi",
-      storageBucket: "harvest-pi.appspot.com",
-      messagingSenderId: "650006770674",
-      appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-    const auth = getAuth(app);
-    window.firebaseConfig = { database, auth };
-  </script>
-
-  <!-- Pi SDK -->
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-  <!-- Main Script -->
-  <script type="module" src="farm/main.js?v=40"></script>
-
-  <!-- Fallback -->
-  <script>
-    window.addEventListener('error', (event) => {
-      alert('Main script failed to load: ' + event.message);
-      const loadingScreen = document.getElementById('loading-screen');
-      const startScreen = document.getElementById('start-screen');
-      if (loadingScreen && startScreen) {
-        loadingScreen.style.display = 'none';
-        startScreen.style.display = 'block';
-      }
-    });
-  </script>
-
-<!-- Settings Modal (global, bisa dipanggil dari mana saja) -->
+<!-- SETTINGS MODAL -->
 <div id="settings-modal" class="modal">
   <div class="modal-content">
     <span id="close-settings" class="close">×</span>
@@ -236,5 +139,59 @@
     <input type="range" id="voice-volume" min="0" max="100" value="50" />
   </div>
 </div>
+
+<!-- NOTIFIKASI -->
+<div id="notification"></div>
+
+<!-- AUDIO -->
+<audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
+<audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
+<audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
+<audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3"></audio>
+<audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3"></audio>
+<audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3"></audio>
+<audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
+<audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
+
+  <!-- FIREBASE -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+  import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
+    authDomain: "harvest-pi.firebaseapp.com",
+    databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "harvest-pi",
+    storageBucket: "harvest-pi.appspot.com",
+    messagingSenderId: "650006770674",
+    appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
+  const auth = getAuth(app);
+  window.firebaseConfig = { database, auth };
+</script>
+
+<!-- PI NETWORK SDK -->
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+<!-- MAIN GAME SCRIPT -->
+<script type="module" src="farm/main.js?v=40"></script>
+
+<!-- FALLBACK ERROR HANDLING -->
+<script>
+  window.addEventListener('error', (event) => {
+    alert('Main script failed to load: ' + event.message);
+    const loadingScreen = document.getElementById('loading-screen');
+    const startScreen = document.getElementById('start-screen');
+    if (loadingScreen && startScreen) {
+      loadingScreen.style.display = 'none';
+      startScreen.style.display = 'block';
+    }
+  });
+</script>
 </body>
 </html>

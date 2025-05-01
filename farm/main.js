@@ -1116,6 +1116,7 @@ function toggleLanguage() {
     renderInventory();
     renderSellSection();
     renderAchievements();
+    updateDailyRewardTexts();
     playMenuSound();
 }
 
@@ -1175,6 +1176,19 @@ function checkDailyReward() {
             btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
         }
     }, { onlyOnce: true });
+}
+
+// Daily Claim Text
+function updateDailyRewardTexts() {
+  const title = document.getElementById('daily-reward-title');
+  const text = document.getElementById('daily-reward-text');
+  const claimBtn = document.getElementById('claim-modal-btn');
+
+  if (!langData[currentLang]) return;
+
+  if (title) title.textContent = langData[currentLang].dailyRewardTitle || 'Daily Reward';
+  if (text) text.textContent = langData[currentLang].dailyRewardText || 'You got +100 Farm Coins & +50 Water!';
+  if (claimBtn) claimBtn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
 }
 
 // Initialize game

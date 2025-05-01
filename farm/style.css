@@ -11,17 +11,13 @@ body {
   background-size: cover;
   font-family: 'Press Start 2P', cursive;
   color: #fff;
+  text-align: center;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   overflow-x: hidden;
-  margin: 0;
-  padding: 0;
-}
-
-h1#title {
-  font-size: 36px;
-  color: #8BC34A; /* Hijau daun */
-  text-shadow: 0 0 5px #8BC34A, 0 0 10px #558B2F;
-  margin-bottom: 20px;
 }
 
 button {
@@ -941,18 +937,14 @@ input[type="range"] {
 }
 
 #start-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.8); /* bisa diubah sesuai style kamu */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: rgba(0,0,0,0.6);
   text-align: center;
-  z-index: 3000;
 }
 
 #start-screen h1#title {

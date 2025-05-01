@@ -960,59 +960,55 @@ input[type="range"] {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/*-- Tambahan Biar Lebar --*/
+/* Default / Desktop */
 #farm.tab-content {
-  max-width: none !important;
-  width: 100% !important;
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 #farm-area {
-  width: 100% !important;
-  max-width: 400px; /* Ukuran sesuai XP bar / wallet */
+  width: 100%;
+  max-width: 400px;
   height: 400px;
-  margin: 0 auto;
   padding: 80px 20px;
   display: grid;
-  grid-template-columns: repeat(2, 200px);
-  grid-template-rows: repeat(2, 24px);
-  gap: 80px;
+  grid-template-columns: repeat(2, 160px);
+  grid-template-rows: repeat(2, 20px);
+  gap: 70px;
   justify-content: center;
   background: #8b4513;
   border-radius: 10px;
 }
 
-@media (max-width: 480px) {
-  #farm.tab-content {
-    max-width: none !important;
-    width: 100% !important;
+/* Tablet */
+@media (max-width: 600px) {
+  #farm.tab-content,
+  #farm-area {
+    max-width: 340px;
   }
 
   #farm-area {
-    display: grid;
     grid-template-columns: repeat(2, 140px);
-    grid-template-rows: repeat(2, 20px);
-    row-gap: 40px;
-    column-gap: 40px;
-    justify-content: center;
-    align-content: space-around;
-    background: #8b4513;
+    grid-template-rows: repeat(2, 18px);
+    height: 340px;
+    gap: 60px;
     padding: 60px 15px;
-    border-radius: 10px;
-    width: 100% !important;
-    max-width: 340px;
-    height: 320px;
-    margin: 0 auto;
   }
 }
 
-@media (max-width: 360px) {
+/* Mobile Kecil */
+@media (max-width: 420px) {
+  #farm.tab-content,
+  #farm-area {
+    max-width: 280px;
+  }
+
   #farm-area {
     grid-template-columns: repeat(2, 120px);
-    grid-template-rows: repeat(2, 18px);
-    row-gap: 30px;
-    column-gap: 30px;
-    padding: 50px 10px;
-    max-width: 280px;
+    grid-template-rows: repeat(2, 16px);
     height: 300px;
+    gap: 50px;
+    padding: 50px 10px;
   }
 }

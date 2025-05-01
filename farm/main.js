@@ -1078,7 +1078,7 @@ function startGame() {
     // Auto Full Screen
     enterFullScreen();
 }
-addSafeClickListener(document.getElementById('start-screen'), () => {
+addSafeClickListener(document.getElementById('start-text'), () => {
   startGame();
 });
 

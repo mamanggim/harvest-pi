@@ -1272,7 +1272,7 @@ function updateFullscreenButtonText() {
   fullscreenToggle.textContent = isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
 }
 
-// DOM Content Loaded
+// === DOM Content Loaded ===
 document.addEventListener('DOMContentLoaded', () => {
   const startText = document.getElementById('start-text');
   if (startText) {
@@ -1289,7 +1289,11 @@ document.addEventListener('DOMContentLoaded', () => {
   addSafeClickListener(document.getElementById('game-settings-btn'), openSettings);
   addSafeClickListener(document.getElementById('exit-game-btn'), exitGame);
   addSafeClickListener(document.getElementById('exchange-btn'), exchangePi);
-  document.getElementById('exchange-amount')?.addEventListener('input', updateExchangeResult);
+
+  const exchangeInput = document.getElementById('exchange-amount');
+  if (exchangeInput) {
+    exchangeInput.addEventListener('input', updateExchangeResult);
+  }
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
     addSafeClickListener(btn, () => {

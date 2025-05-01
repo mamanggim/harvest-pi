@@ -1312,7 +1312,6 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab(tab);
       });
     });
-  }
 
   initializeGame();
 });

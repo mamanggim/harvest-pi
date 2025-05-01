@@ -1356,7 +1356,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }, 100); // Delay 100ms sebelum melakukan pengecekan
-});
 
   // === Tambahan untuk Fullscreen Button ===
   const fullscreenToggle = document.getElementById('fullscreen-toggle');

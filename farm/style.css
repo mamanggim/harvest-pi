@@ -406,32 +406,33 @@ input[type="range"] {
 /* ========== PART 7: FARM AREA & PLOT STYLE ========== */
 
 #farm-area {
-  #farm-area {
   display: grid;
   grid-template-columns: repeat(2, 200px);
-  gap: 40px;
+  row-gap: 70px;
+  column-gap: 70px;
   justify-content: center;
   align-content: center;
   background: #8b4513;
-  padding: 50px 20px;
+  padding: 60px 30px;
   border-radius: 12px;
-  max-width: 480px;
   width: 100%;
+  max-width: 600px;
+  min-height: 480px;
   margin: 0 auto;
-  box-sizing: border-box;
 }
 
 .plot {
   background: #654321;
   border: 2px solid #fff;
-  border-radius: 140% / 140%;
-  width: 200px;
-  height: 24px;
-  position: relative;
-  cursor: pointer;
+  border-radius: 140% / 100%; /* tetap elips */
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 200px;
+  height: 40px;
+  cursor: pointer;
+  transition: transform 0.1s;
 }
 
 .plot-content {

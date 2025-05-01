@@ -20,13 +20,6 @@ body {
   overflow-x: hidden;
 }
 
-h1#title {
-  font-size: 36px;
-  color: #8BC34A; /* Hijau daun */
-  text-shadow: 0 0 5px #8BC34A, 0 0 10px #558B2F;
-  margin-bottom: 20px;
-}
-
 button {
   background: #4caf50;
   color: #fff;

@@ -945,7 +945,6 @@ input[type="range"] {
   padding: 20px;
   background: rgba(0,0,0,0.6);
   text-align: center;
-  cursor: pointer;
 }
 
 #start-screen h1#title {

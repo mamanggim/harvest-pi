@@ -1274,85 +1274,89 @@ function updateFullscreenButtonText() {
 
 // === DOM Content Loaded ===
 document.addEventListener('DOMContentLoaded', () => {
-  const startText = document.getElementById('start-text');
-  if (startText) {
-    addSafeClickListener(startText, () => startGame());
-  } else {
-    console.error('start-text element not found');
-    showNotification('start-text element not found');
-  }
+  setTimeout(() => {
+    // Memastikan elemen dimuat setelah sedikit delay
+    const startText = document.getElementById('start-text');
+    if (startText) {
+      addSafeClickListener(startText, () => startGame());
+    } else {
+      console.error('start-text element not found');
+      showNotification('start-text element not found');
+    }
 
-  const langToggle = document.getElementById('lang-toggle');
-  if (langToggle) {
-    addSafeClickListener(langToggle, toggleLanguage);
-  } else {
-    console.error('lang-toggle element not found');
-    showNotification('lang-toggle element not found');
-  }
+    const langToggle = document.getElementById('lang-toggle');
+    if (langToggle) {
+      addSafeClickListener(langToggle, toggleLanguage);
+    } else {
+      console.error('lang-toggle element not found');
+      showNotification('lang-toggle element not found');
+    }
 
-  const settingsBtn = document.getElementById('settings-btn');
-  if (settingsBtn) {
-    addSafeClickListener(settingsBtn, openSettings);
-  } else {
-    console.error('settings-btn element not found');
-    showNotification('settings-btn element not found');
-  }
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+      addSafeClickListener(settingsBtn, openSettings);
+    } else {
+      console.error('settings-btn element not found');
+      showNotification('settings-btn element not found');
+    }
 
-  const claimRewardBtn = document.getElementById('claim-reward-btn');
-  if (claimRewardBtn) {
-    addSafeClickListener(claimRewardBtn, claimDailyReward);
-  } else {
-    console.error('claim-reward-btn element not found');
-    showNotification('claim-reward-btn element not found');
-  }
+    const claimRewardBtn = document.getElementById('claim-reward-btn');
+    if (claimRewardBtn) {
+      addSafeClickListener(claimRewardBtn, claimDailyReward);
+    } else {
+      console.error('claim-reward-btn element not found');
+      showNotification('claim-reward-btn element not found');
+    }
 
-  const gameLangToggle = document.getElementById('game-lang-toggle');
-  if (gameLangToggle) {
-    addSafeClickListener(gameLangToggle, toggleLanguage);
-  } else {
-    console.error('game-lang-toggle element not found');
-    showNotification('game-lang-toggle element not found');
-  }
+    const gameLangToggle = document.getElementById('game-lang-toggle');
+    if (gameLangToggle) {
+      addSafeClickListener(gameLangToggle, toggleLanguage);
+    } else {
+      console.error('game-lang-toggle element not found');
+      showNotification('game-lang-toggle element not found');
+    }
 
-  const gameSettingsBtn = document.getElementById('game-settings-btn');
-  if (gameSettingsBtn) {
-    addSafeClickListener(gameSettingsBtn, openSettings);
-  } else {
-    console.error('game-settings-btn element not found');
-    showNotification('game-settings-btn element not found');
-  }
+    const gameSettingsBtn = document.getElementById('game-settings-btn');
+    if (gameSettingsBtn) {
+      addSafeClickListener(gameSettingsBtn, openSettings);
+    } else {
+      console.error('game-settings-btn element not found');
+      showNotification('game-settings-btn element not found');
+    }
 
-  const exitGameBtn = document.getElementById('exit-game-btn');
-  if (exitGameBtn) {
-    addSafeClickListener(exitGameBtn, exitGame);
-  } else {
-    console.error('exit-game-btn element not found');
-    showNotification('exit-game-btn element not found');
-  }
+    const exitGameBtn = document.getElementById('exit-game-btn');
+    if (exitGameBtn) {
+      addSafeClickListener(exitGameBtn, exitGame);
+    } else {
+      console.error('exit-game-btn element not found');
+      showNotification('exit-game-btn element not found');
+    }
 
-  const exchangeBtn = document.getElementById('exchange-btn');
-  if (exchangeBtn) {
-    addSafeClickListener(exchangeBtn, exchangePi);
-  } else {
-    console.error('exchange-btn element not found');
-    showNotification('exchange-btn element not found');
-  }
+    const exchangeBtn = document.getElementById('exchange-btn');
+    if (exchangeBtn) {
+      addSafeClickListener(exchangeBtn, exchangePi);
+    } else {
+      console.error('exchange-btn element not found');
+      showNotification('exchange-btn element not found');
+    }
 
-  const exchangeInput = document.getElementById('exchange-amount');
-  if (exchangeInput) {
-    exchangeInput.addEventListener('input', updateExchangeResult);
-  } else {
-    console.error('exchange-amount input element not found');
-    showNotification('exchange-amount input element not found');
-  }
+    const exchangeInput = document.getElementById('exchange-amount');
+    if (exchangeInput) {
+      exchangeInput.addEventListener('input', updateExchangeResult);
+    } else {
+      console.error('exchange-amount input element not found');
+      showNotification('exchange-amount input element not found');
+    }
 
-  // Pengecekan dan penambahan event listener untuk semua tombol tab
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    addSafeClickListener(btn, () => {
-      const tab = btn.getAttribute('data-tab');
-      switchTab(tab);
+    // Pengecekan dan penambahan event listener untuk semua tombol tab
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      addSafeClickListener(btn, () => {
+        const tab = btn.getAttribute('data-tab');
+        switchTab(tab);
+      });
     });
-  });
+  }, 100); // Delay 100ms sebelum melakukan pengecekan
+});
 
   // === Tambahan untuk Fullscreen Button ===
   const fullscreenToggle = document.getElementById('fullscreen-toggle');

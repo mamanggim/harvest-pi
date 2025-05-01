@@ -1272,98 +1272,50 @@ function updateFullscreenButtonText() {
   fullscreenToggle.textContent = isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
 }
 
-// === DOM Content Loaded ===
+// DOM Content Loaded (versi aman)
 document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    // Memastikan elemen dimuat setelah sedikit delay
-    const startText = document.getElementById('start-text');
-    if (startText) {
-      addSafeClickListener(startText, () => startGame());
-    } else {
-      console.error('start-text element not found');
-      showNotification('start-text element not found');
-    }
+  const startText = document.getElementById('start-text');
+  if (startText) addSafeClickListener(startText, () => startGame());
 
-    const langToggle = document.getElementById('lang-toggle');
-    if (langToggle) {
-      addSafeClickListener(langToggle, toggleLanguage);
-    } else {
-      console.error('lang-toggle element not found');
-      showNotification('lang-toggle element not found');
-    }
+  const langToggle = document.getElementById('lang-toggle');
+  if (langToggle) addSafeClickListener(langToggle, toggleLanguage);
 
-    const settingsBtn = document.getElementById('settings-btn');
-    if (settingsBtn) {
-      addSafeClickListener(settingsBtn, openSettings);
-    } else {
-      console.error('settings-btn element not found');
-      showNotification('settings-btn element not found');
-    }
+  const settingsBtn = document.getElementById('settings-btn');
+  if (settingsBtn) addSafeClickListener(settingsBtn, openSettings);
 
-    const claimRewardBtn = document.getElementById('claim-reward-btn');
-    if (claimRewardBtn) {
-      addSafeClickListener(claimRewardBtn, claimDailyReward);
-    } else {
-      console.error('claim-reward-btn element not found');
-      showNotification('claim-reward-btn element not found');
-    }
+  const claimBtn = document.getElementById('claim-reward-btn');
+  if (claimBtn) addSafeClickListener(claimBtn, claimDailyReward);
 
-    const gameLangToggle = document.getElementById('game-lang-toggle');
-    if (gameLangToggle) {
-      addSafeClickListener(gameLangToggle, toggleLanguage);
-    } else {
-      console.error('game-lang-toggle element not found');
-      showNotification('game-lang-toggle element not found');
-    }
+  const gameLangToggle = document.getElementById('game-lang-toggle');
+  if (gameLangToggle) addSafeClickListener(gameLangToggle, toggleLanguage);
 
-    const gameSettingsBtn = document.getElementById('game-settings-btn');
-    if (gameSettingsBtn) {
-      addSafeClickListener(gameSettingsBtn, openSettings);
-    } else {
-      console.error('game-settings-btn element not found');
-      showNotification('game-settings-btn element not found');
-    }
+  const gameSettingsBtn = document.getElementById('game-settings-btn');
+  if (gameSettingsBtn) addSafeClickListener(gameSettingsBtn, openSettings);
 
-    const exitGameBtn = document.getElementById('exit-game-btn');
-    if (exitGameBtn) {
-      addSafeClickListener(exitGameBtn, exitGame);
-    } else {
-      console.error('exit-game-btn element not found');
-      showNotification('exit-game-btn element not found');
-    }
+  const exitBtn = document.getElementById('exit-game-btn');
+  if (exitBtn) addSafeClickListener(exitBtn, exitGame);
 
-    const exchangeBtn = document.getElementById('exchange-btn');
-    if (exchangeBtn) {
-      addSafeClickListener(exchangeBtn, exchangePi);
-    } else {
-      console.error('exchange-btn element not found');
-      showNotification('exchange-btn element not found');
-    }
+  const exchangeBtn = document.getElementById('exchange-btn');
+  if (exchangeBtn) addSafeClickListener(exchangeBtn, exchangePi);
 
-    const exchangeInput = document.getElementById('exchange-amount');
-    if (exchangeInput) {
-      exchangeInput.addEventListener('input', updateExchangeResult);
-    } else {
-      console.error('exchange-amount input element not found');
-      showNotification('exchange-amount input element not found');
-    }
+  const exchangeInput = document.getElementById('exchange-amount');
+  if (exchangeInput) exchangeInput.addEventListener('input', updateExchangeResult);
 
-    // Pengecekan dan penambahan event listener untuk semua tombol tab
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+  const fullscreenToggle = document.getElementById('fullscreen-toggle');
+  if (fullscreenToggle) fullscreenToggle.addEventListener('click', toggleFullscreen);
+
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  if (tabButtons.length > 0) {
+    tabButtons.forEach(btn => {
       addSafeClickListener(btn, () => {
         const tab = btn.getAttribute('data-tab');
         switchTab(tab);
       });
     });
-  }, 100); // Delay 100ms sebelum melakukan pengecekan
-
-  // === Tambahan untuk Fullscreen Button ===
-  const fullscreenToggle = document.getElementById('fullscreen-toggle');
-  if (fullscreenToggle) {
-    fullscreenToggle.addEventListener('click', toggleFullscreen);
   }
 
   initializeGame();
+});
 
 document.addEventListener('fullscreenchange', updateFullscreenButtonText);
 

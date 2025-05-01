@@ -406,13 +406,14 @@ input[type="range"] {
 /* ========== PART 7: FARM AREA & PLOT STYLE ========== */
 
 #farm-area {
+  #farm-area {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 200px);
   gap: 40px;
-  justify-items: center;
-  align-items: center;
+  justify-content: center;
+  align-content: center;
   background: #8b4513;
-  padding: 60px 20px;
+  padding: 50px 20px;
   border-radius: 12px;
   max-width: 480px;
   width: 100%;
@@ -424,7 +425,7 @@ input[type="range"] {
   background: #654321;
   border: 2px solid #fff;
   border-radius: 140% / 140%;
-  width: 180px;
+  width: 200px;
   height: 24px;
   position: relative;
   cursor: pointer;

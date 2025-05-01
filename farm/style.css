@@ -321,3 +321,605 @@ input[type="range"] {
   background: #888;
   opacity: 0.6;
 }
+
+/* ========== PART 6: SHOP, INVENTORY, SELL SECTION ========== */
+
+#shop-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  padding: 15px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.shop-item, .inventory-item, .sell-item {
+  background: #333;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  padding: 10px;
+  width: 120px;
+  text-align: center;
+}
+
+.shop-item-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.shop-item h3, .inventory-item h3, .sell-item h3 {
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+.shop-item p, .inventory-item p, .sell-item p {
+  font-size: 10px;
+  margin: 5px 0;
+}
+
+.shop-switch {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.shop-tab-btn {
+  padding: 8px 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  background-color: #ccc;
+  cursor: pointer;
+}
+
+.shop-tab-btn.active {
+  background-color: #4CAF50;
+  color: #fff;
+}
+
+.sell-to-shop-btn {
+  margin-top: 16px;
+  padding: 10px 20px;
+  font-weight: bold;
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  transition: background 0.3s;
+}
+
+.sell-to-shop-btn:hover {
+  background-color: #45a049;
+}
+
+#sell-section {
+  margin-top: 15px;
+  padding: 15px;
+  background: #444;
+  border-radius: 10px;
+}
+
+/* ========== PART 7: FARM AREA & PLOT STYLE ========== */
+
+#farm-area {
+  display: grid;
+  grid-template-columns: repeat(2, 160px);
+  grid-template-rows: repeat(2, 16px);
+  row-gap: 60px;
+  column-gap: 60px;
+  justify-content: center;
+  align-content: space-around;
+  background: #8b4513;
+  padding: 100px 30px 30px 30px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 90%;
+  height: 300px;
+  margin: 0 auto;
+}
+
+.plot {
+  background: #654321;
+  border: 2px solid #fff;
+  border-radius: 140% / 140%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+  position: relative;
+  width: 160px;
+  height: 16px;
+}
+
+.plot-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 50px;
+  position: absolute;
+  top: -46px;
+}
+
+.plant-img {
+  width: 160px;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  z-index: 1;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: opacity 0.5s ease-in-out;
+}
+
+.plant-img.loaded {
+  opacity: 1;
+}
+
+.countdown-bar {
+  position: absolute;
+  top: 12px;
+  width: 100px;
+  height: 8px;
+  background: #333;
+  border-radius: 3px;
+  overflow: hidden;
+  z-index: 4;
+}
+
+.countdown-fill {
+  width: 0%;
+  height: 100%;
+  background: #0ff;
+  box-shadow: 0 0 10px #0ff;
+  transition: width 0.1s linear;
+}
+
+.plot-status {
+  font-size: 10px;
+  color: #ffeb3b;
+  position: absolute;
+  top: 24px;
+  text-align: center;
+  line-height: 1.2;
+  width: 100%;
+}
+
+/* ========== PART 8: REWARD BUTTON, MODAL, DAN SETTING VOLUME ========== */
+
+#claim-reward-btn {
+  background: #4caf50;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+#claim-reward-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+#claim-reward-btn.claimed {
+  background: #888;
+  opacity: 0.6;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: #333;
+  margin: 20% auto;
+  padding: 20px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  width: 300px;
+  color: #fff;
+}
+
+.close {
+  color: #fff;
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #ffeb3b;
+}
+
+label {
+  display: block;
+  margin: 10px 0 5px;
+  font-size: 14px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+#settings-modal button {
+  margin-top: 10px;
+  display: block;
+  width: 100%;
+}
+
+/* ========== PART 9: NOTIFIKASI & TRANSAKSI ========== */
+
+#notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  display: none;
+  font-size: 14px;
+  min-width: 200px;
+  text-align: center;
+  z-index: 1000;
+}
+
+.transaction-animation {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  animation: floatUp 1s ease-out forwards;
+}
+
+.transaction-animation.positive {
+  color: #4caf50;
+}
+
+.transaction-animation.negative {
+  color: #f44336;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-50px); }
+}
+
+/* ========== PART 10: ANIMASI FLY (PANEN & AIR) ========== */
+
+.plant-fly {
+  position: absolute;
+  animation: fly-up 0.8s ease-out forwards;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+.water-fly {
+  position: absolute;
+  animation: fly-down 0.8s ease-out forwards;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+}
+
+.amount-text {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 11;
+  animation: fly-up 0.8s ease-out forwards;
+  left: 70%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+.amount-text.negative {
+  color: #f44336;
+}
+
+.amount-text.positive {
+  color: #4caf50;
+}
+
+@keyframes fly-up {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes fly-down {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(50px);
+    opacity: 0;
+  }
+}
+
+/* ========== PART 11: MODAL & LOADING ========== */
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: #333;
+  margin: 20% auto;
+  padding: 20px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  width: 300px;
+  color: #fff;
+}
+
+.close {
+  color: #fff;
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #ffeb3b;
+}
+
+/* Loading Screen */
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+
+#loading-screen h1 {
+  font-size: 36px;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
+  margin-bottom: 20px;
+}
+
+.loading-animation {
+  font-size: 24px;
+  color: #fff;
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% { content: 'Loading'; }
+  33% { content: 'Loading.'; }
+  66% { content: 'Loading..'; }
+  100% { content: 'Loading...'; }
+}
+
+/* ========== PART 12: RESPONSIVE (MAX WIDTH 600px) ========== */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 24px;
+  }
+
+  .start-text {
+    font-size: 20px;
+  }
+
+  #wallet {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  #level {
+    font-size: 10px;
+  }
+
+  #xp-bar {
+    width: 120px;
+    height: 6px;
+  }
+
+  .tabs {
+    gap: 5px;
+  }
+
+  .tab-btn {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+
+  .shop-item, .inventory-item, .sell-item {
+    width: 100px;
+    padding: 8px;
+  }
+
+  .shop-item-img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .shop-item h3, .inventory-item h3, .sell-item h3 {
+    font-size: 10px;
+  }
+
+  .shop-item p, .inventory-item p, .sell-item p {
+    font-size: 9px;
+  }
+
+  button {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+
+  #exchange-amount {
+    width: 120px;
+  }
+
+  .achievement {
+    width: 200px;
+  }
+
+  #notification {
+    font-size: 12px;
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  #farm-area {
+    grid-template-columns: repeat(2, 100px);
+    grid-template-rows: repeat(2, 10px);
+    row-gap: 40px;
+    column-gap: 40px;
+    padding: 80px 20px 20px 20px;
+    width: 90%;
+    max-width: 340px;
+    height: 240px;
+    margin: 0 auto;
+  }
+
+  .plot {
+    width: 100px;
+    height: 10px;
+  }
+
+  .plot-content {
+    height: 30px;
+    top: -26px;
+  }
+
+  .plant-img {
+    width: 100px;
+    max-height: 100px;
+  }
+
+  .countdown-bar {
+    top: 8px;
+    width: 60px;
+    height: 5px;
+  }
+
+  .plot-status {
+    font-size: 6px;
+    top: 16px;
+  }
+
+  #claim-reward-btn {
+    margin-top: 10px;
+  }
+
+  .modal-content {
+    margin: 30% auto;
+  }
+
+  #loading-screen h1 {
+    font-size: 20px;
+  }
+
+  .loading-animation {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  #farm-area {
+    grid-template-columns: repeat(2, 80px);
+    grid-template-rows: repeat(2, 8px);
+    row-gap: 30px;
+    column-gap: 30px;
+    padding: 70px 15px 15px 15px;
+    width: 90%;
+    max-width: 280px;
+    height: 220px;
+    margin: 0 auto;
+  }
+
+  .plot {
+    width: 80px;
+    height: 8px;
+  }
+
+  .plot-content {
+    height: 30px;
+    top: -26px;
+  }
+
+  .plant-img {
+    width: 80px;
+    max-height: 80px;
+  }
+
+  .countdown-bar {
+    top: 8px;
+    width: 50px;
+    height: 5px;
+  }
+
+  .plot-status {
+    font-size: 6px;
+    top: 16px;
+  }
+
+  #claim-reward-btn {
+    margin-top: 10px;
+  }
+
+  .modal-content {
+    margin: 35% auto;
+  }
+
+  #loading-screen h1 {
+    font-size: 18px;
+  }
+
+  .loading-animation {
+    font-size: 14px;
+  }
+}

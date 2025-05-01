@@ -1063,20 +1063,22 @@ function updateUIText() {
 
 // Start game
 function startGame() {
-    console.log('Starting game...');
-    document.getElementById('start-screen').style.display = 'none';
-    const gameScreen = document.getElementById('game-screen');
-    gameScreen.style.display = 'flex';
-    gameScreen.classList.add('fade-in');
-    document.getElementById('exit-game-btn').style.display = 'block';
-    isAudioPlaying = false; // Reset flag biar audio bisa play
-    console.log('Attempting to play audio...');
-    playBgMusic();
-    playBgVoice();
-    switchTab('farm');
+  console.log('Starting game...');
+  const startScreen = document.getElementById('start-screen');
+  startScreen.style.display = 'none';
+  startScreen.classList.remove('center-screen'); // hapus centering setelah masuk game
 
-    // Auto Full Screen
-    enterFullScreen();
+  const gameScreen = document.getElementById('game-screen');
+  gameScreen.style.display = 'flex';
+  gameScreen.classList.add('fade-in');
+
+  document.getElementById('exit-game-btn').style.display = 'block';
+  isAudioPlaying = false;
+
+  playBgMusic();
+  playBgVoice();
+  switchTab('farm');
+  enterFullScreen();
 }
 addSafeClickListener(document.getElementById('start-text'), () => {
   startGame();
@@ -1084,22 +1086,25 @@ addSafeClickListener(document.getElementById('start-text'), () => {
 
 // Exit game
 function exitGame() {
-    console.log('Exiting game...');
-    document.getElementById('game-screen').style.display = 'none';
-    document.getElementById('start-screen').style.display = 'block';
-    document.getElementById('settings-modal').style.display = 'none';
-    document.getElementById('exit-game-btn').style.display = 'none';
-    if (bgMusic) {
-        bgMusic.pause();
-        bgMusic.currentTime = 0;
-        console.log('BG Music stopped');
-    }
-    if (bgVoice) {
-        bgVoice.pause();
-        bgVoice.currentTime = 0;
-        console.log('BG Voice stopped');
-    }
-    isAudioPlaying = false;
+  console.log('Exiting game...');
+  document.getElementById('game-screen').style.display = 'none';
+
+  const startScreen = document.getElementById('start-screen');
+  startScreen.style.display = 'flex';
+  startScreen.classList.add('center-screen'); // balikin centering ke tengah
+
+  document.getElementById('settings-modal').style.display = 'none';
+  document.getElementById('exit-game-btn').style.display = 'none';
+
+  if (bgMusic) {
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+  }
+  if (bgVoice) {
+    bgVoice.pause();
+    bgVoice.currentTime = 0;
+  }
+  isAudioPlaying = false;
 }
 
 // Toggle language

@@ -927,16 +927,15 @@ input[type="range"] {
 /* === START SCREEN ===*/
 .start-text {
   font-size: 20px;
-  color: #fff;
-  background: #4caf50;
-  border: 2px solid #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
+  animation: blink 1s infinite;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  text-shadow: 0 0 5px #fff;
   margin-top: 15px;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .start-text:hover {
@@ -950,7 +949,21 @@ input[type="range"] {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: rgba(0,0,0,0.6);
   padding: 20px;
+  background: rgba(0,0,0,0.6);
   text-align: center;
+  cursor: pointer;
+}
+
+#start-screen h1#title {
+  font-size: 38px;
+  color: #4caf50;
+  text-shadow: 0 0 10px #4caf50, 0 0 20px #81c784, 0 0 30px #81c784;
+  animation: pulse 2s infinite ease-in-out;
+  margin: 0 0 20px;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
 }

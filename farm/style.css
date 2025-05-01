@@ -20,11 +20,11 @@ body {
   overflow-x: hidden;
 }
 
-h1 {
+h1#title {
   font-size: 36px;
-  color: #ffeb3b;
-  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
-  margin: 10px 0;
+  color: #8BC34A; /* Hijau daun */
+  text-shadow: 0 0 5px #8BC34A, 0 0 10px #558B2F;
+  margin-bottom: 20px;
 }
 
 button {
@@ -922,4 +922,35 @@ input[type="range"] {
   .loading-animation {
     font-size: 14px;
   }
+}
+
+/* === START SCREEN ===*/
+.start-text {
+  font-size: 20px;
+  color: #fff;
+  background: #4caf50;
+  border: 2px solid #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  text-shadow: 0 0 5px #fff;
+  margin-top: 15px;
+}
+
+.start-text:hover {
+  background: #66bb6a;
+  transform: scale(1.05);
+}
+
+#start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: rgba(0,0,0,0.6);
+  padding: 20px;
+  text-align: center;
 }

@@ -909,21 +909,27 @@ addSafeClickListener(document.getElementById('claim-reward-btn'), () => {
 });
 
 addSafeClickListener(claimModalBtn, async () => {
-    if (isClaiming) return; // Cegah klik berulang
+    if (isClaiming) return;
     isClaiming = true;
 
     try {
         const now = Date.now();
         const oneDay = 24 * 60 * 60 * 1000;
+        const playerRef = ref(database, `players/${userId}/lastClaim`);
 
-        if (!lastClaim || (now - lastClaim >= oneDay)) {
+        // Cek lastClaim langsung dari Firebase sebelum klaim
+        const snapshot = await get(playerRef); // Tambah import { get } dari firebase-database.js
+        const currentLastClaim = snapshot.val() || null;
+
+        if (!currentLastClaim || (now - currentLastClaim >= oneDay)) {
             farmCoins += 100;
             water += 50;
             console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
             lastClaim = now;
 
-            // Simpan ke Firebase dan pastikan sukses
-            await savePlayerData();
+            // Simpan ke Firebase dan tunggu konfirmasi
+            await update(playerRef, { lastClaim: lastClaim });
+            await savePlayerData(); // Pastikan semua data terupdate
 
             updateWallet();
             showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
@@ -939,10 +945,14 @@ addSafeClickListener(claimModalBtn, async () => {
             rewardModal.style.display = 'none';
             showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
         } else {
-            showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} until tomorrow to claim again!`);
+            const timeLeft = oneDay - (now - currentLastClaim);
+            const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+            const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+            showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m to claim again!`);
         }
     } catch (error) {
         showNotification('Failed to claim reward. Please try again.');
+        console.error('Claim error:', error);
     } finally {
         isClaiming = false;
     }
@@ -1187,14 +1197,13 @@ function checkDailyReward() {
                 btn.disabled = true;
                 btn.classList.add('claimed');
                 btn.textContent = langData[currentLang]?.claimed || 'Claimed';
-                console.log('Claim button disabled, lastClaim:', lastClaim);
             } else {
                 btn.disabled = false;
                 btn.classList.remove('claimed');
                 btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
-                console.log('Claim button enabled, lastClaim:', lastClaim);
             }
         }
+        console.log('Last claim check:', lastClaim, 'Button state:', btn ? btn.disabled : 'No btn');
     }, { onlyOnce: false });
 }
 

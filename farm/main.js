@@ -206,6 +206,11 @@ async function loadPlayerData() {
 
         const lastClaimValue = typeof data.lastClaim === 'number' ? data.lastClaim : null;
         lastClaim = data.lastClaim || null;
+
+        if (data.lastClaim !== undefined && data.lastClaim !== null) {
+          localStorage.setItem('lastClaim', data.lastClaim);
+        }
+          
         localStorage.setItem('musicVolume', data.musicVolume || 50);
         localStorage.setItem('voiceVolume', data.voiceVolume || 50);
       } else {

@@ -1254,7 +1254,7 @@ async function checkDailyReward() {
   }
 }
 
-// Daily Reward Text
+// Update Daily Reward Text
 function updateDailyRewardTexts() {
   const title = document.getElementById('daily-reward-title');
   const text = document.getElementById('daily-reward-text');
@@ -1269,41 +1269,56 @@ function updateDailyRewardTexts() {
     // Cek status klaim saat init
     checkClaimStatus(claimBtn);
   }
-}
 
-// Fungsi baru buat cek status klaim
-async function checkClaimStatus(btn) {
-  if (!userId || !btn) return;
+  // Event listener untuk claimModalBtn
+  const claimModalBtn = document.getElementById('claim-modal-btn');
+  if (claimModalBtn) {
+    claimModalBtn.addEventListener('click', async () => {
+      if (isClaiming || claimedToday) return; // Lock kalo udah klaim
+      isClaiming = true;
 
-  try {
-    const playerRef = ref(database, `players/${userId}`);
-    const snapshot = await get(playerRef);
-    const data = snapshot.val();
-    claimedToday = data.claimedToday || false;
-    const now = Date.now();
-    const lastClaim = data.lastClaim || null;
+      try {
+        const playerRef = ref(database, `players/${userId}`);
+        const snapshot = await get(playerRef);
+        const data = snapshot.val();
+        claimedToday = data.claimedToday || false;
 
-    // Reset claimedToday kalo udah ganti hari
-    if (lastClaim && !isSameDay(lastClaim, now)) {
-      claimedToday = false;
-      await update(playerRef, { claimedToday: false });
-    }
+        if (claimedToday) {
+          const nextMidnight = getNextMidnight();
+          const timeLeft = nextMidnight - Date.now();
+          const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+          const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+          showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m to claim again!`);
+          return;
+        }
 
-    if (claimedToday) {
-      btn.disabled = true;
-      btn.classList.add('claimed');
-      btn.textContent = langData[currentLang]?.claimed || 'Claimed';
-    } else {
-      btn.disabled = false;
-      btn.classList.remove('claimed');
-      btn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
-    }
-    console.log('Claim status:', { claimedToday, lastClaim, now });
-  } catch (error) {
-    console.error('Error checking claim status:', error);
-    btn.disabled = true;
-    btn.classList.add('claimed');
-    btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+        farmCoins += 100;
+        water += 50;
+        lastClaim = Date.now();
+        claimedToday = true;
+
+        await update(playerRef, { lastClaim, claimedToday });
+        await savePlayerData();
+
+        updateWallet();
+        showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+        playCoinSound();
+
+        claimModalBtn.disabled = true; // Lock tombol setelah klaim
+        claimModalBtn.classList.add('claimed');
+        claimModalBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
+
+        const rewardModal = document.getElementById('reward-modal');
+        if (rewardModal) rewardModal.style.display = 'none';
+
+        showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
+      } catch (error) {
+        showNotification('Failed to claim reward. Please try again.');
+        console.error('Claim error:', error);
+      } finally {
+        isClaiming = false;
+      }
+    });
   }
 }
 

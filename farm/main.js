@@ -244,11 +244,11 @@ async function loadPlayerData() {
 // Update player data to Firebase
 import { update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'; // pastikan ini ada di atas!
 
-// Save player data to Firebase
+// Save player data to Firebase (lebih aman pakai update)
 function savePlayerData() {
   if (!userId) return;
   const playerRef = ref(database, `players/${userId}`);
-  const lastClaimValue = parseInt(localStorage.getItem('lastClaim')) || null;
+
   const dataToSave = {
     farmCoins,
     pi,
@@ -258,14 +258,14 @@ function savePlayerData() {
     inventory,
     harvestCount,
     achievements,
-    lastClaim: lastClaimValue,
+    lastClaim: parseInt(localStorage.getItem('lastClaim')) || null,
     musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
     voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
   };
 
   console.log('Saving to Firebase:', JSON.stringify(dataToSave));
 
-  set(playerRef, dataToSave).catch(error => {
+  update(playerRef, dataToSave).catch(error => {
     console.error('Error saving player data:', error.message);
     showNotification('Error saving player data: ' + error.message);
   });

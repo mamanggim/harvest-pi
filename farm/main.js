@@ -257,13 +257,14 @@ function savePlayerData() {
     harvestCount,
     achievements,
     lastClaim,
-    musicVolume: 50, // Default, bisa diubah via settings
-    voiceVolume: 50  // Default, bisa diubah via settings
+    musicVolume: 50,
+    voiceVolume: 50
   };
 
-  update(playerRef, dataToSave).catch(error => {
+  return update(playerRef, dataToSave).catch(error => {
     console.error('Error saving player data:', error.message);
     showNotification('Error saving player data: ' + error.message);
+    throw error; // Biar bisa ditangkap di claim
   });
 }
 
@@ -907,31 +908,43 @@ addSafeClickListener(document.getElementById('claim-reward-btn'), () => {
     playMenuSound();
 });
 
-addSafeClickListener(claimModalBtn, () => {
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
+addSafeClickListener(claimModalBtn, async () => {
+    if (isClaiming) return; // Cegah klik berulang
+    isClaiming = true;
 
-    if (!lastClaim || (now - lastClaim >= oneDay)) {
-        farmCoins += 100;
-        water += 50;
-        console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
-        lastClaim = now;
-        savePlayerData();
-        updateWallet();
-        showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-        playCoinSound();
-        
-        const claimBtn = document.getElementById('claim-reward-btn');
-        if (claimBtn) {
-            claimBtn.disabled = true;
-            claimBtn.classList.add('claimed');
-            claimBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
+    try {
+        const now = Date.now();
+        const oneDay = 24 * 60 * 60 * 1000;
+
+        if (!lastClaim || (now - lastClaim >= oneDay)) {
+            farmCoins += 100;
+            water += 50;
+            console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
+            lastClaim = now;
+
+            // Simpan ke Firebase dan pastikan sukses
+            await savePlayerData();
+
+            updateWallet();
+            showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+            playCoinSound();
+
+            const claimBtn = document.getElementById('claim-reward-btn');
+            if (claimBtn) {
+                claimBtn.disabled = true;
+                claimBtn.classList.add('claimed');
+                claimBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
+            }
+
+            rewardModal.style.display = 'none';
+            showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
+        } else {
+            showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} until tomorrow to claim again!`);
         }
-        
-        rewardModal.style.display = 'none';
-        showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
-    } else {
-        showNotification(langData[currentLang]?.waitLabel || 'Wait') + ' until tomorrow to claim again!';
+    } catch (error) {
+        showNotification('Failed to claim reward. Please try again.');
+    } finally {
+        isClaiming = false;
     }
 });
 
@@ -1160,6 +1173,8 @@ function initializeSettings() {
 
 // Check daily reward availability
 function checkDailyReward() {
+    if (!userId) return;
+
     const playerRef = ref(database, `players/${userId}/lastClaim`);
     onValue(playerRef, (snapshot) => {
         lastClaim = snapshot.val() || null;
@@ -1168,14 +1183,16 @@ function checkDailyReward() {
         const btn = document.getElementById('claim-reward-btn');
 
         if (btn) {
-            if (lastClaim && now - lastClaim < oneDay) {
+            if (lastClaim && (now - lastClaim < oneDay)) {
                 btn.disabled = true;
                 btn.classList.add('claimed');
                 btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+                console.log('Claim button disabled, lastClaim:', lastClaim);
             } else {
                 btn.disabled = false;
                 btn.classList.remove('claimed');
                 btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
+                console.log('Claim button enabled, lastClaim:', lastClaim);
             }
         }
     }, { onlyOnce: false });

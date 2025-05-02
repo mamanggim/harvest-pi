@@ -184,44 +184,47 @@ async function loadData() {
 // Load player data (anonymous or via Pi Network)
 async function loadPlayerData() {
   try {
-    // 1. Sign in (anonymous untuk sekarang, nanti bisa diganti Pi UID)
     const userCredential = await signInAnonymously(auth);
     userId = userCredential.user.uid;
-    console.log('[Firebase] Signed in anonymously. UID:', userId);
-
+    console.log('Signed in to Firebase anonymously, userId:', userId);
     const playerRef = ref(database, `players/${userId}`);
 
-    // 2. Ambil data hanya sekali dan simpan ke state
     onValue(playerRef, (snapshot) => {
-      if (isDataLoaded) return; // Cegah double load
+      if (isDataLoaded) return;
+
       const data = snapshot.val();
-
       if (data) {
-        // Isi data dari Firebase
-        ({
-          farmCoins = 0,
-          pi = 0,
-          water = 0,
-          level = 1,
-          xp = 0,
-          inventory = [],
-          harvestCount = 0,
-          achievements = { harvest: false, coins: false },
-          lastClaim = null
-        } = data);
+        farmCoins = data.farmCoins || 0;
+        pi = data.pi || 0;
+        water = data.water || 0;
+        level = data.level || 1;
+        xp = data.xp || 0;
+        inventory = data.inventory || [];
+        harvestCount = data.harvestCount || 0;
+        achievements = data.achievements || { harvest: false, coins: false };
 
-        // Simpan ke localStorage (opsional)
-        localStorage.setItem('lastClaim', data.lastClaim || null);
+        const lastClaimValue = typeof data.lastClaim === 'number' ? data.lastClaim : null;
+        localStorage.setItem('lastClaim', lastClaimValue);
         localStorage.setItem('musicVolume', data.musicVolume || 50);
         localStorage.setItem('voiceVolume', data.voiceVolume || 50);
       } else {
-        console.warn('[Firebase] Data player tidak ditemukan. Membuat default...');
-        savePlayerData(); // Buat default langsung
+        const initialData = {
+          farmCoins: 0,
+          pi: 0,
+          water: 0,
+          level: 1,
+          xp: 0,
+          inventory: [],
+          harvestCount: 0,
+          achievements: { harvest: false, coins: false },
+          lastClaim: null,
+          musicVolume: 50,
+          voiceVolume: 50
+        };
+        set(playerRef, initialData);
       }
 
       isDataLoaded = true;
-
-      // Refresh UI
       updateWallet();
       updateVolumes();
       initializePlots();
@@ -234,7 +237,7 @@ async function loadPlayerData() {
 
   } catch (error) {
     console.error('Error loading player data:', error.message);
-    showNotification('Gagal load data player!');
+    showNotification('Failed to connect to Firebase');
   }
 }
 
@@ -261,9 +264,9 @@ function savePlayerData() {
     voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
   };
 
-  console.log('Saving to Firebase (with UPDATE):', JSON.stringify(dataToSave));
+  console.log('Saving to Firebase:', JSON.stringify(dataToSave));
 
-  update(playerRef, dataToSave).catch(error => {
+  set(playerRef, dataToSave).catch(error => {
     console.error('Error saving player data:', error.message);
     showNotification('Error saving player data: ' + error.message);
   });
@@ -1185,6 +1188,32 @@ function updateDailyRewardTexts() {
   if (title) title.textContent = langData[currentLang].dailyRewardTitle || 'Daily Reward';
   if (text) text.textContent = langData[currentLang].dailyRewardText || 'You got +100 Farm Coins & +50 Water!';
   if (claimBtn) claimBtn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
+}
+
+const claimModalBtn = document.getElementById('claim-modal-btn');
+if (claimModalBtn) {
+  claimModalBtn.addEventListener('click', () => {
+    const now = new Date().setHours(0, 0, 0, 0);
+    localStorage.setItem('lastClaim', now);
+
+    // Simpan ke Firebase juga
+    if (userId) {
+      const lastClaimRef = ref(database, `players/${userId}/lastClaim`);
+      set(lastClaimRef, now);
+    }
+
+    // Tambah reward
+    farmCoins += 100;
+    water += 50;
+    updateWallet();
+    checkDailyReward();
+
+    // Tutup modal dan tampilkan notifikasi
+    const rewardModal = document.getElementById('reward-modal');
+    if (rewardModal) rewardModal.style.display = 'none';
+
+    showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
+  });
 }
 
 // Initialize game

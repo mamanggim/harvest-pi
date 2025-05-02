@@ -9,7 +9,7 @@
 body {
   background: url('../assets/img/ui/farm_bg.png') no-repeat center center fixed;
   background-size: cover;
-  font-family: 'VT323', monospace;
+  font-family: 'Press Start 2P', cursive;
   color: #fff;
   text-align: center;
   min-height: 100vh;
@@ -59,9 +59,11 @@ input[type="number"] {
 
 #game-title {
   font-size: 24px;
-  color: #ffeb3b;
+  color: ##4caf50;
   margin-bottom: 5px;
-  text-shadow: 0 0 10px #ffeb3b;
+  text-shadow: 0 0 10px #4caf50, 0 0 20px #f44336, 0 0 30px #f44336;
+  animation: pulse 2s infinite ease-in-out;
+  margin: 0 0 20px;
 }
 
 .tabs {
@@ -951,14 +953,12 @@ input[type="range"] {
   text-align: center;
 }
 
-#start-screen h1#title,
-#game-title {
-  font-family: 'Bungee', cursive;
-  font-size: 36px;
-  color: #39ff14; /* Neon green */
-  text-shadow: 0 0 10px #39ff14, 0 0 20px #ffeb3b, 0 0 30px #ffeb3b;
+#start-screen h1#title {
+  font-size: 38px;
+  color: #4caf50;
+  text-shadow: 0 0 10px #4caf50, 0 0 20px #f44336, 0 0 30px #f44336;
   animation: pulse 2s infinite ease-in-out;
-  margin: 0 0 15px;
+  margin: 0 0 20px;
 }
 @keyframes pulse {
   0% { transform: scale(1); opacity: 1; }

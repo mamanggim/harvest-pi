@@ -40,6 +40,7 @@ let lastClaim = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
 let claimedToday = false; // Flag sederhana buat status klaim
+let isClaiming = false; // Tambah untuk lock claim
 let isAudioPlaying = false; // Flag to track audio state
 
 // Audio elements
@@ -246,7 +247,6 @@ async function loadPlayerData() {
 import { update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'; // pastikan ini ada di atas!
 
 // Save player data to Firebase (lebih aman pakai update)
-function savePlayerData() {
 function savePlayerData() {
   if (!userId || !isDataLoaded) return;
   const playerRef = ref(database, `players/${userId}`);
@@ -1269,6 +1269,43 @@ function updateDailyRewardTexts() {
     // Cek status klaim saat init
     checkClaimStatus(claimBtn);
   }
+}
+
+// Fungsi checkClaimStatus (pastikan ada)
+async function checkClaimStatus(btn) {
+  if (!userId || !btn) return;
+
+  try {
+    const playerRef = ref(database, `players/${userId}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
+    claimedToday = data.claimedToday || false;
+    const now = Date.now();
+    const lastClaim = data.lastClaim || null;
+
+    // Reset claimedToday kalo udah ganti hari
+    if (lastClaim && !isSameDay(lastClaim, now)) {
+      claimedToday = false;
+      await update(playerRef, { claimedToday: false });
+    }
+
+    if (claimedToday) {
+      btn.disabled = true;
+      btn.classList.add('claimed');
+      btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+    } else {
+      btn.disabled = false;
+      btn.classList.remove('claimed');
+      btn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
+    }
+    console.log('Claim status:', { claimedToday, lastClaim, now });
+  } catch (error) {
+    console.error('Error checking claim status:', error);
+    btn.disabled = true;
+    btn.classList.add('claimed');
+    btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+  }
+}
 
   // Event listener untuk claimModalBtn
   const claimModalBtn = document.getElementById('claim-modal-btn');

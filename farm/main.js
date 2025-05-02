@@ -203,16 +203,7 @@ async function loadPlayerData() {
         inventory = data.inventory || [];
         harvestCount = data.harvestCount || 0;
         achievements = data.achievements || { harvest: false, coins: false };
-
-        const lastClaimValue = typeof data.lastClaim === 'number' ? data.lastClaim : null;
         lastClaim = data.lastClaim || null;
-
-        if (data.lastClaim !== undefined && data.lastClaim !== null) {
-          localStorage.setItem('lastClaim', data.lastClaim);
-        }
-          
-        localStorage.setItem('musicVolume', data.musicVolume || 50);
-        localStorage.setItem('voiceVolume', data.voiceVolume || 50);
       } else {
         const initialData = {
           farmCoins: 0,
@@ -227,7 +218,7 @@ async function loadPlayerData() {
           musicVolume: 50,
           voiceVolume: 50
         };
-        set(playerRef, initialData);
+        set(playerRef, initialData).catch(err => console.error('Initial set failed:', err));
       }
 
       isDataLoaded = true;
@@ -243,7 +234,8 @@ async function loadPlayerData() {
 
   } catch (error) {
     console.error('Error loading player data:', error.message);
-    showNotification('Failed to connect to Firebase');
+    showNotification('Failed to connect to Firebase. Please check your internet connection.');
+    isDataLoaded = false; // Jangan lanjut kalo gagal
   }
 }
 
@@ -252,7 +244,7 @@ import { update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-data
 
 // Save player data to Firebase (lebih aman pakai update)
 function savePlayerData() {
-  if (!userId) return;
+  if (!userId || !isDataLoaded) return;
   const playerRef = ref(database, `players/${userId}`);
 
   const dataToSave = {
@@ -264,18 +256,18 @@ function savePlayerData() {
     inventory,
     harvestCount,
     achievements,
-    lastClaim, // ← langsung dari variabel global
-    musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
-    voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
+    lastClaim,
+    musicVolume: 50, // Default, bisa diubah via settings
+    voiceVolume: 50  // Default, bisa diubah via settings
   };
 
-  set(playerRef, dataToSave).catch(error => {
+  update(playerRef, dataToSave).catch(error => {
     console.error('Error saving player data:', error.message);
     showNotification('Error saving player data: ' + error.message);
   });
 }
 
-// Update wallet UI
+// Update wallet UI (tidak diubah, cuma dipanggil)
 function updateWallet() {
     document.getElementById('farm-coins').textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
     document.getElementById('pi-coins').textContent = `${pi.toFixed(2)} PI`;
@@ -916,7 +908,6 @@ addSafeClickListener(document.getElementById('claim-reward-btn'), () => {
 });
 
 addSafeClickListener(claimModalBtn, () => {
-    const lastClaim = parseInt(localStorage.getItem('lastClaim'));
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
 
@@ -924,19 +915,23 @@ addSafeClickListener(claimModalBtn, () => {
         farmCoins += 100;
         water += 50;
         console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
-        localStorage.setItem('lastClaim', Date.now());
-        savePlayerData(); // Simpan semua data player
+        lastClaim = now;
+        savePlayerData();
         updateWallet();
         showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
         playCoinSound();
         
-        // Langsung update tombol utama
         const claimBtn = document.getElementById('claim-reward-btn');
-        claimBtn.disabled = true;
-        claimBtn.classList.add('claimed');
-        claimBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
+        if (claimBtn) {
+            claimBtn.disabled = true;
+            claimBtn.classList.add('claimed');
+            claimBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
+        }
         
         rewardModal.style.display = 'none';
+        showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
+    } else {
+        showNotification(langData[currentLang]?.waitLabel || 'Wait') + ' until tomorrow to claim again!';
     }
 });
 
@@ -1167,21 +1162,23 @@ function initializeSettings() {
 function checkDailyReward() {
     const playerRef = ref(database, `players/${userId}/lastClaim`);
     onValue(playerRef, (snapshot) => {
-        const lastClaim = snapshot.val() || parseInt(localStorage.getItem('lastClaim'));
+        lastClaim = snapshot.val() || null;
         const now = Date.now();
         const oneDay = 24 * 60 * 60 * 1000;
         const btn = document.getElementById('claim-reward-btn');
 
-        if (lastClaim && now - lastClaim < oneDay) {
-            btn.disabled = true;
-            btn.classList.add('claimed');
-            btn.textContent = langData[currentLang]?.claimed || 'Claimed';
-        } else {
-            btn.disabled = false;
-            btn.classList.remove('claimed');
-            btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
+        if (btn) {
+            if (lastClaim && now - lastClaim < oneDay) {
+                btn.disabled = true;
+                btn.classList.add('claimed');
+                btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('claimed');
+                btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
+            }
         }
-    }, { onlyOnce: true });
+    }, { onlyOnce: false });
 }
 
 // Daily Claim Text
@@ -1223,7 +1220,11 @@ if (claimModalBtn) {
 async function initializeGame() {
   try {
     await loadData();           // Muat langData, vegetables, dll
-    await loadPlayerData();     // Ambil data player dari Firebase / local
+    await loadPlayerData();     // Ambil data player dari Firebase
+
+    if (!isDataLoaded) {
+      throw new Error('Failed to load player data');
+    }
 
     initializeSettings();       // Volume dll
     initializePlots();          // Siapkan lahan
@@ -1246,7 +1247,7 @@ async function initializeGame() {
 
   } catch (error) {
     console.error('Error initializing game:', error.message);
-    showNotification('Error initializing game: ' + error.message);
+    showNotification('Error initializing game. Please check your internet connection and reload.');
     setTimeout(() => {
       const loadingScreen = document.getElementById('loading-screen');
       const startScreen = document.getElementById('start-screen');

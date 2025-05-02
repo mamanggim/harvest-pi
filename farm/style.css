@@ -9,7 +9,7 @@
 body {
   background: url('../assets/img/ui/farm_bg.png') no-repeat center center fixed;
   background-size: cover;
-  font-family: 'Press Start 2P', cursive;
+  font-family: 'VT323', monospace;
   color: #fff;
   text-align: center;
   min-height: 100vh;
@@ -951,10 +951,12 @@ input[type="range"] {
   text-align: center;
 }
 
-#start-screen h1#title {
-  font-size: 38px;
-  color: #4caf50;
-  text-shadow: 0 0 10px #4caf50, 0 0 20px #81c784, 0 0 30px #81c784;
+#start-screen h1#title,
+#game-title {
+  font-family: 'Bungee', cursive;
+  font-size: 36px;
+  color: #39ff14; /* Neon green */
+  text-shadow: 0 0 8px #39ff14, 0 0 16px #00ff99;
   animation: pulse 2s infinite ease-in-out;
   margin: 0 0 20px;
 }

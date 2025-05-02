@@ -947,7 +947,7 @@ input[type="range"] {
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.0);
   text-align: center;
 }
 
@@ -956,9 +956,9 @@ input[type="range"] {
   font-family: 'Bungee', cursive;
   font-size: 36px;
   color: #39ff14; /* Neon green */
-  text-shadow: 0 0 8px #39ff14, 0 0 16px #00ff99;
+  text-shadow: 0 0 10px #39ff14, 0 0 20px #ffeb3b, 0 0 30px #ffeb3b;
   animation: pulse 2s infinite ease-in-out;
-  margin: 0 0 20px;
+  margin: 0 0 15px;
 }
 @keyframes pulse {
   0% { transform: scale(1); opacity: 1; }

@@ -1190,25 +1190,21 @@ function updateDailyRewardTexts() {
   if (claimBtn) claimBtn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
 }
 
-const claimModalBtn = document.getElementById('claim-modal-btn');
 if (claimModalBtn) {
   claimModalBtn.addEventListener('click', () => {
     const now = new Date().setHours(0, 0, 0, 0);
     localStorage.setItem('lastClaim', now);
 
-    // Simpan ke Firebase juga
     if (userId) {
       const lastClaimRef = ref(database, `players/${userId}/lastClaim`);
       set(lastClaimRef, now);
     }
 
-    // Tambah reward
     farmCoins += 100;
     water += 50;
     updateWallet();
     checkDailyReward();
 
-    // Tutup modal dan tampilkan notifikasi
     const rewardModal = document.getElementById('reward-modal');
     if (rewardModal) rewardModal.style.display = 'none';
 

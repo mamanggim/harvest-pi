@@ -39,6 +39,7 @@ let userId = null;
 let lastClaim = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
+let claimedToday = false; // Flag sederhana buat status klaim
 let isAudioPlaying = false; // Flag to track audio state
 
 // Audio elements
@@ -204,6 +205,7 @@ async function loadPlayerData() {
         harvestCount = data.harvestCount || 0;
         achievements = data.achievements || { harvest: false, coins: false };
         lastClaim = data.lastClaim || null;
+        claimedToday = data.claimedToday || false;
       } else {
         const initialData = {
           farmCoins: 0,
@@ -215,10 +217,12 @@ async function loadPlayerData() {
           harvestCount: 0,
           achievements: { harvest: false, coins: false },
           lastClaim: null,
-          musicVolume: 50,
-          voiceVolume: 50
+          claimedToday: false
         };
-        set(playerRef, initialData).catch(err => console.error('Initial set failed:', err));
+        set(playerRef, initialData).catch(err => {
+          console.error('Initial set failed:', err);
+          showNotification('Error initializing player data.');
+        });
       }
 
       isDataLoaded = true;
@@ -231,11 +235,10 @@ async function loadPlayerData() {
       renderAchievements();
       checkDailyReward();
     }, { onlyOnce: false });
-
   } catch (error) {
     console.error('Error loading player data:', error.message);
-    showNotification('Failed to connect to Firebase. Please check your internet connection.');
-    isDataLoaded = false; // Jangan lanjut kalo gagal
+    showNotification('Failed to connect to Firebase. Please check your internet connection and reload.');
+    isDataLoaded = false;
   }
 }
 
@@ -243,6 +246,7 @@ async function loadPlayerData() {
 import { update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'; // pastikan ini ada di atas!
 
 // Save player data to Firebase (lebih aman pakai update)
+function savePlayerData() {
 function savePlayerData() {
   if (!userId || !isDataLoaded) return;
   const playerRef = ref(database, `players/${userId}`);
@@ -257,14 +261,13 @@ function savePlayerData() {
     harvestCount,
     achievements,
     lastClaim,
-    musicVolume: 50,
-    voiceVolume: 50
+    claimedToday
   };
 
   return update(playerRef, dataToSave).catch(error => {
     console.error('Error saving player data:', error.message);
     showNotification('Error saving player data: ' + error.message);
-    throw error; // Biar bisa ditangkap di claim
+    throw error;
   });
 }
 
@@ -928,62 +931,71 @@ addSafeClickListener(document.getElementById('claim-reward-btn'), async () => {
     }
 });
 
-addSafeClickListener(claimModalBtn, async () => {
+// Ubah event listener claimModalBtn
+if (claimModalBtn) {
+  claimModalBtn.addEventListener('click', async () => {
     if (isClaiming) return;
     isClaiming = true;
 
     try {
-        const now = Date.now();
-        const playerRef = ref(database, `players/${userId}/lastClaim`);
+      const playerRef = ref(database, `players/${userId}`);
+      const snapshot = await get(playerRef);
+      const data = snapshot.val();
+      claimedToday = data.claimedToday || false;
 
-        // Validasi ulang sebelum klaim
-        const snapshot = await get(playerRef);
-        const currentLastClaim = snapshot.val() || null;
+      if (claimedToday) {
+        const nextMidnight = getNextMidnight();
+        const timeLeft = nextMidnight - Date.now();
+        const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+        const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+        showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m to claim again!`);
+        return;
+      }
 
-        if (currentLastClaim && isSameDay(currentLastClaim, now)) {
-            const nextMidnight = getNextMidnight();
-            const timeLeft = nextMidnight - now;
-            const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
-            const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
-            showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m to claim again!`);
-            return;
-        }
+      farmCoins += 100;
+      water += 50;
+      lastClaim = Date.now();
+      claimedToday = true;
 
-        // Lanjutkan klaim
-        farmCoins += 100;
-        water += 50;
-        console.log(`After claim: farmCoins = ${farmCoins}, water = ${water}`);
-        lastClaim = now;
+      await update(playerRef, { lastClaim, claimedToday });
+      await savePlayerData();
 
-        // Simpan lastClaim ke Firebase
-        await update(playerRef, { lastClaim: lastClaim });
-        await savePlayerData();
+      updateWallet();
+      showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
+      playCoinSound();
 
-        updateWallet();
-        showTransactionAnimation('+100 Coins, +50 Water', true, claimModalBtn);
-        playCoinSound();
+      claimModalBtn.disabled = true;
+      claimModalBtn.classList.add('claimed');
+      claimModalBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
 
-        const claimBtn = document.getElementById('claim-reward-btn');
-        if (claimBtn) {
-            claimBtn.disabled = true;
-            claimBtn.classList.add('claimed');
-            claimBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
-        }
+      const rewardModal = document.getElementById('reward-modal');
+      if (rewardModal) rewardModal.style.display = 'none';
 
-        rewardModal.style.display = 'none';
-        showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
+      showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
     } catch (error) {
-        showNotification('Failed to claim reward. Please try again.');
-        console.error('Claim error:', error);
+      showNotification('Failed to claim reward. Please try again.');
+      console.error('Claim error:', error);
     } finally {
-        isClaiming = false;
+      isClaiming = false;
     }
-});
+  });
+}
 
-addSafeClickListener(closeModal, () => {
-    rewardModal.style.display = 'none';
-    playMenuSound();
-});
+// Pastiin isSameDay dan getNextMidnight ada (kalo belum ada)
+function isSameDay(timestamp1, timestamp2) {
+  const date1 = new Date(timestamp1);
+  const date2 = new Date(timestamp2);
+  return date1.getFullYear() === date2.getFullYear() &&
+         date1.getMonth() === date2.getMonth() &&
+         date1.getDate() === date2.getDate();
+}
+
+function getNextMidnight() {
+  const now = new Date();
+  const nextMidnight = new Date(now);
+  nextMidnight.setHours(24, 0, 0, 0);
+  return nextMidnight.getTime();
+}
 
 // Claim daily reward
 function claimDailyReward() {
@@ -1205,37 +1217,44 @@ function initializeSettings() {
 
 // Check daily reward availability
 async function checkDailyReward() {
-    if (!userId) return;
+  if (!userId) return;
 
-    const playerRef = ref(database, `players/${userId}/lastClaim`);
-    const btn = document.getElementById('claim-reward-btn');
-    if (!btn) return;
+  const playerRef = ref(database, `players/${userId}`);
+  const btn = document.getElementById('claim-reward-btn');
+  if (!btn) return;
 
-    try {
-        // Ambil lastClaim langsung dari Firebase
-        const snapshot = await get(playerRef);
-        lastClaim = snapshot.val() || null;
-        const now = Date.now();
+  try {
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
+    lastClaim = data.lastClaim || null;
+    claimedToday = data.claimedToday || false;
+    const now = Date.now();
 
-        if (lastClaim && isSameDay(lastClaim, now)) {
-            btn.disabled = true;
-            btn.classList.add('claimed');
-            btn.textContent = langData[currentLang]?.claimed || 'Claimed';
-        } else {
-            btn.disabled = false;
-            btn.classList.remove('claimed');
-            btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
-        }
-        console.log('Initial claim check:', { lastClaim, now, disabled: btn.disabled });
-    } catch (error) {
-        console.error('Error checking daily reward:', error);
-        btn.disabled = true; // Default ke disable kalo error
-        btn.classList.add('claimed');
-        btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+    // Reset claimedToday kalo udah ganti hari
+    if (lastClaim && !isSameDay(lastClaim, now)) {
+      claimedToday = false;
+      await update(playerRef, { claimedToday: false });
     }
+
+    if (claimedToday) {
+      btn.disabled = true;
+      btn.classList.add('claimed');
+      btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+    } else {
+      btn.disabled = false;
+      btn.classList.remove('claimed');
+      btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
+    }
+    console.log('Claim check:', { claimedToday, lastClaim, now });
+  } catch (error) {
+    console.error('Error checking daily reward:', error);
+    btn.disabled = true;
+    btn.classList.add('claimed');
+    btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+  }
 }
 
-// Daily Claim Text
+// Daily Reward Text
 function updateDailyRewardTexts() {
   const title = document.getElementById('daily-reward-title');
   const text = document.getElementById('daily-reward-text');
@@ -1245,29 +1264,47 @@ function updateDailyRewardTexts() {
 
   if (title) title.textContent = langData[currentLang].dailyRewardTitle || 'Daily Reward';
   if (text) text.textContent = langData[currentLang].dailyRewardText || 'You got +100 Farm Coins & +50 Water!';
-  if (claimBtn) claimBtn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
+  if (claimBtn) {
+    claimBtn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
+    // Cek status klaim saat init
+    checkClaimStatus(claimBtn);
+  }
 }
 
-if (claimModalBtn) {
-  claimModalBtn.addEventListener('click', () => {
-    const now = new Date().setHours(0, 0, 0, 0);
-    localStorage.setItem('lastClaim', now);
+// Fungsi baru buat cek status klaim
+async function checkClaimStatus(btn) {
+  if (!userId || !btn) return;
 
-    if (userId) {
-      const lastClaimRef = ref(database, `players/${userId}/lastClaim`);
-      set(lastClaimRef, now);
+  try {
+    const playerRef = ref(database, `players/${userId}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
+    claimedToday = data.claimedToday || false;
+    const now = Date.now();
+    const lastClaim = data.lastClaim || null;
+
+    // Reset claimedToday kalo udah ganti hari
+    if (lastClaim && !isSameDay(lastClaim, now)) {
+      claimedToday = false;
+      await update(playerRef, { claimedToday: false });
     }
 
-    farmCoins += 100;
-    water += 50;
-    updateWallet();
-    checkDailyReward();
-
-    const rewardModal = document.getElementById('reward-modal');
-    if (rewardModal) rewardModal.style.display = 'none';
-
-    showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');
-  });
+    if (claimedToday) {
+      btn.disabled = true;
+      btn.classList.add('claimed');
+      btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+    } else {
+      btn.disabled = false;
+      btn.classList.remove('claimed');
+      btn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
+    }
+    console.log('Claim status:', { claimedToday, lastClaim, now });
+  } catch (error) {
+    console.error('Error checking claim status:', error);
+    btn.disabled = true;
+    btn.classList.add('claimed');
+    btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+  }
 }
 
 // Initialize game
@@ -1287,7 +1324,7 @@ async function initializeGame() {
     renderShop();
     renderSellSection();
     checkLevelUp();
-    await checkDailyReward(); // Panggil dengan await biar pastikan selesai
+    await checkDailyReward();
     updateExchangeResult();
 
     setTimeout(() => {
@@ -1298,7 +1335,6 @@ async function initializeGame() {
         startScreen.style.display = 'flex';
       }
     }, 1000);
-
   } catch (error) {
     console.error('Error initializing game:', error.message);
     if (error.message.includes('Failed to connect to Firebase')) {
@@ -1314,7 +1350,7 @@ async function initializeGame() {
     }, 1000);
   }
 }
-
+    
 // Settings Handler
 addSafeClickListener(document.getElementById('settings-btn'), openSettings);
 addSafeClickListener(document.getElementById('game-settings-btn'), openSettings);

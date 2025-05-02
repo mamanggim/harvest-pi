@@ -807,10 +807,10 @@ input[type="range"] {
 
 @media (max-width: 480px) {
   #farm-area {
-    grid-template-columns: repeat(2, 100px);
-    grid-template-rows: repeat(2, 10px);
+    grid-template-columns: repeat(2, 160px);
+    grid-template-rows: repeat(2, 16px);
     row-gap: 40px;
-    column-gap: 80px;
+    column-gap: 40px;
     padding: 80px 20px 20px 20px;
     width: 100%;
     max-width: 480px;
@@ -863,10 +863,10 @@ input[type="range"] {
 
 @media (max-width: 360px) {
   #farm-area {
-    grid-template-columns: repeat(2, 80px);
-    grid-template-rows: repeat(2, 8px);
+    grid-template-columns: repeat(2, 100px);
+    grid-template-rows: repeat(2, 10px);
     row-gap: 30px;
-    column-gap: 60px;
+    column-gap: 30px;
     padding: 70px 15px 15px 15px;
     width: 100%;
     max-width: 360px;

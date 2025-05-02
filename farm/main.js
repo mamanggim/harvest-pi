@@ -36,6 +36,7 @@ let farmPlots = [];
 let harvestCount = 0;
 let achievements = { harvest: false, coins: false };
 let userId = null;
+let lastClaim = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
 let isAudioPlaying = false; // Flag to track audio state
@@ -204,7 +205,7 @@ async function loadPlayerData() {
         achievements = data.achievements || { harvest: false, coins: false };
 
         const lastClaimValue = typeof data.lastClaim === 'number' ? data.lastClaim : null;
-        localStorage.setItem('lastClaim', lastClaimValue);
+        lastClaim = data.lastClaim || null;
         localStorage.setItem('musicVolume', data.musicVolume || 50);
         localStorage.setItem('voiceVolume', data.voiceVolume || 50);
       } else {
@@ -258,14 +259,12 @@ function savePlayerData() {
     inventory,
     harvestCount,
     achievements,
-    lastClaim: parseInt(localStorage.getItem('lastClaim')) || null,
+    lastClaim, // ← langsung dari variabel global
     musicVolume: parseInt(localStorage.getItem('musicVolume')) || 50,
     voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
   };
 
-  console.log('Saving to Firebase:', JSON.stringify(dataToSave));
-
-  update(playerRef, dataToSave).catch(error => {
+  set(playerRef, dataToSave).catch(error => {
     console.error('Error saving player data:', error.message);
     showNotification('Error saving player data: ' + error.message);
   });
@@ -943,29 +942,33 @@ addSafeClickListener(closeModal, () => {
 
 // Claim daily reward
 function claimDailyReward() {
-    const playerRef = ref(database, `players/${userId}/lastClaim`);
-    onValue(playerRef, (snapshot) => {
-        const lastClaim = snapshot.val() || parseInt(localStorage.getItem('lastClaim'));
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000;
+  const playerRef = ref(database, `players/${userId}/lastClaim`);
+  onValue(playerRef, (snapshot) => {
+    lastClaim = snapshot.val();
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
 
-        if (lastClaim && now - lastClaim < oneDay) {
-            const timeLeft = oneDay - (now - lastClaim);
-            const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
-            const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
-            showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m ${langData[currentLang]?.toClaimAgain || 'to claim again!'}`);
-            const btn = document.getElementById('claim-reward-btn');
-            btn.disabled = true;
-            btn.classList.add('claimed');
-            btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+    const btn = document.getElementById('claim-reward-btn');
+
+    if (lastClaim && now - lastClaim < oneDay) {
+      const timeLeft = oneDay - (now - lastClaim);
+      const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+      const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+      showNotification(`${langData[currentLang]?.waitLabel || 'Wait'} ${hoursLeft}h ${minutesLeft}m ${langData[currentLang]?.toClaimAgain || 'to claim again!'}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('claimed');
+        btn.textContent = langData[currentLang]?.claimed || 'Claimed';
+      }
     } else {
-          const btn = document.getElementById('claim-reward-btn');
-          btn.disabled = false;
-          btn.classList.remove('claimed');
-          btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
-          rewardModal.style.display = 'block';
-       }
-    }, { onlyOnce: true });
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('claimed');
+        btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
+      }
+      rewardModal.style.display = 'block';
+    }
+  }, { onlyOnce: true });
 }
 
 // Check harvest achievement

@@ -811,7 +811,7 @@ input[type="range"] {
     grid-template-rows: repeat(2, 10px);
     row-gap: 40px;
     column-gap: 40px;
-    padding: 80px 20px 20px 20px;
+    padding: 80px 40px 40px 20px;
     width: 100%;
     max-width: 480px;
     height: 480px;
@@ -867,7 +867,7 @@ input[type="range"] {
     grid-template-rows: repeat(2, 8px);
     row-gap: 30px;
     column-gap: 30px;
-    padding: 70px 15px 15px 15px;
+    padding: 70px 30px 30px 15px;
     width: 100%;
     max-width: 360px;
     height: 360px;

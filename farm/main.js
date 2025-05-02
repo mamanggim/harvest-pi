@@ -181,55 +181,47 @@ async function loadData() {
 }
 // END loadData fix
 
-// Load player data from Firebase
+// Load player data (anonymous or via Pi Network)
 async function loadPlayerData() {
   try {
+    // 1. Sign in (anonymous untuk sekarang, nanti bisa diganti Pi UID)
     const userCredential = await signInAnonymously(auth);
     userId = userCredential.user.uid;
-    console.log('Signed in to Firebase anonymously, userId:', userId);
+    console.log('[Firebase] Signed in anonymously. UID:', userId);
+
     const playerRef = ref(database, `players/${userId}`);
 
+    // 2. Ambil data hanya sekali dan simpan ke state
     onValue(playerRef, (snapshot) => {
-      if (isDataLoaded) return; // cegah overwrite saat main game
+      if (isDataLoaded) return; // Cegah double load
       const data = snapshot.val();
+
       if (data) {
-        farmCoins = data.farmCoins || 0;
-        pi = data.pi || 0;
-        water = data.water || 0;
-        level = data.level || 1;
-        xp = data.xp || 0;
-        inventory = data.inventory || [];
-        harvestCount = data.harvestCount || 0;
-        achievements = data.achievements || { harvest: false, coins: false };
+        // Isi data dari Firebase
+        ({
+          farmCoins = 0,
+          pi = 0,
+          water = 0,
+          level = 1,
+          xp = 0,
+          inventory = [],
+          harvestCount = 0,
+          achievements = { harvest: false, coins: false },
+          lastClaim = null
+        } = data);
+
+        // Simpan ke localStorage (opsional)
         localStorage.setItem('lastClaim', data.lastClaim || null);
         localStorage.setItem('musicVolume', data.musicVolume || 50);
         localStorage.setItem('voiceVolume', data.voiceVolume || 50);
       } else {
-        const initialData = {
-          farmCoins: 0,
-          pi: 0,
-          water: 0,
-          level: 1,
-          xp: 0,
-          inventory: [],
-          harvestCount: 0,
-          achievements: { harvest: false, coins: false },
-          lastClaim: null,
-          musicVolume: 50,
-          voiceVolume: 50
-        };
-        set(playerRef, initialData);
-        farmCoins = 0;
-        pi = 0;
-        water = 0;
-        level = 1;
-        xp = 0;
-        inventory = [];
-        harvestCount = 0;
-        achievements = { harvest: false, coins: false };
+        console.warn('[Firebase] Data player tidak ditemukan. Membuat default...');
+        savePlayerData(); // Buat default langsung
       }
 
-      isDataLoaded = true; // supaya gak di-overwrite lagi
+      isDataLoaded = true;
+
+      // Refresh UI
       updateWallet();
       updateVolumes();
       initializePlots();
@@ -239,11 +231,15 @@ async function loadPlayerData() {
       renderAchievements();
       checkDailyReward();
     }, { onlyOnce: false });
+
   } catch (error) {
     console.error('Error loading player data:', error.message);
-    showNotification('Failed to connect to Firebase');
+    showNotification('Gagal load data player!');
   }
 }
+
+// Update player data to Firebase
+import { update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'; // pastikan ini ada di atas!
 
 // Save player data to Firebase
 function savePlayerData() {
@@ -265,9 +261,9 @@ function savePlayerData() {
     voiceVolume: parseInt(localStorage.getItem('voiceVolume')) || 50
   };
 
-  console.log('Saving to Firebase:', JSON.stringify(dataToSave));
+  console.log('Saving to Firebase (with UPDATE):', JSON.stringify(dataToSave));
 
-  set(playerRef, dataToSave).catch(error => {
+  update(playerRef, dataToSave).catch(error => {
     console.error('Error saving player data:', error.message);
     showNotification('Error saving player data: ' + error.message);
   });

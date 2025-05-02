@@ -156,16 +156,47 @@ function playCoinSound() {
 }
 
 function updateVolumes() {
-    const musicVolume = localStorage.getItem('musicVolume') || 50;
-    const voiceVolume = localStorage.getItem('voiceVolume') || 50;
-    if (bgMusic) bgMusic.volume = musicVolume / 100;
-    if (bgVoice) bgVoice.volume = voiceVolume / 100;
-    if (harvestingSound) harvestingSound.volume = voiceVolume / 100;
-    if (wateringSound) wateringSound.volume = voiceVolume / 100;
-    if (plantingSound) plantingSound.volume = voiceVolume / 100;
-    if (menuSound) menuSound.volume = voiceVolume / 100;
-    if (buyingSound) buyingSound.volume = voiceVolume / 100;
-    if (coinSound) coinSound.volume = voiceVolume / 100;
+    const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 50;
+    const voiceVolume = parseFloat(localStorage.getItem('voiceVolume')) || 50;
+    console.log('Updating volumes:', { musicVolume, voiceVolume }); // Debug
+
+    // Pastikan volume dalam range 0-1
+    const musicVol = musicVolume / 100;
+    const voiceVol = voiceVolume / 100;
+
+    // Update volume untuk semua audio element
+    if (bgMusic) {
+        bgMusic.volume = musicVol;
+        console.log('BG Music volume set to:', bgMusic.volume);
+    }
+    if (bgVoice) {
+        bgVoice.volume = voiceVol;
+        console.log('BG Voice volume set to:', bgVoice.volume);
+    }
+    if (harvestingSound) {
+        harvestingSound.volume = voiceVol;
+        console.log('Harvesting sound volume set to:', harvestingSound.volume);
+    }
+    if (wateringSound) {
+        wateringSound.volume = voiceVol;
+        console.log('Watering sound volume set to:', wateringSound.volume);
+    }
+    if (plantingSound) {
+        plantingSound.volume = voiceVol;
+        console.log('Planting sound volume set to:', plantingSound.volume);
+    }
+    if (menuSound) {
+        menuSound.volume = voiceVol;
+        console.log('Menu sound volume set to:', menuSound.volume);
+    }
+    if (buyingSound) {
+        buyingSound.volume = voiceVol;
+        console.log('Buying sound volume set to:', buyingSound.volume);
+    }
+    if (coinSound) {
+        coinSound.volume = voiceVol;
+        console.log('Coin sound volume set to:', coinSound.volume);
+    }
 }
 
 // START loadData fix
@@ -336,7 +367,7 @@ function initializePlots() {
             const plantImg = document.createElement('img');
             plantImg.classList.add('plant-img');
             plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
-            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gambar gak ke-load
+            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
             plotContent.appendChild(plantImg);
             plantImg.classList.add('loaded');
 
@@ -381,7 +412,7 @@ function initializePlots() {
                             }
                             plantImg.classList.remove('loaded');
                             plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
-                            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gambar gak ke-load
+                            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                             setTimeout(() => {
                                 plantImg.classList.add('loaded');
                             }, 50);
@@ -454,7 +485,7 @@ function handlePlotClick(index) {
                 const plantImg = document.createElement('img');
                 plantImg.classList.add('plant-img');
                 plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
-                plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gambar gak ke-load
+                plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                 plotContent.appendChild(plantImg);
                 setTimeout(() => {
                     plantImg.classList.add('loaded');
@@ -486,6 +517,7 @@ function handlePlotClick(index) {
 
             const waterImage = document.createElement('img');
             waterImage.src = 'assets/img/ui/water_icon.png';
+            waterImage.onerror = () => { waterImage.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gagal load
             waterImage.classList.add('water-fly');
             waterImage.style.width = '40px';
             waterImage.style.top = '-40px';
@@ -536,7 +568,7 @@ function handlePlotClick(index) {
                         }
                         plantImg.classList.remove('loaded');
                         plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
-                        plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gambar gak ke-load
+                        plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                         setTimeout(() => {
                             plantImg.classList.add('loaded');
                         }, 50);
@@ -576,7 +608,10 @@ function handlePlotClick(index) {
         plot.totalCountdown = 0;
 
         const flyImage = document.createElement('img');
-        flyImage.src = plot.vegetable?.shopImage || 'assets/img/ui/placeholder.png'; // Fallback kalo shopImage gak ada
+        // Pastikan shopImage ada, kalo gak ada kasih placeholder
+        const imageSrc = plot.vegetable?.shopImage ? plot.vegetable.shopImage : 'assets/img/ui/placeholder.png';
+        flyImage.src = imageSrc;
+        flyImage.onerror = () => { flyImage.src = 'assets/img/ui/placeholder.png'; }; // Fallback tambahan
         flyImage.classList.add('plant-fly');
         flyImage.style.width = '60px';
         plotContent.appendChild(flyImage);
@@ -663,7 +698,7 @@ function renderShop() {
   const waterItem = document.createElement('div');
   waterItem.classList.add('shop-item');
   waterItem.innerHTML = `
-    <img src="assets/img/ui/water.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+    <img src="assets/img/ui/water_icon.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
     <h3>${langData[currentLang]?.waterLabel || 'Water'}</h3>
     <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 ${langData[currentLang]?.coinLabel || 'Coins'}</p>
     <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: 0.0001 PI</p>
@@ -1269,24 +1304,29 @@ function initializeSettings() {
     const voiceVolumeSlider = document.getElementById('voice-volume');
     const closeSettings = document.getElementById('close-settings');
 
+    // Set nilai awal slider dari localStorage
     musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
     voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
 
+    // Update volume saat slider diubah
     musicVolumeSlider.addEventListener('input', () => {
-        localStorage.setItem('musicVolume', musicVolumeSlider.value);
+        const newVolume = musicVolumeSlider.value;
+        localStorage.setItem('musicVolume', newVolume);
+        console.log('Music volume changed to:', newVolume); // Debug
         updateVolumes();
     });
 
     voiceVolumeSlider.addEventListener('input', () => {
-        localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
+        const newVolume = voiceVolumeSlider.value;
+        localStorage.setItem('voiceVolume', newVolume);
+        console.log('Voice volume changed to:', newVolume); // Debug
         updateVolumes();
     });
 
     addSafeClickListener(closeSettings, () => {
-    document.getElementById('settings-modal').style.display = 'none';
-    playMenuSound();
-});
-    
+        document.getElementById('settings-modal').style.display = 'none';
+        playMenuSound();
+    });
 }
 
 // Check daily reward availability

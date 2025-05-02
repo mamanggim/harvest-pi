@@ -336,6 +336,7 @@ function initializePlots() {
             const plantImg = document.createElement('img');
             plantImg.classList.add('plant-img');
             plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gambar gak ke-load
             plotContent.appendChild(plantImg);
             plantImg.classList.add('loaded');
 
@@ -380,6 +381,7 @@ function initializePlots() {
                             }
                             plantImg.classList.remove('loaded');
                             plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+                            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gambar gak ke-load
                             setTimeout(() => {
                                 plantImg.classList.add('loaded');
                             }, 50);
@@ -452,6 +454,7 @@ function handlePlotClick(index) {
                 const plantImg = document.createElement('img');
                 plantImg.classList.add('plant-img');
                 plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+                plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gambar gak ke-load
                 plotContent.appendChild(plantImg);
                 setTimeout(() => {
                     plantImg.classList.add('loaded');
@@ -533,6 +536,7 @@ function handlePlotClick(index) {
                         }
                         plantImg.classList.remove('loaded');
                         plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+                        plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gambar gak ke-load
                         setTimeout(() => {
                             plantImg.classList.add('loaded');
                         }, 50);
@@ -572,7 +576,7 @@ function handlePlotClick(index) {
         plot.totalCountdown = 0;
 
         const flyImage = document.createElement('img');
-        flyImage.src = plot.vegetable?.shopImage;
+        flyImage.src = plot.vegetable?.shopImage || 'assets/img/ui/placeholder.png'; // Fallback kalo shopImage gak ada
         flyImage.classList.add('plant-fly');
         flyImage.style.width = '60px';
         plotContent.appendChild(flyImage);

@@ -812,7 +812,9 @@ input[type="range"] {
     row-gap: 40px;
     column-gap: 40px;
     justify-content: center;
+    align-content: space-around;
     padding: 80px 20px 20px 20px;
+    border-radius: 10px;
     width: 100%;
     max-width: 450px;
     height: 450px;
@@ -869,7 +871,9 @@ input[type="range"] {
     row-gap: 30px;
     column-gap: 30px;
     justify-content: center;
+    align-content: space-around;
     padding: 70px 15px 15px 15px;
+    border-radius: 10px;
     width: 100%;
     max-width: 330px;
     height: 330px;

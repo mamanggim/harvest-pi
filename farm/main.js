@@ -3,8 +3,9 @@ const { database, auth } = window.firebaseConfig;
 import { ref, onValue, set, update, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
-// Deklarasi claimModalBtn di sini sebagai global
+// Deklarasi claimModalBtn dan rewardModal sebagai global
 const claimModalBtn = document.getElementById('claim-modal-btn');
+const rewardModal = document.getElementById('reward-modal');
 
 // START addSafeClickListener helper
 function addSafeClickListener(element, callback) {
@@ -919,8 +920,12 @@ addSafeClickListener(document.getElementById('claim-reward-btn'), async () => {
             return; // Langsung return, jangan buka modal
         }
 
-        rewardModal.style.display = 'block';
-        playMenuSound();
+        if (rewardModal) {
+            rewardModal.style.display = 'block';
+            playMenuSound();
+        } else {
+            console.error('Reward modal not found!');
+        }
     } catch (error) {
         console.error('Error checking claim eligibility:', error);
         showNotification('Error checking reward eligibility. Please try again.');
@@ -969,7 +974,11 @@ function claimDailyReward() {
         btn.classList.remove('claimed');
         btn.textContent = langData[currentLang]?.claimNow || 'Claim Now';
       }
-      rewardModal.style.display = 'block';
+      if (rewardModal) {
+          rewardModal.style.display = 'block';
+      } else {
+          console.error('Reward modal not found!');
+      }
     }
   }, { onlyOnce: true });
 }
@@ -1289,7 +1298,6 @@ async function checkClaimStatus(btn) {
       claimModalBtn.classList.add('claimed');
       claimModalBtn.textContent = langData[currentLang]?.claimed || 'Claimed';
 
-      const rewardModal = document.getElementById('reward-modal');
       if (rewardModal) rewardModal.style.display = 'none';
 
       showNotification(langData[currentLang]?.claimSuccess || 'You claimed +100 Coins & +50 Water!');

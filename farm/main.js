@@ -249,7 +249,6 @@ function savePlayerData() {
   if (!userId) return;
   const playerRef = ref(database, `players/${userId}`);
   const lastClaimValue = parseInt(localStorage.getItem('lastClaim')) || null;
-
   const dataToSave = {
     farmCoins,
     pi,

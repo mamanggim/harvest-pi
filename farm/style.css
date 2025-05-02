@@ -823,15 +823,11 @@ input[type="range"] {
   .plot {
     width: 100px;
     height: 10px;
-    justify-content: center;
-    align-items: center;
   }
 
   .plot-content {
     height: 30px;
     top: -26px;
-    justify-content: center;
-    align-items: center;
   }
 
   .plant-img {
@@ -885,15 +881,11 @@ input[type="range"] {
   .plot {
     width: 80px;
     height: 8px;
-    justify-content: center;
-    align-items: center;
   }
 
   .plot-content {
     height: 30px;
     top: -26px;
-    justify-content: center;
-    align-items: center;
   }
 
   .plant-img {
@@ -949,7 +941,7 @@ input[type="range"] {
 }
 
 #start-screen {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;

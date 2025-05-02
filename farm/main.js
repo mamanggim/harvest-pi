@@ -461,7 +461,7 @@ function handlePlotClick(index) {
 
     } else if (plot.currentFrame >= plot.vegetable.frames || plotElement.classList.contains('ready')) {
         const yieldAmount = plot.vegetable.yield;
-        inventory.push({ type: 'harvest', vegetable: plot.vegetable, quantity: yieldAmount });
+        addToInventory('harvest', plot.vegetable, yieldAmount);
         plot.planted = false;
         plot.vegetable = null;
         plot.progress = 0;
@@ -586,16 +586,26 @@ function renderShop() {
   });
 }
 
-// Tambahkan ke inventory
+// Tambahkan ke inventory (diperbaiki untuk membedakan seed dan harvest)
 function addToInventory(type, veg, qty = 1) {
-  const existing = inventory.find(item =>
-    item.type === type &&
-    item.vegetable &&
-    item.vegetable.id === veg.id
+  if (!veg || !veg.id) return;
+
+  const existingIndex = inventory.findIndex(item =>
+    item && item.type === type && item.vegetable && item.vegetable.id === veg.id
   );
 
-  if (existing) {
-    existing.quantity += qty;
+  if (existingIndex !== -1) {
+    // Untuk seed, jangan gabung, biar terpisah per item
+    if (type === 'seed') {
+      inventory.push({
+        type: type,
+        vegetable: veg,
+        quantity: qty
+      });
+    } else if (type === 'harvest') {
+      // Untuk harvest, tambah kuantitas kalo udah ada
+      inventory[existingIndex].quantity += qty;
+    }
   } else {
     inventory.push({
       type: type,
@@ -603,6 +613,8 @@ function addToInventory(type, veg, qty = 1) {
       quantity: qty
     });
   }
+
+  savePlayerData();
 }
 
 // Buy vegetable or water
@@ -715,9 +727,9 @@ function renderInventory() {
   sellButton.textContent = langData[currentLang]?.sellToShop || 'Sell to Shop';
   sellButton.classList.add('sell-to-shop-btn');
   addSafeClickListener(sellButton, () => {
-  openSellTab();
-  playMenuSound();
-});
+    openSellTab();
+    playMenuSound();
+  });
 
   inventoryContent.appendChild(sellButton);
 }
@@ -740,30 +752,41 @@ function renderSellSection() {
 
   let hasItems = false;
 
+  // Gabung item harvest yang sama berdasarkan vegetable.id
+  const groupedHarvest = {};
   inventory.forEach((item, index) => {
     if (item && item.type === 'harvest') {
-      const sellDiv = document.createElement('div'); // ganti dari sellItem
-      sellDiv.classList.add('sell-item');
-
-      const sellPrice = item.vegetable.sellPrice;
-      const isSellable = typeof sellPrice === 'number';
-
-      if (!isSellable) {
-        console.warn(`Missing sellPrice for ${item.vegetable.id}, skipping.`);
-        return;
+      const vegId = item.vegetable.id;
+      if (!groupedHarvest[vegId]) {
+        groupedHarvest[vegId] = { ...item, index: index };
+      } else {
+        groupedHarvest[vegId].quantity += item.quantity;
       }
-
-      sellDiv.innerHTML = `
-        <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
-        <h3>${item.vegetable.name[currentLang]}</h3>
-        <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-        <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${sellPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
-        <button class="sell-btn" data-index="${index}">${langData[currentLang]?.sellLabel || 'Sell'}</button>
-      `;
-
-      sellContent.appendChild(sellDiv);
-      hasItems = true;
     }
+  });
+
+  Object.values(groupedHarvest).forEach((item) => {
+    const sellDiv = document.createElement('div');
+    sellDiv.classList.add('sell-item');
+
+    const sellPrice = item.vegetable.sellPrice;
+    const isSellable = typeof sellPrice === 'number';
+
+    if (!isSellable) {
+      console.warn(`Missing sellPrice for ${item.vegetable.id}, skipping.`);
+      return;
+    }
+
+    sellDiv.innerHTML = `
+      <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
+      <h3>${item.vegetable.name[currentLang]}</h3>
+      <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
+      <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${sellPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
+      <button class="sell-btn" data-index="${item.index}">${langData[currentLang]?.sellLabel || 'Sell'}</button>
+    `;
+
+    sellContent.appendChild(sellDiv);
+    hasItems = true;
   });
 
   if (!hasItems) {
@@ -773,7 +796,7 @@ function renderSellSection() {
   document.querySelectorAll('.sell-btn').forEach(btn => {
     addSafeClickListener(btn, () => {
       const index = parseInt(btn.getAttribute('data-index'));
-      sellItem(index); // ini fungsi, aman karena udah gak bentrok
+      sellItem(index);
     });
   });
 }
@@ -1217,7 +1240,7 @@ function updateDailyRewardTexts() {
   if (!langData[currentLang]) return;
 
   if (title) title.textContent = langData[currentLang].dailyRewardTitle || 'Daily Reward';
-  if (text) text.textContent = langData[currentLang].dailyRewardText || 'You got +100 Farm Coins & +50 Water!';
+  if (text) text.content = langData[currentLang].dailyRewardText || 'You got +100 Farm Coins & +50 Water!';
   if (claimModalBtn) {
     claimModalBtn.textContent = langData[currentLang].claimRewardLabel || 'Claim';
     // Cek status klaim saat init

@@ -207,6 +207,7 @@ async function loadPlayerData() {
         level = data.level || 1;
         xp = data.xp || 0;
         inventory = data.inventory || [];
+        farmPlots = data.farmPlots || []; // Load farmPlots dari Firebase
         harvestCount = data.harvestCount || 0;
         achievements = data.achievements || { harvest: false, coins: false };
         lastClaim = data.lastClaim || null;
@@ -219,6 +220,7 @@ async function loadPlayerData() {
           level: 1,
           xp: 0,
           inventory: [],
+          farmPlots: [], // Inisialisasi farmPlots kosong di Firebase
           harvestCount: 0,
           achievements: { harvest: false, coins: false },
           lastClaim: null,
@@ -247,7 +249,7 @@ async function loadPlayerData() {
   }
 }
 
-// Save player data to Firebase (lebih aman pakai update)
+// Save player data to Firebase (diperbaiki untuk menyimpan farmPlots)
 function savePlayerData() {
   if (!userId || !isDataLoaded) return;
   const playerRef = ref(database, `players/${userId}`);
@@ -259,6 +261,7 @@ function savePlayerData() {
     level,
     xp,
     inventory,
+    farmPlots, // Simpan farmPlots ke Firebase
     harvestCount,
     achievements,
     lastClaim,
@@ -272,7 +275,7 @@ function savePlayerData() {
   });
 }
 
-// Update wallet UI (tidak diubah, cuma dipanggil)
+// Update wallet UI
 function updateWallet() {
     document.getElementById('farm-coins').textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
     document.getElementById('pi-coins').textContent = `${pi.toFixed(2)} PI`;
@@ -283,7 +286,7 @@ function updateWallet() {
     savePlayerData();
 }
 
-// Initialize farm plots
+// Initialize farm plots (diperbaiki untuk load dari Firebase)
 function initializePlots() {
     const farmArea = document.getElementById('farm-area');
     if (!farmArea) {
@@ -292,22 +295,119 @@ function initializePlots() {
         return;
     }
 
-    farmPlots = [];
     farmArea.innerHTML = '';
-    for (let i = 0; i < plotCount; i++) {
-        const plot = document.createElement('div');
-        plot.classList.add('plot');
-        plot.innerHTML = `
+
+    // Inisialisasi farmPlots dengan default kalo kosong
+    if (!farmPlots || farmPlots.length === 0) {
+        farmPlots = [];
+        for (let i = 0; i < plotCount; i++) {
+            farmPlots.push({
+                planted: false,
+                vegetable: null,
+                progress: 0,
+                watered: false,
+                currentFrame: 1,
+                countdown: 0,
+                totalCountdown: 0
+            });
+        }
+    }
+
+    // Render ulang plot berdasarkan data farmPlots
+    farmPlots.forEach((plot, i) => {
+        const plotElement = document.createElement('div');
+        plotElement.classList.add('plot');
+        plotElement.innerHTML = `
             <div class="plot-content"></div>
             <div class="countdown-bar">
                 <div class="countdown-fill"></div>
             </div>
             <div class="plot-status"></div>
         `;
-        addSafeClickListener(plot, () => handlePlotClick(i));
-        farmArea.appendChild(plot);
-        farmPlots.push({ planted: false, vegetable: null, progress: 0, watered: false, currentFrame: 1, countdown: 0, totalCountdown: 0 });
-    }
+        addSafeClickListener(plotElement, () => handlePlotClick(i));
+        farmArea.appendChild(plotElement);
+
+        // Kalo plot udah ditanam, render tanamannya
+        if (plot.planted && plot.vegetable) {
+            const plotContent = plotElement.querySelector('.plot-content');
+            const plotStatus = plotElement.querySelector('.plot-status');
+            const countdownFill = plotElement.querySelector('.countdown-fill');
+
+            const plantImg = document.createElement('img');
+            plantImg.classList.add('plant-img');
+            plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+            plotContent.appendChild(plantImg);
+            plantImg.classList.add('loaded');
+
+            if (plot.currentFrame >= plot.vegetable.frames) {
+                plotElement.classList.add('ready');
+                plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
+                countdownFill.style.width = '100%';
+            } else if (plot.watered) {
+                plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
+                const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
+                countdownFill.style.width = `${progress}%`;
+
+                // Lanjutkan countdown
+                const countdownInterval = setInterval(() => {
+                    if (!plot.planted) {
+                        clearInterval(countdownInterval);
+                        countdownFill.style.width = '0%';
+                        return;
+                    }
+                    if (plot.currentFrame >= plot.vegetable.frames) {
+                        clearInterval(countdownInterval);
+                        countdownFill.style.width = '100%';
+                        plotElement.classList.add('ready');
+                        plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
+                        return;
+                    }
+
+                    if (plot.watered) {
+                        plot.countdown--;
+                        const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
+                        countdownFill.style.width = `${progress}%`;
+                        if (plot.countdown <= 0) {
+                            plot.currentFrame++;
+                            plot.watered = false;
+                            plot.countdown = plot.vegetable.growthTime;
+                            plot.totalCountdown = plot.vegetable.growthTime;
+                            let plantImg = plotContent.querySelector('.plant-img');
+                            if (!plantImg) {
+                                plantImg = document.createElement('img');
+                                plantImg.classList.add('plant-img');
+                                plotContent.appendChild(plantImg);
+                            }
+                            plantImg.classList.remove('loaded');
+                            plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+                            setTimeout(() => {
+                                plantImg.classList.add('loaded');
+                            }, 50);
+                            if (plot.currentFrame >= plot.vegetable.frames) {
+                                plotElement.classList.add('ready');
+                                plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
+                                clearInterval(countdownInterval);
+                                countdownFill.style.width = '100%';
+                            } else {
+                                plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+                                countdownFill.style.width = '0%';
+                            }
+                        } else {
+                            plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
+                        }
+                    } else {
+                        plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+                        clearInterval(countdownInterval);
+                        countdownFill.style.width = '0%';
+                    }
+                    savePlayerData(); // Simpan progress countdown
+                }, 1000);
+            } else {
+                plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+                countdownFill.style.width = '0%';
+            }
+        }
+    });
 
     updateUIText();
 }
@@ -453,6 +553,7 @@ function handlePlotClick(index) {
                     clearInterval(countdownInterval);
                     countdownFill.style.width = '0%';
                 }
+                savePlayerData(); // Simpan progress countdown
             }, 1000);
 
         } else {
@@ -586,7 +687,7 @@ function renderShop() {
   });
 }
 
-// Tambahkan ke inventory (diperbaiki untuk membedakan seed dan harvest)
+// Tambahkan ke inventory (diperbaiki: seed digabung, harvest digabung)
 function addToInventory(type, veg, qty = 1) {
   if (!veg || !veg.id) return;
 
@@ -595,17 +696,8 @@ function addToInventory(type, veg, qty = 1) {
   );
 
   if (existingIndex !== -1) {
-    // Untuk seed, jangan gabung, biar terpisah per item
-    if (type === 'seed') {
-      inventory.push({
-        type: type,
-        vegetable: veg,
-        quantity: qty
-      });
-    } else if (type === 'harvest') {
-      // Untuk harvest, tambah kuantitas kalo udah ada
-      inventory[existingIndex].quantity += qty;
-    }
+    // Baik seed maupun harvest, tambah kuantitas kalo udah ada
+    inventory[existingIndex].quantity += qty;
   } else {
     inventory.push({
       type: type,
@@ -734,7 +826,7 @@ function renderInventory() {
   inventoryContent.appendChild(sellButton);
 }
 
-// START renderSellSection fix
+// START renderSellSection
 function renderSellSection() {
   const sellContent = document.getElementById('sell-content');
   if (!sellContent) {
@@ -800,9 +892,9 @@ function renderSellSection() {
     });
   });
 }
-// END renderSellSection fix
+// END renderSellSection
 
-// START sellItem fix
+// START sellItem
 function sellItem(index) {
   const item = inventory[index];
   if (!item || item.type !== 'harvest') return;
@@ -832,7 +924,7 @@ function sellItem(index) {
   checkLevelUp();
   checkCoinAchievement();
 }
-// END sellItem fix
+// END sellItem
 
 // Fungsi untuk langsung buka tab Sell di dalam Shop
 function openSellTab() {

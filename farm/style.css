@@ -59,9 +59,9 @@ input[type="number"] {
 
 #game-title {
   font-size: 24px;
-  color: ##4caf50;
+  color: #66ff00;
   margin-bottom: 5px;
-  text-shadow: 0 0 10px #4caf50, 0 0 20px #f44336, 0 0 30px #f44336;
+  text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
   animation: pulse 2s infinite ease-in-out;
   margin: 0 0 20px;
 }
@@ -955,8 +955,8 @@ input[type="range"] {
 
 #start-screen h1#title {
   font-size: 38px;
-  color: #4caf50;
-  text-shadow: 0 0 10px #4caf50, 0 0 20px #f44336, 0 0 30px #f44336;
+  color: #66ff00;
+  text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
   animation: pulse 2s infinite ease-in-out;
   margin: 0 0 20px;
 }

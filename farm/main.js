@@ -69,7 +69,6 @@ function playBgMusic() {
                 })
                 .catch(e => {
                     console.log('BG Music failed to start:', e.message);
-                    // Coba play lagi setelah delay kecil
                     setTimeout(() => {
                         bgMusic.play().catch(err => console.log('Retry BG Music failed:', err.message));
                     }, 100);
@@ -90,7 +89,6 @@ function playBgVoice() {
                 })
                 .catch(e => {
                     console.log('BG Voice failed to start:', e.message);
-                    // Coba play lagi setelah delay kecil
                     setTimeout(() => {
                         bgVoice.play().catch(err => console.log('Retry BG Voice failed:', err.message));
                     }, 100);
@@ -161,17 +159,19 @@ function updateVolumes() {
     console.log('Updating volumes:', { musicVolume, voiceVolume }); // Debug
 
     // Pastikan volume dalam range 0-1
-    const musicVol = musicVolume / 100;
-    const voiceVol = voiceVolume / 100;
+    const musicVol = Math.min(Math.max(musicVolume / 100, 0), 1);
+    const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 1);
 
     // Update volume untuk semua audio element
     if (bgMusic) {
         bgMusic.volume = musicVol;
         console.log('BG Music volume set to:', bgMusic.volume);
+        if (isAudioPlaying) bgMusic.play().catch(e => console.log('BG Music play failed after volume change:', e));
     }
     if (bgVoice) {
         bgVoice.volume = voiceVol;
         console.log('BG Voice volume set to:', bgVoice.volume);
+        bgVoice.play().catch(e => console.log('BG Voice play failed after volume change:', e));
     }
     if (harvestingSound) {
         harvestingSound.volume = voiceVol;
@@ -517,7 +517,7 @@ function handlePlotClick(index) {
 
             const waterImage = document.createElement('img');
             waterImage.src = 'assets/img/ui/water_icon.png';
-            waterImage.onerror = () => { waterImage.src = 'assets/img/ui/placeholder.png'; }; // Fallback kalo gagal load
+            waterImage.onerror = () => { waterImage.src = 'assets/img/ui/placeholder.png'; };
             waterImage.classList.add('water-fly');
             waterImage.style.width = '40px';
             waterImage.style.top = '-40px';
@@ -608,10 +608,12 @@ function handlePlotClick(index) {
         plot.totalCountdown = 0;
 
         const flyImage = document.createElement('img');
-        // Pastikan shopImage ada, kalo gak ada kasih placeholder
         const imageSrc = plot.vegetable?.shopImage ? plot.vegetable.shopImage : 'assets/img/ui/placeholder.png';
         flyImage.src = imageSrc;
-        flyImage.onerror = () => { flyImage.src = 'assets/img/ui/placeholder.png'; }; // Fallback tambahan
+        flyImage.onerror = () => {
+            console.log(`Failed to load fly image: ${imageSrc}, using placeholder`);
+            flyImage.src = 'assets/img/ui/placeholder.png';
+        };
         flyImage.classList.add('plant-fly');
         flyImage.style.width = '60px';
         plotContent.appendChild(flyImage);

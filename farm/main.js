@@ -468,12 +468,12 @@ function handlePlotClick(index) {
             plot.totalCountdown = vegetable.growthTime;
 
             const flyImage = document.createElement('img');
-            flyImage.src = vegetable.shopImage; // Pake path dari vegetables.json
+            flyImage.src = vegetable.shopImage; // Ambil dari vegetables.json
             flyImage.classList.add('plant-fly');
             flyImage.style.width = '60px';
             flyImage.onerror = () => {
-                console.log(`Failed to load seed fly image: ${vegetable.shopImage}, using placeholder`);
-                flyImage.src = 'assets/img/ui/placeholder.png'; // Kembali ke path relatif
+                console.log(`Failed to load fly image: ${vegetable.shopImage}, using placeholder`);
+                flyImage.src = 'assets/img/ui/placeholder.png';
             };
             plotContent.appendChild(flyImage);
 
@@ -520,7 +520,7 @@ function handlePlotClick(index) {
             plot.watered = true;
 
             const waterImage = document.createElement('img');
-            waterImage.src = 'assets/img/ui/water_icon.png'; // Kembali ke path relatif
+            waterImage.src = 'assets/img/ui/water_icon.png';
             waterImage.onerror = () => { waterImage.src = 'assets/img/ui/placeholder.png'; };
             waterImage.classList.add('water-fly');
             waterImage.style.width = '40px';
@@ -593,7 +593,7 @@ function handlePlotClick(index) {
                     clearInterval(countdownInterval);
                     countdownFill.style.width = '0%';
                 }
-                savePlayerData();
+                savePlayerData(); // Simpan progress countdown
             }, 1000);
 
         } else {
@@ -611,46 +611,19 @@ function handlePlotClick(index) {
         plot.countdown = 0;
         plot.totalCountdown = 0;
 
-        // Logging buat debug
-        console.log('Plot data before harvest:', plot);
-        console.log('Vegetable data:', plot.vegetable);
-
-        // Validasi shopImage dengan cek path asli
-        let imageSrc = plot.vegetable?.shopImage;
-        if (!imageSrc) {
-            console.warn('shopImage missing in vegetable data, using placeholder');
-            imageSrc = 'assets/img/ui/placeholder.png';
-        } else {
-            console.log('Attempting to load fly image with original path:', imageSrc);
-            // Tes tambah root kalo perlu, tapi cek dulu
-            const testSrc = `/harvest-pi${imageSrc.startsWith('/') ? imageSrc : '/' + imageSrc}`;
-            console.log('Testing with root path:', testSrc);
-            // Pake path asli dulu, fallback ke root kalo gagal
-            imageSrc = imageSrc; // Mulai dengan path asli
-        }
-
         const flyImage = document.createElement('img');
+        const imageSrc = plot.vegetable?.shopImage ? plot.vegetable.shopImage : 'assets/img/ui/placeholder.png';
+        console.log('Attempting to load fly image:', imageSrc); // Debug
         flyImage.src = imageSrc;
+        flyImage.onerror = () => {
+            console.log(`Failed to load fly image: ${imageSrc}, using placeholder`);
+            flyImage.src = 'assets/img/ui/placeholder.png';
+        };
         flyImage.classList.add('plant-fly');
         flyImage.style.width = '60px';
-        flyImage.style.position = 'absolute';
+        flyImage.style.position = 'absolute'; // Pastiin posisi absolut buat animasi
         flyImage.style.left = '50%';
         flyImage.style.transform = 'translateX(-50%)';
-        flyImage.onerror = () => {
-            console.error(`Failed to load fly image: ${imageSrc}, trying with root`);
-            flyImage.src = `/harvest-pi${imageSrc.startsWith('/') ? imageSrc : '/' + imageSrc}`;
-            flyImage.onerror = () => {
-                console.error(`Failed to load with root: ${flyImage.src}, using placeholder`);
-                flyImage.src = 'assets/img/ui/placeholder.png';
-                flyImage.onerror = () => {
-                    console.error('Failed to load placeholder image');
-                    flyImage.style.display = 'none';
-                };
-            };
-        };
-        flyImage.onload = () => {
-            console.log('Fly image loaded successfully:', imageSrc);
-        };
         plotContent.appendChild(flyImage);
 
         const amountText = document.createElement('div');

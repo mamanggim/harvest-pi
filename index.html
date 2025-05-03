@@ -28,8 +28,20 @@
   <div class="loading-animation">Loading...</div>
 </div>
 
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display: flex;">
+  <div class="login-container">
+    <h1>Harvest Pi</h1>
+    <button id="login-pi-btn">Login with Pi</button>
+    <div class="policy-links">
+      <a href="harvest-pi/privacy-policy.html" target="_blank">Privacy Policy</a> |
+      <a href="harvest-pi/term-of-service.html" target="_blank">Terms of Service</a>
+    </div>
+  </div>
+</div>
+
 <!-- START SCREEN -->
-<div id="start-screen">
+<div id="start-screen" style="display: none;">
   <h1 id="title">Harvest Pi</h1>
   <div id="start-text" class="start-text">Start Game</div>
   <div class="corner-buttons">
@@ -38,7 +50,7 @@
   </div>
 </div>
 
-  <!-- GAME SCREEN -->
+<!-- GAME SCREEN -->
 <div id="game-screen" style="display: none;">
   <div id="game-header">
     <div class="corner-buttons">
@@ -115,7 +127,7 @@
   </div>
 </div>
 
-  <!-- MODAL REWARD -->
+<!-- MODAL REWARD -->
 <div id="reward-modal" class="modal">
   <div class="modal-content">
     <span id="reward-modal-close" class="close">×</span>
@@ -153,27 +165,8 @@
 <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
 <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
 
-  <!-- FIREBASE -->
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-  import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
-    authDomain: "harvest-pi.firebaseapp.com",
-    databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "harvest-pi",
-    storageBucket: "harvest-pi.appspot.com",
-    messagingSenderId: "650006770674",
-    appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const database = getDatabase(app);
-  const auth = getAuth(app);
-  window.firebaseConfig = { database, auth };
-</script>
+<!-- FIREBASE -->
+<script type="module" src="firebase/firebase-config.js"></script>
 
 <!-- PI NETWORK SDK -->
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
@@ -186,10 +179,10 @@
   window.addEventListener('error', (event) => {
     alert('Main script failed to load: ' + event.message);
     const loadingScreen = document.getElementById('loading-screen');
-    const startScreen = document.getElementById('start-screen');
-    if (loadingScreen && startScreen) {
+    const loginScreen = document.getElementById('login-screen');
+    if (loadingScreen && loginScreen) {
       loadingScreen.style.display = 'none';
-      startScreen.style.display = 'block';
+      loginScreen.style.display = 'flex';
     }
   });
 </script>

@@ -468,13 +468,9 @@ function handlePlotClick(index) {
             plot.totalCountdown = vegetable.growthTime;
 
             const flyImage = document.createElement('img');
-            flyImage.src = vegetable.shopImage; // Ambil dari vegetables.json
+            flyImage.src = vegetable.shopImage;
             flyImage.classList.add('plant-fly');
             flyImage.style.width = '60px';
-            flyImage.onerror = () => {
-                console.log(`Failed to load fly image: ${vegetable.shopImage}, using placeholder`);
-                flyImage.src = 'assets/img/ui/placeholder.png';
-            };
             plotContent.appendChild(flyImage);
 
             const amountText = document.createElement('div');
@@ -613,18 +609,21 @@ function handlePlotClick(index) {
 
         const flyImage = document.createElement('img');
         const imageSrc = plot.vegetable?.shopImage ? plot.vegetable.shopImage : 'assets/img/ui/placeholder.png';
-        console.log('Attempting to load fly image:', imageSrc); // Debug
         flyImage.src = imageSrc;
         flyImage.onerror = () => {
-            console.log(`Failed to load fly image: ${imageSrc}, using placeholder`);
-            flyImage.src = 'assets/img/ui/placeholder.png';
-        };
+        console.log(`Failed to load fly image: ${imageSrc}, using placeholder`);
+        flyImage.src = 'assets/img/ui/placeholder.png';
+     };
         flyImage.classList.add('plant-fly');
         flyImage.style.width = '60px';
-        flyImage.style.position = 'absolute'; // Pastiin posisi absolut buat animasi
-        flyImage.style.left = '50%';
-        flyImage.style.transform = 'translateX(-50%)';
-        plotContent.appendChild(flyImage);
+
+        // Tempel ke body, bukan plotContent
+        document.body.appendChild(flyImage);
+
+        // Atur posisi gambar dari posisi plot
+        const rect = plotContent.getBoundingClientRect();
+        flyImage.style.left = `${rect.left + rect.width / 2 - 30}px`;
+        flyImage.style.top = `${rect.top}px`;
 
         const amountText = document.createElement('div');
         amountText.textContent = `+${yieldAmount}`;

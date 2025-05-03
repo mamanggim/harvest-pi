@@ -18,18 +18,6 @@
     #start-text:active {
       transform: scale(0.95);
     }
-    #login-pi {
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      padding: 10px;
-      font-size: 16px;
-      margin-top: 10px;
-      user-select: none;
-    }
-    #login-pi:active {
-      transform: scale(0.95);
-    }
   </style>
 </head>
 <body>
@@ -44,14 +32,13 @@
 <div id="start-screen">
   <h1 id="title">Harvest Pi</h1>
   <div id="start-text" class="start-text">Start Game</div>
-  <div id="login-pi">Login with Pi</div> <!-- Tambah tombol Login with Pi -->
   <div class="corner-buttons">
     <button id="lang-toggle">Switch Language (EN/ID)</button>
     <button id="settings-btn">⚙️</button>
   </div>
 </div>
 
-<!-- GAME SCREEN -->
+  <!-- GAME SCREEN -->
 <div id="game-screen" style="display: none;">
   <div id="game-header">
     <div class="corner-buttons">
@@ -69,7 +56,6 @@
       <button class="tab-btn" data-tab="achievements">Achievements</button>
     </div>
     <div id="wallet">
-      <span id="player-name">Player: Guest</span> <!-- Tambah elemen buat username Pi -->
       <span id="farm-coins">0 Farm Coins</span> |
       <span id="pi-coins">0.00 PI</span> |
       <span id="water">0 Water</span>
@@ -129,7 +115,7 @@
   </div>
 </div>
 
-<!-- MODAL REWARD -->
+  <!-- MODAL REWARD -->
 <div id="reward-modal" class="modal">
   <div class="modal-content">
     <span id="reward-modal-close" class="close">×</span>
@@ -158,16 +144,16 @@
 <div id="notification"></div>
 
 <!-- AUDIO -->
-<audio id="bg-music" src="/harvest-pi/assets/sfx/music/main-bgm.mp3" loop></audio>
-<audio id="bg-voice" src="/harvest-pi/assets/sfx/voice/main-bgv.mp3" loop></audio>
-<audio id="harvesting-sound" src="/harvest-pi/assets/sfx/voice/harvesting-bgv.mp3"></audio>
-<audio id="watering-sound" src="/harvest-pi/assets/sfx/voice/watering-bgv.mp3"></audio>
-<audio id="planting-sound" src="/harvest-pi/assets/sfx/voice/planting-bgv.mp3"></audio>
-<audio id="menu-sound" src="/harvest-pi/assets/sfx/voice/menu-bgv.mp3"></audio>
-<audio id="buying-sound" src="/harvest-pi/assets/sfx/voice/buying-bgv.mp3"></audio>
-<audio id="coin-sound" src="/harvest-pi/assets/sfx/voice/coin-bgv.mp3"></audio>
+<audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
+<audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
+<audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
+<audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3"></audio>
+<audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3"></audio>
+<audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3"></audio>
+<audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
+<audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
 
-<!-- FIREBASE -->
+  <!-- FIREBASE -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
   import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
@@ -191,9 +177,6 @@
 
 <!-- PI NETWORK SDK -->
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<script>
-  window.Pi.init({ version: "2.0", sandbox: true }); // Sandbox mode untuk testing
-</script>
 
 <!-- MAIN GAME SCRIPT -->
 <script type="module" src="farm/main.js?v=40"></script>

@@ -27,6 +27,7 @@ function addSafeClickListener(element, callback) {
 
 // Global variables
 let isDataLoaded = false;
+let piInitialized = false;
 let farmCoins = 0;
 let pi = 0;
 let water = 0;
@@ -216,9 +217,6 @@ async function loadData() {
 // END loadData fix
 
 // Authenticate with Pi Network
-// Inisialisasi Pi SDK sekali di awal
-let piInitialized = false;
-
 async function initializePiSDK() {
   if (!window.Pi) {
     console.error('Pi SDK not loaded');
@@ -229,7 +227,7 @@ async function initializePiSDK() {
   try {
     await Pi.init({
       version: "2.0",
-      appId: "zph8ke6h96lxogfkzxcxgekdtgcqcos3gv1ighavcwxbf8dobcadvfyifvgqutgh" // Masukin Pi API key
+      appId: "zph8ke6h96lxogfkzxcxgekdtgcqcos3gv1ighavcwxbf8dobcadvfyifvgqutgh" // Pi API key
     });
     piInitialized = true;
     console.log('Pi SDK initialized successfully');
@@ -242,18 +240,30 @@ async function initializePiSDK() {
 }
 
 // Update fungsi authenticateWithPi
-async function authenticateWithPi() {
-  if (!piInitialized) {
-    const initialized = await initializePiSDK();
-    if (!initialized) return;
+function authenticateWithPi() {
+  if (!window.Pi) {
+    console.error('Pi SDK not loaded');
+    showNotification('Pi Network SDK not available. Please try again later.');
+    return;
   }
 
+  if (!piInitialized) {
+    initializePiSDK().then(initialized => {
+      if (!initialized) return;
+      proceedAuthentication();
+    });
+  } else {
+    proceedAuthentication();
+  }
+}
+
+function proceedAuthentication() {
   const scopes = ['username']; // Mulai dengan scope minimal
   Pi.authenticate(scopes, onIncompletePaymentFound)
     .then(authResult => {
       console.log('Pi Auth success:', authResult);
       const user = authResult.user;
-      userId = user.uid; // Gunain UID langsung, lebih unik dan aman
+      userId = user.uid; // Gunain UID, lebih unik
       const playerRef = ref(database, `players/${userId}`);
 
       update(playerRef, {
@@ -265,7 +275,7 @@ async function authenticateWithPi() {
         pi: pi || 0
       }).then(() => {
         showNotification(`Logged in as ${user.username} (Email: ${user.email || 'Not provided'})`);
-        localStorage.setItem('userId', userId); // Simpan userId di localStorage
+        localStorage.setItem('userId', userId); // Simpan userId
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('start-screen').style.display = 'flex';
         loadPlayerData();

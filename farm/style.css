@@ -737,6 +737,65 @@ input[type="range"] {
   100% { content: 'Loading...'; }
 }
 
+/* Login Screen */
+#login-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2001;
+}
+
+.login-container {
+  background: #333;
+  padding: 20px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  text-align: center;
+  color: #fff;
+}
+
+.login-container h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: #66ff00;
+  text-shadow: 0 0 10px #66ff00;
+}
+
+#login-pi-btn {
+  background: #4caf50;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+#login-pi-btn:hover {
+  background: #66bb6a;
+}
+
+.policy-links {
+  margin-top: 15px;
+  font-size: 12px;
+}
+
+.policy-links a {
+  color: #ffeb3b;
+  text-decoration: none;
+}
+
+.policy-links a:hover {
+  text-decoration: underline;
+}
+
 /* ========== PART 12: RESPONSIVE (MAX WIDTH 600px) ========== */
 @media (max-width: 600px) {
   h1 {

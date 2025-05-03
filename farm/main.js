@@ -468,18 +468,12 @@ function handlePlotClick(index) {
             plot.totalCountdown = vegetable.growthTime;
 
             const flyImage = document.createElement('img');
-            // Tambah root harvest-pi ke path shopImage
-            let seedImageSrc = vegetable.shopImage;
-            if (seedImageSrc && !seedImageSrc.startsWith('/harvest-pi')) {
-                seedImageSrc = `/harvest-pi${seedImageSrc.startsWith('/') ? seedImageSrc : '/' + seedImageSrc}`;
-            }
-            console.log('Seed fly image path:', seedImageSrc); // Debug
-            flyImage.src = seedImageSrc;
+            flyImage.src = vegetable.shopImage; // Pake path dari vegetables.json
             flyImage.classList.add('plant-fly');
             flyImage.style.width = '60px';
             flyImage.onerror = () => {
-                console.log(`Failed to load seed fly image: ${seedImageSrc}, using placeholder`);
-                flyImage.src = '/harvest-pi/assets/img/ui/placeholder.png';
+                console.log(`Failed to load seed fly image: ${vegetable.shopImage}, using placeholder`);
+                flyImage.src = 'assets/img/ui/placeholder.png'; // Kembali ke path relatif
             };
             plotContent.appendChild(flyImage);
 
@@ -494,13 +488,8 @@ function handlePlotClick(index) {
                 plotContent.innerHTML = '';
                 const plantImg = document.createElement('img');
                 plantImg.classList.add('plant-img');
-                // Tambah root ke baseImage
-                let baseImageSrc = vegetable.baseImage;
-                if (baseImageSrc && !baseImageSrc.startsWith('/harvest-pi')) {
-                    baseImageSrc = `/harvest-pi${baseImageSrc.startsWith('/') ? baseImageSrc : '/' + baseImageSrc}`;
-                }
-                plantImg.src = `${baseImageSrc}${plot.currentFrame}.png`;
-                plantImg.onerror = () => { plantImg.src = '/harvest-pi/assets/img/ui/placeholder.png'; };
+                plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+                plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                 plotContent.appendChild(plantImg);
                 setTimeout(() => {
                     plantImg.classList.add('loaded');
@@ -531,8 +520,8 @@ function handlePlotClick(index) {
             plot.watered = true;
 
             const waterImage = document.createElement('img');
-            waterImage.src = '/harvest-pi/assets/img/ui/water_icon.png'; // Tambah root
-            waterImage.onerror = () => { waterImage.src = '/harvest-pi/assets/img/ui/placeholder.png'; };
+            waterImage.src = 'assets/img/ui/water_icon.png'; // Kembali ke path relatif
+            waterImage.onerror = () => { waterImage.src = 'assets/img/ui/placeholder.png'; };
             waterImage.classList.add('water-fly');
             waterImage.style.width = '40px';
             waterImage.style.top = '-40px';
@@ -582,13 +571,8 @@ function handlePlotClick(index) {
                             plotContent.appendChild(plantImg);
                         }
                         plantImg.classList.remove('loaded');
-                        // Tambah root ke baseImage
-                        let baseImageSrc = plot.vegetable.baseImage;
-                        if (baseImageSrc && !baseImageSrc.startsWith('/harvest-pi')) {
-                            baseImageSrc = `/harvest-pi${baseImageSrc.startsWith('/') ? baseImageSrc : '/' + baseImageSrc}`;
-                        }
-                        plantImg.src = `${baseImageSrc}${plot.currentFrame}.png`;
-                        plantImg.onerror = () => { plantImg.src = '/harvest-pi/assets/img/ui/placeholder.png'; };
+                        plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+                        plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                         setTimeout(() => {
                             plantImg.classList.add('loaded');
                         }, 50);
@@ -609,7 +593,7 @@ function handlePlotClick(index) {
                     clearInterval(countdownInterval);
                     countdownFill.style.width = '0%';
                 }
-                savePlayerData(); // Simpan progress countdown
+                savePlayerData();
             }, 1000);
 
         } else {
@@ -631,16 +615,18 @@ function handlePlotClick(index) {
         console.log('Plot data before harvest:', plot);
         console.log('Vegetable data:', plot.vegetable);
 
-        // Validasi dan tambah root ke shopImage
+        // Validasi shopImage dengan cek path asli
         let imageSrc = plot.vegetable?.shopImage;
         if (!imageSrc) {
             console.warn('shopImage missing in vegetable data, using placeholder');
-            imageSrc = '/harvest-pi/assets/img/ui/placeholder.png';
+            imageSrc = 'assets/img/ui/placeholder.png';
         } else {
-            if (!imageSrc.startsWith('/harvest-pi')) {
-                imageSrc = `/harvest-pi${imageSrc.startsWith('/') ? imageSrc : '/' + imageSrc}`;
-            }
-            console.log('Attempting to load fly image:', imageSrc);
+            console.log('Attempting to load fly image with original path:', imageSrc);
+            // Tes tambah root kalo perlu, tapi cek dulu
+            const testSrc = `/harvest-pi${imageSrc.startsWith('/') ? imageSrc : '/' + imageSrc}`;
+            console.log('Testing with root path:', testSrc);
+            // Pake path asli dulu, fallback ke root kalo gagal
+            imageSrc = imageSrc; // Mulai dengan path asli
         }
 
         const flyImage = document.createElement('img');
@@ -651,11 +637,15 @@ function handlePlotClick(index) {
         flyImage.style.left = '50%';
         flyImage.style.transform = 'translateX(-50%)';
         flyImage.onerror = () => {
-            console.error(`Failed to load fly image: ${imageSrc}, falling back to placeholder`);
-            flyImage.src = '/harvest-pi/assets/img/ui/placeholder.png';
+            console.error(`Failed to load fly image: ${imageSrc}, trying with root`);
+            flyImage.src = `/harvest-pi${imageSrc.startsWith('/') ? imageSrc : '/' + imageSrc}`;
             flyImage.onerror = () => {
-                console.error('Failed to load placeholder image as well');
-                flyImage.style.display = 'none';
+                console.error(`Failed to load with root: ${flyImage.src}, using placeholder`);
+                flyImage.src = 'assets/img/ui/placeholder.png';
+                flyImage.onerror = () => {
+                    console.error('Failed to load placeholder image');
+                    flyImage.style.display = 'none';
+                };
             };
         };
         flyImage.onload = () => {

@@ -12,12 +12,14 @@ function addSafeClickListener(element, callback) {
     element.addEventListener('click', (e) => {
         if (isLocked) return;
         isLocked = true;
+        console.log('Click event triggered on:', element); // Debug
         callback(e);
         setTimeout(() => isLocked = false, 300);
     });
     element.addEventListener('touchstart', (e) => {
         if (isLocked) return;
         isLocked = true;
+        console.log('Touchstart event triggered on:', element); // Debug
         callback(e);
         setTimeout(() => isLocked = false, 300);
     });
@@ -238,8 +240,10 @@ async function initializePiSDK() {
     }
 }
 
-// Update fungsi authenticateWithPi
+// Update fungsi authenticateWithPi dengan debug
 async function authenticateWithPi() {
+    console.log('authenticateWithPi called'); // Debug
+
     if (!window.Pi) {
         console.error('Pi SDK not loaded');
         showNotification('Pi Network SDK not available. Please try again later.');
@@ -247,12 +251,18 @@ async function authenticateWithPi() {
     }
 
     if (!piInitialized) {
+        console.log('Pi SDK not initialized, initializing now...'); // Debug
         const initialized = await initializePiSDK();
-        if (!initialized) return;
+        if (!initialized) {
+            console.error('Pi SDK initialization failed');
+            showNotification('Failed to initialize Pi SDK. Please try again.');
+            return;
+        }
     }
 
     // Cuma pake scope username
     const scopes = ['username'];
+    console.log('Attempting Pi.authenticate with scopes:', scopes); // Debug
     Pi.authenticate(scopes, onIncompletePaymentFound)
         .then(authResult => {
             console.log('Pi Auth success:', authResult);
@@ -305,6 +315,7 @@ function checkPiBrowser() {
     // Cek user agent untuk Pi Browser
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const isPiBrowser = userAgent.includes('PiBrowser');
+    console.log('Checking Pi Browser, userAgent:', userAgent, 'isPiBrowser:', isPiBrowser); // Debug
 
     if (!isPiBrowser) {
         // Pop-up notifikasi pertama
@@ -376,18 +387,35 @@ function checkPiBrowser() {
 
 // Modal SignIn
 function showModal() {
-    document.getElementById('signInModal').style.display = 'flex';
+    console.log('Showing login modal'); // Debug
+    const modal = document.getElementById('signInModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        console.error('signInModal not found');
+    }
 }
 
 function closeModal() {
-    document.getElementById('signInModal').style.display = 'none';
+    console.log('Closing login modal'); // Debug
+    const modal = document.getElementById('signInModal');
+    if (modal) {
+        modal.style.display = 'none';
+    } else {
+        console.error('signInModal not found');
+    }
 }
 
 // Cek kalo user belum login, tampilkan modal
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded'); // Debug
+
     // Cek apakah di Pi Browser
     const isPiBrowser = checkPiBrowser();
-    if (!isPiBrowser) return; // Kalo bukan Pi Browser, stop di sini
+    if (!isPiBrowser) {
+        console.log('Not in Pi Browser, stopping further execution'); // Debug
+        return;
+    }
 
     if (!localStorage.getItem('userId')) {
         showModal();
@@ -513,8 +541,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Pasang event listener untuk login-pi-btn
     const loginPiBtn = document.getElementById('login-pi-btn');
-    if (loginPiBtn) addSafeClickListener(loginPiBtn, authenticateWithPi);
+    if (loginPiBtn) {
+        console.log('login-pi-btn found, attaching event listener'); // Debug
+        addSafeClickListener(loginPiBtn, authenticateWithPi);
+        // Fallback: tambah event listener langsung
+        loginPiBtn.addEventListener('click', () => {
+            console.log('Direct click event on login-pi-btn'); // Debug
+            authenticateWithPi();
+        });
+        loginPiBtn.addEventListener('touchstart', () => {
+            console.log('Direct touchstart event on login-pi-btn'); // Debug
+            authenticateWithPi();
+        });
+    } else {
+        console.error('login-pi-btn not found in DOM'); // Debug
+    }
 
     initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
     initializeGame();
@@ -1607,9 +1650,22 @@ async function initializeGame() {
             }
         }, 1000);
 
+        // Pindah inisialisasi loginPiBtn ke sini biar pasti DOM udah siap
         const loginPiBtn = document.getElementById('login-pi-btn');
         if (loginPiBtn) {
+            console.log('login-pi-btn found in initializeGame, attaching event listener'); // Debug
             addSafeClickListener(loginPiBtn, authenticateWithPi);
+            // Fallback
+            loginPiBtn.addEventListener('click', () => {
+                console.log('Direct click event on login-pi-btn in initializeGame'); // Debug
+                authenticateWithPi();
+            });
+            loginPiBtn.addEventListener('touchstart', () => {
+                console.log('Direct touchstart event on login-pi-btn in initializeGame'); // Debug
+                authenticateWithPi();
+            });
+        } else {
+            console.error('login-pi-btn not found in initializeGame'); // Debug
         }
     } catch (error) {
         console.error('Error initializing game:', error.message);

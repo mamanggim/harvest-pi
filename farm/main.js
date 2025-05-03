@@ -47,9 +47,6 @@ let claimedToday = false; // Flag sederhana buat status klaim
 let isClaiming = false; // Tambah untuk lock claim
 let isAudioPlaying = false; // Flag to track audio state
 
-// Global variable untuk kontrol audio
-let isAudioPlaying = false;
-
 // Audio elements (dideklarasi ulang di fungsi biar aman kalo DOM belum siap)
 function getAudioElements() {
     return {

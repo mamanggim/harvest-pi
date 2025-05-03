@@ -218,131 +218,217 @@ async function loadData() {
 
 // Authenticate with Pi Network
 async function initializePiSDK() {
-  if (!window.Pi) {
-    console.error('Pi SDK not loaded');
-    showNotification('Pi Network SDK not available. Please try again later.');
-    return false;
-  }
+    if (!window.Pi) {
+        console.error('Pi SDK not loaded');
+        showNotification('Pi Network SDK not available. Please try again later.');
+        return false;
+    }
 
-  try {
-    await Pi.init({
-      version: "2.0",
-      appId: "zph8ke6h96lxogfkzxcxgekdtgcqcos3gv1ighavcwxbf8dobcadvfyifvgqutgh" // Pi API key
-    });
-    piInitialized = true;
-    console.log('Pi SDK initialized successfully');
-    return true;
-  } catch (error) {
-    console.error('Pi init failed:', error);
-    showNotification('Failed to initialize Pi SDK: ' + error.message);
-    return false;
-  }
+    try {
+        await Pi.init({
+            version: "2.0",
+            appId: "zph8ke6h96lxogfkzxcxgekdtgcqcos3gv1ighavcwxbf8dobcadvfyifvgqutgh" // Pi API key
+        });
+        piInitialized = true;
+        console.log('Pi SDK initialized successfully');
+        return true;
+    } catch (error) {
+        console.error('Pi init failed:', error);
+        showNotification('Failed to initialize Pi SDK: ' + error.message);
+        return false;
+    }
 }
 
 // Update fungsi authenticateWithPi
-function authenticateWithPi() {
-  if (!window.Pi) {
-    console.error('Pi SDK not loaded');
-    showNotification('Pi Network SDK not available. Please try again later.');
-    return;
-  }
-
-  if (!piInitialized) {
-    initializePiSDK().then(initialized => {
-      if (!initialized) return;
-      proceedAuthentication();
-    });
-  } else {
-    proceedAuthentication();
-  }
-}
-
-function proceedAuthentication() {
-  const scopes = ['username']; // Mulai dengan scope minimal
-  Pi.authenticate(scopes, onIncompletePaymentFound)
-    .then(authResult => {
-      console.log('Pi Auth success:', authResult);
-      const user = authResult.user;
-      userId = user.uid; // Gunain UID, lebih unik
-      const playerRef = ref(database, `players/${userId}`);
-
-      update(playerRef, {
-        piUser: {
-          uid: user.uid,
-          username: user.username,
-          email: user.email || null
-        },
-        pi: pi || 0
-      }).then(() => {
-        showNotification(`Logged in as ${user.username} (Email: ${user.email || 'Not provided'})`);
-        localStorage.setItem('userId', userId); // Simpan userId
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('start-screen').style.display = 'flex';
-        loadPlayerData();
-      }).catch(error => {
-        console.error('Error saving Pi user data:', error);
-        showNotification('Failed to save Pi user data: ' + error.message);
-      });
-    })
-    .catch(error => {
-      console.error('Pi Auth failed:', error);
-      showNotification('Pi Network login failed: ' + error.message);
-    });
-}
-
-// Panggil initializePiSDK di initializeGame
-async function initializeGame() {
-  try {
-    await loadData();
-    await initializePiSDK(); // Inisialisasi Pi SDK di sini
-    updateUIText();
-
-    setTimeout(() => {
-      const loadingScreen = document.getElementById('loading-screen');
-      const loginScreen = document.getElementById('login-screen');
-      if (loadingScreen && loginScreen) {
-        loadingScreen.style.display = 'none';
-        loginScreen.style.display = 'flex';
-      }
-    }, 1000);
-
-    const loginPiBtn = document.getElementById('login-pi-btn');
-    if (loginPiBtn) {
-      addSafeClickListener(loginPiBtn, authenticateWithPi);
+async function authenticateWithPi() {
+    if (!window.Pi) {
+        console.error('Pi SDK not loaded');
+        showNotification('Pi Network SDK not available. Please try again later.');
+        return;
     }
-  } catch (error) {
-    console.error('Error initializing game:', error.message);
-    showNotification('Error initializing game. Please reload.');
-    setTimeout(() => {
-      const loadingScreen = document.getElementById('loading-screen');
-      const loginScreen = document.getElementById('login-screen');
-      if (loadingScreen && loginScreen) {
-        loadingScreen.style.display = 'none';
-        loginScreen.style.display = 'flex';
-      }
-    }, 1000);
-  }
+
+    if (!piInitialized) {
+        const initialized = await initializePiSDK();
+        if (!initialized) return;
+    }
+
+    const scopes = ['username']; // Mulai dengan scope minimal
+    Pi.authenticate(scopes, onIncompletePaymentFound)
+        .then(authResult => {
+            console.log('Pi Auth success:', authResult);
+            const user = authResult.user;
+            userId = user.uid; // Gunain UID, lebih unik
+            const playerRef = ref(database, `players/${userId}`);
+
+            update(playerRef, {
+                piUser: {
+                    uid: user.uid,
+                    username: user.username,
+                    email: user.email || null
+                },
+                pi: pi || 0
+            }).then(() => {
+                showNotification(`Logged in as ${user.username} (Email: ${user.email || 'Not provided'})`);
+                localStorage.setItem('userId', userId); // Simpan userId
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('start-screen').style.display = 'flex';
+                loadPlayerData();
+            }).catch(error => {
+                console.error('Error saving Pi user data:', error);
+                showNotification('Failed to save Pi user data: ' + error.message);
+            });
+        })
+        .catch(error => {
+            console.error('Pi Auth failed:', error);
+            showNotification('Pi Network login failed: ' + error.message);
+        });
 }
 
 function onIncompletePaymentFound(payment) {
-  console.log("onIncompletePaymentFound", payment);
-  // Kalo gak pake backend, biarin kosong kayak gini
+    console.log("onIncompletePaymentFound", payment);
+    // Kalo gak pake backend, biarin kosong kayak gini
 }
 
 // Modal SignIn
 function showModal() {
-  document.getElementById('signInModal').style.display = 'flex';
+    document.getElementById('signInModal').style.display = 'flex';
 }
 
 function closeModal() {
-  document.getElementById('signInModal').style.display = 'none';
+    document.getElementById('signInModal').style.display = 'none';
 }
 
 // Cek kalo user belum login, tampilkan modal
 document.addEventListener('DOMContentLoaded', () => {
-  if (!localStorage.getItem('userId')) {
-    showModal();
-  }
+    if (!localStorage.getItem('userId')) {
+        showModal();
+    }
+
+    const startText = document.getElementById('start-text');
+    if (startText) addSafeClickListener(startText, startGame);
+
+    const langToggle = document.getElementById('lang-toggle');
+    if (langToggle) addSafeClickListener(langToggle, toggleLanguage);
+
+    const gameLangToggle = document.getElementById('game-lang-toggle');
+    if (gameLangToggle) addSafeClickListener(gameLangToggle, toggleLanguage);
+
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+        addSafeClickListener(settingsBtn, () => {
+            document.getElementById('settings-modal').style.display = 'block';
+            playMenuSound();
+        });
+    }
+
+    const gameSettingsBtn = document.getElementById('game-settings-btn');
+    if (gameSettingsBtn) {
+        addSafeClickListener(gameSettingsBtn, () => {
+            document.getElementById('settings-modal').style.display = 'block';
+            playMenuSound();
+        });
+    }
+
+    const closeSettings = document.getElementById('close-settings');
+    if (closeSettings) {
+        addSafeClickListener(closeSettings, () => {
+            document.getElementById('settings-modal').style.display = 'none';
+            playMenuSound();
+        });
+    }
+
+    const rewardModalClose = document.getElementById('reward-modal-close');
+    if (rewardModalClose) {
+        addSafeClickListener(rewardModalClose, () => {
+            rewardModal.style.display = 'none';
+            playMenuSound();
+        });
+    }
+
+    const fullscreenToggle = document.getElementById('fullscreen-toggle');
+    if (fullscreenToggle) {
+        addSafeClickListener(fullscreenToggle, () => {
+            if (!document.fullscreenElement) {
+                enterFullScreen();
+            } else {
+                exitFullScreen();
+            }
+            playMenuSound();
+        });
+    }
+
+    const musicVolumeSlider = document.getElementById('music-volume');
+    if (musicVolumeSlider) {
+        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
+        musicVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('musicVolume', musicVolumeSlider.value);
+            updateVolumes();
+        });
+    }
+
+    const voiceVolumeSlider = document.getElementById('voice-volume');
+    if (voiceVolumeSlider) {
+        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
+        voiceVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
+            updateVolumes();
+        });
+    }
+
+    const exitGameBtn = document.getElementById('exit-game-btn');
+    if (exitGameBtn) {
+        addSafeClickListener(exitGameBtn, () => {
+            bgMusic.pause();
+            bgVoice.pause();
+            window.location.reload();
+        });
+    }
+
+    const exchangeBtn = document.getElementById('exchange-btn');
+    if (exchangeBtn) addSafeClickListener(exchangeBtn, exchangePi);
+
+    const exchangeAmount = document.getElementById('exchange-amount');
+    if (exchangeAmount) exchangeAmount.addEventListener('input', updateExchangeResult);
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        addSafeClickListener(btn, () => {
+            const tab = btn.getAttribute('data-tab');
+            switchTab(tab);
+        });
+    });
+
+    const buyTab = document.getElementById('shop-buy-tab');
+    const sellTab = document.getElementById('shop-sell-tab');
+    const shopContent = document.getElementById('shop-content');
+    const sellContent = document.getElementById('sell-section');
+
+    if (buyTab) {
+        addSafeClickListener(buyTab, () => {
+            buyTab.classList.add('active');
+            sellTab.classList.remove('active');
+            shopContent.style.display = 'block';
+            sellContent.style.display = 'none';
+            renderShop();
+            playMenuSound();
+        });
+    }
+
+    if (sellTab) {
+        addSafeClickListener(sellTab, () => {
+            sellTab.classList.add('active');
+            buyTab.classList.remove('active');
+            shopContent.style.display = 'none';
+            sellContent.style.display = 'block';
+            renderSellSection();
+            playMenuSound();
+        });
+    }
+
+    const loginPiBtn = document.getElementById('login-pi-btn');
+    if (loginPiBtn) addSafeClickListener(loginPiBtn, authenticateWithPi);
+
+    initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
+    initializeGame();
 });
 
 // Load player data
@@ -1474,131 +1560,3 @@ function exitFullScreen() {
         document.msExitFullscreen();
     }
 }
-
-// Event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    const startText = document.getElementById('start-text');
-    if (startText) addSafeClickListener(startText, startGame);
-
-    const langToggle = document.getElementById('lang-toggle');
-    if (langToggle) addSafeClickListener(langToggle, toggleLanguage);
-
-    const gameLangToggle = document.getElementById('game-lang-toggle');
-    if (gameLangToggle) addSafeClickListener(gameLangToggle, toggleLanguage);
-
-    const settingsBtn = document.getElementById('settings-btn');
-    if (settingsBtn) {
-        addSafeClickListener(settingsBtn, () => {
-            document.getElementById('settings-modal').style.display = 'block';
-            playMenuSound();
-        });
-    }
-
-    const gameSettingsBtn = document.getElementById('game-settings-btn');
-    if (gameSettingsBtn) {
-        addSafeClickListener(gameSettingsBtn, () => {
-            document.getElementById('settings-modal').style.display = 'block';
-            playMenuSound();
-        });
-    }
-
-    const closeSettings = document.getElementById('close-settings');
-    if (closeSettings) {
-        addSafeClickListener(closeSettings, () => {
-            document.getElementById('settings-modal').style.display = 'none';
-            playMenuSound();
-        });
-    }
-
-    const rewardModalClose = document.getElementById('reward-modal-close');
-    if (rewardModalClose) {
-        addSafeClickListener(rewardModalClose, () => {
-            rewardModal.style.display = 'none';
-            playMenuSound();
-        });
-    }
-
-    const fullscreenToggle = document.getElementById('fullscreen-toggle');
-    if (fullscreenToggle) {
-        addSafeClickListener(fullscreenToggle, () => {
-            if (!document.fullscreenElement) {
-                enterFullScreen();
-            } else {
-                exitFullScreen();
-            }
-            playMenuSound();
-        });
-    }
-
-    const musicVolumeSlider = document.getElementById('music-volume');
-    if (musicVolumeSlider) {
-        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
-        musicVolumeSlider.addEventListener('input', () => {
-            localStorage.setItem('musicVolume', musicVolumeSlider.value);
-            updateVolumes();
-        });
-    }
-
-    const voiceVolumeSlider = document.getElementById('voice-volume');
-    if (voiceVolumeSlider) {
-        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
-        voiceVolumeSlider.addEventListener('input', () => {
-            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
-            updateVolumes();
-        });
-    }
-
-    const exitGameBtn = document.getElementById('exit-game-btn');
-    if (exitGameBtn) {
-        addSafeClickListener(exitGameBtn, () => {
-            bgMusic.pause();
-            bgVoice.pause();
-            window.location.reload();
-        });
-    }
-
-    const exchangeBtn = document.getElementById('exchange-btn');
-    if (exchangeBtn) addSafeClickListener(exchangeBtn, exchangePi);
-
-    const exchangeAmount = document.getElementById('exchange-amount');
-    if (exchangeAmount) exchangeAmount.addEventListener('input', updateExchangeResult);
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        addSafeClickListener(btn, () => {
-            const tab = btn.getAttribute('data-tab');
-            switchTab(tab);
-        });
-    });
-
-    const buyTab = document.getElementById('shop-buy-tab');
-    const sellTab = document.getElementById('shop-sell-tab');
-    const shopContent = document.getElementById('shop-content');
-    const sellContent = document.getElementById('sell-section');
-
-    if (buyTab) {
-        addSafeClickListener(buyTab, () => {
-            buyTab.classList.add('active');
-            sellTab.classList.remove('active');
-            shopContent.style.display = 'block';
-            sellContent.style.display = 'none';
-            renderShop();
-            playMenuSound();
-        });
-    }
-
-    if (sellTab) {
-        addSafeClickListener(sellTab, () => {
-            sellTab.classList.add('active');
-            buyTab.classList.remove('active');
-            shopContent.style.display = 'none';
-            sellContent.style.display = 'block';
-            renderSellSection();
-            playMenuSound();
-        });
-    }
-
-    const loginPiBtn = document.getElementById('login-pi-btn');
-    if (loginPiBtn) addSafeClickListener(loginPiBtn, authenticateWithPi);
-
-    initializeGame();
-});

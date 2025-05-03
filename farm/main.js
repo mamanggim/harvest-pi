@@ -1,7 +1,6 @@
-// Ambil database dan auth dari firebase-config.js
-import { database, auth } from '../firebase/firebase-config.js';
+// Ambil database dari firebase-config.js
+import { database } from '../firebase/firebase-config.js';
 import { ref, onValue, set, update, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Deklarasi claimModalBtn dan rewardModal sebagai global
 const claimModalBtn = document.getElementById('claim-modal-btn');
@@ -252,35 +251,51 @@ async function authenticateWithPi() {
         if (!initialized) return;
     }
 
-    const scopes = ['username']; // Mulai dengan scope minimal
+    // Autentikasi Pi Network dengan scope username dan email
+    const scopes = ['username', 'email'];
     Pi.authenticate(scopes, onIncompletePaymentFound)
         .then(authResult => {
             console.log('Pi Auth success:', authResult);
-            const user = authResult.user;
-            userId = user.uid; // Gunain UID, lebih unik
+            const piUser = authResult.user;
+            userId = piUser.uid; // Pake UID dari Pi sebagai userId
+            console.log('User ID set to:', userId);
+
             const playerRef = ref(database, `players/${userId}`);
 
-            update(playerRef, {
-                piUser: {
-                    uid: user.uid,
-                    username: user.username,
-                    email: user.email || null
-                },
-                pi: pi || 0
-            }).then(() => {
-                showNotification(`Logged in as ${user.username} (Email: ${user.email || 'Not provided'})`);
-                localStorage.setItem('userId', userId); // Simpan userId
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('start-screen').style.display = 'flex';
-                loadPlayerData();
+            // Simpan data Pi user
+            get(playerRef).then(snapshot => {
+                const data = snapshot.val() || {};
+                update(playerRef, {
+                    piUser: {
+                        uid: piUser.uid,
+                        username: piUser.username,
+                        email: piUser.email || 'Not provided'
+                    },
+                    pi: data.pi || 0,
+                    farmCoins: data.farmCoins || 0,
+                    lastUpdated: new Date().toISOString()
+                }).then(() => {
+                    showNotification(`Logged in as ${piUser.username} (Email: ${piUser.email || 'Not provided'})`);
+                    localStorage.setItem('userId', userId);
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('start-screen').style.display = 'flex';
+                    loadPlayerData();
+                }).catch(error => {
+                    console.error('Error saving Pi user data:', error);
+                    showNotification('Failed to save Pi user data: ' + error.message);
+                });
             }).catch(error => {
-                console.error('Error saving Pi user data:', error);
-                showNotification('Failed to save Pi user data: ' + error.message);
+                console.error('Error checking existing data:', error);
+                showNotification('Error accessing player data: ' + error.message);
             });
         })
         .catch(error => {
             console.error('Pi Auth failed:', error);
-            showNotification('Pi Network login failed: ' + error.message);
+            if (error.message.includes('scopes')) {
+                showNotification('Cannot access email: Please enable email scope in Pi Developer Portal.');
+            } else {
+                showNotification('Pi Network login failed: ' + error.message);
+            }
         });
 }
 
@@ -435,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadPlayerData() {
     try {
         if (!userId) {
-            console.warn('No userId, please login first!');
+            console.warn('No userId, please login with Pi first!');
             return;
         }
         const playerRef = ref(database, `players/${userId}`);
@@ -469,7 +484,7 @@ async function loadPlayerData() {
                     achievements: { harvest: false, coins: false },
                     lastClaim: null,
                     claimedToday: false,
-                    piUser: { email: userId }
+                    piUser: { uid: userId }
                 };
                 set(playerRef, initialData).catch(err => {
                     console.error('Initial set failed:', err);
@@ -510,7 +525,8 @@ function savePlayerData() {
         harvestCount,
         achievements,
         lastClaim,
-        claimedToday
+        claimedToday,
+        piUser: { uid: userId }
     };
 
     return update(playerRef, dataToSave).catch(error => {

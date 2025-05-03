@@ -47,18 +47,26 @@ let claimedToday = false; // Flag sederhana buat status klaim
 let isClaiming = false; // Tambah untuk lock claim
 let isAudioPlaying = false; // Flag to track audio state
 
-// Audio elements
-const bgMusic = document.getElementById('bg-music');
-const bgVoice = document.getElementById('bg-voice');
-const harvestingSound = document.getElementById('harvesting-sound');
-const wateringSound = document.getElementById('watering-sound');
-const plantingSound = document.getElementById('planting-sound');
-const menuSound = document.getElementById('menu-sound');
-const buyingSound = document.getElementById('buying-sound');
-const coinSound = document.getElementById('coin-sound');
+// Global variable untuk kontrol audio
+let isAudioPlaying = false;
+
+// Audio elements (dideklarasi ulang di fungsi biar aman kalo DOM belum siap)
+function getAudioElements() {
+    return {
+        bgMusic: document.getElementById('bg-music'),
+        bgVoice: document.getElementById('bg-voice'),
+        harvestingSound: document.getElementById('harvesting-sound'),
+        wateringSound: document.getElementById('watering-sound'),
+        plantingSound: document.getElementById('planting-sound'),
+        menuSound: document.getElementById('menu-sound'),
+        buyingSound: document.getElementById('buying-sound'),
+        coinSound: document.getElementById('coin-sound')
+    };
+}
 
 // Audio control functions
 function playBgMusic() {
+    const { bgMusic } = getAudioElements();
     if (bgMusic && !isAudioPlaying) {
         const playPromise = bgMusic.play();
         if (playPromise !== undefined) {
@@ -80,6 +88,7 @@ function playBgMusic() {
 }
 
 function playBgVoice() {
+    const { bgVoice } = getAudioElements();
     if (bgVoice && !isAudioPlaying) {
         const playPromise = bgVoice.play();
         if (playPromise !== undefined) {
@@ -100,55 +109,91 @@ function playBgVoice() {
 }
 
 function playHarvestingSound() {
+    const { harvestingSound } = getAudioElements();
     if (harvestingSound) {
         const playPromise = harvestingSound.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Harvest sound failed:', e.message));
+            playPromise.catch(e => {
+                console.log('Harvesting sound failed:', e.message);
+                setTimeout(() => {
+                    harvestingSound.play().catch(err => console.log('Retry Harvesting sound failed:', err.message));
+                }, 100);
+            });
         }
     }
 }
 
 function playWateringSound() {
+    const { wateringSound } = getAudioElements();
     if (wateringSound) {
         const playPromise = wateringSound.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Watering sound failed:', e.message));
+            playPromise.catch(e => {
+                console.log('Watering sound failed:', e.message);
+                setTimeout(() => {
+                    wateringSound.play().catch(err => console.log('Retry Watering sound failed:', err.message));
+                }, 100);
+            });
         }
     }
 }
 
 function playPlantingSound() {
+    const { plantingSound } = getAudioElements();
     if (plantingSound) {
         const playPromise = plantingSound.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Planting sound failed:', e.message));
+            playPromise.catch(e => {
+                console.log('Planting sound failed:', e.message);
+                setTimeout(() => {
+                    plantingSound.play().catch(err => console.log('Retry Planting sound failed:', err.message));
+                }, 100);
+            });
         }
     }
 }
 
 function playMenuSound() {
+    const { menuSound } = getAudioElements();
     if (menuSound) {
         const playPromise = menuSound.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Menu sound failed:', e.message));
+            playPromise.catch(e => {
+                console.log('Menu sound failed:', e.message);
+                setTimeout(() => {
+                    menuSound.play().catch(err => console.log('Retry Menu sound failed:', err.message));
+                }, 100);
+            });
         }
     }
 }
 
 function playBuyingSound() {
+    const { buyingSound } = getAudioElements();
     if (buyingSound) {
         const playPromise = buyingSound.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Buying sound failed:', e.message));
+            playPromise.catch(e => {
+                console.log('Buying sound failed:', e.message);
+                setTimeout(() => {
+                    buyingSound.play().catch(err => console.log('Retry Buying sound failed:', err.message));
+                }, 100);
+            });
         }
     }
 }
 
 function playCoinSound() {
+    const { coinSound } = getAudioElements();
     if (coinSound) {
         const playPromise = coinSound.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Coin sound failed:', e.message));
+            playPromise.catch(e => {
+                console.log('Coin sound failed:', e.message);
+                setTimeout(() => {
+                    coinSound.play().catch(err => console.log('Retry Coin sound failed:', err.message));
+                }, 100);
+            });
         }
     }
 }
@@ -156,47 +201,25 @@ function playCoinSound() {
 function updateVolumes() {
     const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 50;
     const voiceVolume = parseFloat(localStorage.getItem('voiceVolume')) || 50;
-    console.log('Updating volumes:', { musicVolume, voiceVolume }); // Debug
+    console.log('Updating volumes:', { musicVolume, voiceVolume });
 
-    // Pastikan volume dalam range 0-1
     const musicVol = Math.min(Math.max(musicVolume / 100, 0), 1);
     const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 1);
 
-    // Update volume untuk semua audio element
-    if (bgMusic) {
-        bgMusic.volume = musicVol;
-        console.log('BG Music volume set to:', bgMusic.volume);
-        if (isAudioPlaying) bgMusic.play().catch(e => console.log('BG Music play failed after volume change:', e));
-    }
-    if (bgVoice) {
-        bgVoice.volume = voiceVol;
-        console.log('BG Voice volume set to:', bgVoice.volume);
-        bgVoice.play().catch(e => console.log('BG Voice play failed after volume change:', e));
-    }
-    if (harvestingSound) {
-        harvestingSound.volume = voiceVol;
-        console.log('Harvesting sound volume set to:', harvestingSound.volume);
-    }
-    if (wateringSound) {
-        wateringSound.volume = voiceVol;
-        console.log('Watering sound volume set to:', wateringSound.volume);
-    }
-    if (plantingSound) {
-        plantingSound.volume = voiceVol;
-        console.log('Planting sound volume set to:', plantingSound.volume);
-    }
-    if (menuSound) {
-        menuSound.volume = voiceVol;
-        console.log('Menu sound volume set to:', menuSound.volume);
-    }
-    if (buyingSound) {
-        buyingSound.volume = voiceVol;
-        console.log('Buying sound volume set to:', buyingSound.volume);
-    }
-    if (coinSound) {
-        coinSound.volume = voiceVol;
-        console.log('Coin sound volume set to:', coinSound.volume);
-    }
+    const audioElements = getAudioElements();
+
+    Object.entries(audioElements).forEach(([key, element]) => {
+        if (element) {
+            element.volume = key === 'bgMusic' ? musicVol : voiceVol;
+            console.log(`${key} volume set to:`, element.volume);
+            // Coba play ulang kalo audio aktif
+            if (!element.paused) {
+                element.play().catch(e => console.log(`${key} play failed after volume change:`, e.message));
+            }
+        } else {
+            console.warn(`Audio element not found: ${key}`);
+        }
+    });
 }
 
 // START loadData fix
@@ -1326,13 +1349,13 @@ function toggleLanguage() {
 
 // Open settings
 function openSettings() {
-  const modal = document.getElementById('settings-modal');
-  if (modal) {
-    modal.style.display = 'block';
-    playMenuSound();
-  } else {
-    console.error('Settings modal not found!');
-  }
+    const modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.style.display = 'block';
+        playMenuSound();
+    } else {
+        console.error('Settings modal not found!');
+    }
 }
 
 // Initialize settings
@@ -1341,7 +1364,12 @@ function initializeSettings() {
     const voiceVolumeSlider = document.getElementById('voice-volume');
     const closeSettings = document.getElementById('close-settings');
 
-    // Set nilai awal slider dari localStorage
+    if (!musicVolumeSlider || !voiceVolumeSlider || !closeSettings) {
+        console.error('Settings elements not found');
+        return;
+    }
+
+    // Set nilai awal dari localStorage
     musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
     voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
 
@@ -1349,14 +1377,14 @@ function initializeSettings() {
     musicVolumeSlider.addEventListener('input', () => {
         const newVolume = musicVolumeSlider.value;
         localStorage.setItem('musicVolume', newVolume);
-        console.log('Music volume changed to:', newVolume); // Debug
+        console.log('Music volume changed to:', newVolume); // Debug dari kode lama
         updateVolumes();
     });
 
     voiceVolumeSlider.addEventListener('input', () => {
         const newVolume = voiceVolumeSlider.value;
         localStorage.setItem('voiceVolume', newVolume);
-        console.log('Voice volume changed to:', newVolume); // Debug
+        console.log('Voice volume changed to:', newVolume); // Debug dari kode lama
         updateVolumes();
     });
 

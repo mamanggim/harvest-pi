@@ -216,47 +216,102 @@ async function loadData() {
 // END loadData fix
 
 // Authenticate with Pi Network
-function authenticateWithPi() {
+// Inisialisasi Pi SDK sekali di awal
+let piInitialized = false;
+
+async function initializePiSDK() {
   if (!window.Pi) {
     console.error('Pi SDK not loaded');
     showNotification('Pi Network SDK not available. Please try again later.');
-    return;
+    return false;
   }
 
-  const scopes = ['username', 'email', 'payments'];
-  Pi.init({ version: "2.0" }).then(() => {
-    Pi.authenticate(scopes, onIncompletePaymentFound)
-      .then(authResult => {
-        console.log('Pi Auth success:', authResult);
-        const user = authResult.user;
-        userId = user.email || `${user.username}@pi-network.com`;
-        const playerRef = ref(database, `players/${userId}`);
-
-        update(playerRef, {
-          piUser: {
-            uid: user.uid,
-            username: user.username,
-            email: user.email || null
-          },
-          pi: pi || 0
-        }).then(() => {
-          showNotification(`Logged in as ${user.username} (Email: ${user.email || 'Not provided'})`);
-          document.getElementById('login-screen').style.display = 'none';
-          document.getElementById('start-screen').style.display = 'flex';
-          loadPlayerData();
-        }).catch(error => {
-          console.error('Error saving Pi user data:', error);
-          showNotification('Failed to save Pi user data: ' + error.message);
-        });
-      })
-      .catch(error => {
-        console.error('Pi Auth failed:', error);
-        showNotification('Pi Network login failed: ' + error.message);
-      });
-  }).catch(error => {
+  try {
+    await Pi.init({
+      version: "2.0",
+      appId: "zph8ke6h96lxogfkzxcxgekdtgcqcos3gv1ighavcwxbf8dobcadvfyifvgqutgh" // Masukin Pi API key
+    });
+    piInitialized = true;
+    console.log('Pi SDK initialized successfully');
+    return true;
+  } catch (error) {
     console.error('Pi init failed:', error);
     showNotification('Failed to initialize Pi SDK: ' + error.message);
-  });
+    return false;
+  }
+}
+
+// Update fungsi authenticateWithPi
+async function authenticateWithPi() {
+  if (!piInitialized) {
+    const initialized = await initializePiSDK();
+    if (!initialized) return;
+  }
+
+  const scopes = ['username']; // Mulai dengan scope minimal
+  Pi.authenticate(scopes, onIncompletePaymentFound)
+    .then(authResult => {
+      console.log('Pi Auth success:', authResult);
+      const user = authResult.user;
+      userId = user.uid; // Gunain UID langsung, lebih unik dan aman
+      const playerRef = ref(database, `players/${userId}`);
+
+      update(playerRef, {
+        piUser: {
+          uid: user.uid,
+          username: user.username,
+          email: user.email || null
+        },
+        pi: pi || 0
+      }).then(() => {
+        showNotification(`Logged in as ${user.username} (Email: ${user.email || 'Not provided'})`);
+        localStorage.setItem('userId', userId); // Simpan userId di localStorage
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('start-screen').style.display = 'flex';
+        loadPlayerData();
+      }).catch(error => {
+        console.error('Error saving Pi user data:', error);
+        showNotification('Failed to save Pi user data: ' + error.message);
+      });
+    })
+    .catch(error => {
+      console.error('Pi Auth failed:', error);
+      showNotification('Pi Network login failed: ' + error.message);
+    });
+}
+
+// Panggil initializePiSDK di initializeGame
+async function initializeGame() {
+  try {
+    await loadData();
+    await initializePiSDK(); // Inisialisasi Pi SDK di sini
+    updateUIText();
+
+    setTimeout(() => {
+      const loadingScreen = document.getElementById('loading-screen');
+      const loginScreen = document.getElementById('login-screen');
+      if (loadingScreen && loginScreen) {
+        loadingScreen.style.display = 'none';
+        loginScreen.style.display = 'flex';
+      }
+    }, 1000);
+
+    const loginPiBtn = document.getElementById('login-pi-btn');
+    if (loginPiBtn) {
+      addSafeClickListener(loginPiBtn, authenticateWithPi);
+    }
+  } catch (error) {
+    console.error('Error initializing game:', error.message);
+    showNotification('Error initializing game. Please reload.');
+    setTimeout(() => {
+      const loadingScreen = document.getElementById('loading-screen');
+      const loginScreen = document.getElementById('login-screen');
+      if (loadingScreen && loginScreen) {
+        loadingScreen.style.display = 'none';
+        loginScreen.style.display = 'flex';
+      }
+    }, 1000);
+  }
 }
 
 function onIncompletePaymentFound(payment) {

@@ -66,20 +66,14 @@ const coinSound = document.getElementById('coin-sound');
 // Audio control functions
 function playBgMusic() {
     if (bgMusic && !isAudioPlaying) {
-        const playPromise = bgMusic.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('BG Music failed to start:', e.message));
-        }
+        bgMusic.play().catch(e => console.log('BG Music failed to start:', e.message));
         isAudioPlaying = true;
     }
 }
 
 function playBgVoice() {
     if (bgVoice && !isAudioPlaying) {
-        const playPromise = bgVoice.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('BG Voice failed to start:', e.message));
-        }
+        bgVoice.play().catch(e => console.log('BG Voice failed to start:', e.message));
     }
 }
 
@@ -125,7 +119,7 @@ function updateVolumes() {
     if (coinSound) coinSound.volume = voiceVol;
 }
 
-// START loadData fix
+// START loadData
 async function loadData() {
     try {
         const langRes = await fetch('/data/lang.json');
@@ -141,7 +135,7 @@ async function loadData() {
         showNotification('Error loading game data.');
     }
 }
-// END loadData fix
+// END loadData
 
 // Authenticate with Pi Network
 async function initializePiSDK() {
@@ -588,7 +582,6 @@ function initializePlots() {
             const plantImg = document.createElement('img');
             plantImg.classList.add('plant-img');
             plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
-            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
             plotContent.appendChild(plantImg);
             plantImg.classList.add('loaded');
 
@@ -632,7 +625,6 @@ function initializePlots() {
                             }
                             plantImg.classList.remove('loaded');
                             plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
-                            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                             setTimeout(() => {
                                 plantImg.classList.add('loaded');
                             }, 50);
@@ -705,7 +697,6 @@ function handlePlotClick(index) {
                 const plantImg = document.createElement('img');
                 plantImg.classList.add('plant-img');
                 plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
-                plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                 plotContent.appendChild(plantImg);
                 setTimeout(() => {
                     plantImg.classList.add('loaded');
@@ -737,7 +728,6 @@ function handlePlotClick(index) {
 
             const waterImage = document.createElement('img');
             waterImage.src = 'assets/img/ui/water_icon.png';
-            waterImage.onerror = () => { waterImage.src = 'assets/img/ui/placeholder.png'; };
             waterImage.classList.add('water-fly');
             waterImage.style.width = '40px';
             waterImage.style.top = '-40px';
@@ -788,7 +778,6 @@ function handlePlotClick(index) {
                         }
                         plantImg.classList.remove('loaded');
                         plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
-                        plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                         setTimeout(() => {
                             plantImg.classList.add('loaded');
                         }, 50);
@@ -828,9 +817,7 @@ function handlePlotClick(index) {
         plot.totalCountdown = 0;
 
         const flyImage = document.createElement('img');
-        const imageSrc = plot.vegetable?.shopImage ? plot.vegetable.shopImage : 'assets/img/ui/placeholder.png';
-        flyImage.src = imageSrc;
-        flyImage.onerror = () => { flyImage.src = 'assets/img/ui/placeholder.png'; };
+        flyImage.src = plot.vegetable.shopImage;
         flyImage.classList.add('plant-fly');
         flyImage.style.width = '60px';
 
@@ -877,7 +864,7 @@ function renderShop() {
 
     if (!langData[currentLang]) {
         console.warn('Language data missing, skipping renderShop');
-        shopContent.innerHTML = `<p style="color:red;">Language data not loaded. Please reload.</p>`;
+        shopContent.innerHTML = '<p style="color:red;">Language data not loaded</p>';
         return;
     }
 
@@ -1134,7 +1121,7 @@ function renderSellSection() {
 }
 // END renderSellSection
 
-// START sellItem (Tambahin XP +10)
+// START sellItem
 function sellItem(index) {
     const item = inventory[index];
     if (!item || item.type !== 'harvest') return;

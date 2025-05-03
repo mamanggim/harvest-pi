@@ -217,46 +217,68 @@ async function loadData() {
 
 // Authenticate with Pi Network
 function authenticateWithPi() {
-    if (!window.Pi) {
-        console.error('Pi SDK not loaded');
-        showNotification('Pi Network SDK not available. Please try again later.');
-        return;
-    }
+  if (!window.Pi) {
+    console.error('Pi SDK not loaded');
+    showNotification('Pi Network SDK not available. Please try again later.');
+    return;
+  }
 
-    window.Pi.authenticate(['username', 'email'], onIncompletePaymentFound)
-        .then(result => {
-            console.log('Pi Auth success:', result);
-            const piUser = result.user;
-            userId = piUser.email || `${piUser.username}@pi-network.com`; // Pake email, fallback ke username
-            const playerRef = ref(database, `players/${userId}`);
+  const scopes = ['username', 'email', 'payments'];
+  Pi.init({ version: "2.0" }).then(() => {
+    Pi.authenticate(scopes, onIncompletePaymentFound)
+      .then(authResult => {
+        console.log('Pi Auth success:', authResult);
+        const user = authResult.user;
+        userId = user.email || `${user.username}@pi-network.com`;
+        const playerRef = ref(database, `players/${userId}`);
 
-            update(playerRef, {
-                piUser: {
-                    uid: piUser.uid,
-                    username: piUser.username,
-                    email: piUser.email || null
-                },
-                pi: pi || 0
-            }).then(() => {
-                showNotification(`Logged in as ${piUser.username} (Email: ${piUser.email || 'Not provided'})`);
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('start-screen').style.display = 'flex';
-                loadPlayerData();
-            }).catch(error => {
-                console.error('Error saving Pi user data:', error);
-                showNotification('Failed to save Pi user data.');
-            });
-        })
-        .catch(error => {
-            console.error('Pi Auth failed:', error);
-            showNotification('Pi Network login failed. Please try again.');
+        update(playerRef, {
+          piUser: {
+            uid: user.uid,
+            username: user.username,
+            email: user.email || null
+          },
+          pi: pi || 0
+        }).then(() => {
+          showNotification(`Logged in as ${user.username} (Email: ${user.email || 'Not provided'})`);
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('start-screen').style.display = 'flex';
+          loadPlayerData();
+        }).catch(error => {
+          console.error('Error saving Pi user data:', error);
+          showNotification('Failed to save Pi user data: ' + error.message);
         });
+      })
+      .catch(error => {
+        console.error('Pi Auth failed:', error);
+        showNotification('Pi Network login failed: ' + error.message);
+      });
+  }).catch(error => {
+    console.error('Pi init failed:', error);
+    showNotification('Failed to initialize Pi SDK: ' + error.message);
+  });
 }
 
 function onIncompletePaymentFound(payment) {
-    console.log('Incomplete payment found:', payment);
-    return { handled: false };
+  console.log("onIncompletePaymentFound", payment);
+  // Kalo gak pake backend, biarin kosong kayak gini
 }
+
+// Modal SignIn
+function showModal() {
+  document.getElementById('signInModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('signInModal').style.display = 'none';
+}
+
+// Cek kalo user belum login, tampilkan modal
+document.addEventListener('DOMContentLoaded', () => {
+  if (!localStorage.getItem('userId')) {
+    showModal();
+  }
+});
 
 // Load player data
 async function loadPlayerData() {

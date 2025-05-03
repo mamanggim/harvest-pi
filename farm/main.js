@@ -8,18 +8,22 @@ const rewardModal = document.getElementById('reward-modal');
 
 // START addSafeClickListener helper
 function addSafeClickListener(element, callback) {
+    if (!element) {
+        console.error('Element not found for addSafeClickListener:', callback.name);
+        return;
+    }
     let isLocked = false;
     element.addEventListener('click', (e) => {
         if (isLocked) return;
         isLocked = true;
-        console.log('Click event triggered on:', element); // Debug
+        console.log('Click event triggered on:', element.id || element); // Debug
         callback(e);
         setTimeout(() => isLocked = false, 300);
     });
     element.addEventListener('touchstart', (e) => {
         if (isLocked) return;
         isLocked = true;
-        console.log('Touchstart event triggered on:', element); // Debug
+        console.log('Touchstart event triggered on:', element.id || element); // Debug
         callback(e);
         setTimeout(() => isLocked = false, 300);
     });
@@ -310,81 +314,6 @@ function onIncompletePaymentFound(payment) {
     // Kalo gak pake backend, biarin kosong kayak gini
 }
 
-// Fungsi untuk cek apakah di Pi Browser dan tampilkan pop-up
-function checkPiBrowser() {
-    // Cek user agent untuk Pi Browser
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isPiBrowser = userAgent.includes('PiBrowser');
-    console.log('Checking Pi Browser, userAgent:', userAgent, 'isPiBrowser:', isPiBrowser); // Debug
-
-    if (!isPiBrowser) {
-        // Pop-up notifikasi pertama
-        const piBrowserModal = document.createElement('div');
-        piBrowserModal.id = 'pi-browser-modal';
-        piBrowserModal.style.position = 'fixed';
-        piBrowserModal.style.top = '0';
-        piBrowserModal.style.left = '0';
-        piBrowserModal.style.width = '100%';
-        piBrowserModal.style.height = '100%';
-        piBrowserModal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        piBrowserModal.style.display = 'flex';
-        piBrowserModal.style.justifyContent = 'center';
-        piBrowserModal.style.alignItems = 'center';
-        piBrowserModal.style.zIndex = '1000';
-
-        piBrowserModal.innerHTML = `
-            <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
-                <h2>Pi Browser Required</h2>
-                <p>This game only runs on Pi Browser. Please install Pi Browser to continue.</p>
-                <button id="install-pi-btn" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Install Pi Browser</button>
-            </div>
-        `;
-
-        document.body.appendChild(piBrowserModal);
-
-        // Pop-up kedua untuk install
-        const installPiBtn = document.getElementById('install-pi-btn');
-        if (installPiBtn) {
-            installPiBtn.addEventListener('click', () => {
-                const installModal = document.createElement('div');
-                installModal.id = 'install-modal';
-                installModal.style.position = 'fixed';
-                installModal.style.top = '0';
-                installModal.style.left = '0';
-                installModal.style.width = '100%';
-                installModal.style.height = '100%';
-                installModal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-                installModal.style.display = 'flex';
-                installModal.style.justifyContent = 'center';
-                installModal.style.alignItems = 'center';
-                installModal.style.zIndex = '1001';
-
-                installModal.innerHTML = `
-                    <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
-                        <h2>Install Pi Browser</h2>
-                        <p>Download Pi Browser to play Harvest Pi:</p>
-                        <a href="https://pibrowser.onelink.me/4i5c/harvestpi" target="_blank" style="display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Download Pi Browser</a>
-                        <br><br>
-                        <button id="close-install-modal" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">Close</button>
-                    </div>
-                `;
-
-                document.body.appendChild(installModal);
-
-                const closeInstallModal = document.getElementById('close-install-modal');
-                if (closeInstallModal) {
-                    closeInstallModal.addEventListener('click', () => {
-                        installModal.remove();
-                    });
-                }
-            });
-        }
-
-        return false; // Bukan Pi Browser
-    }
-    return true; // Di Pi Browser
-}
-
 // Modal SignIn
 function showModal() {
     console.log('Showing login modal'); // Debug
@@ -393,6 +322,7 @@ function showModal() {
         modal.style.display = 'flex';
     } else {
         console.error('signInModal not found');
+        showNotification('Login modal not found. Please reload.');
     }
 }
 
@@ -409,13 +339,6 @@ function closeModal() {
 // Cek kalo user belum login, tampilkan modal
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded'); // Debug
-
-    // Cek apakah di Pi Browser
-    const isPiBrowser = checkPiBrowser();
-    if (!isPiBrowser) {
-        console.log('Not in Pi Browser, stopping further execution'); // Debug
-        return;
-    }
 
     if (!localStorage.getItem('userId')) {
         showModal();
@@ -544,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pasang event listener untuk login-pi-btn
     const loginPiBtn = document.getElementById('login-pi-btn');
     if (loginPiBtn) {
-        console.log('login-pi-btn found, attaching event listener'); // Debug
+        console.log('login-pi-btn found in DOMContentLoaded, attaching event listener'); // Debug
         addSafeClickListener(loginPiBtn, authenticateWithPi);
         // Fallback: tambah event listener langsung
         loginPiBtn.addEventListener('click', () => {
@@ -556,7 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
             authenticateWithPi();
         });
     } else {
-        console.error('login-pi-btn not found in DOM'); // Debug
+        console.error('login-pi-btn not found in DOMContentLoaded'); // Debug
+        showNotification('Login button not found. Please reload.');
     }
 
     initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
@@ -1479,7 +1403,10 @@ function checkDailyReward() {
 // Show notification
 function showNotification(message) {
     const notification = document.getElementById('notification');
-    if (!notification) return;
+    if (!notification) {
+        console.error('Notification element not found, message:', message); // Debug
+        return;
+    }
 
     notification.textContent = message;
     notification.style.display = 'block';
@@ -1638,6 +1565,7 @@ function startGame() {
 // Initialize game
 async function initializeGame() {
     try {
+        console.log('Starting game initialization...'); // Debug
         await loadData();
         updateUIText();
 
@@ -1647,6 +1575,10 @@ async function initializeGame() {
             if (loadingScreen && loginScreen) {
                 loadingScreen.style.display = 'none';
                 loginScreen.style.display = 'flex';
+                console.log('Loading screen hidden, login screen shown'); // Debug
+            } else {
+                console.error('Loading or login screen element not found');
+                showNotification('Error loading screens. Please reload.');
             }
         }, 1000);
 
@@ -1666,6 +1598,7 @@ async function initializeGame() {
             });
         } else {
             console.error('login-pi-btn not found in initializeGame'); // Debug
+            showNotification('Login button not found. Please reload.');
         }
     } catch (error) {
         console.error('Error initializing game:', error.message);

@@ -263,8 +263,7 @@ async function authenticateWithPi() {
             update(playerRef, {
                 piUser: {
                     uid: user.uid,
-                    username: user.username,
-                    email: user.email
+                    username: user.username
                 },
                 pi: pi || 0
             }).then(() => {

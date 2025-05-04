@@ -264,7 +264,7 @@ async function authenticateWithPi() {
                 piUser: {
                     uid: user.uid,
                     username: user.username,
-                    email: user.email || null
+                    email: user.email
                 },
                 pi: pi || 0
             }).then(() => {

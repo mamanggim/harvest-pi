@@ -939,16 +939,23 @@ function toggleLanguage() {
 function startGame() {
     if (!userId) {
         console.warn('Login required!');
+        showModal();
         return;
     }
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('game-screen').style.display = 'flex';
-    document.getElementById('exit-game-btn').style.display = 'block';
-    isAudioPlaying = false;
-    playBgMusic();
-    playBgVoice();
-    switchTab('farm');
-    enterFullScreen();
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    if (startScreen && gameScreen) {
+        startScreen.style.display = 'none';
+        gameScreen.style.display = 'flex';
+        gameScreen.classList.add('fade-in');
+        setTimeout(() => gameScreen.classList.remove('fade-in'), 600); // Match fade-in duration
+        document.getElementById('exit-game-btn').style.display = 'block';
+        isAudioPlaying = false;
+        playBgMusic();
+        playBgVoice();
+        switchTab('farm');
+        enterFullScreen();
+    }
 }
 
 // Inisialisasi game
@@ -961,7 +968,13 @@ async function initializeGame() {
             const loginScreen = document.getElementById('login-screen');
             if (loadingScreen && loginScreen) {
                 loadingScreen.style.display = 'none';
-                loginScreen.style.display = 'flex';
+                if (!userId) {
+                    loginScreen.style.display = 'flex';
+                } else {
+                    loginScreen.style.display = 'none';
+                    document.getElementById('start-screen').style.display = 'flex';
+                    loadPlayerData(); // Pastikan data player dimuat setelah start screen muncul
+                }
             }
         }, 1000);
     } catch (error) {

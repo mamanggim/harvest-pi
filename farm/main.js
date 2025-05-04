@@ -338,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
             withdrawInfo.style.display = 'block';
         }
     }
-});
     
     const startText = document.getElementById('start-text');
     if (startText) addSafeClickListener(startText, startGame);

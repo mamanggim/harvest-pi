@@ -16,14 +16,14 @@ function addSafeClickListener(element, callback) {
     element.addEventListener('click', (e) => {
         if (isLocked) return;
         isLocked = true;
-        console.log('Click event triggered on:', element.id || element);
+        console.log('Click event triggered on:', element.id || element); // Debug
         callback(e);
         setTimeout(() => isLocked = false, 300);
     });
     element.addEventListener('touchstart', (e) => {
         if (isLocked) return;
         isLocked = true;
-        console.log('Touchstart event triggered on:', element.id || element);
+        console.log('Touchstart event triggered on:', element.id || element); // Debug
         callback(e);
         setTimeout(() => isLocked = false, 300);
     });
@@ -49,9 +49,9 @@ let userId = null;
 let lastClaim = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
-let claimedToday = false;
-let isClaiming = false;
-let isAudioPlaying = false;
+let claimedToday = false; // Flag sederhana buat status klaim
+let isClaiming = false; // Tambah untuk lock claim
+let isAudioPlaying = false; // Flag to track audio state
 
 // Audio elements
 const bgMusic = document.getElementById('bg-music');
@@ -66,39 +66,97 @@ const coinSound = document.getElementById('coin-sound');
 // Audio control functions
 function playBgMusic() {
     if (bgMusic && !isAudioPlaying) {
-        bgMusic.play().catch(e => console.log('BG Music failed to start:', e.message));
-        isAudioPlaying = true;
+        const playPromise = bgMusic.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    console.log('Background music started successfully');
+                    isAudioPlaying = true;
+                })
+                .catch(e => {
+                    console.log('BG Music failed to start:', e.message);
+                    setTimeout(() => {
+                        bgMusic.play().catch(err => console.log('Retry BG Music failed:', err.message));
+                    }, 100);
+                });
+        }
+    } else {
+        console.log('BG Music already playing or bgMusic not found:', bgMusic, isAudioPlaying);
     }
 }
 
 function playBgVoice() {
     if (bgVoice && !isAudioPlaying) {
-        bgVoice.play().catch(e => console.log('BG Voice failed to start:', e.message));
+        const playPromise = bgVoice.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    console.log('Background voice started successfully');
+                })
+                .catch(e => {
+                    console.log('BG Voice failed to start:', e.message);
+                    setTimeout(() => {
+                        bgVoice.play().catch(err => console.log('Retry BG Voice failed:', err.message));
+                    }, 100);
+                });
+        }
+    } else {
+        console.log('BG Voice already playing or bgVoice not found:', bgVoice, isAudioPlaying);
     }
 }
 
 function playHarvestingSound() {
-    if (harvestingSound) harvestingSound.play().catch(e => console.log('Harvest sound failed:', e.message));
+    if (harvestingSound) {
+        const playPromise = harvestingSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Harvest sound failed:', e.message));
+        }
+    }
 }
 
 function playWateringSound() {
-    if (wateringSound) wateringSound.play().catch(e => console.log('Watering sound failed:', e.message));
+    if (wateringSound) {
+        const playPromise = wateringSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Watering sound failed:', e.message));
+        }
+    }
 }
 
 function playPlantingSound() {
-    if (plantingSound) plantingSound.play().catch(e => console.log('Planting sound failed:', e.message));
+    if (plantingSound) {
+        const playPromise = plantingSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Planting sound failed:', e.message));
+        }
+    }
 }
 
 function playMenuSound() {
-    if (menuSound) menuSound.play().catch(e => console.log('Menu sound failed:', e.message));
+    if (menuSound) {
+        const playPromise = menuSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Menu sound failed:', e.message));
+        }
+    }
 }
 
 function playBuyingSound() {
-    if (buyingSound) buyingSound.play().catch(e => console.log('Buying sound failed:', e.message));
+    if (buyingSound) {
+        const playPromise = buyingSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Buying sound failed:', e.message));
+        }
+    }
 }
 
 function playCoinSound() {
-    if (coinSound) coinSound.play().catch(e => console.log('Coin sound failed:', e.message));
+    if (coinSound) {
+        const playPromise = coinSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Coin sound failed:', e.message));
+        }
+    }
 }
 
 function updateVolumes() {
@@ -109,17 +167,43 @@ function updateVolumes() {
     const musicVol = Math.min(Math.max(musicVolume / 100, 0), 1);
     const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 1);
 
-    if (bgMusic) bgMusic.volume = musicVol;
-    if (bgVoice) bgVoice.volume = voiceVol;
-    if (harvestingSound) harvestingSound.volume = voiceVol;
-    if (wateringSound) wateringSound.volume = voiceVol;
-    if (plantingSound) plantingSound.volume = voiceVol;
-    if (menuSound) menuSound.volume = voiceVol;
-    if (buyingSound) buyingSound.volume = voiceVol;
-    if (coinSound) coinSound.volume = voiceVol;
+    if (bgMusic) {
+        bgMusic.volume = musicVol;
+        console.log('BG Music volume set to:', bgMusic.volume);
+        if (isAudioPlaying) bgMusic.play().catch(e => console.log('BG Music play failed after volume change:', e));
+    }
+    if (bgVoice) {
+        bgVoice.volume = voiceVol;
+        console.log('BG Voice volume set to:', bgVoice.volume);
+        bgVoice.play().catch(e => console.log('BG Voice play failed after volume change:', e));
+    }
+    if (harvestingSound) {
+        harvestingSound.volume = voiceVol;
+        console.log('Harvesting sound volume set to:', harvestingSound.volume);
+    }
+    if (wateringSound) {
+        wateringSound.volume = voiceVol;
+        console.log('Watering sound volume set to:', wateringSound.volume);
+    }
+    if (plantingSound) {
+        plantingSound.volume = voiceVol;
+        console.log('Planting sound volume set to:', plantingSound.volume);
+    }
+    if (menuSound) {
+        menuSound.volume = voiceVol;
+        console.log('Menu sound volume set to:', menuSound.volume);
+    }
+    if (buyingSound) {
+        buyingSound.volume = voiceVol;
+        console.log('Buying sound volume set to:', buyingSound.volume);
+    }
+    if (coinSound) {
+        coinSound.volume = voiceVol;
+        console.log('Coin sound volume set to:', coinSound.volume);
+    }
 }
 
-// START loadData
+// START loadData fix
 async function loadData() {
     try {
         const langRes = await fetch('/data/lang.json');
@@ -135,7 +219,7 @@ async function loadData() {
         showNotification('Error loading game data.');
     }
 }
-// END loadData
+// END loadData fix
 
 // Authenticate with Pi Network
 async function initializePiSDK() {
@@ -148,7 +232,7 @@ async function initializePiSDK() {
     try {
         await Pi.init({
             version: "2.0",
-            appId: "zph8ke6h96lxogfkzxcxgekdtgcqcos3gv1ighavcwxbf8dobcadvfyifvgqutgh"
+            appId: "zph8ke6h96lxogfkzxcxgekdtgcqcos3gv1ighavcwxbf8dobcadvfyifvgqutgh" // Pi API key
         });
         piInitialized = true;
         console.log('Pi SDK initialized successfully');
@@ -160,11 +244,9 @@ async function initializePiSDK() {
     }
 }
 
-// Update fungsi authenticateWithPi dengan loading
+// Update fungsi authenticateWithPi dengan debug
 async function authenticateWithPi() {
-    console.log('authenticateWithPi called');
-    const loginScreen = document.getElementById('login-screen');
-    const loadingScreen = document.getElementById('loading-screen');
+    console.log('authenticateWithPi called'); // Debug
 
     if (!window.Pi) {
         console.error('Pi SDK not loaded');
@@ -173,7 +255,7 @@ async function authenticateWithPi() {
     }
 
     if (!piInitialized) {
-        console.log('Pi SDK not initialized, initializing now...');
+        console.log('Pi SDK not initialized, initializing now...'); // Debug
         const initialized = await initializePiSDK();
         if (!initialized) {
             console.error('Pi SDK initialization failed');
@@ -182,30 +264,26 @@ async function authenticateWithPi() {
         }
     }
 
-    // Tampilkan loading screen
-    if (loadingScreen) {
-        console.log('Showing loading screen for login');
-        loadingScreen.style.display = 'flex';
-    }
-
+    // Cuma pake scope username
     const scopes = ['username'];
-    console.log('Attempting Pi.authenticate with scopes:', scopes);
+    console.log('Attempting Pi.authenticate with scopes:', scopes); // Debug
     Pi.authenticate(scopes, onIncompletePaymentFound)
         .then(authResult => {
             console.log('Pi Auth success:', authResult);
             const piUser = authResult.user;
-            userId = piUser.uid;
+            userId = piUser.uid; // Pake UID dari Pi sebagai userId
             console.log('User ID set to:', userId);
 
             const playerRef = ref(database, `players/${userId}`);
 
+            // Simpan data Pi user
             get(playerRef).then(snapshot => {
                 const data = snapshot.val() || {};
                 update(playerRef, {
                     piUser: {
                         uid: piUser.uid,
                         username: piUser.username,
-                        email: 'Not provided'
+                        email: 'Not provided' // Email dihapus, set default
                     },
                     pi: data.pi || 0,
                     farmCoins: data.farmCoins || 0,
@@ -213,53 +291,35 @@ async function authenticateWithPi() {
                 }).then(() => {
                     showNotification(`Logged in as ${piUser.username}`);
                     localStorage.setItem('userId', userId);
-
-                    // Sembunyiin loading setelah 3 detik
-                    setTimeout(() => {
-                        if (loadingScreen) {
-                            console.log('Hiding loading screen after login');
-                            loadingScreen.style.display = 'none';
-                        }
-                        if (loginScreen) {
-                            console.log('Hiding login-screen');
-                            loginScreen.style.display = 'none';
-                        }
-                        const startScreen = document.getElementById('start-screen');
-                        if (startScreen) {
-                            console.log('Showing start-screen');
-                            startScreen.style.display = 'flex';
-                        }
-                        loadPlayerData();
-                    }, 3000); // 3 detik
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('start-screen').style.display = 'flex';
+                    loadPlayerData();
                 }).catch(error => {
                     console.error('Error saving Pi user data:', error);
                     showNotification('Failed to save Pi user data: ' + error.message);
-                    if (loadingScreen) loadingScreen.style.display = 'none';
                 });
             }).catch(error => {
                 console.error('Error checking existing data:', error);
                 showNotification('Error accessing player data: ' + error.message);
-                if (loadingScreen) loadingScreen.style.display = 'none';
             });
         })
         .catch(error => {
             console.error('Pi Auth failed:', error);
             showNotification('Pi Network login failed: ' + error.message);
-            if (loadingScreen) loadingScreen.style.display = 'none';
         });
 }
 
 function onIncompletePaymentFound(payment) {
     console.log("onIncompletePaymentFound", payment);
+    // Kalo gak pake backend, biarin kosong kayak gini
 }
 
 // Modal SignIn
 function showModal() {
-    console.log('Showing login modal');
+    console.log('Showing login modal'); // Debug
     const modal = document.getElementById('signInModal');
     if (modal) {
         modal.style.display = 'flex';
-        console.log('signInModal display set to flex');
     } else {
         console.error('signInModal not found');
         showNotification('Login modal not found. Please reload.');
@@ -267,11 +327,10 @@ function showModal() {
 }
 
 function closeModal() {
-    console.log('Closing login modal');
+    console.log('Closing login modal'); // Debug
     const modal = document.getElementById('signInModal');
     if (modal) {
         modal.style.display = 'none';
-        console.log('signInModal display set to none');
     } else {
         console.error('signInModal not found');
     }
@@ -279,18 +338,10 @@ function closeModal() {
 
 // Cek kalo user belum login, tampilkan modal
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded');
-    const userIdFromStorage = localStorage.getItem('userId');
-    console.log('userId from localStorage:', userIdFromStorage);
-    if (!userIdFromStorage) {
-        console.log('No userId, showing modal');
+    console.log('DOM fully loaded'); // Debug
+
+    if (!localStorage.getItem('userId')) {
         showModal();
-    } else {
-        console.log('userId found, skipping modal');
-        const loginScreen = document.getElementById('login-screen');
-        if (loginScreen) loginScreen.style.display = 'none';
-        const startScreen = document.getElementById('start-screen');
-        if (startScreen) startScreen.style.display = 'flex';
     }
 
     const startText = document.getElementById('start-text');
@@ -413,20 +464,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Pasang event listener untuk login-pi-btn
     const loginPiBtn = document.getElementById('login-pi-btn');
     if (loginPiBtn) {
-        console.log('login-pi-btn found in DOMContentLoaded, attaching event listener');
+        console.log('login-pi-btn found in DOMContentLoaded, attaching event listener'); // Debug
         addSafeClickListener(loginPiBtn, authenticateWithPi);
+        // Fallback: tambah event listener langsung
         loginPiBtn.addEventListener('click', () => {
-            console.log('Direct click event on login-pi-btn');
+            console.log('Direct click event on login-pi-btn'); // Debug
             authenticateWithPi();
         });
         loginPiBtn.addEventListener('touchstart', () => {
-            console.log('Direct touchstart event on login-pi-btn');
+            console.log('Direct touchstart event on login-pi-btn'); // Debug
             authenticateWithPi();
         });
     } else {
-        console.error('login-pi-btn not found in DOMContentLoaded');
+        console.error('login-pi-btn not found in DOMContentLoaded'); // Debug
         showNotification('Login button not found. Please reload.');
     }
 
@@ -582,6 +635,7 @@ function initializePlots() {
             const plantImg = document.createElement('img');
             plantImg.classList.add('plant-img');
             plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
             plotContent.appendChild(plantImg);
             plantImg.classList.add('loaded');
 
@@ -625,6 +679,7 @@ function initializePlots() {
                             }
                             plantImg.classList.remove('loaded');
                             plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+                            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                             setTimeout(() => {
                                 plantImg.classList.add('loaded');
                             }, 50);
@@ -697,6 +752,7 @@ function handlePlotClick(index) {
                 const plantImg = document.createElement('img');
                 plantImg.classList.add('plant-img');
                 plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+                plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                 plotContent.appendChild(plantImg);
                 setTimeout(() => {
                     plantImg.classList.add('loaded');
@@ -728,6 +784,7 @@ function handlePlotClick(index) {
 
             const waterImage = document.createElement('img');
             waterImage.src = 'assets/img/ui/water_icon.png';
+            waterImage.onerror = () => { waterImage.src = 'assets/img/ui/placeholder.png'; };
             waterImage.classList.add('water-fly');
             waterImage.style.width = '40px';
             waterImage.style.top = '-40px';
@@ -778,6 +835,7 @@ function handlePlotClick(index) {
                         }
                         plantImg.classList.remove('loaded');
                         plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+                        plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
                         setTimeout(() => {
                             plantImg.classList.add('loaded');
                         }, 50);
@@ -817,7 +875,12 @@ function handlePlotClick(index) {
         plot.totalCountdown = 0;
 
         const flyImage = document.createElement('img');
-        flyImage.src = plot.vegetable.shopImage;
+        const imageSrc = plot.vegetable?.shopImage ? plot.vegetable.shopImage : 'assets/img/ui/placeholder.png';
+        flyImage.src = imageSrc;
+        flyImage.onerror = () => {
+            console.log(`Failed to load fly image: ${imageSrc}, using placeholder`);
+            flyImage.src = 'assets/img/ui/placeholder.png';
+        };
         flyImage.classList.add('plant-fly');
         flyImage.style.width = '60px';
 
@@ -851,6 +914,11 @@ function handlePlotClick(index) {
     }
 }
 
+// Fungsi paksa layout agar grid langsung kebentuk
+function forceReflow(el) {
+    void el.offsetHeight;
+}
+
 // Render shop dengan item sayuran
 function renderShop() {
     const shopContent = document.getElementById('shop-content');
@@ -859,12 +927,12 @@ function renderShop() {
         return;
     }
 
+    forceReflow(shopContent);
     shopContent.style.display = 'grid';
-    shopContent.innerHTML = '';
 
     if (!langData[currentLang]) {
         console.warn('Language data missing, skipping renderShop');
-        shopContent.innerHTML = '<p style="color:red;">Language data not loaded</p>';
+        shopContent.innerHTML = `<p style="color:red;">Language data not loaded. Please reload.</p>`;
         return;
     }
 
@@ -874,6 +942,8 @@ function renderShop() {
         return;
     }
 
+    shopContent.innerHTML = '';
+
     vegetables.forEach(veg => {
         const vegItem = document.createElement('div');
         vegItem.classList.add('shop-item');
@@ -882,20 +952,21 @@ function renderShop() {
         const piPrice = typeof veg.piPrice === 'number' ? veg.piPrice : 0;
 
         vegItem.innerHTML = `
-            <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img">
+            <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
             <h3>${veg.name[currentLang]}</h3>
             <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${farmPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
             <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${piPrice} PI</p>
             <button class="buy-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
             <button class="buy-pi-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
         `;
+
         shopContent.appendChild(vegItem);
     });
 
     const waterItem = document.createElement('div');
     waterItem.classList.add('shop-item');
     waterItem.innerHTML = `
-        <img src="assets/img/ui/water_icon.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img">
+        <img src="assets/img/ui/water_icon.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
         <h3>${langData[currentLang]?.waterLabel || 'Water'}</h3>
         <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 ${langData[currentLang]?.coinLabel || 'Coins'}</p>
         <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: 0.0001 PI</p>
@@ -903,6 +974,8 @@ function renderShop() {
         <button class="buy-pi-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
     `;
     shopContent.appendChild(waterItem);
+
+    shopContent.style.display = 'flex';
 
     document.querySelectorAll('.buy-btn').forEach(btn => {
         addSafeClickListener(btn, () => {
@@ -1031,10 +1104,11 @@ function renderInventory() {
         const title = isSeed ? `${veg.name[currentLang]} Seed` : veg.name[currentLang];
 
         invItem.innerHTML = `
-            <img src="${veg.shopImage}" alt="${title}" class="shop-item-img">
+            <img src="${veg.shopImage}" alt="${title}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
             <h3>${title}</h3>
             <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
         `;
+
         inventoryContent.appendChild(invItem);
         hasItems = true;
     });
@@ -1052,6 +1126,7 @@ function renderInventory() {
         openSellTab();
         playMenuSound();
     });
+
     inventoryContent.appendChild(sellButton);
 }
 
@@ -1104,6 +1179,7 @@ function renderSellSection() {
             <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${sellPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
             <button class="sell-btn" data-index="${item.index}">${langData[currentLang]?.sellLabel || 'Sell'}</button>
         `;
+
         sellContent.appendChild(sellDiv);
         hasItems = true;
     });
@@ -1121,7 +1197,7 @@ function renderSellSection() {
 }
 // END renderSellSection
 
-// START sellItem (Tambahin XP +10)
+// START sellItem
 function sellItem(index) {
     const item = inventory[index];
     if (!item || item.type !== 'harvest') return;
@@ -1134,7 +1210,7 @@ function sellItem(index) {
 
     const totalGain = sellPrice * item.quantity;
     farmCoins += totalGain;
-    xp += 10; // Tambah XP 10 pas jual sayuran
+    xp += 10;
 
     const btnElement = document.querySelector(`.sell-btn[data-index="${index}"]`);
     if (btnElement) {
@@ -1311,7 +1387,6 @@ function checkDailyReward() {
     const today = new Date().toISOString().split('T')[0];
     const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().split('T')[0] : null;
 
-    console.log('Checking daily reward:', { today, lastClaimDate, claimedToday });
     if (lastClaimDate === today) {
         document.getElementById('claim-reward-btn').classList.add('claimed');
         document.getElementById('claim-reward-btn').textContent = langData[currentLang]?.claimed || 'Claimed!';
@@ -1323,14 +1398,13 @@ function checkDailyReward() {
         document.getElementById('claim-reward-btn').disabled = false;
         claimedToday = false;
     }
-    savePlayerData();
 }
 
 // Show notification
 function showNotification(message) {
     const notification = document.getElementById('notification');
     if (!notification) {
-        console.error('Notification element not found, message:', message);
+        console.error('Notification element not found, message:', message); // Debug
         return;
     }
 
@@ -1491,31 +1565,56 @@ function startGame() {
 // Initialize game
 async function initializeGame() {
     try {
-        console.log('Starting game initialization...');
+        console.log('Starting game initialization...'); // Debug
         await loadData();
-        currentLang = localStorage.getItem('language') || 'en';
         updateUIText();
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            console.log('Showing initial loading screen');
-            loadingScreen.style.display = 'flex';
-            setTimeout(() => {
-                console.log('Hiding initial loading screen');
+
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const loginScreen = document.getElementById('login-screen');
+            if (loadingScreen && loginScreen) {
                 loadingScreen.style.display = 'none';
-                if (!userId) {
-                    showModal();
-                } else {
-                    loadPlayerData();
-                }
-            }, 3000); // 3 detik loading awal
+                loginScreen.style.display = 'flex';
+                console.log('Loading screen hidden, login screen shown'); // Debug
+            } else {
+                console.error('Loading or login screen element not found');
+                showNotification('Error loading screens. Please reload.');
+            }
+        }, 1000);
+
+        // Pindah inisialisasi loginPiBtn ke sini biar pasti DOM udah siap
+        const loginPiBtn = document.getElementById('login-pi-btn');
+        if (loginPiBtn) {
+            console.log('login-pi-btn found in initializeGame, attaching event listener'); // Debug
+            addSafeClickListener(loginPiBtn, authenticateWithPi);
+            // Fallback
+            loginPiBtn.addEventListener('click', () => {
+                console.log('Direct click event on login-pi-btn in initializeGame'); // Debug
+                authenticateWithPi();
+            });
+            loginPiBtn.addEventListener('touchstart', () => {
+                console.log('Direct touchstart event on login-pi-btn in initializeGame'); // Debug
+                authenticateWithPi();
+            });
+        } else {
+            console.error('login-pi-btn not found in initializeGame'); // Debug
+            showNotification('Login button not found. Please reload.');
         }
     } catch (error) {
         console.error('Error initializing game:', error.message);
         showNotification('Error initializing game. Please reload.');
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const loginScreen = document.getElementById('login-screen');
+            if (loadingScreen && loginScreen) {
+                loadingScreen.style.display = 'none';
+                loginScreen.style.display = 'flex';
+            }
+        }, 1000);
     }
 }
 
-// Enter fullscreen
+// Fullscreen toggle
 function enterFullScreen() {
     const elem = document.documentElement;
     if (elem.requestFullscreen) {
@@ -1529,7 +1628,6 @@ function enterFullScreen() {
     }
 }
 
-// Exit fullscreen
 function exitFullScreen() {
     if (document.exitFullscreen) {
         document.exitFullscreen();

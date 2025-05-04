@@ -159,8 +159,8 @@ function updateVolumes() {
     const voiceVolume = parseFloat(localStorage.getItem('voiceVolume')) || 50;
     console.log('Updating volumes:', { musicVolume, voiceVolume });
 
-    const musicVol = Math.min(Math.max(musicVolume / 100, 0), 0);
-    const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 0);
+    const musicVol = Math.min(Math.max(musicVolume / 100, 0), 1);
+    const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 1);
 
     if (bgMusic) {
         bgMusic.volume = musicVol;

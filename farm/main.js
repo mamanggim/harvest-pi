@@ -169,8 +169,12 @@ async function authenticateWithPi() {
                     lastUpdated: new Date().toISOString()
                 }).then(() => {
                     showNotification(`Logged in as ${authResult.user.username}`);
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('start-screen').style.display = 'flex';
+                    const loginScreen = document.getElementById('login-screen');
+                    const startScreen = document.getElementById('start-screen');
+                    if (loginScreen && startScreen) {
+                        loginScreen.style.display = 'none';
+                        startScreen.style.display = 'flex';
+                    }
                     loadPlayerData();
                 }).catch(error => {
                     console.error('Error saving Pi user data:', error);
@@ -203,7 +207,15 @@ function closeModal() {
 
 // Event listener awal
 document.addEventListener('DOMContentLoaded', () => {
-    if (!userId) showModal();
+    if (!userId) {
+        showModal();
+        const loginScreen = document.getElementById('login-screen');
+        const startScreen = document.getElementById('start-screen');
+        if (loginScreen && startScreen) {
+            loginScreen.style.display = 'flex';
+            startScreen.style.display = 'none';
+        }
+    }
 
     addSafeClickListener(document.getElementById('start-text'), startGame);
     addSafeClickListener(document.getElementById('lang-toggle'), toggleLanguage);
@@ -960,20 +972,24 @@ function startGame() {
 
 // Inisialisasi game
 async function initializeGame() {
+async function initializeGame() {
     try {
         await loadData();
         updateUIText();
         setTimeout(() => {
             const loadingScreen = document.getElementById('loading-screen');
             const loginScreen = document.getElementById('login-screen');
-            if (loadingScreen && loginScreen) {
+            const startScreen = document.getElementById('start-screen');
+            if (loadingScreen && loginScreen && startScreen) {
                 loadingScreen.style.display = 'none';
-                if (!userId) {
-                    loginScreen.style.display = 'flex';
-                } else {
+                // Selalu tampilkan login screen terlebih dahulu
+                loginScreen.style.display = 'flex';
+                startScreen.style.display = 'none'; // Pastikan start screen disembunyikan
+                // Jika userId sudah ada, langsung ke start screen setelah login
+                if (userId) {
                     loginScreen.style.display = 'none';
-                    document.getElementById('start-screen').style.display = 'flex';
-                    loadPlayerData(); // Pastikan data player dimuat setelah start screen muncul
+                    startScreen.style.display = 'flex';
+                    loadPlayerData();
                 }
             }
         }, 1000);

@@ -741,3 +741,12 @@ input[type="range"] {
   #loading-screen h1 { font-size: 18px; }
   .loading-animation { font-size: 14px; }
 }
+
+#game-screen.fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

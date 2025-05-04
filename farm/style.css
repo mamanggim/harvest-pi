@@ -1,10 +1,14 @@
-body {
+/* Reset default styles */
+* {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
     font-family: Arial, sans-serif;
-    background: url('assets/img/background.jpg') no-repeat center center fixed;
-    background-size: cover;
+    background-color: #f0f0f0;
     overflow: hidden;
-    color: #fff;
 }
 
 .center-screen {
@@ -12,170 +16,105 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    width: 100vw;
-    flex-direction: column;
-    background: rgba(0, 0, 0, 0.7);
-}
-
-#loading-screen, #login-screen, #start-screen, #game-screen {
-    position: absolute;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
     top: 0;
     left: 0;
-}
-
-#loading-screen {
-    z-index: 2000;
-}
-
-#login-screen {
     z-index: 1000;
 }
 
-#start-screen {
-    z-index: 900;
-}
-
-#game-screen {
-    z-index: 800;
-    flex-direction: column;
-    padding: 10px;
-}
-
-#signInModal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border: 2px solid green;
-    z-index: 1000;
-    flex-direction: column;
-    align-items: center;
+.start-container {
     text-align: center;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-#signInModal h1 {
-    color: green;
+#title, #game-title {
     font-size: 2.5em;
-    margin: 0 0 20px;
-    text-shadow: 0 0 10px #00ff00;
+    color: #4CAF50;
+    margin-bottom: 20px;
 }
 
-#signInModal button {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 1em;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-}
-
-#signInModal button:hover {
-    background-color: #45a049;
-}
-
-#signInModal p {
-    color: yellow;
-    font-size: 0.9em;
-    margin-top: 10px;
-}
-
-#signInModal p a {
-    color: yellow;
-    text-decoration: none;
-}
-
-#signInModal p a:hover {
-    text-decoration: underline;
-}
-
-#start-screen h1 {
-    color: green;
-    font-size: 2.5em;
-    margin: 0 0 20px;
-    text-shadow: 0 0 10px #00ff00;
-}
-
-#start-screen button {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 1em;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-}
-
-#start-screen button:hover {
-    background-color: #45a049;
-}
-
-#header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    border-bottom: 2px solid green;
-}
-
-#game-title {
-    color: green;
+#start-text {
     font-size: 1.5em;
-    margin: 0;
-    text-shadow: 0 0 5px #00ff00;
-}
-
-#tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.5);
-}
-
-.tab-btn {
-    padding: 10px 20px;
-    font-size: 1em;
+    color: #333;
     cursor: pointer;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+#lang-toggle, #game-lang-toggle {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #ddd;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.game-screen {
+    display: none;
+    flex-direction: row;
+    height: 100vh;
+    width: 100vw;
+}
+
+.sidebar {
+    width: 250px;
     background-color: #333;
     color: white;
-    border: none;
-    border-radius: 5px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.tab-btn.active {
-    background-color: #4CAF50;
-}
-
-#wallet {
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    border-bottom: 2px solid green;
+.wallet {
+    margin-bottom: 20px;
     text-align: center;
+}
+
+.wallet p {
+    margin: 5px 0;
 }
 
 .xp-bar {
     width: 100%;
-    height: 20px;
-    background: #333;
-    border-radius: 10px;
+    height: 10px;
+    background-color: #ddd;
+    border-radius: 5px;
     overflow: hidden;
 }
 
 .xp-fill {
     height: 100%;
-    background: green;
+    background-color: #4CAF50;
     width: 0%;
-    transition: width 0.5s;
+    transition: width 0.3s;
 }
 
-#tab-content {
+.tabs button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #444;
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.tabs button.active {
+    background-color: #4CAF50;
+}
+
+.main-content {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
@@ -197,185 +136,217 @@ body {
 }
 
 .plot {
+    width: 100px;
+    height: 100px;
+    background-color: #ddd;
     position: relative;
-    width: 150px;
-    height: 150px;
-    background: url('assets/img/plot.png') no-repeat center;
-    background-size: contain;
     cursor: pointer;
 }
 
 .plot-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    position: relative;
 }
 
-.plant-img {
-    width: 100px;
+.plot-content img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     opacity: 0;
     transition: opacity 0.5s;
 }
 
-.plant-img.loaded {
+.plot-content img.loaded {
     opacity: 1;
 }
 
 .countdown-bar {
     width: 100%;
     height: 5px;
-    background: #333;
+    background-color: #bbb;
     position: absolute;
-    bottom: 5px;
+    bottom: 0;
 }
 
 .countdown-fill {
     height: 100%;
-    background: green;
+    background-color: #4CAF50;
     width: 0%;
-    transition: width 0.5s;
+    transition: width 1s;
 }
 
 .plot-status {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
     text-align: center;
-    color: white;
     font-size: 0.8em;
+    color: #333;
+    position: absolute;
+    bottom: -20px;
+    width: 100%;
 }
 
 .plot.ready {
-    border: 2px solid yellow;
+    border: 2px solid #4CAF50;
 }
 
-#notification {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
+.shop-content {
     display: none;
-    z-index: 1000;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-}
-
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border: 2px solid green;
-    text-align: center;
-}
-
-.modal-content h2 {
-    color: green;
-    margin: 0 0 20px;
-}
-
-.modal-content button {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 1em;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-}
-
-.modal-content button:hover {
-    background-color: #45a049;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1px));
+    gap: 20px;
 }
 
 .shop-item, .inventory-item, .sell-item {
-    background: rgba(0, 0, 0, 0.7);
+    background: #fff;
     padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
     text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
-.shop-item-img, .inventory-item-img {
-    width: 80px;
-    height: auto;
+.shop-item-img, .inventory-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
 }
 
-.buy-btn, .sell-btn {
-    margin: 5px;
+.buy-btn, .buy-pi-btn, .sell-btn {
     padding: 5px 10px;
     background-color: #4CAF50;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-}
-
-.buy-btn:hover, .sell-btn:hover {
-    background-color: #45a049;
+    margin-top: 5px;
 }
 
 .sell-to-shop-btn {
-    margin-top: 10px;
     padding: 10px 20px;
-    background-color: #4CAF50;
+    background-color: #ff4444;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
 }
 
-.sell-to-shop-btn:hover {
-    background-color: #45a049;
+.shop-tabs {
+    margin-bottom: 10px;
+}
+
+.shop-tabs button {
+    padding: 10px;
+    background-color: #444;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.shop-tabs button.active {
+    background-color: #4CAF50;
+}
+
+#exchange input {
+    padding: 5px;
+    margin: 10px 0;
+    width: 100%;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 5px;
+    text-align: center;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+}
+
+.notification {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1001;
+}
+
+.plant-fly, .water-fly, .amount-text {
+    position: absolute;
+    transition: all 0.8s ease;
 }
 
 .plant-fly, .water-fly {
-    position: absolute;
-    transition: all 0.8s ease-out;
+    z-index: 1002;
 }
 
 .amount-text {
-    position: absolute;
-    color: white;
+    z-index: 1003;
+    font-size: 1.2em;
     font-weight: bold;
-    transition: all 0.8s ease-out;
 }
 
 .positive {
-    color: green;
+    color: #4CAF50;
 }
 
 .negative {
-    color: red;
+    color: #ff4444;
 }
 
 .transaction-animation {
     position: absolute;
-    font-size: 1.2em;
-    pointer-events: none;
-    animation: flyUp 1s ease-out forwards;
+    z-index: 1004;
+    animation: flyUp 1s ease-out;
 }
 
 @keyframes flyUp {
     0% { transform: translateY(0); opacity: 1; }
     100% { transform: translateY(-50px); opacity: 0; }
+}
+
+.loading-screen {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgba(0, 0, 0, 0.8);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2000;
 }
 
 .spinner {
@@ -385,10 +356,14 @@ body {
     width: 50px;
     height: 50px;
     animation: spin 1s linear infinite;
-    margin: auto;
 }
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+#claim-reward-btn.claimed {
+    background-color: #ccc;
+    cursor: not-allowed;
 }

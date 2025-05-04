@@ -154,6 +154,24 @@ function playCoinSound() {
     }
 }
 
+// Set posisi awal slider dari localStorage
+document.getElementById('music-volume').value = localStorage.getItem('musicVolume') || 50;
+document.getElementById('voice-volume').value = localStorage.getItem('voiceVolume') || 50;
+
+// Listener untuk simpan dan update volume real-time
+document.getElementById('music-volume').addEventListener('input', function () {
+    localStorage.setItem('musicVolume', this.value);
+    updateVolumes();
+});
+
+document.getElementById('voice-volume').addEventListener('input', function () {
+    localStorage.setItem('voiceVolume', this.value);
+    updateVolumes();
+});
+
+// Panggil update pertama kali setelah semua siap
+updateVolumes();
+
 function updateVolumes() {
     const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 50;
     const voiceVolume = parseFloat(localStorage.getItem('voiceVolume')) || 50;

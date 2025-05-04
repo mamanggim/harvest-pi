@@ -1553,3 +1553,25 @@ function exitFullScreen() {
         document.msExitFullscreen();
     }
 }
+
+// Fitur Deposit
+addSafeClickListener(depositBtn, () => {
+    const piAmount = parseFloat(depositAmountInput.value);
+    if (isNaN(piAmount) || piAmount < 1) {
+        depositMessage.textContent = 'Minimal deposit adalah 1 Pi.';
+        return;
+    }
+
+    const coinsToAdd = piAmount * piToFarmRate;
+    farmCoins += coinsToAdd;
+
+    // Simpan ke database
+    if (userId) {
+        update(ref(database, 'users/' + userId), {
+            farmCoins: farmCoins
+        }).then(() => {
+            depositMessage.textContent = `Deposit sukses! Kamu dapat ${coinsToAdd.toLocaleString()} FC.`;
+            updateFarmCoinUI();
+        });
+    }
+});

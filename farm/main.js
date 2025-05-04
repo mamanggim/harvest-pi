@@ -972,7 +972,6 @@ function startGame() {
 
 // Inisialisasi game
 async function initializeGame() {
-async function initializeGame() {
     try {
         await loadData();
         updateUIText();

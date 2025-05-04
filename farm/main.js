@@ -297,6 +297,44 @@ document.addEventListener('DOMContentLoaded', () => {
         showModal();
     }
 
+  const depositBtn = document.getElementById('confirm-deposit');
+  const depositAmountInput = document.getElementById('deposit-amount');
+  const farmCoinBalance = document.getElementById('farm-coin-balance');
+  const withdrawBtn = document.getElementById('withdraw-button');
+  const withdrawInfo = document.getElementById('withdraw-info');
+
+  function updateFarmCoinDisplay() {
+      farmCoinBalance.textContent = farmCoins.toLocaleString();
+  }
+
+  if (depositBtn && depositAmountInput) {
+      depositBtn.addEventListener('click', () => {
+          const amount = parseFloat(depositAmountInput.value);
+          if (isNaN(amount) || amount < 1) {
+              alert("Minimal deposit adalah 1 Pi.");
+              return;
+          }
+
+          const coinsToAdd = amount * piToFarmRate;
+          farmCoins += coinsToAdd;
+          updateFarmCoinDisplay();
+
+          if (userId) {
+              firebase.database().ref(`users/${userId}/balance`).set(farmCoins);
+          }
+
+          alert(`Deposit berhasil. Kamu dapat ${coinsToAdd} Farm Coins.`);
+      });
+  }
+
+  const userLevel = 5;
+  const depositTotal = 4;
+  if (userLevel >= 10 && farmCoins >= 1000000 && depositTotal >= 10) {
+      withdrawBtn.disabled = false;
+      withdrawInfo.style.display = 'none';
+  }
+});
+
     const startText = document.getElementById('start-text');
     if (startText) addSafeClickListener(startText, startGame);
 

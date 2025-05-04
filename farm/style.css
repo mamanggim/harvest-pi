@@ -1024,3 +1024,15 @@ input[type="range"] {
   50% { transform: scale(1.05); opacity: 0.85; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/*-- Finance --*/
+.deposit-section,
+.withdraw-section {
+  margin-top: 15px;
+}
+
+#deposit-amount {
+  padding: 5px;
+  width: 150px;
+  margin-right: 10px;
+}

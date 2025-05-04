@@ -1,4 +1,5 @@
-/* RESET & GLOBAL STYLES */
+/* ========== PART 1: RESET & GLOBAL STYLES ========== */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -42,7 +43,8 @@ input[type="number"] {
   font-size: 12px;
 }
 
-/* GAME HEADER */
+/* ========== PART 2: GAME HEADER: JUDUL, TAB, WALLET ========== */
+
 #game-header {
   position: fixed;
   top: 0;
@@ -52,7 +54,7 @@ input[type="number"] {
   backdrop-filter: blur(6px);
   z-index: 1000;
   padding: 10px 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 
 #game-title {
@@ -118,12 +120,13 @@ input[type="number"] {
   transition: width 0.3s;
 }
 
-/* GAME SCREEN & TAB CONTENT */
+/* ========== PART 3: GAME SCREEN & TAB KONTEN ========== */
+
 #game-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 220px;
+  padding-top: 220px; /* cukup tinggi biar gak ketiban header */
   min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -151,7 +154,8 @@ input[type="number"] {
   display: block;
 }
 
-/* BUTTONS, MODAL & NOTIFICATION */
+/* ========== PART 4: TOMBOL, MODAL & NOTIFIKASI ========== */
+
 .corner-buttons {
   position: fixed;
   top: 10px;
@@ -172,9 +176,25 @@ input[type="number"] {
   transition: all 0.3s;
 }
 
-#lang-toggle:hover, #settings-btn:hover, #game-lang-toggle:hover, #game-settings-btn:hover, #exit-game-btn:hover {
+#lang-toggle:hover, #settings-btn:hover, #game-lang-toggle:hover,
+#game-settings-btn:hover, #exit-game-btn:hover {
   background: #555;
   border-color: #ffeb3b;
+}
+
+button {
+  background: #4caf50;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+button:hover {
+  background: #66bb6a;
 }
 
 #notification {
@@ -242,7 +262,8 @@ input[type="range"] {
   width: 100%;
 }
 
-/* WALLET, XP BAR & DAILY REWARD */
+/* ========== PART 5: WALLET, XP BAR & DAILY REWARD ========== */
+
 #wallet {
   margin: 10px auto;
   font-size: 14px;
@@ -296,7 +317,8 @@ input[type="range"] {
   opacity: 0.6;
 }
 
-/* SHOP, INVENTORY, SELL SECTION */
+/* ========== PART 6: SHOP, INVENTORY, SELL SECTION ========== */
+
 #shop-content {
   display: flex;
   flex-wrap: wrap;
@@ -351,7 +373,7 @@ input[type="range"] {
 }
 
 .shop-tab-btn.active {
-  background-color: #4caf50;
+  background-color: #4CAF50;
   color: #fff;
 }
 
@@ -359,7 +381,7 @@ input[type="range"] {
   margin-top: 16px;
   padding: 10px 20px;
   font-weight: bold;
-  background-color: #4caf50;
+  background-color: #4CAF50;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -383,7 +405,8 @@ input[type="range"] {
   border-radius: 10px;
 }
 
-/* FARM AREA & PLOT STYLE */
+/* ========== PART 7: FARM AREA & PLOT STYLE ========== */
+
 #farm-area {
   display: grid;
   grid-template-columns: repeat(2, 160px);
@@ -393,7 +416,7 @@ input[type="range"] {
   justify-content: center;
   align-content: space-around;
   background: #8b4513;
-  padding: 100px 30px 30px 30px;
+  padding: 100px 30px 30px 30px; /* Geser ke kanan dengan padding-left: 70px */
   border-radius: 10px;
   width: 100%;
   max-width: 410px;
@@ -472,52 +495,212 @@ input[type="range"] {
   width: 100%;
 }
 
-/* START SCREEN */
-.start-text {
-  font-size: 20px;
-  color: #ffeb3b;
-  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
-  animation: blink 1s infinite;
+/* ========== PART 8: REWARD BUTTON, MODAL, DAN SETTING VOLUME ========== */
+
+#claim-reward-btn {
+  background: #4caf50;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 12px;
   cursor: pointer;
-  margin-top: 15px;
+  font-size: 14px;
+  border-radius: 8px;
+  margin-top: 20px;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+#claim-reward-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
 }
 
-.start-text:hover {
-  background: #66bb6a;
-  transform: scale(1.05);
+#claim-reward-btn.claimed {
+  background: #888;
+  opacity: 0.6;
 }
 
-#start-screen {
+.modal {
   display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: #333;
+  margin: 20% auto;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.0);
+  border: 2px solid #fff;
+  border-radius: 10px;
+  width: 300px;
+  color: #fff;
+}
+
+.close {
+  color: #fff;
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #ffeb3b;
+}
+
+label {
+  display: block;
+  margin: 10px 0 5px;
+  font-size: 14px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+#settings-modal button {
+  margin-top: 10px;
+  display: block;
+  width: 100%;
+}
+
+/* ========== PART 9: NOTIFIKASI & TRANSAKSI ========== */
+
+#notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  display: none;
+  font-size: 14px;
+  min-width: 200px;
   text-align: center;
+  z-index: 1000;
 }
 
-#start-screen h1#title {
-  font-size: 38px;
-  color: #66ff00;
-  text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
-  animation: pulse 2s infinite ease-in-out;
-  margin: 0 0 20px;
+.transaction-animation {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  animation: floatUp 1s ease-out forwards;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.85; }
-  100% { transform: scale(1); opacity: 1; }
+.transaction-animation.positive {
+  color: #4caf50;
 }
 
-/* LOADING & LOGIN SCREEN */
+.transaction-animation.negative {
+  color: #f44336;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-50px); }
+}
+
+/* ========== PART 10: ANIMASI FLY (PANEN & AIR) ========== */
+
+.plant-fly {
+  position: absolute;
+  animation: fly-up 0.8s ease-out forwards;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+.water-fly {
+  position: absolute;
+  animation: fly-down 0.8s ease-out forwards;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+}
+
+.amount-text {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 11;
+  animation: fly-up 0.8s ease-out forwards;
+  left: 70%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+.amount-text.negative {
+  color: #f44336;
+}
+
+.amount-text.positive {
+  color: #4caf50;
+}
+
+@keyframes fly-up {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes fly-down {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(50px);
+    opacity: 0;
+  }
+}
+
+/* ========== PART 11: MODAL & LOADING ========== */
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: #333;
+  margin: 20% auto;
+  padding: 20px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  width: 300px;
+  color: #fff;
+}
+
+.close {
+  color: #fff;
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #ffeb3b;
+}
+
+/* Loading Screen */
 #loading-screen {
   position: fixed;
   top: 0;
@@ -554,6 +737,7 @@ input[type="range"] {
   100% { content: 'Loading...'; }
 }
 
+/* Login Screen */
 #login-screen {
   position: fixed;
   top: 0;
@@ -612,92 +796,74 @@ input[type="range"] {
   text-decoration: underline;
 }
 
-/* NOTIFICATION & TRANSACTION ANIMATION */
-.transaction-animation {
-  position: absolute;
-  font-size: 14px;
-  font-weight: bold;
-  animation: floatUp 1s ease-out forwards;
-}
-
-.transaction-animation.positive {
-  color: #4caf50;
-}
-
-.transaction-animation.negative {
-  color: #f44336;
-}
-
-@keyframes floatUp {
-  0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-50px); }
-}
-
-/* FLY ANIMATIONS */
-.plant-fly {
-  position: absolute;
-  animation: fly-up 0.8s ease-out forwards;
-  z-index: 10;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 0;
-}
-
-.water-fly {
-  position: absolute;
-  animation: fly-down 0.8s ease-out forwards;
-  z-index: 10;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 0;
-}
-
-.amount-text {
-  position: absolute;
-  font-size: 12px;
-  font-weight: bold;
-  z-index: 11;
-  animation: fly-up 0.8s ease-out forwards;
-  left: 70%;
-  transform: translateX(-50%);
-  bottom: 0;
-}
-
-.amount-text.negative {
-  color: #f44336;
-}
-
-.amount-text.positive {
-  color: #4caf50;
-}
-
-@keyframes fly-up {
-  0% { transform: translateX(-50%) translateY(0); opacity: 1; }
-  100% { transform: translateX(-50%) translateY(-50px); opacity: 0; }
-}
-
-@keyframes fly-down {
-  0% { transform: translateX(-50%) translateY(0); opacity: 1; }
-  100% { transform: translateX(-50%) translateY(50px); opacity: 0; }
-}
-
-/* RESPONSIVE DESIGN */
+/* ========== PART 12: RESPONSIVE (MAX WIDTH 600px) ========== */
 @media (max-width: 600px) {
-  h1 { font-size: 24px; }
-  .start-text { font-size: 20px; }
-  #wallet { font-size: 12px; padding: 8px; }
-  #level { font-size: 10px; }
-  #xp-bar { width: 120px; height: 6px; }
-  .tabs { gap: 5px; }
-  .tab-btn { padding: 6px 12px; font-size: 10px; }
-  .shop-item, .inventory-item, .sell-item { width: 100px; padding: 8px; }
-  .shop-item-img { width: 50px; height: 50px; }
-  .shop-item h3, .inventory-item h3, .sell-item h3 { font-size: 10px; }
-  .shop-item p, .inventory-item p, .sell-item p { font-size: 9px; }
-  button { padding: 6px 10px; font-size: 10px; }
-  #exchange-amount { width: 120px; }
-  .achievement { width: 200px; }
-  #notification { font-size: 12px; min-width: 150px; }
+  h1 {
+    font-size: 24px;
+  }
+
+  .start-text {
+    font-size: 20px;
+  }
+
+  #wallet {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  #level {
+    font-size: 10px;
+  }
+
+  #xp-bar {
+    width: 120px;
+    height: 6px;
+  }
+
+  .tabs {
+    gap: 5px;
+  }
+
+  .tab-btn {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+
+  .shop-item, .inventory-item, .sell-item {
+    width: 100px;
+    padding: 8px;
+  }
+
+  .shop-item-img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .shop-item h3, .inventory-item h3, .sell-item h3 {
+    font-size: 10px;
+  }
+
+  .shop-item p, .inventory-item p, .sell-item p {
+    font-size: 9px;
+  }
+
+  button {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+
+  #exchange-amount {
+    width: 120px;
+  }
+
+  .achievement {
+    width: 200px;
+  }
+
+  #notification {
+    font-size: 12px;
+    min-width: 150px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -706,19 +872,56 @@ input[type="range"] {
     grid-template-rows: repeat(2, 17px);
     row-gap: 40px;
     column-gap: 40px;
-    padding: 80px 20px 20px 80px;
+    justify-content: center !important;
+    align-content: space-around;
+    padding: 80px 20px 20px 80px; /* Sesuaikan padding-left jadi 60px */
+    width: 100%;
     max-width: 450px;
     height: 450px;
+    margin: 0 auto;
   }
-  .plot { width: 100px; height: 10px; }
-  .plot-content { height: 30px; top: -26px; }
-  .plant-img { width: 100px; max-height: 100px; }
-  .countdown-bar { top: 8px; width: 60px; height: 5px; }
-  .plot-status { font-size: 6px; top: 16px; }
-  #claim-reward-btn { margin-top: 10px; }
-  .modal-content { margin: 30% auto; }
-  #loading-screen h1 { font-size: 20px; }
-  .loading-animation { font-size: 16px; }
+
+  .plot {
+    width: 100px;
+    height: 10px;
+  }
+
+  .plot-content {
+    height: 30px;
+    top: -26px;
+  }
+
+  .plant-img {
+    width: 100px;
+    max-height: 100px;
+  }
+
+  .countdown-bar {
+    top: 8px;
+    width: 60px;
+    height: 5px;
+  }
+
+  .plot-status {
+    font-size: 6px;
+    top: 16px;
+  }
+
+  #claim-reward-btn {
+    margin-top: 10px;
+  }
+
+  .modal-content {
+    margin: 30% auto;
+  }
+
+  #loading-screen h1 {
+    font-size: 20px;
+  }
+
+  .loading-animation {
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 360px) {
@@ -727,26 +930,97 @@ input[type="range"] {
     grid-template-rows: repeat(2, 13px);
     row-gap: 30px;
     column-gap: 30px;
-    padding: 70px 15px 15px 70px;
+    justify-content: center !important;
+    align-content: space-around;
+    padding: 70px 15px 15px 70px; /* Sesuaikan padding-left jadi 50px */
+    width: 100%;
     max-width: 330px;
     height: 330px;
+    margin: 0 auto;
   }
-  .plot { width: 80px; height: 8px; }
-  .plot-content { height: 30px; top: -26px; }
-  .plant-img { width: 80px; max-height: 80px; }
-  .countdown-bar { top: 8px; width: 50px; height: 5px; }
-  .plot-status { font-size: 6px; top: 16px; }
-  #claim-reward-btn { margin-top: 10px; }
-  .modal-content { margin: 35% auto; }
-  #loading-screen h1 { font-size: 18px; }
-  .loading-animation { font-size: 14px; }
+
+  .plot {
+    width: 80px;
+    height: 8px;
+  }
+
+  .plot-content {
+    height: 30px;
+    top: -26px;
+  }
+
+  .plant-img {
+    width: 80px;
+    max-height: 80px;
+  }
+
+  .countdown-bar {
+    top: 8px;
+    width: 50px;
+    height: 5px;
+  }
+
+  .plot-status {
+    font-size: 6px;
+    top: 16px;
+  }
+
+  #claim-reward-btn {
+    margin-top: 10px;
+  }
+
+  .modal-content {
+    margin: 35% auto;
+  }
+
+  #loading-screen h1 {
+    font-size: 18px;
+  }
+
+  .loading-animation {
+    font-size: 14px;
+  }
 }
 
-#game-screen.fade-in {
-    animation: fadeIn 0.6s ease-in-out;
+/* === START SCREEN ===*/
+.start-text {
+  font-size: 20px;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
+  animation: blink 1s infinite;
+  cursor: pointer;
+  margin-top: 15px;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+.start-text:hover {
+  background: #66bb6a;
+  transform: scale(1.05);
+}
+
+#start-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: rgba(0,0,0,0.0);
+  text-align: center;
+}
+
+#start-screen h1#title {
+  font-size: 38px;
+  color: #66ff00;
+  text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
+  animation: pulse 2s infinite ease-in-out;
+  margin: 0 0 20px;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
 }

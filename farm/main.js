@@ -882,7 +882,7 @@ function renderShop() {
         const piPrice = typeof veg.piPrice === 'number' ? veg.piPrice : 0;
 
         vegItem.innerHTML = `
-            <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+            <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img">
             <h3>${veg.name[currentLang]}</h3>
             <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${farmPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
             <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${piPrice} PI</p>
@@ -895,7 +895,7 @@ function renderShop() {
     const waterItem = document.createElement('div');
     waterItem.classList.add('shop-item');
     waterItem.innerHTML = `
-        <img src="assets/img/ui/water_icon.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+        <img src="assets/img/ui/water_icon.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img">
         <h3>${langData[currentLang]?.waterLabel || 'Water'}</h3>
         <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 ${langData[currentLang]?.coinLabel || 'Coins'}</p>
         <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: 0.0001 PI</p>
@@ -1031,7 +1031,7 @@ function renderInventory() {
         const title = isSeed ? `${veg.name[currentLang]} Seed` : veg.name[currentLang];
 
         invItem.innerHTML = `
-            <img src="${veg.shopImage}" alt="${title}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+            <img src="${veg.shopImage}" alt="${title}" class="shop-item-img">
             <h3>${title}</h3>
             <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
         `;
@@ -1121,7 +1121,7 @@ function renderSellSection() {
 }
 // END renderSellSection
 
-// START sellItem
+// START sellItem (Tambahin XP +10)
 function sellItem(index) {
     const item = inventory[index];
     if (!item || item.type !== 'harvest') return;

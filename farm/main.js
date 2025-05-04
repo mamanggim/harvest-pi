@@ -155,8 +155,8 @@ function playCoinSound() {
 }
 
 // Set posisi awal slider dari localStorage
-document.getElementById('music-volume').value = localStorage.getItem('musicVolume') || 50;
-document.getElementById('voice-volume').value = localStorage.getItem('voiceVolume') || 50;
+document.getElementById('music-volume').value = localStorage.getItem('musicVolume') ?? 50;
+document.getElementById('voice-volume').value = localStorage.getItem('voiceVolume') ?? 50;
 
 // Listener untuk simpan dan update volume real-time
 document.getElementById('music-volume').addEventListener('input', function () {
@@ -169,52 +169,28 @@ document.getElementById('voice-volume').addEventListener('input', function () {
     updateVolumes();
 });
 
-// Panggil update pertama kali setelah semua siap
-updateVolumes();
-
+// Update audio volumes
 function updateVolumes() {
-    const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 50;
-    const voiceVolume = parseFloat(localStorage.getItem('voiceVolume')) || 50;
-    console.log('Updating volumes:', { musicVolume, voiceVolume });
+    const musicVolume = parseFloat(localStorage.getItem('musicVolume') ?? 50);
+    const voiceVolume = parseFloat(localStorage.getItem('voiceVolume') ?? 50);
 
     const musicVol = Math.min(Math.max(musicVolume / 100, 0), 1);
     const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 1);
 
-    if (bgMusic) {
-        bgMusic.volume = musicVol;
-        console.log('BG Music volume set to:', bgMusic.volume);
-        if (isAudioPlaying) bgMusic.play().catch(e => console.log('BG Music play failed after volume change:', e));
-    }
-    if (bgVoice) {
-        bgVoice.volume = voiceVol;
-        console.log('BG Voice volume set to:', bgVoice.volume);
-        bgVoice.play().catch(e => console.log('BG Voice play failed after volume change:', e));
-    }
-    if (harvestingSound) {
-        harvestingSound.volume = voiceVol;
-        console.log('Harvesting sound volume set to:', harvestingSound.volume);
-    }
-    if (wateringSound) {
-        wateringSound.volume = voiceVol;
-        console.log('Watering sound volume set to:', wateringSound.volume);
-    }
-    if (plantingSound) {
-        plantingSound.volume = voiceVol;
-        console.log('Planting sound volume set to:', plantingSound.volume);
-    }
-    if (menuSound) {
-        menuSound.volume = voiceVol;
-        console.log('Menu sound volume set to:', menuSound.volume);
-    }
-    if (buyingSound) {
-        buyingSound.volume = voiceVol;
-        console.log('Buying sound volume set to:', buyingSound.volume);
-    }
-    if (coinSound) {
-        coinSound.volume = voiceVol;
-        console.log('Coin sound volume set to:', coinSound.volume);
-    }
+    if (bgMusic) bgMusic.volume = musicVol;
+    if (bgVoice) bgVoice.volume = voiceVol;
+    if (harvestingSound) harvestingSound.volume = voiceVol;
+    if (wateringSound) wateringSound.volume = voiceVol;
+    if (plantingSound) plantingSound.volume = voiceVol;
+    if (menuSound) menuSound.volume = voiceVol;
+    if (buyingSound) buyingSound.volume = voiceVol;
+    if (coinSound) coinSound.volume = voiceVol;
+
+    console.log('Updated Volumes:', { musicVol, voiceVol });
 }
+
+// Panggil update pertama kali setelah semua siap
+updateVolumes();
 
 // START loadData fix
 async function loadData() {

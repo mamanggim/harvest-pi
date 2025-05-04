@@ -159,8 +159,8 @@ function updateVolumes() {
     const voiceVolume = parseFloat(localStorage.getItem('voiceVolume')) || 50;
     console.log('Updating volumes:', { musicVolume, voiceVolume });
 
-    const musicVol = Math.min(Math.max(musicVolume / 100, 0), 1);
-    const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 1);
+    const musicVol = Math.min(Math.max(musicVolume / 100, 0), 0);
+    const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 0);
 
     if (bgMusic) {
         bgMusic.volume = musicVol;
@@ -267,7 +267,7 @@ async function authenticateWithPi() {
                 },
                 pi: pi || 0
             }).then(() => {
-                showNotification(`Logged in as ${user.username} (Email: ${user.email || 'Not provided'})`);
+                showNotification(`Logged in as ${user.username}`);
                 localStorage.setItem('userId', userId); // Simpan userId
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('start-screen').style.display = 'flex';

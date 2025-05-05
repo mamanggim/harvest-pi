@@ -1026,13 +1026,135 @@ input[type="range"] {
 }
 
 /*-- Finance --*/
-.deposit-section,
-.withdraw-section {
-  margin-top: 15px;
+#depositPi {
+  background: #333;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
 }
 
-#deposit-amount {
-  padding: 5px;
+#depositPi h2#finance-title {
+  font-size: 18px;
+  color: #66ff00;
+  text-shadow: 0 0 5px #66ff00;
+  margin-bottom: 15px;
+}
+
+#depositPi p {
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+#depositPi h3 {
+  font-size: 14px;
+  color: #ffeb3b;
+  margin: 15px 0 10px;
+}
+
+#depositPi hr {
+  border: 1px solid #fff;
+  margin: 15px 0;
+}
+
+#depositPi input[type="number"]#deposit-amount {
   width: 150px;
-  margin-right: 10px;
+  margin: 10px 0;
+  padding: 8px;
+  background: #444;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+#depositPi button#confirm-deposit {
+  background: #4caf50;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 16px;
+  font-size: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.3s;
+}
+
+#depositPi button#confirm-deposit:hover {
+  background: #66bb6a;
+}
+
+#depositPi button#confirm-deposit:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+#depositPi button#withdraw-btn {
+  background: #f44336;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 16px;
+  font-size: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.3s;
+}
+
+#depositPi button#withdraw-btn:hover {
+  background: #ef5350;
+}
+
+#depositPi button#withdraw-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+#depositPi p#deposit-message {
+  font-size: 10px;
+  color: #ffeb3b;
+  margin-top: 10px;
+}
+
+#depositPi p#withdraw-note {
+  font-size: 10px;
+  color: #f44336;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+/* Responsive untuk tab depositPi */
+@media (max-width: 600px) {
+  #depositPi {
+    padding: 15px;
+  }
+
+  #depositPi h2#finance-title {
+    font-size: 16px;
+  }
+
+  #depositPi h3 {
+    font-size: 12px;
+  }
+
+  #depositPi p {
+    font-size: 10px;
+  }
+
+  #depositPi input[type="number"]#deposit-amount {
+    width: 120px;
+    padding: 6px;
+    font-size: 10px;
+  }
+
+  #depositPi button#confirm-deposit,
+  #depositPi button#withdraw-btn {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+
+  #depositPi p#deposit-message,
+  #depositPi p#withdraw-note {
+    font-size: 9px;
+  }
 }

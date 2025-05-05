@@ -295,21 +295,6 @@ function onIncompletePaymentFound(payment) {
     // Kalo gak pake backend, biarin kosong kayak gini
 }
 
-// Modal SignIn
-function showModal() {
-    const signInModalElement = document.getElementById('signInModal');
-    if (signInModalElement) {
-        signInModalElement.style.display = 'flex';
-    }
-}
-
-function closeModal() {
-    const signInModalElement = document.getElementById('signInModal');
-    if (signInModalElement) {
-        signInModalElement.style.display = 'none';
-    }
-}
-
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
     const startTextElement = document.getElementById('start-text');

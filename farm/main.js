@@ -290,7 +290,7 @@ function showModal() {
 function closeModal() {
     document.getElementById('signInModal').style.display = 'none';
 }
-    
+
     const startText = document.getElementById('start-text');
     if (startText) addSafeClickListener(startText, startGame);
 
@@ -1553,49 +1553,49 @@ const depositBtn = document.querySelector('#confirm-deposit');
 const depositAmountInput = document.querySelector('#deposit-amount');
 const depositMessage = document.querySelector('#deposit-message');
 
-addSafeClickListener(depositBtn, async () => {
-    if (!depositBtn || !depositAmountInput || !depositMessage) return;
+if (depositBtn && depositAmountInput && depositMessage) {
+    addSafeClickListener(depositBtn, async () => {
+        const piAmount = parseFloat(depositAmountInput.value);
+        depositMessage.textContent = ''; // Reset message
 
-    const piAmount = parseFloat(depositAmountInput.value);
-    depositMessage.textContent = ''; // Reset pesan
+        if (!userId) {
+            depositMessage.textContent = currentLang.deposit_user_unknown || 'User not recognized.';
+            return;
+        }
 
-    if (!userId) {
-        depositMessage.textContent = 'User tidak dikenali.';
-        return;
-    }
+        if (isNaN(piAmount) || piAmount < 1) {
+            depositMessage.textContent = currentLang.deposit_minimum || 'Minimum deposit is 1 Pi.';
+            return;
+        }
 
-    if (isNaN(piAmount) || piAmount < 1) {
-        depositMessage.textContent = 'Minimal deposit adalah 1 Pi.';
-        return;
-    }
+        depositBtn.disabled = true;
+        depositBtn.textContent = currentLang.deposit_processing || 'Processing...';
 
-    depositBtn.disabled = true;
-    depositBtn.textContent = 'Memproses...';
+        const coinsToAdd = piAmount * piToFarmRate;
+        farmCoins += coinsToAdd;
 
-    const coinsToAdd = piAmount * piToFarmRate;
-    farmCoins += coinsToAdd;
+        try {
+            const userRef = ref(database, 'users/' + userId);
+            const snapshot = await get(userRef);
+            const data = snapshot.val() || {};
+            const previousDeposit = data.totalDeposit || 0;
 
-    try {
-        const userRef = ref(database, 'users/' + userId);
+            await update(userRef, {
+                farmCoins: farmCoins,
+                totalDeposit: previousDeposit + piAmount
+            });
 
-        const snapshot = await get(userRef);
-        const data = snapshot.val() || {};
-        const previousDeposit = data.totalDeposit || 0;
+            depositMessage.textContent = (currentLang.deposit_success || 'Deposit successful! You got') +
+                ` ${coinsToAdd.toLocaleString()} FC.`;
 
-        await update(userRef, {
-            farmCoins: farmCoins,
-            totalDeposit: previousDeposit + piAmount
-        });
-
-        depositMessage.textContent = `Deposit sukses! Kamu dapat ${coinsToAdd.toLocaleString()} FC.`;
-        updateFarmCoinUI();
-
-        depositAmountInput.value = '';
-    } catch (error) {
-        console.error(error);
-        depositMessage.textContent = 'Terjadi kesalahan saat deposit.';
-    } finally {
-        depositBtn.disabled = false;
-        depositBtn.textContent = 'Deposit';
-    }
-});
+            updateFarmCoinUI();
+            depositAmountInput.value = '';
+        } catch (error) {
+            console.error(error);
+            depositMessage.textContent = currentLang.deposit_error || 'An error occurred during deposit.';
+        } finally {
+            depositBtn.disabled = false;
+            depositBtn.textContent = currentLang.deposit || 'Deposit';
+        }
+    });
+}

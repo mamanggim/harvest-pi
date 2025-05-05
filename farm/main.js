@@ -291,132 +291,131 @@ function closeModal() {
     document.getElementById('signInModal').style.display = 'none';
 }
 
-    const startText = document.getElementById('start-text');
-    if (startText) addSafeClickListener(startText, startGame);
+const startText = document.getElementById('start-text');
+if (startText) addSafeClickListener(startText, startGame);
 
-    const langToggle = document.getElementById('lang-toggle');
-    if (langToggle) addSafeClickListener(langToggle, toggleLanguage);
+const langToggle = document.getElementById('lang-toggle');
+if (langToggle) addSafeClickListener(langToggle, toggleLanguage);
 
-    const gameLangToggle = document.getElementById('game-lang-toggle');
-    if (gameLangToggle) addSafeClickListener(gameLangToggle, toggleLanguage);
+const gameLangToggle = document.getElementById('game-lang-toggle');
+if (gameLangToggle) addSafeClickListener(gameLangToggle, toggleLanguage);
 
-    const settingsBtn = document.getElementById('settings-btn');
-    if (settingsBtn) {
-        addSafeClickListener(settingsBtn, () => {
-            document.getElementById('settings-modal').style.display = 'block';
-            playMenuSound();
-        });
-    }
-
-    const gameSettingsBtn = document.getElementById('game-settings-btn');
-    if (gameSettingsBtn) {
-        addSafeClickListener(gameSettingsBtn, () => {
-            document.getElementById('settings-modal').style.display = 'block';
-            playMenuSound();
-        });
-    }
-
-    const closeSettings = document.getElementById('close-settings');
-    if (closeSettings) {
-        addSafeClickListener(closeSettings, () => {
-            document.getElementById('settings-modal').style.display = 'none';
-            playMenuSound();
-        });
-    }
-
-    const rewardModalClose = document.getElementById('reward-modal-close');
-    if (rewardModalClose) {
-        addSafeClickListener(rewardModalClose, () => {
-            rewardModal.style.display = 'none';
-            playMenuSound();
-        });
-    }
-
-    const fullscreenToggle = document.getElementById('fullscreen-toggle');
-    if (fullscreenToggle) {
-        addSafeClickListener(fullscreenToggle, () => {
-            if (!document.fullscreenElement) {
-                enterFullScreen();
-            } else {
-                exitFullScreen();
-            }
-            playMenuSound();
-        });
-    }
-
-    const musicVolumeSlider = document.getElementById('music-volume');
-    if (musicVolumeSlider) {
-        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
-        musicVolumeSlider.addEventListener('input', () => {
-            localStorage.setItem('musicVolume', musicVolumeSlider.value);
-            updateVolumes();
-        });
-    }
-
-    const voiceVolumeSlider = document.getElementById('voice-volume');
-    if (voiceVolumeSlider) {
-        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
-        voiceVolumeSlider.addEventListener('input', () => {
-            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
-            updateVolumes();
-        });
-    }
-
-    const exitGameBtn = document.getElementById('exit-game-btn');
-    if (exitGameBtn) {
-        addSafeClickListener(exitGameBtn, () => {
-            bgMusic.pause();
-            bgVoice.pause();
-            window.location.reload();
-        });
-    }
-
-    const exchangeBtn = document.getElementById('exchange-btn');
-    if (exchangeBtn) addSafeClickListener(exchangeBtn, exchangePi);
-
-    const exchangeAmount = document.getElementById('exchange-amount');
-    if (exchangeAmount) exchangeAmount.addEventListener('input', updateExchangeResult);
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        addSafeClickListener(btn, () => {
-            const tab = btn.getAttribute('data-tab');
-            switchTab(tab);
-        });
+const settingsBtn = document.getElementById('settings-btn');
+if (settingsBtn) {
+    addSafeClickListener(settingsBtn, () => {
+        document.getElementById('settings-modal').style.display = 'block';
+        playMenuSound();
     });
+}
 
-    const buyTab = document.getElementById('shop-buy-tab');
-    const sellTab = document.getElementById('shop-sell-tab');
-    const shopContent = document.getElementById('shop-content');
-    const sellContent = document.getElementById('sell-section');
+const gameSettingsBtn = document.getElementById('game-settings-btn');
+if (gameSettingsBtn) {
+    addSafeClickListener(gameSettingsBtn, () => {
+        document.getElementById('settings-modal').style.display = 'block';
+        playMenuSound();
+    });
+}
 
-    if (buyTab) {
-        addSafeClickListener(buyTab, () => {
-            buyTab.classList.add('active');
-            sellTab.classList.remove('active');
-            shopContent.style.display = 'block';
-            sellContent.style.display = 'none';
-            renderShop();
-            playMenuSound();
-        });
-    }
+const closeSettings = document.getElementById('close-settings');
+if (closeSettings) {
+    addSafeClickListener(closeSettings, () => {
+        document.getElementById('settings-modal').style.display = 'none';
+        playMenuSound();
+    });
+}
 
-    if (sellTab) {
-        addSafeClickListener(sellTab, () => {
-            sellTab.classList.add('active');
-            buyTab.classList.remove('active');
-            shopContent.style.display = 'none';
-            sellContent.style.display = 'block';
-            renderSellSection();
-            playMenuSound();
-        });
-    }
+const rewardModalClose = document.getElementById('reward-modal-close');
+if (rewardModalClose) {
+    addSafeClickListener(rewardModalClose, () => {
+        rewardModal.style.display = 'none';
+        playMenuSound();
+    });
+}
 
-    const loginPiBtn = document.getElementById('login-pi-btn');
-    if (loginPiBtn) addSafeClickListener(loginPiBtn, authenticateWithPi);
+const fullscreenToggle = document.getElementById('fullscreen-toggle');
+if (fullscreenToggle) {
+    addSafeClickListener(fullscreenToggle, () => {
+        if (!document.fullscreenElement) {
+            enterFullScreen();
+        } else {
+            exitFullScreen();
+        }
+        playMenuSound();
+    });
+}
 
-    initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
-    initializeGame();
+const musicVolumeSlider = document.getElementById('music-volume');
+if (musicVolumeSlider) {
+    musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
+    musicVolumeSlider.addEventListener('input', () => {
+        localStorage.setItem('musicVolume', musicVolumeSlider.value);
+        updateVolumes();
+    });
+}
+
+const voiceVolumeSlider = document.getElementById('voice-volume');
+if (voiceVolumeSlider) {
+    voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
+    voiceVolumeSlider.addEventListener('input', () => {
+        localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
+        updateVolumes();
+    });
+}
+
+const exitGameBtn = document.getElementById('exit-game-btn');
+if (exitGameBtn) {
+    addSafeClickListener(exitGameBtn, () => {
+        bgMusic.pause();
+        bgVoice.pause();
+        window.location.reload();
+    });
+}
+
+const exchangeBtn = document.getElementById('exchange-btn');
+if (exchangeBtn) addSafeClickListener(exchangeBtn, exchangePi);
+
+const exchangeAmount = document.getElementById('exchange-amount');
+if (exchangeAmount) exchangeAmount.addEventListener('input', updateExchangeResult);
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    addSafeClickListener(btn, () => {
+        const tab = btn.getAttribute('data-tab');
+        switchTab(tab);
+    });
 });
+
+const buyTab = document.getElementById('shop-buy-tab');
+const sellTab = document.getElementById('shop-sell-tab');
+const shopContent = document.getElementById('shop-content');
+const sellContent = document.getElementById('sell-section');
+
+if (buyTab) {
+    addSafeClickListener(buyTab, () => {
+        buyTab.classList.add('active');
+        sellTab.classList.remove('active');
+        shopContent.style.display = 'block';
+        sellContent.style.display = 'none';
+        renderShop();
+        playMenuSound();
+    });
+}
+
+if (sellTab) {
+    addSafeClickListener(sellTab, () => {
+        sellTab.classList.add('active');
+        buyTab.classList.remove('active');
+        shopContent.style.display = 'none';
+        sellContent.style.display = 'block';
+        renderSellSection();
+        playMenuSound();
+    });
+}
+
+const loginPiBtn = document.getElementById('login-pi-btn');
+if (loginPiBtn) addSafeClickListener(loginPiBtn, authenticateWithPi);
+
+initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
+initializeGame();
 
 // Load player data
 async function loadPlayerData() {
@@ -982,7 +981,7 @@ function buyVegetable(id, currency) {
         if (farmCoins >= veg.farmPrice) {
             farmCoins -= veg.farmPrice;
             canBuy = true;
-            showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
+            showTransactionAnimation(`EY${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
         } else {
             showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
         }
@@ -1605,36 +1604,36 @@ const withdrawNote = document.getElementById('withdraw-note');
 
 // Atur teks tombol & note dari lang.json
 if (withdrawBtn && withdrawNote) {
-  withdrawBtn.textContent = getLangText('withdraw_button');
-  withdrawNote.innerText = getLangText('withdraw_note');
+    withdrawBtn.textContent = getLangText('withdraw_button');
+    withdrawNote.innerText = getLangText('withdraw_note');
 }
 
 // Fungsi cek kelayakan withdraw
 function checkWithdrawEligibility(level, farmCoins, totalDeposit) {
-  const eligible = level >= 10 && farmCoins >= 1000000 && totalDeposit >= 10;
-  if (withdrawBtn && withdrawNote) {
-    withdrawBtn.disabled = !eligible;
-    withdrawNote.style.display = eligible ? 'none' : 'block';
-  }
+    const eligible = level >= 10 && farmCoins >= 1000000 && totalDeposit >= 10;
+    if (withdrawBtn && withdrawNote) {
+        withdrawBtn.disabled = !eligible;
+        withdrawNote.style.display = eligible ? 'none' : 'block';
+    }
 }
 
 // Ambil data user dari Firebase dan update tombol withdraw
 async function updateWithdrawStatus() {
-  if (!userId) return;
+    if (!userId) return;
 
-  try {
-    const userRef = ref(database, 'users/' + userId);
-    const snapshot = await get(userRef);
-    const data = snapshot.val() || {};
+    try {
+        const userRef = ref(database, 'users/' + userId);
+        const snapshot = await get(userRef);
+        const data = snapshot.val() || {};
 
-    const level = data.level || 1;
-    const coins = data.farmCoins || 0;
-    const deposit = data.totalDeposit || 0;
+        const level = data.level || 1;
+        const coins = data.farmCoins || 0;
+        const deposit = data.totalDeposit || 0;
 
-    checkWithdrawEligibility(level, coins, deposit);
-  } catch (error) {
-    console.error('Withdraw check error:', error);
-  }
+        checkWithdrawEligibility(level, coins, deposit);
+    } catch (error) {
+        console.error('Withdraw check error:', error);
+    }
 }
 
 // Jalankan saat halaman siap

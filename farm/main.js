@@ -1821,8 +1821,6 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
             const previousDeposit = data.totalDeposit || 0;
 
             const newPiBalance = previousPiBalance + piAmount;
-            const fcToAdd = piAmount * piToFarmRate;
-            const newFC = previousFC + fcToAdd;
 
             await update(playerRef, {
                 piBalance: newPiBalance,
@@ -1831,11 +1829,10 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
 
             // Update UI
             if (piBalanceElement) piBalanceElement.textContent = newPiBalance.toLocaleString();
-            if (fcBalanceElement) fcBalanceElement.textContent = newFC.toLocaleString();
 
             depositMessageElement.textContent =
-                (langData[currentLang]?.deposit_success || 'Deposit successful! You got') +
-                ` ${fcToAdd.toLocaleString()} FC.`;
+                (langData[currentLang]?.deposit_success || 'Deposit successful! You deposited') +
+                ` ${piAmount.toLocaleString()} Pi.`;
 
             depositAmountInputElement.value = '';
         } catch (error) {

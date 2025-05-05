@@ -52,14 +52,19 @@ function loadUserBalances() {
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
         const data = snapshot.val() || {};
-        const pi = data.piBalance || 0;
-        const farmCoins = data.farmCoins || 0;
+        
+        // Jangan gunakan const agar isi variabel global bisa diperbarui
+        pi = data.piBalance || 0;
+        farmCoins = data.farmCoins || 0;
 
+        // Update label balance utama
         const piBalanceElement = document.getElementById('pi-balance');
         const fcBalanceElement = document.getElementById('fc-balance');
-
         if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
         if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
+
+        // Update elemen UI lain yang pakai updateWallet()
+        updateWallet();
     });
 }
 

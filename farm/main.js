@@ -1458,7 +1458,7 @@ function updateUIText() {
     if (gameTitleElement) gameTitleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
 
     const startTextElement = document.querySelector('.start-text');
-    if (startTextElement) startTextElement.textContent = langData[currentLang]?.startGame || 'Click to Start';
+    if (startTextElement) startTextElement.textContent = langData[currentLang]?.startGame || 'Start Game';
 
     const farmTabElement = document.querySelector('.tab-btn[data-tab="farm"]');
     if (farmTabElement) farmTabElement.textContent = langData[currentLang]?.farmTab || 'Farm';
@@ -1559,8 +1559,7 @@ function startGame() {
         gameScreenElement.classList.add('fade-in');
     }
     isAudioPlaying = false;
-
-    playBgm();
+    playBgm(); // Pastikan BGM jalan
     switchTab('farm');
 }
 
@@ -1741,4 +1740,61 @@ async function updateWithdrawStatus() {
     } catch (error) {
         console.error('Withdraw check error:', error);
     }
+}
+
+// Tambahan untuk fix close button
+const closeModalElements = document.querySelectorAll('.close');
+if (closeModalElements) {
+    closeModalElements.forEach(closeBtn => {
+        addSafeClickListener(closeBtn, () => {
+            const settingsModalElement = document.getElementById('settings-modal');
+            if (settingsModalElement) {
+                settingsModalElement.style.display = 'none';
+                playMenuSound();
+            }
+            const rewardModalElement = document.getElementById('reward-modal');
+            if (rewardModalElement) {
+                rewardModalElement.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Pastikan audio tetap jalan
+function ensureAudio() {
+    if (bgm && !isAudioPlaying) playBgm();
+    updateVolumes();
+}
+document.addEventListener('visibilitychange', ensureAudio);
+
+// Tambahan untuk fix settings button
+const settingsBtnElement = document.getElementById('settings-btn');
+if (settingsBtnElement && !settingsBtnElement._listenerAdded) {
+    addSafeClickListener(settingsBtnElement, () => {
+        const settingsModalElement = document.getElementById('settings-modal');
+        if (settingsModalElement) {
+            settingsModalElement.style.display = 'block';
+            playMenuSound();
+        }
+    });
+    settingsBtnElement._listenerAdded = true;
+}
+
+// Panggil ulang audio pas game start
+function startGame() {
+    if (!userId) {
+        console.warn('Please login with Pi Network first!');
+        return;
+    }
+    console.log('Starting game...');
+    const startScreenElement = document.getElementById('start-screen');
+    const gameScreenElement = document.getElementById('game-screen');
+    if (startScreenElement && gameScreenElement) {
+        startScreenElement.style.display = 'none';
+        gameScreenElement.style.display = 'flex';
+        gameScreenElement.classList.add('fade-in');
+    }
+    isAudioPlaying = false;
+    playBgm(); // Pastikan BGM jalan
+    switchTab('farm');
 }

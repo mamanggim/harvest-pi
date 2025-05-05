@@ -1764,7 +1764,7 @@ function exitFullScreen() {
     }
 }
 
-// Fitur Deposit
+// Fitur Deposit Pi
 const depositBtnElement = document.querySelector('#confirm-deposit');
 const depositAmountInputElement = document.querySelector('#deposit-amount');
 const depositMessageElement = document.querySelector('#deposit-message');
@@ -1772,7 +1772,7 @@ const depositMessageElement = document.querySelector('#deposit-message');
 if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
     addSafeClickListener(depositBtnElement, async () => {
         const piAmount = parseFloat(depositAmountInputElement.value);
-        depositMessageElement.textContent = ''; // Reset message
+        depositMessageElement.textContent = ''; // Reset pesan
 
         if (!userId) {
             depositMessageElement.textContent = langData[currentLang]?.deposit_user_unknown || 'User not recognized.';
@@ -1788,20 +1788,23 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
         depositBtnElement.textContent = langData[currentLang]?.deposit_processing || 'Processing...';
 
         try {
-            const userRef = ref(database, 'users/' + userId);
+            const userRef = ref(database, 'players/' + userId);
             const snapshot = await get(userRef);
             const data = snapshot.val() || {};
-            const previousDeposit = data.totalDeposit || 0;
-            const currentPiBalance = data.piBalance || 0;
 
+            const previousPiBalance = data.piBalance || 0;
+            const previousDeposit = data.totalDeposit || 0;
+
+            // Tambahkan Pi ke saldo user
             await update(userRef, {
-                piBalance: currentPiBalance + piAmount,
+                piBalance: previousPiBalance + piAmount,
                 totalDeposit: previousDeposit + piAmount
             });
 
             depositMessageElement.textContent = `Deposit successful! You deposited ${piAmount} Pi.`;
 
-            updateWallet(); // Refresh tampilan saldo
+            // Refresh wallet & finance view
+            updateWallet();
             depositAmountInputElement.value = '';
         } catch (error) {
             console.error(error);

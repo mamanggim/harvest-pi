@@ -1787,29 +1787,21 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
         depositBtnElement.disabled = true;
         depositBtnElement.textContent = langData[currentLang]?.deposit_processing || 'Processing...';
 
-        const piAmount = parseFloat(depositAmountInputElement.value);
-        await update(userRef, {
-        piBalance: (data.piBalance || 0) + piAmount,
-        totalDeposit: previousDeposit + piAmount
-   });
-        depositMessageElement.textContent = (langData[currentLang]?.deposit_success || 'Deposit successful!') +
-        ` You deposited ${piAmount} Pi.`;
-
         try {
             const userRef = ref(database, 'users/' + userId);
             const snapshot = await get(userRef);
             const data = snapshot.val() || {};
             const previousDeposit = data.totalDeposit || 0;
+            const currentPiBalance = data.piBalance || 0;
 
             await update(userRef, {
-                farmCoins: farmCoins,
+                piBalance: currentPiBalance + piAmount,
                 totalDeposit: previousDeposit + piAmount
             });
 
-            depositMessageElement.textContent = (langData[currentLang]?.deposit_success || 'Deposit successful! You got') +
-                ` ${coinsToAdd.toLocaleString()} FC.`;
+            depositMessageElement.textContent = `Deposit successful! You deposited ${piAmount} Pi.`;
 
-            updateWallet();
+            updateWallet(); // Refresh tampilan saldo
             depositAmountInputElement.value = '';
         } catch (error) {
             console.error(error);
@@ -1820,7 +1812,6 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
         }
     });
 }
-
 
 // Fitur Withdraw
 const withdrawBtnElement = document.getElementById('withdraw-btn');

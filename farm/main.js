@@ -1599,3 +1599,57 @@ if (depositBtn && depositAmountInput && depositMessage) {
         }
     });
 }
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const withdrawBtn = document.getElementById('withdraw-button');
+    const withdrawInfo = document.getElementById('withdraw-info');
+
+    if (!userId) return;
+
+    try {
+        const userSnap = await get(ref(database, 'users/' + userId));
+        const userData = userSnap.val();
+
+        const userLevel = userData.level || 1;
+        const farmCoins = userData.farmCoins || 0;
+        const totalDeposit = userData.totalDeposit || 0;
+
+        const meetsRequirements = userLevel >= 10 && farmCoins >= 1000000 && totalDeposit >= 10;
+
+        if (meetsRequirements) {
+            withdrawBtn.disabled = false;
+            withdrawInfo.style.display = 'none';
+        } else {
+            withdrawBtn.disabled = true;
+            withdrawInfo.style.display = 'block';
+            withdrawInfo.textContent = getLangText('withdraw_locked');
+        }
+
+        withdrawBtn.textContent = getLangText('withdraw_button');
+
+        withdrawBtn.addEventListener('click', async () => {
+            withdrawBtn.disabled = true;
+            withdrawBtn.textContent = '...';
+
+            try {
+                const withdrawRef = ref(database, 'withdrawRequests/' + userId);
+                await set(withdrawRef, {
+                    userId,
+                    amount: farmCoins,
+                    timestamp: Date.now()
+                });
+
+                alert(getLangText('withdraw_success'));
+            } catch (error) {
+                console.error(error);
+                alert(getLangText('withdraw_error'));
+            } finally {
+                withdrawBtn.disabled = false;
+                withdrawBtn.textContent = getLangText('withdraw_button');
+            }
+        });
+
+    } catch (err) {
+        console.error('Error checking withdraw eligibility:', err);
+    }
+});

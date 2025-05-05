@@ -1787,8 +1787,13 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
         depositBtnElement.disabled = true;
         depositBtnElement.textContent = langData[currentLang]?.deposit_processing || 'Processing...';
 
-        const coinsToAdd = piAmount * piToFarmRate;
-        farmCoins += coinsToAdd;
+        const piAmount = parseFloat(depositAmountInputElement.value);
+        await update(userRef, {
+        piBalance: (data.piBalance || 0) + piAmount,
+        totalDeposit: previousDeposit + piAmount
+   });
+        depositMessageElement.textContent = (langData[currentLang]?.deposit_success || 'Deposit successful!') +
+        ` You deposited ${piAmount} Pi.`;
 
         try {
             const userRef = ref(database, 'users/' + userId);

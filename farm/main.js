@@ -1600,56 +1600,42 @@ if (depositBtn && depositAmountInput && depositMessage) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const withdrawBtn = document.getElementById('withdraw-button');
-    const withdrawInfo = document.getElementById('withdraw-info');
+const withdrawBtn = document.getElementById('withdraw-btn');
+const withdrawNote = document.getElementById('withdraw-note');
 
-    if (!userId) return;
+// Atur teks tombol & note dari lang.json
+if (withdrawBtn && withdrawNote) {
+  withdrawBtn.textContent = getLangText('withdraw_button');
+  withdrawNote.innerText = getLangText('withdraw_note');
+}
 
-    try {
-        const userSnap = await get(ref(database, 'users/' + userId));
-        const userData = userSnap.val();
+// Fungsi cek kelayakan withdraw
+function checkWithdrawEligibility(level, farmCoins, totalDeposit) {
+  const eligible = level >= 10 && farmCoins >= 1000000 && totalDeposit >= 10;
+  if (withdrawBtn && withdrawNote) {
+    withdrawBtn.disabled = !eligible;
+    withdrawNote.style.display = eligible ? 'none' : 'block';
+  }
+}
 
-        const userLevel = userData.level || 1;
-        const farmCoins = userData.farmCoins || 0;
-        const totalDeposit = userData.totalDeposit || 0;
+// Ambil data user dari Firebase dan update tombol withdraw
+async function updateWithdrawStatus() {
+  if (!userId) return;
 
-        const meetsRequirements = userLevel >= 10 && farmCoins >= 1000000 && totalDeposit >= 10;
+  try {
+    const userRef = ref(database, 'users/' + userId);
+    const snapshot = await get(userRef);
+    const data = snapshot.val() || {};
 
-        if (meetsRequirements) {
-            withdrawBtn.disabled = false;
-            withdrawInfo.style.display = 'none';
-        } else {
-            withdrawBtn.disabled = true;
-            withdrawInfo.style.display = 'block';
-            withdrawInfo.textContent = getLangText('withdraw_locked');
-        }
+    const level = data.level || 1;
+    const coins = data.farmCoins || 0;
+    const deposit = data.totalDeposit || 0;
 
-        withdrawBtn.textContent = getLangText('withdraw_button');
+    checkWithdrawEligibility(level, coins, deposit);
+  } catch (error) {
+    console.error('Withdraw check error:', error);
+  }
+}
 
-        withdrawBtn.addEventListener('click', async () => {
-            withdrawBtn.disabled = true;
-            withdrawBtn.textContent = '...';
-
-            try {
-                const withdrawRef = ref(database, 'withdrawRequests/' + userId);
-                await set(withdrawRef, {
-                    userId,
-                    amount: farmCoins,
-                    timestamp: Date.now()
-                });
-
-                alert(getLangText('withdraw_success'));
-            } catch (error) {
-                console.error(error);
-                alert(getLangText('withdraw_error'));
-            } finally {
-                withdrawBtn.disabled = false;
-                withdrawBtn.textContent = getLangText('withdraw_button');
-            }
-        });
-
-    } catch (err) {
-        console.error('Error checking withdraw eligibility:', err);
-    }
-});
+// Jalankan saat halaman siap
+updateWithdrawStatus();

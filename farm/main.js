@@ -1316,8 +1316,6 @@ function switchTab(tab) {
 }
 
 // Exchange PI to Farm Coins to PI
-const coinSound = new Audio('assets/sfx/coin.mp3'); // Pastikan path-nya benar
-
 function updateExchangeResult() {
   const amountInput = document.getElementById('exchange-amount');
   const direction = document.getElementById('exchange-direction').value;

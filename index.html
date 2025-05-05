@@ -115,10 +115,10 @@
     <label for="exchange-amount">Amount:</label>
     <input type="number" id="exchange-amount" placeholder="Enter amount" oninput="updateExchangeResult()">
 
-    <select id="exchange-direction" onchange="updateExchangeResult()">
-      <option value="piToFc">Pi → FC</option>
-      <option value="fcToPi">FC → Pi</option>
-    </select>
+    <select id="exchange-direction">
+    <option value="piToFc">Pi → FC</option>
+    <option value="fcToPi">FC → Pi</option>
+  </select>
 
     <div id="exchange-result" class="exchange-result">You will get: 0</div>
     <button onclick="handleExchange()" id="exchange-btn">Exchange</button>

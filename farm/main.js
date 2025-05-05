@@ -291,131 +291,134 @@ function closeModal() {
     document.getElementById('signInModal').style.display = 'none';
 }
 
-const startText = document.getElementById('start-text');
-if (startText) addSafeClickListener(startText, startGame);
+// Document ready event listener
+document.addEventListener('DOMContentLoaded', () => {
+    const startText = document.getElementById('start-text');
+    if (startText) addSafeClickListener(startText, startGame);
 
-const langToggle = document.getElementById('lang-toggle');
-if (langToggle) addSafeClickListener(langToggle, toggleLanguage);
+    const langToggle = document.getElementById('lang-toggle');
+    if (langToggle) addSafeClickListener(langToggle, toggleLanguage);
 
-const gameLangToggle = document.getElementById('game-lang-toggle');
-if (gameLangToggle) addSafeClickListener(gameLangToggle, toggleLanguage);
+    const gameLangToggle = document.getElementById('game-lang-toggle');
+    if (gameLangToggle) addSafeClickListener(gameLangToggle, toggleLanguage);
 
-const settingsBtn = document.getElementById('settings-btn');
-if (settingsBtn) {
-    addSafeClickListener(settingsBtn, () => {
-        document.getElementById('settings-modal').style.display = 'block';
-        playMenuSound();
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+        addSafeClickListener(settingsBtn, () => {
+            document.getElementById('settings-modal').style.display = 'block';
+            playMenuSound();
+        });
+    }
+
+    const gameSettingsBtn = document.getElementById('game-settings-btn');
+    if (gameSettingsBtn) {
+        addSafeClickListener(gameSettingsBtn, () => {
+            document.getElementById('settings-modal').style.display = 'block';
+            playMenuSound();
+        });
+    }
+
+    const closeSettings = document.getElementById('close-settings');
+    if (closeSettings) {
+        addSafeClickListener(closeSettings, () => {
+            document.getElementById('settings-modal').style.display = 'none';
+            playMenuSound();
+        });
+    }
+
+    const rewardModalClose = document.getElementById('reward-modal-close');
+    if (rewardModalClose) {
+        addSafeClickListener(rewardModalClose, () => {
+            rewardModal.style.display = 'none';
+            playMenuSound();
+        });
+    }
+
+    const fullscreenToggle = document.getElementById('fullscreen-toggle');
+    if (fullscreenToggle) {
+        addSafeClickListener(fullscreenToggle, () => {
+            if (!document.fullscreenElement) {
+                enterFullScreen();
+            } else {
+                exitFullScreen();
+            }
+            playMenuSound();
+        });
+    }
+
+    const musicVolumeSlider = document.getElementById('music-volume');
+    if (musicVolumeSlider) {
+        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
+        musicVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('musicVolume', musicVolumeSlider.value);
+            updateVolumes();
+        });
+    }
+
+    const voiceVolumeSlider = document.getElementById('voice-volume');
+    if (voiceVolumeSlider) {
+        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
+        voiceVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
+            updateVolumes();
+        });
+    }
+
+    const exitGameBtn = document.getElementById('exit-game-btn');
+    if (exitGameBtn) {
+        addSafeClickListener(exitGameBtn, () => {
+            bgMusic.pause();
+            bgVoice.pause();
+            window.location.reload();
+        });
+    }
+
+    const exchangeBtn = document.getElementById('exchange-btn');
+    if (exchangeBtn) addSafeClickListener(exchangeBtn, exchangePi);
+
+    const exchangeAmount = document.getElementById('exchange-amount');
+    if (exchangeAmount) exchangeAmount.addEventListener('input', updateExchangeResult);
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        addSafeClickListener(btn, () => {
+            const tab = btn.getAttribute('data-tab');
+            switchTab(tab);
+        });
     });
-}
 
-const gameSettingsBtn = document.getElementById('game-settings-btn');
-if (gameSettingsBtn) {
-    addSafeClickListener(gameSettingsBtn, () => {
-        document.getElementById('settings-modal').style.display = 'block';
-        playMenuSound();
-    });
-}
+    const buyTab = document.getElementById('shop-buy-tab');
+    const sellTab = document.getElementById('shop-sell-tab');
+    const shopContent = document.getElementById('shop-content');
+    const sellContent = document.getElementById('sell-section');
 
-const closeSettings = document.getElementById('close-settings');
-if (closeSettings) {
-    addSafeClickListener(closeSettings, () => {
-        document.getElementById('settings-modal').style.display = 'none';
-        playMenuSound();
-    });
-}
+    if (buyTab) {
+        addSafeClickListener(buyTab, () => {
+            buyTab.classList.add('active');
+            sellTab.classList.remove('active');
+            shopContent.style.display = 'block';
+            sellContent.style.display = 'none';
+            renderShop();
+            playMenuSound();
+        });
+    }
 
-const rewardModalClose = document.getElementById('reward-modal-close');
-if (rewardModalClose) {
-    addSafeClickListener(rewardModalClose, () => {
-        rewardModal.style.display = 'none';
-        playMenuSound();
-    });
-}
+    if (sellTab) {
+        addSafeClickListener(sellTab, () => {
+            sellTab.classList.add('active');
+            buyTab.classList.remove('active');
+            shopContent.style.display = 'none';
+            sellContent.style.display = 'block';
+            renderSellSection();
+            playMenuSound();
+        });
+    }
 
-const fullscreenToggle = document.getElementById('fullscreen-toggle');
-if (fullscreenToggle) {
-    addSafeClickListener(fullscreenToggle, () => {
-        if (!document.fullscreenElement) {
-            enterFullScreen();
-        } else {
-            exitFullScreen();
-        }
-        playMenuSound();
-    });
-}
+    const loginPiBtn = document.getElementById('login-pi-btn');
+    if (loginPiBtn) addSafeClickListener(loginPiBtn, authenticateWithPi);
 
-const musicVolumeSlider = document.getElementById('music-volume');
-if (musicVolumeSlider) {
-    musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
-    musicVolumeSlider.addEventListener('input', () => {
-        localStorage.setItem('musicVolume', musicVolumeSlider.value);
-        updateVolumes();
-    });
-}
-
-const voiceVolumeSlider = document.getElementById('voice-volume');
-if (voiceVolumeSlider) {
-    voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
-    voiceVolumeSlider.addEventListener('input', () => {
-        localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
-        updateVolumes();
-    });
-}
-
-const exitGameBtn = document.getElementById('exit-game-btn');
-if (exitGameBtn) {
-    addSafeClickListener(exitGameBtn, () => {
-        bgMusic.pause();
-        bgVoice.pause();
-        window.location.reload();
-    });
-}
-
-const exchangeBtn = document.getElementById('exchange-btn');
-if (exchangeBtn) addSafeClickListener(exchangeBtn, exchangePi);
-
-const exchangeAmount = document.getElementById('exchange-amount');
-if (exchangeAmount) exchangeAmount.addEventListener('input', updateExchangeResult);
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    addSafeClickListener(btn, () => {
-        const tab = btn.getAttribute('data-tab');
-        switchTab(tab);
-    });
+    initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
+    initializeGame();
 });
-
-const buyTab = document.getElementById('shop-buy-tab');
-const sellTab = document.getElementById('shop-sell-tab');
-const shopContent = document.getElementById('shop-content');
-const sellContent = document.getElementById('sell-section');
-
-if (buyTab) {
-    addSafeClickListener(buyTab, () => {
-        buyTab.classList.add('active');
-        sellTab.classList.remove('active');
-        shopContent.style.display = 'block';
-        sellContent.style.display = 'none';
-        renderShop();
-        playMenuSound();
-    });
-}
-
-if (sellTab) {
-    addSafeClickListener(sellTab, () => {
-        sellTab.classList.add('active');
-        buyTab.classList.remove('active');
-        shopContent.style.display = 'none';
-        sellContent.style.display = 'block';
-        renderSellSection();
-        playMenuSound();
-    });
-}
-
-const loginPiBtn = document.getElementById('login-pi-btn');
-if (loginPiBtn) addSafeClickListener(loginPiBtn, authenticateWithPi);
-
-initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
-initializeGame();
 
 // Load player data
 async function loadPlayerData() {
@@ -981,7 +984,7 @@ function buyVegetable(id, currency) {
         if (farmCoins >= veg.farmPrice) {
             farmCoins -= veg.farmPrice;
             canBuy = true;
-            showTransactionAnimation(`EY${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
+            showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`)); // Perbaiki typo "EY" jadi "-"
         } else {
             showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
         }
@@ -1558,17 +1561,17 @@ if (depositBtn && depositAmountInput && depositMessage) {
         depositMessage.textContent = ''; // Reset message
 
         if (!userId) {
-            depositMessage.textContent = currentLang.deposit_user_unknown || 'User not recognized.';
+            depositMessage.textContent = langData[currentLang]?.deposit_user_unknown || 'User not recognized.';
             return;
         }
 
         if (isNaN(piAmount) || piAmount < 1) {
-            depositMessage.textContent = currentLang.deposit_minimum || 'Minimum deposit is 1 Pi.';
+            depositMessage.textContent = langData[currentLang]?.deposit_minimum || 'Minimum deposit is 1 Pi.';
             return;
         }
 
         depositBtn.disabled = true;
-        depositBtn.textContent = currentLang.deposit_processing || 'Processing...';
+        depositBtn.textContent = langData[currentLang]?.deposit_processing || 'Processing...';
 
         const coinsToAdd = piAmount * piToFarmRate;
         farmCoins += coinsToAdd;
@@ -1584,17 +1587,17 @@ if (depositBtn && depositAmountInput && depositMessage) {
                 totalDeposit: previousDeposit + piAmount
             });
 
-            depositMessage.textContent = (currentLang.deposit_success || 'Deposit successful! You got') +
+            depositMessage.textContent = (langData[currentLang]?.deposit_success || 'Deposit successful! You got') +
                 ` ${coinsToAdd.toLocaleString()} FC.`;
 
-            updateFarmCoinUI();
+            updateWallet(); // Perbaiki dari updateFarmCoinUI() yang tidak didefinisikan
             depositAmountInput.value = '';
         } catch (error) {
             console.error(error);
-            depositMessage.textContent = currentLang.deposit_error || 'An error occurred during deposit.';
+            depositMessage.textContent = langData[currentLang]?.deposit_error || 'An error occurred during deposit.';
         } finally {
             depositBtn.disabled = false;
-            depositBtn.textContent = currentLang.deposit || 'Deposit';
+            depositBtn.textContent = langData[currentLang]?.deposit || 'Deposit';
         }
     });
 }
@@ -1604,8 +1607,8 @@ const withdrawNote = document.getElementById('withdraw-note');
 
 // Atur teks tombol & note dari lang.json
 if (withdrawBtn && withdrawNote) {
-    withdrawBtn.textContent = getLangText('withdraw_button');
-    withdrawNote.innerText = getLangText('withdraw_note');
+    withdrawBtn.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
+    withdrawNote.innerText = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
 }
 
 // Fungsi cek kelayakan withdraw

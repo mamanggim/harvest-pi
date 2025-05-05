@@ -1316,92 +1316,68 @@ function switchTab(tab) {
 }
 
 // Exchange PI to Farm Coins to PI
-let dynamicRate = 1000000; // Default awal
+let currentExchangeRate = 1000000; // default awal 1 Pi = 1.000.000 FC
+const coinSound = document.getElementById("coin-sound");
 
-// Simulasi fluktuasi harga harian (pagi hari misalnya)
-function simulateMarketRate() {
-  const base = 1000000;
-  const fluctuation = Math.floor(Math.random() * 200000) - 100000; // +/-100k
-  dynamicRate = Math.max(100000, base + fluctuation); // Batas bawah rate
-  document.getElementById('live-rate').textContent = `Live Rate: 1 Pi = ${dynamicRate.toLocaleString()} FC`;
+// Ambil rate dari Firebase
+function loadExchangeRate() {
+    const rateRef = ref(database, "exchangeRate/liveRate");
+    onValue(rateRef, (snapshot) => {
+        currentExchangeRate = snapshot.val() || currentExchangeRate;
+        const rateEl = document.getElementById("live-rate");
+        if (rateEl) rateEl.textContent = `1 Pi = ${currentExchangeRate.toLocaleString()} FC`;
+        updateExchangeResult();
+    });
 }
-
-// Panggil saat load & bisa setInterval harian
-simulateMarketRate();
-// setInterval(simulateMarketRate, 86400000); // setiap 24 jam
+loadExchangeRate();
 
 function updateExchangeResult() {
-  const amountInput = document.getElementById('exchange-amount');
-  const direction = document.getElementById('exchange-direction').value;
-  const resultElement = document.getElementById('exchange-result');
-  const amount = parseFloat(amountInput.value) || 0;
+    const amount = parseFloat(document.getElementById("exchange-amount").value) || 0;
+    const direction = document.getElementById("exchange-direction").value;
+    const result = (direction === "piToFc")
+        ? amount * currentExchangeRate
+        : amount / currentExchangeRate;
 
-  let result = 0;
-  if (direction === 'piToFc') {
-    result = amount * dynamicRate;
-  } else {
-    result = amount / dynamicRate;
-  }
-
-  resultElement.textContent = `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    document.getElementById("exchange-result").textContent = `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 async function handleExchange() {
-  const amountInput = document.getElementById('exchange-amount');
-  const directionSelect = document.getElementById('exchange-direction');
-  const amount = parseFloat(amountInput.value);
-  const exchangeBtn = document.getElementById('exchange-btn');
+    const amount = parseFloat(document.getElementById("exchange-amount").value);
+    const direction = document.getElementById("exchange-direction").value;
+    const playerRef = ref(database, `players/${userId}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
 
-  if (isNaN(amount) || amount <= 0) {
-    showNotification("Invalid amount!");
-    return;
-  }
+    if (!data) return showNotification("Player data not found!");
 
-  exchangeBtn.disabled = true;
-  exchangeBtn.textContent = "Processing...";
+    let pi = data.piBalance || 0;
+    let fc = data.farmCoins || 0;
 
-  const playerRef = ref(database, `players/${userId}`);
-  const snapshot = await get(playerRef);
-  const data = snapshot.val() || {};
-
-  let { piBalance = 0, farmCoins = 0 } = data;
-  let newPi = piBalance;
-  let newFC = farmCoins;
-  const direction = directionSelect.value;
-
-  if (direction === 'piToFc') {
-    if (piBalance < amount) {
-      showNotification("Not enough Pi!");
-    } else {
-      newPi -= amount;
-      newFC += amount * dynamicRate;
-      showNotification(`Exchanged ${amount} Pi to FC`);
-      coinSound.play();
+    if (isNaN(amount) || amount <= 0) {
+        return showNotification("Invalid amount!");
     }
-  } else {
-    if (farmCoins < amount) {
-      showNotification("Not enough FC!");
+
+    if (direction === "piToFc") {
+        if (pi < amount) return showNotification("Not enough Pi!");
+        pi -= amount;
+        fc += amount * currentExchangeRate;
     } else {
-      newFC -= amount;
-      newPi += amount / dynamicRate;
-      showNotification(`Exchanged ${amount} FC to Pi`);
-      coinSound.play();
+        if (fc < amount) return showNotification("Not enough FC!");
+        fc -= amount;
+        pi += amount / currentExchangeRate;
     }
-  }
 
-  await update(playerRef, {
-    piBalance: newPi,
-    farmCoins: newFC
-  });
+    await update(playerRef, {
+        piBalance: Math.floor(pi),
+        farmCoins: Math.floor(fc)
+    });
 
-  // Update UI
-  document.getElementById('pi-balance').textContent = newPi.toLocaleString();
-  document.getElementById('fc-balance').textContent = newFC.toLocaleString();
-
-  amountInput.value = '';
-  document.getElementById('exchange-result').textContent = '';
-  exchangeBtn.disabled = false;
-  exchangeBtn.textContent = "Exchange";
+    document.getElementById("pi-balance").textContent = Math.floor(pi).toLocaleString();
+    document.getElementById("fc-balance").textContent = Math.floor(fc).toLocaleString();
+    document.getElementById("exchange-amount").value = "";
+    updateExchangeResult();
+    coinSound.play();
+    showNotification("Exchange success!");
 }
 
 // Modal untuk daily reward

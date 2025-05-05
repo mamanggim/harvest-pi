@@ -1597,23 +1597,53 @@ function exitFullScreen() {
 }
 
 // Fitur Deposit
-addSafeClickListener(depositBtn, () => {
+const depositBtn = document.querySelector('#confirm-deposit');
+const depositAmountInput = document.querySelector('#deposit-amount');
+const depositMessage = document.querySelector('#deposit-message');
+
+addSafeClickListener(depositBtn, async () => {
     const piAmount = parseFloat(depositAmountInput.value);
+    depositMessage.textContent = ''; // Reset pesan
+
+    if (!userId) {
+        depositMessage.textContent = 'User tidak dikenali.';
+        return;
+    }
+
     if (isNaN(piAmount) || piAmount < 1) {
         depositMessage.textContent = 'Minimal deposit adalah 1 Pi.';
         return;
     }
 
+    depositBtn.disabled = true;
+    depositBtn.textContent = 'Memproses...';
+
     const coinsToAdd = piAmount * piToFarmRate;
     farmCoins += coinsToAdd;
 
-    // Simpan ke database
-    if (userId) {
-        update(ref(database, 'users/' + userId), {
-            farmCoins: farmCoins
-        }).then(() => {
-            depositMessage.textContent = `Deposit sukses! Kamu dapat ${coinsToAdd.toLocaleString()} FC.`;
-            updateFarmCoinUI();
+    try {
+        const userRef = ref(database, 'users/' + userId);
+
+        // Ambil data sebelumnya (opsional jika pakai totalDeposit)
+        const snapshot = await get(userRef);
+        const data = snapshot.val() || {};
+        const previousDeposit = data.totalDeposit || 0;
+
+        await update(userRef, {
+            farmCoins: farmCoins,
+            totalDeposit: previousDeposit + piAmount
         });
+
+        depositMessage.textContent = `Deposit sukses! Kamu dapat ${coinsToAdd.toLocaleString()} FC.`;
+        updateFarmCoinUI();
+
+        // Reset input
+        depositAmountInput.value = '';
+    } catch (error) {
+        console.error(error);
+        depositMessage.textContent = 'Terjadi kesalahan saat deposit.';
+    } finally {
+        depositBtn.disabled = false;
+        depositBtn.textContent = 'Deposit';
     }
 });

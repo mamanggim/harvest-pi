@@ -60,7 +60,10 @@
     "deposit_success_prefix": "You received",
     "withdraw_title": "Withdraw",
     "withdraw_button": "Withdraw PI",
-    "withdraw_note": "This feature will unlock when you reach:\n- Level 10\n- Farm Coin ≥ 1,000,000\n- Total Deposit ≥ 10 PI"
+    "withdraw_note": "This feature will unlock when you reach:\n- Level 10\n- Farm Coin ≥ 1,000,000\n- Total Deposit ≥ 10 PI",
+    "withdraw_locked": "Withdrawal is locked. Requirements:\n- Level 10\n- Farm Coin ≥ 1,000,000\n- Total Deposit ≥ 10 PI",
+    "withdraw_success": "Withdrawal request sent successfully.",
+    "withdraw_error": "Error during withdrawal.",
     "exchangeBtn": "Exchange",
     "sellItemsLabel": "Sell Items",
     "settingsLabel": "Settings",
@@ -128,7 +131,10 @@
     "deposit_success_prefix": "Kamu menerima",
     "withdraw_title": "Tarik",
     "withdraw_button": "Tarik PI",
-    "withdraw_note": "Fitur akan terbuka setelah kamu mencapai:\n- Level 10\n- Farm Coin ≥ 1.000.000\n- Total Deposit ≥ 10 PI"
+    "withdraw_note": "Fitur akan terbuka setelah kamu mencapai:\n- Level 10\n- Farm Coin ≥ 1.000.000\n- Total Deposit ≥ 10 PI",
+    "withdraw_locked": "Penarikan dikunci. Syarat:\n- Level 10\n- Farm Coin ≥ 1.000.000\n- Total Setoran ≥ 10 PI",
+    "withdraw_success": "Permintaan penarikan berhasil dikirim.",
+    "withdraw_error": "Terjadi kesalahan saat penarikan.",
     "exchangeBtn": "Tukar",
     "sellItemsLabel": "Jual Item",
     "settingsLabel": "Pengaturan",

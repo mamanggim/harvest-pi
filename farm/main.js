@@ -269,6 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const langToggleElement = document.getElementById('lang-toggle');
     if (langToggleElement) addSafeClickListener(langToggleElement, toggleLanguage);
 
+    const gameLangToggleElement = document.getElementById('game-lang-toggle');
+    if (gameLangToggleElement) addSafeClickListener(gameLangToggleElement, toggleLanguage);
+
     const settingsBtnElement = document.getElementById('settings-btn');
     if (settingsBtnElement) {
         addSafeClickListener(settingsBtnElement, () => {
@@ -299,6 +302,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 settingsModalElement.style.display = 'none';
                 playMenuSound();
             }
+        });
+    }
+
+    const exitGameBtnElement = document.getElementById('exit-game-btn');
+    if (exitGameBtnElement) {
+        addSafeClickListener(exitGameBtnElement, () => {
+            if (bgm) bgm.pause();
+            window.location.reload();
         });
     }
 
@@ -1190,7 +1201,7 @@ function switchTab(tab) {
     } else if (tab === 'exchange') {
         updateExchangeResult();
     } else if (tab === 'finance') {
-        updateWithdrawStatus(); // Pastikan status Withdraw diupdate saat tab Finance dibuka
+        renderFinanceTab(); // Panggil fungsi untuk render tab Finance
     }
 
     playMenuSound();
@@ -1405,6 +1416,35 @@ function renderAchievements() {
     achievementsContentElement.appendChild(coinAchievement);
 
     savePlayerData();
+}
+
+// Render Finance tab
+function renderFinanceTab() {
+    const financeContentElement = document.getElementById('finance');
+    if (!financeContentElement) {
+        console.error('finance tab element not found');
+        return;
+    }
+
+    // Pastikan elemen di dalam tab Finance diupdate
+    const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
+    const piCoinBalanceElement = document.getElementById('pi-coin-balance');
+    if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins;
+    if (piCoinBalanceElement) piCoinBalanceElement.textContent = pi.toFixed(2);
+
+    const depositAmountElement = document.getElementById('deposit-amount');
+    if (depositAmountElement) depositAmountElement.placeholder = langData[currentLang]?.enterPiAmount || 'Enter PI amount';
+
+    const confirmDepositElement = document.getElementById('confirm-deposit');
+    if (confirmDepositElement) confirmDepositElement.textContent = langData[currentLang]?.deposit || 'Deposit';
+
+    const withdrawBtnElement = document.getElementById('withdraw-btn');
+    if (withdrawBtnElement) withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
+
+    const withdrawNoteElement = document.getElementById('withdraw-note');
+    if (withdrawNoteElement) withdrawNoteElement.textContent = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
+
+    updateWithdrawStatus();
 }
 
 // Update UI text based on language

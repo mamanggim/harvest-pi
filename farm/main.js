@@ -1779,22 +1779,3 @@ if (settingsBtnElement && !settingsBtnElement._listenerAdded) {
     });
     settingsBtnElement._listenerAdded = true;
 }
-
-// Panggil ulang audio pas game start
-function startGame() {
-    if (!userId) {
-        console.warn('Please login with Pi Network first!');
-        return;
-    }
-    console.log('Starting game...');
-    const startScreenElement = document.getElementById('start-screen');
-    const gameScreenElement = document.getElementById('game-screen');
-    if (startScreenElement && gameScreenElement) {
-        startScreenElement.style.display = 'none';
-        gameScreenElement.style.display = 'flex';
-        gameScreenElement.classList.add('fade-in');
-    }
-    isAudioPlaying = false;
-    playBgm(); // Pastikan BGM jalan
-    switchTab('farm');
-}

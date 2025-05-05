@@ -108,18 +108,20 @@
 
   <!-- EXCHANGE -->
   <div class="exchange-container">
-  <h3>Exchange Center</h3>
-  <p>1 Pi ≈ <span id="current-rate">1,000,000</span> FC 
-     <span id="rate-change" class="rate-change">+0%</span>
-  </p>
+  <h3 class="exchange-title">Exchange</h3>
 
-  <input type="number" id="exchange-amount" placeholder="Enter amount">
-  <div class="exchange-buttons">
-    <button onclick="exchangePiToFC()">Pi → FC</button>
-    <button onclick="exchangeFCToPi()">FC → Pi</button>
+  <div class="exchange-section">
+    <label for="exchange-amount">Amount:</label>
+    <input type="number" id="exchange-amount" placeholder="Enter amount" oninput="updateExchangeResult()">
+    
+    <select id="exchange-direction">
+      <option value="piToFc">Pi → FC</option>
+      <option value="fcToPi">FC → Pi</option>
+    </select>
+
+    <div id="exchange-result" class="exchange-result">You will get: 0</div>
+    <button onclick="handleExchange()" id="exchange-btn">Exchange</button>
   </div>
-
-  <p id="exchange-result">You will get: 0</p>
 </div>
 
   <!-- FINANCE -->

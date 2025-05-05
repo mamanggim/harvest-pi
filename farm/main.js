@@ -290,54 +290,6 @@ function showModal() {
 function closeModal() {
     document.getElementById('signInModal').style.display = 'none';
 }
-
-// Cek kalo user belum login, tampilkan modal
-document.addEventListener('DOMContentLoaded', () => {
-    if (!localStorage.getItem('userId')) {
-        showModal();
-    }
-
-    const depositBtn = document.getElementById('confirm-deposit');
-    const depositAmountInput = document.getElementById('deposit-amount');
-    const farmCoinBalance = document.getElementById('farm-coin-balance');
-    const withdrawBtn = document.getElementById('withdraw-button');
-    const withdrawInfo = document.getElementById('withdraw-info');
-
-    function updateFarmCoinDisplay() {
-        farmCoinBalance.textContent = farmCoins.toLocaleString();
-    }
-
-    if (depositBtn && depositAmountInput) {
-        depositBtn.addEventListener('click', () => {
-            const amount = parseFloat(depositAmountInput.value);
-            if (isNaN(amount) || amount < 1) {
-                alert("Minimal deposit adalah 1 Pi.");
-                return;
-            }
-
-            const coinsToAdd = amount * piToFarmRate;
-            farmCoins += coinsToAdd;
-            updateFarmCoinDisplay();
-
-            if (userId) {
-                firebase.database().ref(`users/${userId}/balance`).set(farmCoins);
-            }
-
-            alert(`Deposit berhasil. Kamu dapat ${coinsToAdd.toLocaleString()} Farm Coins.`);
-        });
-    }
-
-    const userLevel = 5; // ganti ini nanti real-time
-    const depositTotal = 4; // ganti juga dengan data riil
-    if (withdrawBtn && withdrawInfo) {
-        if (userLevel >= 10 && farmCoins >= 1000000 && depositTotal >= 10) {
-            withdrawBtn.disabled = false;
-            withdrawInfo.style.display = 'none';
-        } else {
-            withdrawBtn.disabled = true;
-            withdrawInfo.style.display = 'block';
-        }
-    }
     
     const startText = document.getElementById('start-text');
     if (startText) addSafeClickListener(startText, startGame);
@@ -1602,6 +1554,8 @@ const depositAmountInput = document.querySelector('#deposit-amount');
 const depositMessage = document.querySelector('#deposit-message');
 
 addSafeClickListener(depositBtn, async () => {
+    if (!depositBtn || !depositAmountInput || !depositMessage) return;
+
     const piAmount = parseFloat(depositAmountInput.value);
     depositMessage.textContent = ''; // Reset pesan
 
@@ -1624,7 +1578,6 @@ addSafeClickListener(depositBtn, async () => {
     try {
         const userRef = ref(database, 'users/' + userId);
 
-        // Ambil data sebelumnya (opsional jika pakai totalDeposit)
         const snapshot = await get(userRef);
         const data = snapshot.val() || {};
         const previousDeposit = data.totalDeposit || 0;
@@ -1637,7 +1590,6 @@ addSafeClickListener(depositBtn, async () => {
         depositMessage.textContent = `Deposit sukses! Kamu dapat ${coinsToAdd.toLocaleString()} FC.`;
         updateFarmCoinUI();
 
-        // Reset input
         depositAmountInput.value = '';
     } catch (error) {
         console.error(error);

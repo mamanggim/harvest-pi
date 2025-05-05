@@ -1316,77 +1316,108 @@ function switchTab(tab) {
 }
 
 // Exchange PI to Farm Coins to PI
-function loadExchangeRate() {
-  const refPath = ref(database, 'exchangeRate');
-  onValue(refPath, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
+const coinSound = new Audio('assets/sfx/coin.mp3'); // Pastikan path-nya benar
 
-    piToFarmRate = data.currentRate;
+function updateExchangeResult() {
+  const amountInput = document.getElementById('exchange-amount');
+  const direction = document.getElementById('exchange-direction').value;
+  const resultElement = document.getElementById('exchange-result');
+  const amount = parseFloat(amountInput.value) || 0;
 
-    const rateEl = document.getElementById('current-rate');
-    const changeEl = document.getElementById('rate-change');
+  let result = 0;
+  if (direction === 'piToFc') {
+    result = amount * piToFarmRate;
+  } else {
+    result = amount / piToFarmRate;
+  }
 
-    if (rateEl) rateEl.textContent = piToFarmRate.toLocaleString();
+  resultElement.textContent = `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
 
-    const diff = ((data.currentRate - data.yesterdayRate) / data.yesterdayRate) * 100;
-    changeEl.textContent = `${diff >= 0 ? '+' : ''}${diff.toFixed(2)}%`;
-    changeEl.className = 'rate-change ' + (diff >= 0 ? 'positive' : 'negative');
+async function handleExchange() {
+  const amountInput = document.getElementById('exchange-amount');
+  const direction = document.getElementById('exchange-direction');
+  const resultElement = document.getElementById('exchange-result');
+  const exchangeBtn = document.getElementById('exchange-btn');
+
+  const amount = parseFloat(amountInput.value);
+  if (isNaN(amount) || amount <= 0) {
+    showNotification("Invalid amount!");
+    return;
+  }
+
+  exchangeBtn.disabled = true;
+  exchangeBtn.textContent = "Processing...";
+
+  const playerRef = ref(database, `players/${userId}`);
+  const snapshot = await get(playerRef);
+  const data = snapshot.val() || {};
+
+  let { piBalance = 0, farmCoins = 0 } = data;
+  let newPi = piBalance;
+  let newFC = farmCoins;
+
+  if (direction.value === 'piToFc') {
+    if (piBalance < amount) {
+      showNotification("Not enough Pi!");
+    } else {
+      newPi -= amount;
+      newFC += amount * piToFarmRate;
+      showNotification(`Exchanged ${amount} Pi to FC`);
+      coinSound.play();
+    }
+  } else {
+    if (farmCoins < amount) {
+      showNotification("Not enough FC!");
+    } else {
+      newFC -= amount;
+      newPi += amount / piToFarmRate;
+      showNotification(`Exchanged ${amount} FC to Pi`);
+      coinSound.play();
+    }
+  }
+
+  await update(playerRef, {
+    piBalance: newPi,
+    farmCoins: newFC
   });
-}
 
-function exchangePiToFC() {
-  const amount = parseFloat(document.getElementById('exchange-amount').value);
-  if (isNaN(amount) || amount <= 0 || pi < amount) return showNotification("Invalid or insufficient Pi!");
+  // Update UI
+  const piBalanceElement = document.getElementById('pi-balance');
+  const fcBalanceElement = document.getElementById('fc-balance');
+  if (piBalanceElement) piBalanceElement.textContent = newPi.toLocaleString();
+  if (fcBalanceElement) fcBalanceElement.textContent = newFC.toLocaleString();
 
-  const result = amount * piToFarmRate;
-  pi -= amount;
-  farmCoins += result;
-  update(ref(database, `exchangeRate`), { demand: increment(amount) });
-
-  updateWallet();
-  showNotification(`You got ${result.toLocaleString()} FC!`);
-  document.getElementById('exchange-result').textContent = `You will get: ${result.toLocaleString()} FC`;
-}
-
-function exchangeFCToPi() {
-  const amount = parseFloat(document.getElementById('exchange-amount').value);
-  const neededFC = amount * piToFarmRate;
-  if (isNaN(amount) || amount <= 0 || farmCoins < neededFC) return showNotification("Invalid or insufficient FC!");
-
-  pi += amount;
-  farmCoins -= neededFC;
-  update(ref(database, `exchangeRate`), { supply: increment(amount) });
-
-  updateWallet();
-  showNotification(`You got ${amount.toLocaleString()} Pi!`);
-  document.getElementById('exchange-result').textContent = `You will get: ${amount.toLocaleString()} Pi`;
+  amountInput.value = '';
+  resultElement.textContent = '';
+  exchangeBtn.disabled = false;
+  exchangeBtn.textContent = "Exchange";
 }
 
 // Update exchange rate
-function updateExchangeRate() {
-  const refPath = ref(database, 'exchangeRate');
-  get(refPath).then((snapshot) => {
-    const data = snapshot.val();
-    const { baseRate, currentRate, demand, supply } = data;
+//function updateExchangeRate() {
+ // const refPath = ref(database, 'exchangeRate');
+  //get(refPath).then((snapshot) => {
+   // const data = snapshot.val();
+   // const { baseRate, currentRate, demand, supply } = data;
     
-    const ratio = (demand + 1) / (supply + 1);
-    let newRate = baseRate * ratio;
+   // const ratio = (demand + 1) / (supply + 1);
+   // let newRate = baseRate * ratio;
 
-    // Koreksi ±10%
-    const maxChange = 0.10;
-    const changePercent = Math.max(-maxChange, Math.min((newRate - currentRate) / currentRate, maxChange));
-    newRate = Math.round(currentRate * (1 + changePercent));
+    //----- Koreksi ±10%---//
+   // const maxChange = 0.10;
+   // const changePercent = Math.max(-maxChange, Math.min((newRate - currentRate) / currentRate, maxChange));
+    //newRate = Math.round(currentRate * (1 + changePercent));
 
-    update(refPath, {
-      yesterdayRate: currentRate,
-      currentRate: newRate,
-      demand: 0,
-      supply: 0,
-      lastUpdate: new Date().toISOString().split('T')[0]
-    });
-  });
-}
+    //update(refPath, {
+      //yesterdayRate: currentRate,
+     // currentRate: newRate,
+     // demand: 0,
+     // supply: 0,
+      //lastUpdate: new Date().toISOString().split('T')[0]
+    //});
+ // });
+//}
 
 // Modal untuk daily reward
 if (claimModalBtn) {

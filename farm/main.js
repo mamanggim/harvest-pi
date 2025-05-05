@@ -1316,6 +1316,20 @@ function switchTab(tab) {
 }
 
 // Exchange PI to Farm Coins to PI
+let dynamicRate = 1000000; // Default awal
+
+// Simulasi fluktuasi harga harian (pagi hari misalnya)
+function simulateMarketRate() {
+  const base = 1000000;
+  const fluctuation = Math.floor(Math.random() * 200000) - 100000; // +/-100k
+  dynamicRate = Math.max(100000, base + fluctuation); // Batas bawah rate
+  document.getElementById('live-rate').textContent = `Live Rate: 1 Pi = ${dynamicRate.toLocaleString()} FC`;
+}
+
+// Panggil saat load & bisa setInterval harian
+simulateMarketRate();
+// setInterval(simulateMarketRate, 86400000); // setiap 24 jam
+
 function updateExchangeResult() {
   const amountInput = document.getElementById('exchange-amount');
   const direction = document.getElementById('exchange-direction').value;
@@ -1324,9 +1338,9 @@ function updateExchangeResult() {
 
   let result = 0;
   if (direction === 'piToFc') {
-    result = amount * piToFarmRate;
+    result = amount * dynamicRate;
   } else {
-    result = amount / piToFarmRate;
+    result = amount / dynamicRate;
   }
 
   resultElement.textContent = `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -1334,11 +1348,10 @@ function updateExchangeResult() {
 
 async function handleExchange() {
   const amountInput = document.getElementById('exchange-amount');
-  const direction = document.getElementById('exchange-direction');
-  const resultElement = document.getElementById('exchange-result');
+  const directionSelect = document.getElementById('exchange-direction');
+  const amount = parseFloat(amountInput.value);
   const exchangeBtn = document.getElementById('exchange-btn');
 
-  const amount = parseFloat(amountInput.value);
   if (isNaN(amount) || amount <= 0) {
     showNotification("Invalid amount!");
     return;
@@ -1354,13 +1367,14 @@ async function handleExchange() {
   let { piBalance = 0, farmCoins = 0 } = data;
   let newPi = piBalance;
   let newFC = farmCoins;
+  const direction = directionSelect.value;
 
-  if (direction.value === 'piToFc') {
+  if (direction === 'piToFc') {
     if (piBalance < amount) {
       showNotification("Not enough Pi!");
     } else {
       newPi -= amount;
-      newFC += amount * piToFarmRate;
+      newFC += amount * dynamicRate;
       showNotification(`Exchanged ${amount} Pi to FC`);
       coinSound.play();
     }
@@ -1369,7 +1383,7 @@ async function handleExchange() {
       showNotification("Not enough FC!");
     } else {
       newFC -= amount;
-      newPi += amount / piToFarmRate;
+      newPi += amount / dynamicRate;
       showNotification(`Exchanged ${amount} FC to Pi`);
       coinSound.play();
     }
@@ -1381,41 +1395,14 @@ async function handleExchange() {
   });
 
   // Update UI
-  const piBalanceElement = document.getElementById('pi-balance');
-  const fcBalanceElement = document.getElementById('fc-balance');
-  if (piBalanceElement) piBalanceElement.textContent = newPi.toLocaleString();
-  if (fcBalanceElement) fcBalanceElement.textContent = newFC.toLocaleString();
+  document.getElementById('pi-balance').textContent = newPi.toLocaleString();
+  document.getElementById('fc-balance').textContent = newFC.toLocaleString();
 
   amountInput.value = '';
-  resultElement.textContent = '';
+  document.getElementById('exchange-result').textContent = '';
   exchangeBtn.disabled = false;
   exchangeBtn.textContent = "Exchange";
 }
-
-// Update exchange rate
-//function updateExchangeRate() {
- // const refPath = ref(database, 'exchangeRate');
-  //get(refPath).then((snapshot) => {
-   // const data = snapshot.val();
-   // const { baseRate, currentRate, demand, supply } = data;
-    
-   // const ratio = (demand + 1) / (supply + 1);
-   // let newRate = baseRate * ratio;
-
-    //----- Koreksi ±10%---//
-   // const maxChange = 0.10;
-   // const changePercent = Math.max(-maxChange, Math.min((newRate - currentRate) / currentRate, maxChange));
-    //newRate = Math.round(currentRate * (1 + changePercent));
-
-    //update(refPath, {
-      //yesterdayRate: currentRate,
-     // currentRate: newRate,
-     // demand: 0,
-     // supply: 0,
-      //lastUpdate: new Date().toISOString().split('T')[0]
-    //});
- // });
-//}
 
 // Modal untuk daily reward
 if (claimModalBtn) {

@@ -1787,7 +1787,6 @@ const depositAmountInputElement = document.querySelector('#deposit-amount');
 const depositMessageElement = document.querySelector('#deposit-message');
 const piBalanceElement = document.getElementById('pi-balance');
 const fcBalanceElement = document.getElementById('fc-balance');
-const piToFarmRate = 1000000;
 
 if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
     addSafeClickListener(depositBtnElement, async () => {

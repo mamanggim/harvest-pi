@@ -48,6 +48,21 @@ let claimedToday = false; // Flag sederhana buat status klaim
 let isClaiming = false; // Tambah untuk lock claim
 let isAudioPlaying = false; // Flag to track audio state
 
+function loadUserBalances() {
+    const playerRef = ref(database, `players/${userId}`);
+    onValue(playerRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        const pi = data.piBalance || 0;
+        const farmCoins = data.farmCoins || 0;
+
+        const piBalanceElement = document.getElementById('pi-balance');
+        const fcBalanceElement = document.getElementById('fc-balance');
+
+        if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
+        if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
+    });
+}
+
 // Audio elements
 const bgMusic = document.getElementById('bg-music');
 const bgVoice = document.getElementById('bg-voice');
@@ -263,6 +278,8 @@ async function authenticateWithPi() {
             userId = user.uid; // Gunain UID, lebih unik
             const playerRef = ref(database, `players/${userId}`);
 
+            loadUserBalances(); // Tampilkan saldo Pi & FC dari database
+            
             update(playerRef, {
                 piUser: {
                     uid: user.uid,

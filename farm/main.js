@@ -1565,9 +1565,9 @@ function updateUIText() {
         exchangeTabElement.textContent = langData[currentLang]?.exchangeTab || 'Exchange';
     }
 
-    const depositPiTabElement = document.querySelector('.tab-btn[data-tab="depositPi"]');
-    if (depositPiTabElement) {
-        depositPiTabElement.textContent = langData[currentLang]?.depositPiTab || 'Deposit Pi Coin';
+    const financeTabElement = document.querySelector('.tab-btn[data-tab="finance"]');
+    if (financeTabElement) {
+        financeTabElement.textContent = langData[currentLang]?.financeTab || 'Finance';
     }
 
     const leaderboardTabElement = document.querySelector('.tab-btn[data-tab="leaderboard"]');

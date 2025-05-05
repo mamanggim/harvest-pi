@@ -1,216 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Harvest Pi</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="farm/style.css?v=40" />
-  <style>
-    #start-text {
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      padding: 15px;
-      font-size: 18px;
-      user-select: none;
-    }
-    #start-text:active {
-      transform: scale(0.95);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harvest Pi</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<!-- LOADING -->
-<div id="loading-screen">
-  <h1>Harvest Pi</h1>
-  <div class="loading-animation">Loading...</div>
-</div>
-
-<!-- LOGIN SCREEN -->
-<div id="login-screen" style="display: flex;">
-  <div class="login-container">
-    <h1>Harvest Pi</h1>
-    <button id="login-pi-btn">Login with Pi</button>
-    <div class="policy-links">
-      <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
-      <a href="/term-of-service.html" target="_blank">Terms of Service</a>
+    <div id="loading-screen">
+        <h1>Harvest Pi</h1>
+        <div class="loading-animation">Loading...</div>
     </div>
-  </div>
-</div>
 
-<!-- START SCREEN -->
-<div id="start-screen" style="display: none;">
-  <h1 id="title">Harvest Pi</h1>
-  <div id="start-text" class="start-text">Start Game</div>
-  <div class="corner-buttons">
-    <button id="lang-toggle">Switch Language (EN/ID)</button>
-    <button id="settings-btn">⚙️</button>
-  </div>
-</div>
+    <div id="login-screen">
+        <div class="login-container">
+            <h1>Harvest Pi</h1>
+            <button id="login-pi-btn">Login with Pi</button>
+            <div class="policy-links">
+                <a href="privacy.html" target="_blank">Privacy Policy</a> | 
+                <a href="terms.html" target="_blank">Terms of Service</a>
+            </div>
+        </div>
+    </div>
 
-<!-- GAME SCREEN -->
-<div id="game-screen" style="display: none;">
-  <div id="game-header">
+    <div id="start-screen">
+        <h1 id="title">Harvest Pi</h1>
+        <div class="start-text">Click to Start</div>
+    </div>
+
     <div class="corner-buttons">
-      <button id="game-settings-btn">⚙️</button>
+        <button id="lang-toggle">EN</button>
+        <button id="settings-btn">⚙️</button>
     </div>
-    <h1 id="game-title">Harvest Pi</h1>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="farm">Farm</button>
-      <button class="tab-btn" data-tab="shop">Shop</button>
-      <button class="tab-btn" data-tab="upgrades">Upgrades</button>
-      <button class="tab-btn" data-tab="inventory">Inventory</button>
-      <button class="tab-btn" data-tab="exchange">Exchange</button>
-      <button class="tab-btn" data-tab="depositPi">Finance</button>
-      <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
-      <button class="tab-btn" data-tab="achievements">Achievements</button>
+
+    <div id="game-screen" style="display: none;">
+        <div id="game-header">
+            <h1 id="game-title">Harvest Pi</h1>
+            <div class="tabs">
+                <button class="tab-btn" data-tab="farm">Farm</button>
+                <button class="tab-btn" data-tab="shop">Shop</button>
+                <button class="tab-btn" data-tab="upgrades">Upgrades</button>
+                <button class="tab-btn" data-tab="inventory">Inventory</button>
+                <button class="tab-btn" data-tab="exchange">Exchange</button>
+                <button class="tab-btn" data-tab="finance">Finance</button>
+                <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
+                <button class="tab-btn" data-tab="achievements">Achievements</button>
+            </div>
+            <div id="wallet">
+                <p id="farm-coins">0 Coins</p>
+                <p id="pi-coins">0.00 PI</p>
+                <p id="water">0 Water</p>
+                <p id="level">Level: 1 | XP: 0</p>
+                <div id="xp-bar">
+                    <div id="xp-fill"></div>
+                </div>
+            </div>
+        </div>
+        <div id="farm" class="tab-content active">
+            <div id="farm-area"></div>
+            <button id="claim-reward-btn">Claim Daily Reward</button>
+        </div>
+        <div id="shop" class="tab-content">
+            <div class="shop-switch">
+                <button class="shop-tab-btn active" id="shop-buy-tab">Buy</button>
+                <button class="shop-tab-btn" id="shop-sell-tab">Sell</button>
+            </div>
+            <div id="shop-content"></div>
+            <div id="sell-section" style="display: none;">
+                <h3 id="sell-section-title">Sell Items</h3>
+                <div id="sell-content"></div>
+            </div>
+        </div>
+        <div id="upgrades" class="tab-content">
+            <h2 id="upgrades-title">Upgrades</h2>
+            <p id="upgrades-content">Coming soon...</p>
+        </div>
+        <div id="inventory" class="tab-content">
+            <div id="inventory-content"></div>
+        </div>
+        <div id="exchange" class="tab-content">
+            <h2 id="exchange-title">Exchange</h2>
+            <p id="exchange-rate">1 PI = 1,000,000 Farm Coins</p>
+            <input type="number" id="exchange-amount" placeholder="Enter PI amount">
+            <p id="exchange-result-label">Farm Coins: <span id="exchange-result">0</span></p>
+            <button id="exchange-btn">Exchange to Farm Coins</button>
+        </div>
+        <div id="finance" class="tab-content">
+            <h2 id="finance-title"></h2>
+            <p>Farm Coins: <span id="farm-coin-balance">0</span></p>
+            <p>PI Coins: <span id="pi-coin-balance">0</span></p>
+            <h3>Deposit</h3>
+            <input type="number" id="deposit-amount" placeholder="Enter PI amount">
+            <button id="confirm-deposit">Deposit</button>
+            <p id="deposit-message"></p>
+            <hr>
+            <h3>Withdraw</h3>
+            <button id="withdraw-btn">Withdraw</button>
+            <p id="withdraw-note"></p>
+        </div>
+        <div id="leaderboard" class="tab-content">
+            <h2 id="leaderboard-title">Leaderboard</h2>
+            <p id="leaderboard-content">Coming soon...</p>
+        </div>
+        <div id="achievements" class="tab-content">
+            <div id="achievements-content"></div>
+        </div>
     </div>
-    <div id="wallet">
-      <span id="farm-coins">0 Farm Coins</span> |
-      <span id="pi-coins">0.00 PI</span> |
-      <span id="water">0 Water</span>
-      <div id="level">Level: 1 | XP: 0</div>
-      <div id="xp-bar"><div id="xp-fill"></div></div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Settings</h2>
+            <label for="bgm-volume">BGM Volume</label>
+            <input type="range" id="bgm-volume" min="0" max="100" value="50">
+            <label for="sfx-volume">SFX Volume</label>
+            <input type="range" id="sfx-volume" min="0" max="100" value="50">
+            <button id="save-settings">Save</button>
+        </div>
     </div>
-  </div>
 
-  <!-- FARM -->
-  <div id="farm" class="tab-content active">
-    <div id="farm-area"></div>
-    <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
-  </div>
+    <div id="notification"></div>
 
-  <!-- SHOP -->
-  <div id="shop" class="tab-content">
-    <div class="shop-switch">
-      <button id="shop-buy-tab" class="shop-tab-btn active">Buy</button>
-      <button id="shop-sell-tab" class="shop-tab-btn">Sell</button>
-    </div>
-    <div id="shop-content"></div>
-    <div id="sell-section" style="display: none;">
-      <h2 id="sell-section-title">Sell Items</h2>
-      <div id="sell-content"></div>
-    </div>
-  </div>
+    <audio id="bgm" loop>
+        <source src="assets/audio/bgm.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="click-sound">
+        <source src="assets/audio/click.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="harvest-sound">
+        <source src="assets/audio/harvest.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="water-sound">
+        <source src="assets/audio/water.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="menu-sound">
+        <source src="assets/audio/menu.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="buy-sound">
+        <source src="assets/audio/buy.mp3" type="audio/mpeg">
+    </audio>
 
-  <!-- UPGRADES -->
-  <div id="upgrades" class="tab-content">
-    <h2 id="upgrades-title">Upgrades</h2>
-    <p id="upgrades-content">Coming soon...</p>
-  </div>
-
-  <!-- INVENTORY -->
-  <div id="inventory" class="tab-content">
-    <div id="inventory-content"></div>
-  </div>
-
-  <!-- EXCHANGE -->
-  <div id="exchange" class="tab-content">
-    <h2 id="exchange-title">Exchange</h2>
-    <p id="exchange-rate">1 PI = 1,000,000 Farm Coins</p>
-    <input type="number" id="exchange-amount" placeholder="Enter PI amount" />
-    <p><span id="exchange-result-label">Farm Coins:</span> <span id="exchange-result">0</span></p>
-    <button id="exchange-btn">Exchange to Farm Coins</button>
-  </div>
-
-  <!-- FINANCE -->
-  <div id="depositPi" class="tab-content" style="display: none;">
-    <h2 id="finance-title">Finance</h2>
-    
-    <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
-    <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
-
-    <hr />
-
-    <h3>Deposit</h3>
-    <input type="number" id="deposit-amount" placeholder="Enter PI Amount" />
-    <button id="confirm-deposit">Deposit</button>
-    <p id="deposit-message" class="deposit-message">Minimum deposit 1 PI</p>
-
-    <hr />
-
-    <h3>Withdraw</h3>
-    <button id="withdraw-btn" disabled>Withdraw PI</button>
-    <p id="withdraw-note" class="note">
-      This feature will unlock when you reach: <br />
-      - Level 10<br />
-      - Farm Coin ≥ 1.000.000<br />
-      - Total Deposit ≥ 10 PI
-    </p>
-  </div>
-  
-  <!-- LEADERBOARD -->
-  <div id="leaderboard" class="tab-content">
-    <h2 id="leaderboard-title">Leaderboard</h2>
-    <p id="leaderboard-content">Coming soon...</p>
-  </div>
-
-  <!-- ACHIEVEMENTS -->
-  <div id="achievements" class="tab-content">
-    <div id="achievements-content"></div>
-  </div>
-</div>
-
-<!-- MODAL REWARD -->
-<div id="reward-modal" class="modal">
-  <div class="modal-content">
-    <span id="reward-modal-close" class="close">×</span>
-    <h2 id="daily-reward-title">Daily Reward</h2>
-    <p id="daily-reward-text">You got +100 Farm Coins & +50 Water!</p>
-    <button id="claim-modal-btn" aria-label="Claim Reward">Claim</button>
-  </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div id="settings-modal" class="modal">
-  <div class="modal-content">
-    <span id="close-settings" class="close">×</span>
-    <h2 id="settings-title">Settings</h2>
-    <button id="fullscreen-toggle">⛶</button>
-    <button id="game-lang-toggle">Switch Language (EN/ID)</button>
-    <button id="exit-game-btn">Exit</button>
-    <label id="music-volume-label" for="music-volume">Music Volume:</label>
-    <input type="range" id="music-volume" min="0" max="100" step="1" value="100" />
-    <label id="voice-volume-label" for="voice-volume">Voice/SFX Volume:</label>
-    <input type="range" id="voice-volume" min="0" max="100" step="1" value="100" />
-  </div>
-</div>
-
-<!-- NOTIFIKASI -->
-<div id="notification"></div>
-
-<!-- AUDIO -->
-<audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
-<audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
-<audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
-<audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3"></audio>
-<audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3"></audio>
-<audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3"></audio>
-<audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
-<audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
-
-<!-- FIREBASE -->
-<script type="module" src="firebase/firebase-config.js"></script>
-
-<!-- PI NETWORK SDK -->
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-<!-- MAIN GAME SCRIPT -->
-<script type="module" src="farm/main.js?v=40"></script>
-
-<!-- FALLBACK ERROR HANDLING -->
-<script>
-  window.addEventListener('error', (event) => {
-    alert('Main script failed to load: ' + event.message);
-    const loadingScreen = document.getElementById('loading-screen');
-    const loginScreen = document.getElementById('login-screen');
-    if (loadingScreen && loginScreen) {
-      loadingScreen.style.display = 'none';
-      loginScreen.style.display = 'flex';
-    }
-  });
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
 </html>

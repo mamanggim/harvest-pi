@@ -107,13 +107,20 @@
   </div>
 
   <!-- EXCHANGE -->
-  <div id="exchange" class="tab-content">
-    <h2 id="exchange-title">Exchange</h2>
-    <p id="exchange-rate">1 PI = 1,000,000 Farm Coins</p>
-    <input type="number" id="exchange-amount" placeholder="Enter PI amount" />
-    <p><span id="exchange-result-label">Farm Coins:</span> <span id="exchange-result">0</span></p>
-    <button id="exchange-btn">Exchange to Farm Coins</button>
+  <div class="exchange-container">
+  <h3>Exchange Center</h3>
+  <p>1 Pi ≈ <span id="current-rate">1,000,000</span> FC 
+     <span id="rate-change" class="rate-change">+0%</span>
+  </p>
+
+  <input type="number" id="exchange-amount" placeholder="Enter amount">
+  <div class="exchange-buttons">
+    <button onclick="exchangePiToFC()">Pi → FC</button>
+    <button onclick="exchangeFCToPi()">FC → Pi</button>
   </div>
+
+  <p id="exchange-result">You will get: 0</p>
+</div>
 
   <!-- FINANCE -->
 <div id="finance" class="tab-content">

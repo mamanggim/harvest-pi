@@ -1816,6 +1816,8 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
     });
 }
 
+
+// Fitur Withdraw
 const withdrawBtnElement = document.getElementById('withdraw-btn');
 const withdrawNoteElement = document.getElementById('withdraw-note');
 

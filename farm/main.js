@@ -405,9 +405,10 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
         });
     }
-
-    if (exchangeBtnElement) addSafeClickListener(exchangeBtnElement, handleExchange);
-
+    
+    const exchangeBtnElement = document.getElementById('exchange-btn');
+    if (exchangeBtnElement) exchangeBtnElement.addEventListener('click', handleExchange);
+    
     const exchangeAmountElement = document.getElementById('exchange-amount');
     if (exchangeAmountElement) exchangeAmountElement.addEventListener('input', updateExchangeResult);
 

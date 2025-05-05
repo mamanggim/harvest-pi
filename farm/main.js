@@ -49,17 +49,19 @@ let isClaiming = false; // Tambah untuk lock claim
 let isAudioPlaying = false; // Flag to track audio state
 
 // Audio elements
-const bgm = document.getElementById('bgm');
-const clickSound = document.getElementById('click-sound');
-const harvestSound = document.getElementById('harvest-sound');
-const waterSound = document.getElementById('water-sound');
+const bgMusic = document.getElementById('bg-music');
+const bgVoice = document.getElementById('bg-voice');
+const harvestingSound = document.getElementById('harvesting-sound');
+const wateringSound = document.getElementById('watering-sound');
+const plantingSound = document.getElementById('planting-sound');
 const menuSound = document.getElementById('menu-sound');
-const buySound = document.getElementById('buy-sound');
+const buyingSound = document.getElementById('buying-sound');
+const coinSound = document.getElementById('coin-sound');
 
 // Audio control functions
-function playBgm() {
-    if (bgm && !isAudioPlaying) {
-        const playPromise = bgm.play();
+function playBgMusic() {
+    if (bgMusic && !isAudioPlaying) {
+        const playPromise = bgMusic.play();
         if (playPromise !== undefined) {
             playPromise
                 .then(() => {
@@ -67,38 +69,60 @@ function playBgm() {
                     isAudioPlaying = true;
                 })
                 .catch(e => {
-                    console.log('BGM failed to start:', e.message);
+                    console.log('BG Music failed to start:', e.message);
                     setTimeout(() => {
-                        bgm.play().catch(err => console.log('Retry BGM failed:', err.message));
+                        bgMusic.play().catch(err => console.log('Retry BG Music failed:', err.message));
                     }, 100);
                 });
         }
+    } else {
+        console.log('BG Music already playing or bgMusic not found:', bgMusic, isAudioPlaying);
     }
 }
 
-function playClickSound() {
-    if (clickSound) {
-        const playPromise = clickSound.play();
+function playBgVoice() {
+    if (bgVoice && !isAudioPlaying) {
+        const playPromise = bgVoice.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Click sound failed:', e.message));
+            playPromise
+                .then(() => {
+                    console.log('Background voice started successfully');
+                })
+                .catch(e => {
+                    console.log('BG Voice failed to start:', e.message);
+                    setTimeout(() => {
+                        bgVoice.play().catch(err => console.log('Retry BG Voice failed:', err.message));
+                    }, 100);
+                });
         }
+    } else {
+        console.log('BG Voice already playing or bgVoice not found:', bgVoice, isAudioPlaying);
     }
 }
 
-function playHarvestSound() {
-    if (harvestSound) {
-        const playPromise = harvestSound.play();
+function playHarvestingSound() {
+    if (harvestingSound) {
+        const playPromise = harvestingSound.play();
         if (playPromise !== undefined) {
             playPromise.catch(e => console.log('Harvest sound failed:', e.message));
         }
     }
 }
 
-function playWaterSound() {
-    if (waterSound) {
-        const playPromise = waterSound.play();
+function playWateringSound() {
+    if (wateringSound) {
+        const playPromise = wateringSound.play();
         if (playPromise !== undefined) {
             playPromise.catch(e => console.log('Watering sound failed:', e.message));
+        }
+    }
+}
+
+function playPlantingSound() {
+    if (plantingSound) {
+        const playPromise = plantingSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Planting sound failed:', e.message));
         }
     }
 }
@@ -112,56 +136,66 @@ function playMenuSound() {
     }
 }
 
-function playBuySound() {
-    if (buySound) {
-        const playPromise = buySound.play();
+function playBuyingSound() {
+    if (buyingSound) {
+        const playPromise = buyingSound.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Buy sound failed:', e.message));
+            playPromise.catch(e => console.log('Buying sound failed:', e.message));
+        }
+    }
+}
+
+function playCoinSound() {
+    if (coinSound) {
+        const playPromise = coinSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log('Coin sound failed:', e.message));
         }
     }
 }
 
 // Set posisi awal slider dari localStorage
-const bgmVolumeSlider = document.getElementById('bgm-volume');
-const sfxVolumeSlider = document.getElementById('sfx-volume');
-
-if (bgmVolumeSlider) {
-    bgmVolumeSlider.value = localStorage.getItem('bgmVolume') ?? 50;
+const musicVolumeSlider = document.getElementById('music-volume');
+if (musicVolumeSlider) {
+    musicVolumeSlider.value = localStorage.getItem('musicVolume') ?? 50;
 }
-if (sfxVolumeSlider) {
-    sfxVolumeSlider.value = localStorage.getItem('sfxVolume') ?? 50;
+const voiceVolumeSlider = document.getElementById('voice-volume');
+if (voiceVolumeSlider) {
+    voiceVolumeSlider.value = localStorage.getItem('voiceVolume') ?? 50;
 }
 
 // Listener untuk simpan dan update volume real-time
-if (bgmVolumeSlider) {
-    bgmVolumeSlider.addEventListener('input', function () {
-        localStorage.setItem('bgmVolume', this.value);
+if (musicVolumeSlider) {
+    musicVolumeSlider.addEventListener('input', function () {
+        localStorage.setItem('musicVolume', this.value);
         updateVolumes();
     });
 }
-if (sfxVolumeSlider) {
-    sfxVolumeSlider.addEventListener('input', function () {
-        localStorage.setItem('sfxVolume', this.value);
+if (voiceVolumeSlider) {
+    voiceVolumeSlider.addEventListener('input', function () {
+        localStorage.setItem('voiceVolume', this.value);
         updateVolumes();
     });
 }
 
 // Update audio volumes
 function updateVolumes() {
-    const bgmVolume = parseFloat(localStorage.getItem('bgmVolume') ?? 50);
-    const sfxVolume = parseFloat(localStorage.getItem('sfxVolume') ?? 50);
+    const musicVolume = parseFloat(localStorage.getItem('musicVolume') ?? 50);
+    const voiceVolume = parseFloat(localStorage.getItem('voiceVolume') ?? 50);
 
-    const bgmVol = Math.min(Math.max(bgmVolume / 100, 0), 1);
-    const sfxVol = Math.min(Math.max(sfxVolume / 100, 0), 1);
+    const musicVol = Math.min(Math.max(musicVolume / 100, 0), 1);
+    const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 1);
 
-    if (bgm) bgm.volume = bgmVol;
-    if (clickSound) clickSound.volume = sfxVol;
-    if (harvestSound) harvestSound.volume = sfxVol;
-    if (waterSound) waterSound.volume = sfxVol;
-    if (menuSound) menuSound.volume = sfxVol;
-    if (buySound) buySound.volume = sfxVol;
+    if (bgMusic) bgMusic.volume = musicVol;
+    if (bgVoice) bgVoice.volume = voiceVol;
+    if (harvestingSound) harvestingSound.volume = voiceVol;
+    if (wateringSound) wateringSound.volume = voiceVol;
+    if (plantingSound) plantingSound.volume = voiceVol;
+    if (menuSound) menuSound.volume = voiceVol;
+    if (buyingSound) buyingSound.volume = voiceVol;
+    if (coinSound) coinSound.volume = voiceVol;
 
-    console.log('Updated Volumes:', { bgmVol, sfxVol });
+    console.log('Updated Volumes:', { musicVol, voiceVol });
 }
 
 // Panggil update pertama kali setelah semua siap
@@ -261,9 +295,24 @@ function onIncompletePaymentFound(payment) {
     // Kalo gak pake backend, biarin kosong kayak gini
 }
 
+// Modal SignIn
+function showModal() {
+    const signInModalElement = document.getElementById('signInModal');
+    if (signInModalElement) {
+        signInModalElement.style.display = 'flex';
+    }
+}
+
+function closeModal() {
+    const signInModalElement = document.getElementById('signInModal');
+    if (signInModalElement) {
+        signInModalElement.style.display = 'none';
+    }
+}
+
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
-    const startTextElement = document.querySelector('.start-text');
+    const startTextElement = document.getElementById('start-text');
     if (startTextElement) addSafeClickListener(startTextElement, startGame);
 
     const langToggleElement = document.getElementById('lang-toggle');
@@ -283,9 +332,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const closeModalElement = document.querySelector('.close');
-    if (closeModalElement) {
-        addSafeClickListener(closeModalElement, () => {
+    const gameSettingsBtnElement = document.getElementById('game-settings-btn');
+    if (gameSettingsBtnElement) {
+        addSafeClickListener(gameSettingsBtnElement, () => {
+            const settingsModalElement = document.getElementById('settings-modal');
+            if (settingsModalElement) {
+                settingsModalElement.style.display = 'block';
+                playMenuSound();
+            }
+        });
+    }
+
+    const closeSettingsElement = document.getElementById('close-settings');
+    if (closeSettingsElement) {
+        addSafeClickListener(closeSettingsElement, () => {
             const settingsModalElement = document.getElementById('settings-modal');
             if (settingsModalElement) {
                 settingsModalElement.style.display = 'none';
@@ -294,21 +354,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const saveSettingsBtn = document.getElementById('save-settings');
-    if (saveSettingsBtn) {
-        addSafeClickListener(saveSettingsBtn, () => {
-            const settingsModalElement = document.getElementById('settings-modal');
-            if (settingsModalElement) {
-                settingsModalElement.style.display = 'none';
-                playMenuSound();
+    const rewardModalCloseElement = document.getElementById('reward-modal-close');
+    if (rewardModalCloseElement) {
+        addSafeClickListener(rewardModalCloseElement, () => {
+            if (rewardModal) rewardModal.style.display = 'none';
+            playMenuSound();
+        });
+    }
+
+    const fullscreenToggleElement = document.getElementById('fullscreen-toggle');
+    if (fullscreenToggleElement) {
+        addSafeClickListener(fullscreenToggleElement, () => {
+            if (!document.fullscreenElement) {
+                enterFullScreen();
+            } else {
+                exitFullScreen();
             }
+            playMenuSound();
+        });
+    }
+
+    if (musicVolumeSlider) {
+        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
+        musicVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('musicVolume', musicVolumeSlider.value);
+            updateVolumes();
+        });
+    }
+
+    if (voiceVolumeSlider) {
+        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
+        voiceVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
+            updateVolumes();
         });
     }
 
     const exitGameBtnElement = document.getElementById('exit-game-btn');
     if (exitGameBtnElement) {
         addSafeClickListener(exitGameBtnElement, () => {
-            if (bgm) bgm.pause();
+            if (bgMusic) bgMusic.pause();
+            if (bgVoice) bgVoice.pause();
             window.location.reload();
         });
     }
@@ -358,13 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loginPiBtnElement = document.getElementById('login-pi-btn');
     if (loginPiBtnElement) addSafeClickListener(loginPiBtnElement, authenticateWithPi);
-
-    // Tambah event listener untuk Deposit dan Withdraw
-    const depositBtnElement = document.getElementById('confirm-deposit');
-    if (depositBtnElement) addSafeClickListener(depositBtnElement, handleDeposit);
-
-    const withdrawBtnElement = document.getElementById('withdraw-btn');
-    if (withdrawBtnElement) addSafeClickListener(withdrawBtnElement, handleWithdraw);
 
     initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
     initializeGame();
@@ -425,7 +504,6 @@ async function loadPlayerData() {
             renderSellSection();
             renderAchievements();
             checkDailyReward();
-            updateWithdrawStatus(); // Tambah untuk cek status Withdraw
         }, { onlyOnce: false });
     } catch (error) {
         console.error('Error loading player data:', error.message);
@@ -468,20 +546,46 @@ function updateWallet() {
     const levelElement = document.getElementById('level');
     const xpFillElement = document.getElementById('xp-fill');
 
-    if (farmCoinsElement) farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
-    if (piCoinsElement) piCoinsElement.textContent = `${pi.toFixed(2)} PI`;
-    if (waterElement) waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
-    if (levelElement) levelElement.textContent = `Level: ${level} | XP: ${xp}`;
+    if (farmCoinsElement) {
+        farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
+    } else {
+        console.warn('Element with ID "farm-coins" not found');
+    }
+
+    if (piCoinsElement) {
+        piCoinsElement.textContent = `${pi.toFixed(2)} PI`;
+    } else {
+        console.warn('Element with ID "pi-coins" not found');
+    }
+
+    if (waterElement) {
+        waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
+    } else {
+        console.warn('Element with ID "water" not found');
+    }
+
+    if (levelElement) {
+        levelElement.textContent = `Level: ${level} | XP: ${xp}`;
+    } else {
+        console.warn('Element with ID "level" not found');
+    }
+
     if (xpFillElement) {
         const xpPercentage = (xp / (level * 100)) * 100;
         xpFillElement.style.width = `${xpPercentage}%`;
+    } else {
+        console.warn('Element with ID "xp-fill" not found');
     }
 
-    // Update elemen di tab Finance
+    // Update elemen di tab depositPi
     const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
     const piCoinBalanceElement = document.getElementById('pi-coin-balance');
-    if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins;
-    if (piCoinBalanceElement) piCoinBalanceElement.textContent = pi.toFixed(2);
+    if (farmCoinBalanceElement) {
+        farmCoinBalanceElement.textContent = farmCoins;
+    }
+    if (piCoinBalanceElement) {
+        piCoinBalanceElement.textContent = pi.toFixed(2);
+    }
 
     savePlayerData();
 }
@@ -668,7 +772,7 @@ function handlePlotClick(index) {
             savePlayerData();
             renderInventory();
             showNotification(langData[currentLang]?.planted || 'Planted!');
-            playClickSound();
+            playPlantingSound();
             return;
         } else {
             showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
@@ -700,7 +804,7 @@ function handlePlotClick(index) {
 
             updateWallet();
             showNotification(langData[currentLang]?.watered || 'Watered!');
-            playWaterSound();
+            playWateringSound();
 
             const countdownInterval = setInterval(() => {
                 if (!plot.planted) {
@@ -806,7 +910,7 @@ function handlePlotClick(index) {
         savePlayerData();
         checkHarvestAchievement();
         showNotification(langData[currentLang]?.harvested || 'Harvested!');
-        playHarvestSound();
+        playHarvestingSound();
         renderInventory();
         renderSellSection();
     }
@@ -926,7 +1030,7 @@ function buyVegetable(id, currency) {
                 water += 10;
                 updateWallet();
                 showTransactionAnimation(`-100`, false, document.querySelector(`.buy-btn[data-id="water"]`));
-                playBuySound();
+                playBuyingSound();
             } else {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
@@ -936,7 +1040,7 @@ function buyVegetable(id, currency) {
                 water += 10;
                 updateWallet();
                 showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
-                playBuySound();
+                playBuyingSound();
             } else {
                 showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
             }
@@ -975,7 +1079,7 @@ function buyVegetable(id, currency) {
         savePlayerData();
         updateWallet();
         renderInventory();
-        playBuySound();
+        playBuyingSound();
     }
 }
 
@@ -1129,7 +1233,7 @@ function sellItem(index) {
     updateWallet();
     renderInventory();
     renderSellSection();
-    playBuySound();
+    playCoinSound();
     checkLevelUp();
     checkCoinAchievement();
 }
@@ -1162,7 +1266,6 @@ function checkLevelUp() {
         showNotification(`${langData[currentLang]?.levelUp || 'Level Up!'} ${level}`);
     }
     updateWallet();
-    updateWithdrawStatus(); // Update status Withdraw setelah level up
 }
 
 // Switch tabs
@@ -1200,8 +1303,6 @@ function switchTab(tab) {
         renderAchievements();
     } else if (tab === 'exchange') {
         updateExchangeResult();
-    } else if (tab === 'finance') {
-        renderFinanceTab(); // Panggil fungsi untuk render tab Finance
     }
 
     playMenuSound();
@@ -1223,7 +1324,7 @@ function exchangePi() {
         farmCoins += amount * piToFarmRate;
         updateWallet();
         showNotification(langData[currentLang]?.exchanged || 'Exchanged!');
-        playBuySound();
+        playCoinSound();
         checkCoinAchievement();
         updateExchangeResult();
     } else {
@@ -1243,9 +1344,8 @@ function updateExchangeResult() {
 }
 
 // Modal untuk daily reward
-const claimRewardBtn = document.getElementById('claim-reward-btn');
-if (claimRewardBtn) {
-    addSafeClickListener(claimRewardBtn, async () => {
+if (claimModalBtn) {
+    addSafeClickListener(document.getElementById('claim-reward-btn'), async () => {
         const playerRef = ref(database, `players/${userId}/lastClaim`);
         try {
             const snapshot = await get(playerRef);
@@ -1255,9 +1355,12 @@ if (claimRewardBtn) {
             const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().split('T')[0] : null;
 
             if (lastClaimDate === today) {
-                claimRewardBtn.classList.add('claimed');
-                claimRewardBtn.textContent = langData[currentLang]?.claimed || 'Claimed!';
-                claimRewardBtn.disabled = true;
+                const claimRewardBtnElement = document.getElementById('claim-reward-btn');
+                if (claimRewardBtnElement) {
+                    claimRewardBtnElement.classList.add('claimed');
+                    claimRewardBtnElement.textContent = langData[currentLang]?.claimed || 'Claimed!';
+                    claimRewardBtnElement.disabled = true;
+                }
                 claimedToday = true;
                 return;
             }
@@ -1303,7 +1406,7 @@ if (claimModalBtn) {
                 claimRewardBtnElement.disabled = true;
             }
             checkLevelUp();
-            playBuySound();
+            playCoinSound();
             showNotification(langData[currentLang]?.rewardClaimed || 'Reward Claimed!');
         } catch (error) {
             console.error('Error claiming reward:', error.message);
@@ -1418,116 +1521,185 @@ function renderAchievements() {
     savePlayerData();
 }
 
-// Render Finance tab
-function renderFinanceTab() {
-    const financeContentElement = document.getElementById('finance');
-    if (!financeContentElement) {
-        console.error('finance tab element not found');
-        return;
-    }
-
-    // Pastikan elemen di dalam tab Finance diupdate
-    const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
-    const piCoinBalanceElement = document.getElementById('pi-coin-balance');
-    if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins;
-    if (piCoinBalanceElement) piCoinBalanceElement.textContent = pi.toFixed(2);
-
-    const depositAmountElement = document.getElementById('deposit-amount');
-    if (depositAmountElement) depositAmountElement.placeholder = langData[currentLang]?.enterPiAmount || 'Enter PI amount';
-
-    const confirmDepositElement = document.getElementById('confirm-deposit');
-    if (confirmDepositElement) confirmDepositElement.textContent = langData[currentLang]?.deposit || 'Deposit';
-
-    const withdrawBtnElement = document.getElementById('withdraw-btn');
-    if (withdrawBtnElement) withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
-
-    const withdrawNoteElement = document.getElementById('withdraw-note');
-    if (withdrawNoteElement) withdrawNoteElement.textContent = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
-
-    updateWithdrawStatus();
-}
-
 // Update UI text based on language
 function updateUIText() {
     if (!langData[currentLang]) return;
 
     const titleElement = document.getElementById('title');
-    if (titleElement) titleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
+    if (titleElement) {
+        titleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
+    }
 
     const gameTitleElement = document.getElementById('game-title');
-    if (gameTitleElement) gameTitleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
+    if (gameTitleElement) {
+        gameTitleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
+    }
 
-    const startTextElement = document.querySelector('.start-text');
-    if (startTextElement) startTextElement.textContent = langData[currentLang]?.startGame || 'Start Game';
+    const startTextElement = document.getElementById('start-text');
+    if (startTextElement) {
+        startTextElement.textContent = langData[currentLang]?.startGame || 'Start Game';
+    }
 
     const farmTabElement = document.querySelector('.tab-btn[data-tab="farm"]');
-    if (farmTabElement) farmTabElement.textContent = langData[currentLang]?.farmTab || 'Farm';
+    if (farmTabElement) {
+        farmTabElement.textContent = langData[currentLang]?.farmTab || 'Farm';
+    }
 
     const shopTabElement = document.querySelector('.tab-btn[data-tab="shop"]');
-    if (shopTabElement) shopTabElement.textContent = langData[currentLang]?.shopTab || 'Shop';
+    if (shopTabElement) {
+        shopTabElement.textContent = langData[currentLang]?.shopTab || 'Shop';
+    }
 
     const upgradesTabElement = document.querySelector('.tab-btn[data-tab="upgrades"]');
-    if (upgradesTabElement) upgradesTabElement.textContent = langData[currentLang]?.upgradesTab || 'Upgrades';
+    if (upgradesTabElement) {
+        upgradesTabElement.textContent = langData[currentLang]?.upgradesTab || 'Upgrades';
+    }
 
     const inventoryTabElement = document.querySelector('.tab-btn[data-tab="inventory"]');
-    if (inventoryTabElement) inventoryTabElement.textContent = langData[currentLang]?.inventoryTab || 'Inventory';
+    if (inventoryTabElement) {
+        inventoryTabElement.textContent = langData[currentLang]?.inventoryTab || 'Inventory';
+    }
 
     const exchangeTabElement = document.querySelector('.tab-btn[data-tab="exchange"]');
-    if (exchangeTabElement) exchangeTabElement.textContent = langData[currentLang]?.exchangeTab || 'Exchange';
+    if (exchangeTabElement) {
+        exchangeTabElement.textContent = langData[currentLang]?.exchangeTab || 'Exchange';
+    }
 
-    const financeTabElement = document.querySelector('.tab-btn[data-tab="finance"]');
-    if (financeTabElement) financeTabElement.textContent = langData[currentLang]?.financeTab || 'Finance';
+    const depositPiTabElement = document.querySelector('.tab-btn[data-tab="depositPi"]');
+    if (depositPiTabElement) {
+        depositPiTabElement.textContent = langData[currentLang]?.depositPiTab || 'Deposit Pi Coin';
+    }
 
     const leaderboardTabElement = document.querySelector('.tab-btn[data-tab="leaderboard"]');
-    if (leaderboardTabElement) leaderboardTabElement.textContent = langData[currentLang]?.leaderboardTab || 'Leaderboard';
+    if (leaderboardTabElement) {
+        leaderboardTabElement.textContent = langData[currentLang]?.leaderboardTab || 'Leaderboard';
+    }
 
     const achievementsTabElement = document.querySelector('.tab-btn[data-tab="achievements"]');
-    if (achievementsTabElement) achievementsTabElement.textContent = langData[currentLang]?.achievementsTab || 'Achievements';
+    if (achievementsTabElement) {
+        achievementsTabElement.textContent = langData[currentLang]?.achievementsTab || 'Achievements';
+    }
 
     const langToggleElement = document.getElementById('lang-toggle');
-    if (langToggleElement) langToggleElement.textContent = currentLang === 'en' ? 'EN' : 'ID';
+    if (langToggleElement) {
+        langToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
+    }
+
+    const gameLangToggleElement = document.getElementById('game-lang-toggle');
+    if (gameLangToggleElement) {
+        gameLangToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
+    }
 
     const upgradesTitleElement = document.getElementById('upgrades-title');
-    if (upgradesTitleElement) upgradesTitleElement.textContent = langData[currentLang]?.upgradesTitle || 'Upgrades';
+    if (upgradesTitleElement) {
+        upgradesTitleElement.textContent = langData[currentLang]?.upgradesTitle || 'Upgrades';
+    }
 
     const upgradesContentElement = document.getElementById('upgrades-content');
-    if (upgradesContentElement) upgradesContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
+    if (upgradesContentElement) {
+        upgradesContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
+    }
 
     const exchangeTitleElement = document.getElementById('exchange-title');
-    if (exchangeTitleElement) exchangeTitleElement.textContent = langData[currentLang]?.exchangeTitle || 'Exchange';
+    if (exchangeTitleElement) {
+        exchangeTitleElement.textContent = langData[currentLang]?.exchangeTitle || 'Exchange';
+    }
 
     const exchangeRateElement = document.getElementById('exchange-rate');
-    if (exchangeRateElement) exchangeRateElement.textContent = `${langData[currentLang]?.exchangeRate || '1 PI = 1,000,000 Farm Coins'}`;
+    if (exchangeRateElement) {
+        exchangeRateElement.textContent = `${langData[currentLang]?.exchangeRate || '1 PI = 1,000,000 Farm Coins'}`;
+    }
 
     const exchangeAmountElement = document.getElementById('exchange-amount');
-    if (exchangeAmountElement) exchangeAmountElement.placeholder = langData[currentLang]?.enterPiAmount || 'Enter PI amount';
+    if (exchangeAmountElement) {
+        exchangeAmountElement.placeholder = langData[currentLang]?.enterPiAmount || 'Enter PI amount';
+    }
 
     const exchangeResultLabelElement = document.getElementById('exchange-result-label');
-    if (exchangeResultLabelElement) exchangeResultLabelElement.textContent = `${langData[currentLang]?.farmCoinsLabel || 'Farm Coins'}: `;
+    if (exchangeResultLabelElement) {
+        exchangeResultLabelElement.textContent = `${langData[currentLang]?.farmCoinsLabel || 'Farm Coins'}: `;
+    }
 
     const exchangeBtnElement = document.getElementById('exchange-btn');
-    if (exchangeBtnElement) exchangeBtnElement.textContent = langData[currentLang]?.exchangeButton || 'Exchange to Farm Coins';
+    if (exchangeBtnElement) {
+        exchangeBtnElement.textContent = langData[currentLang]?.exchangeButton || 'Exchange to Farm Coins';
+    }
 
     const leaderboardTitleElement = document.getElementById('leaderboard-title');
-    if (leaderboardTitleElement) leaderboardTitleElement.textContent = langData[currentLang]?.leaderboardTitle || 'Leaderboard';
+    if (leaderboardTitleElement) {
+        leaderboardTitleElement.textContent = langData[currentLang]?.leaderboardTitle || 'Leaderboard';
+    }
 
     const leaderboardContentElement = document.getElementById('leaderboard-content');
-    if (leaderboardContentElement) leaderboardContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
+    if (leaderboardContentElement) {
+        leaderboardContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
+    }
 
+    const settingsTitleElement = document.getElementById('settings-title');
+    if (settingsTitleElement) {
+        settingsTitleElement.textContent = langData[currentLang]?.settingsTitle || 'Settings';
+    }
+
+    const musicVolumeLabelElement = document.getElementById('music-volume-label');
+    if (musicVolumeLabelElement) {
+        musicVolumeLabelElement.textContent = langData[currentLang]?.musicVolumeLabel || 'Music Volume:';
+    }
+
+    const voiceVolumeLabelElement = document.getElementById('voice-volume-label');
+    if (voiceVolumeLabelElement) {
+        voiceVolumeLabelElement.textContent = langData[currentLang]?.voiceVolumeLabel || 'Voice/SFX Volume:';
+    }
+
+    const exitGameBtnElement = document.getElementById('exit-game-btn');
+    if (exitGameBtnElement) {
+        exitGameBtnElement.textContent = langData[currentLang]?.exitGame || 'Exit';
+    }
+
+    const dailyRewardTitleElement = document.getElementById('daily-reward-title');
+    if (dailyRewardTitleElement) {
+        dailyRewardTitleElement.textContent = langData[currentLang]?.dailyRewardTitle || 'Daily Reward';
+    }
+
+    const claimModalBtnElement = document.getElementById('claim-modal-btn');
+    if (claimModalBtnElement) {
+        claimModalBtnElement.textContent = langData[currentLang]?.claimButton || 'Claim';
+    }
+
+    const shopBuyTabElement = document.getElementById('shop-buy-tab');
+    if (shopBuyTabElement) {
+        shopBuyTabElement.textContent = langData[currentLang]?.buyTab || 'Buy';
+    }
+
+    const shopSellTabElement = document.getElementById('shop-sell-tab');
+    if (shopSellTabElement) {
+        shopSellTabElement.textContent = langData[currentLang]?.sellTab || 'Sell';
+    }
+
+    const sellSectionTitleElement = document.getElementById('sell-section-title');
+    if (sellSectionTitleElement) {
+        sellSectionTitleElement.textContent = langData[currentLang]?.sellSectionTitle || 'Sell Items';
+    }
+
+    // Tambah untuk tab depositPi
     const financeTitleElement = document.getElementById('finance-title');
-    if (financeTitleElement) financeTitleElement.textContent = langData[currentLang]?.financeTab || 'Finance';
-
-    const depositAmountElement = document.getElementById('deposit-amount');
-    if (depositAmountElement) depositAmountElement.placeholder = langData[currentLang]?.enterPiAmount || 'Enter PI amount';
+    if (financeTitleElement) {
+        financeTitleElement.textContent = langData[currentLang]?.depositPiTab || 'Deposit Pi Coin';
+    }
 
     const confirmDepositElement = document.getElementById('confirm-deposit');
-    if (confirmDepositElement) confirmDepositElement.textContent = langData[currentLang]?.deposit || 'Deposit';
+    if (confirmDepositElement) {
+        confirmDepositElement.textContent = langData[currentLang]?.deposit || 'Deposit';
+    }
 
     const withdrawBtnElement = document.getElementById('withdraw-btn');
-    if (withdrawBtnElement) withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
+    if (withdrawBtnElement) {
+        withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
+    }
 
     const withdrawNoteElement = document.getElementById('withdraw-note');
-    if (withdrawNoteElement) withdrawNoteElement.textContent = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
+    if (withdrawNoteElement) {
+        withdrawNoteElement.textContent = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
+    }
 
     updateWallet();
     renderShop();
@@ -1553,14 +1725,20 @@ function startGame() {
     console.log('Starting game...');
     const startScreenElement = document.getElementById('start-screen');
     const gameScreenElement = document.getElementById('game-screen');
-    if (startScreenElement && gameScreenElement) {
+    const exitGameBtnElement = document.getElementById('exit-game-btn');
+    if (startScreenElement && gameScreenElement && exitGameBtnElement) {
         startScreenElement.style.display = 'none';
+        startScreenElement.classList.remove('center-screen');
         gameScreenElement.style.display = 'flex';
         gameScreenElement.classList.add('fade-in');
+        exitGameBtnElement.style.display = 'block';
     }
     isAudioPlaying = false;
-    playBgm(); // Pastikan BGM jalan
+
+    playBgMusic();
+    playBgVoice();
     switchTab('farm');
+    enterFullScreen();
 }
 
 // Initialize game
@@ -1596,186 +1774,127 @@ async function initializeGame() {
     }
 }
 
-// Fitur Deposit
-async function handleDeposit() {
-    const depositAmountInput = document.getElementById('deposit-amount');
-    const depositMessage = document.getElementById('deposit-message');
-    const depositBtn = document.getElementById('confirm-deposit');
-
-    if (!depositAmountInput || !depositMessage || !depositBtn) return;
-
-    const piAmount = parseFloat(depositAmountInput.value);
-    depositMessage.textContent = ''; // Reset message
-
-    if (!userId) {
-        depositMessage.textContent = langData[currentLang]?.deposit_user_unknown || 'User not recognized.';
-        return;
-    }
-
-    if (isNaN(piAmount) || piAmount < 1) {
-        depositMessage.textContent = langData[currentLang]?.deposit_minimum || 'Minimum deposit is 1 Pi.';
-        return;
-    }
-
-    if (pi < piAmount) {
-        depositMessage.textContent = langData[currentLang]?.notEnoughPi || 'Not Enough PI!';
-        return;
-    }
-
-    depositBtn.disabled = true;
-    depositBtn.textContent = langData[currentLang]?.deposit_processing || 'Processing...';
-
-    const coinsToAdd = piAmount * piToFarmRate;
-    pi -= piAmount;
-    farmCoins += coinsToAdd;
-
-    try {
-        const playerRef = ref(database, `players/${userId}`);
-        const snapshot = await get(playerRef);
-        const data = snapshot.val() || {};
-        const previousDeposit = data.totalDeposit || 0;
-
-        await update(playerRef, {
-            farmCoins: farmCoins,
-            pi: pi,
-            totalDeposit: previousDeposit + piAmount
-        });
-
-        depositMessage.textContent = (langData[currentLang]?.deposit_success || 'Deposit successful! You got') +
-            ` ${coinsToAdd.toLocaleString()} FC.`;
-
-        updateWallet();
-        depositAmountInput.value = '';
-        playBuySound();
-    } catch (error) {
-        console.error('Deposit error:', error);
-        depositMessage.textContent = langData[currentLang]?.deposit_error || 'An error occurred during deposit.';
-    } finally {
-        depositBtn.disabled = false;
-        depositBtn.textContent = langData[currentLang]?.deposit || 'Deposit';
+// Fullscreen toggle
+function enterFullScreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
     }
 }
 
-// Fitur Withdraw
-async function handleWithdraw() {
-    const withdrawBtn = document.getElementById('withdraw-btn');
-    const withdrawNote = document.getElementById('withdraw-note');
-
-    if (!withdrawBtn || !withdrawNote) return;
-
-    if (!userId) {
-        showNotification(langData[currentLang]?.deposit_user_unknown || 'User not recognized.');
-        return;
+function exitFullScreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
     }
+}
 
-    withdrawBtn.disabled = true;
-    withdrawBtn.textContent = langData[currentLang]?.processing || 'Processing...';
+// Fitur Deposit
+const depositBtnElement = document.querySelector('#confirm-deposit');
+const depositAmountInputElement = document.querySelector('#deposit-amount');
+const depositMessageElement = document.querySelector('#deposit-message');
 
-    try {
-        const playerRef = ref(database, `players/${userId}`);
-        const snapshot = await get(playerRef);
-        const data = snapshot.val() || {};
+if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
+    addSafeClickListener(depositBtnElement, async () => {
+        const piAmount = parseFloat(depositAmountInputElement.value);
+        depositMessageElement.textContent = ''; // Reset message
 
-        const totalDeposit = data.totalDeposit || 0;
-
-        if (level < 10 || farmCoins < 1000000 || totalDeposit < 10) {
-            withdrawNote.textContent = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
-            withdrawNote.style.display = 'block';
+        if (!userId) {
+            depositMessageElement.textContent = langData[currentLang]?.deposit_user_unknown || 'User not recognized.';
             return;
         }
 
-        const piToWithdraw = totalDeposit * 0.9; // 90% dari total deposit
-        farmCoins -= 1000000; // Kurangi 1M Farm Coins
-        pi += piToWithdraw;
+        if (isNaN(piAmount) || piAmount < 1) {
+            depositMessageElement.textContent = langData[currentLang]?.deposit_minimum || 'Minimum deposit is 1 Pi.';
+            return;
+        }
 
-        await update(playerRef, {
-            farmCoins: farmCoins,
-            pi: pi,
-            totalDeposit: 0 // Reset total deposit setelah withdraw
-        });
+        depositBtnElement.disabled = true;
+        depositBtnElement.textContent = langData[currentLang]?.deposit_processing || 'Processing...';
 
-        showNotification((langData[currentLang]?.withdraw_success || 'Withdraw successful! You got') +
-            ` ${piToWithdraw.toFixed(2)} PI.`);
-        updateWallet();
-        updateWithdrawStatus();
-        playBuySound();
-    } catch (error) {
-        console.error('Withdraw error:', error);
-        showNotification(langData[currentLang]?.withdraw_error || 'An error occurred during withdraw.');
-    } finally {
-        withdrawBtn.disabled = false;
-        withdrawBtn.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
-    }
+        const coinsToAdd = piAmount * piToFarmRate;
+        farmCoins += coinsToAdd;
+
+        try {
+            const userRef = ref(database, 'users/' + userId);
+            const snapshot = await get(userRef);
+            const data = snapshot.val() || {};
+            const previousDeposit = data.totalDeposit || 0;
+
+            await update(userRef, {
+                farmCoins: farmCoins,
+                totalDeposit: previousDeposit + piAmount
+            });
+
+            depositMessageElement.textContent = (langData[currentLang]?.deposit_success || 'Deposit successful! You got') +
+                ` ${coinsToAdd.toLocaleString()} FC.`;
+
+            updateWallet();
+            depositAmountInputElement.value = '';
+        } catch (error) {
+            console.error(error);
+            depositMessageElement.textContent = langData[currentLang]?.deposit_error || 'An error occurred during deposit.';
+        } finally {
+            depositBtnElement.disabled = false;
+            depositBtnElement.textContent = langData[currentLang]?.deposit || 'Deposit';
+        }
+    });
+}
+
+const withdrawBtnElement = document.getElementById('withdraw-btn');
+const withdrawNoteElement = document.getElementById('withdraw-note');
+
+// Atur teks tombol & note dari lang.json
+if (withdrawBtnElement && withdrawNoteElement) {
+    withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
+    withdrawNoteElement.innerText = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
 }
 
 // Fungsi cek kelayakan withdraw
-function checkWithdrawEligibility() {
-    const withdrawBtn = document.getElementById('withdraw-btn');
-    const withdrawNote = document.getElementById('withdraw-note');
-    if (!withdrawBtn || !withdrawNote) return;
-
-    const eligible = level >= 10 && farmCoins >= 1000000 && (playerData.totalDeposit || 0) >= 10;
-    withdrawBtn.disabled = !eligible;
-    withdrawNote.style.display = eligible ? 'none' : 'block';
+function checkWithdrawEligibility(level, farmCoins, totalDeposit) {
+    const eligible = level >= 10 && farmCoins >= 1000000 && totalDeposit >= 10;
+    if (withdrawBtnElement && withdrawNoteElement) {
+        withdrawBtnElement.disabled = !eligible;
+        withdrawNoteElement.style.display = eligible ? 'none' : 'block';
+    }
 }
 
 // Ambil data user dari Firebase dan update tombol withdraw
-let playerData = {};
 async function updateWithdrawStatus() {
     if (!userId) return;
 
-    const withdrawBtn = document.getElementById('withdraw-btn');
-    const withdrawNote = document.getElementById('withdraw-note');
-    if (!withdrawBtn || !withdrawNote) {
+    const withdrawBtnElement = document.getElementById('withdraw-btn');
+    const withdrawNoteElement = document.getElementById('withdraw-note');
+    if (!withdrawBtnElement || !withdrawNoteElement) {
         console.warn('Withdraw button or note element not found');
         return;
     }
 
     try {
-        const playerRef = ref(database, `players/${userId}`);
-        const snapshot = await get(playerRef);
-        playerData = snapshot.val() || {};
+        const userRef = ref(database, 'users/' + userId);
+        const snapshot = await get(userRef);
+        const data = snapshot.val() || {};
 
-        checkWithdrawEligibility();
+        const level = data.level || 1;
+        const coins = data.farmCoins || 0;
+        const deposit = data.totalDeposit || 0;
+
+        checkWithdrawEligibility(level, coins, deposit);
     } catch (error) {
         console.error('Withdraw check error:', error);
     }
 }
 
-// Tambahan untuk fix close button
-const closeModalElements = document.querySelectorAll('.close');
-if (closeModalElements) {
-    closeModalElements.forEach(closeBtn => {
-        addSafeClickListener(closeBtn, () => {
-            const settingsModalElement = document.getElementById('settings-modal');
-            if (settingsModalElement) {
-                settingsModalElement.style.display = 'none';
-                playMenuSound();
-            }
-            const rewardModalElement = document.getElementById('reward-modal');
-            if (rewardModalElement) {
-                rewardModalElement.style.display = 'none';
-            }
-        });
-    });
-}
-
-// Pastikan audio tetap jalan
-function ensureAudio() {
-    if (bgm && !isAudioPlaying) playBgm();
-    updateVolumes();
-}
-document.addEventListener('visibilitychange', ensureAudio);
-
-// Tambahan untuk fix settings button
-const settingsBtnElement = document.getElementById('settings-btn');
-if (settingsBtnElement && !settingsBtnElement._listenerAdded) {
-    addSafeClickListener(settingsBtnElement, () => {
-        const settingsModalElement = document.getElementById('settings-modal');
-        if (settingsModalElement) {
-            settingsModalElement.style.display = 'block';
-            playMenuSound();
-        }
-    });
-    settingsBtnElement._listenerAdded = true;
-}
+// Jalankan saat halaman siap
+updateWithdrawStatus();

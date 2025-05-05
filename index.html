@@ -108,13 +108,14 @@
 
   <!-- EXCHANGE -->
   <div class="exchange-container">
-  <h3 class="exchange-title">Exchange</h3>
+  <h3 class="exchange-title">Live Exchange</h3>
+  <div class="exchange-rate" id="live-rate">Loading rate...</div>
 
   <div class="exchange-section">
     <label for="exchange-amount">Amount:</label>
     <input type="number" id="exchange-amount" placeholder="Enter amount" oninput="updateExchangeResult()">
-    
-    <select id="exchange-direction">
+
+    <select id="exchange-direction" onchange="updateExchangeResult()">
       <option value="piToFc">Pi → FC</option>
       <option value="fcToPi">FC → Pi</option>
     </select>

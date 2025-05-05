@@ -1826,7 +1826,6 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
 
             await update(playerRef, {
                 piBalance: newPiBalance,
-                farmCoins: newFC,
                 totalDeposit: previousDeposit + piAmount
             });
 

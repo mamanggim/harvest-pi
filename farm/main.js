@@ -1317,7 +1317,6 @@ function switchTab(tab) {
 
 // Exchange PI to Farm Coins to PI
 let currentExchangeRate = 1000000; // default awal 1 Pi = 1.000.000 FC
-const coinSound = document.getElementById("coin-sound");
 
 // Ambil rate dari Firebase
 function loadExchangeRate() {

@@ -406,8 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const exchangeBtnElement = document.getElementById('exchange-btn');
-    if (exchangeBtnElement) addSafeClickListener(exchangeBtnElement, exchangePi);
+    if (exchangeBtnElement) addSafeClickListener(exchangeBtnElement, handleExchange);
 
     const exchangeAmountElement = document.getElementById('exchange-amount');
     if (exchangeAmountElement) exchangeAmountElement.addEventListener('input', updateExchangeResult);

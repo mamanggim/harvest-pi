@@ -1315,39 +1315,77 @@ function switchTab(tab) {
     playMenuSound();
 }
 
-// Exchange PI to Farm Coins
-function exchangePi() {
-    const exchangeAmountElement = document.getElementById('exchange-amount');
-    if (!exchangeAmountElement) return;
+// Exchange PI to Farm Coins to PI
+function loadExchangeRate() {
+  const refPath = ref(database, 'exchangeRate');
+  onValue(refPath, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
 
-    const amount = parseFloat(exchangeAmountElement.value);
-    if (isNaN(amount) || amount <= 0) {
-        showNotification(langData[currentLang]?.invalidAmount || 'Invalid amount!');
-        return;
-    }
+    piToFarmRate = data.currentRate;
 
-    if (pi >= amount) {
-        pi -= amount;
-        farmCoins += amount * piToFarmRate;
-        updateWallet();
-        showNotification(langData[currentLang]?.exchanged || 'Exchanged!');
-        playCoinSound();
-        checkCoinAchievement();
-        updateExchangeResult();
-    } else {
-        showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
-    }
+    const rateEl = document.getElementById('current-rate');
+    const changeEl = document.getElementById('rate-change');
+
+    if (rateEl) rateEl.textContent = piToFarmRate.toLocaleString();
+
+    const diff = ((data.currentRate - data.yesterdayRate) / data.yesterdayRate) * 100;
+    changeEl.textContent = `${diff >= 0 ? '+' : ''}${diff.toFixed(2)}%`;
+    changeEl.className = 'rate-change ' + (diff >= 0 ? 'positive' : 'negative');
+  });
 }
 
-// Update exchange result
-function updateExchangeResult() {
-    const exchangeAmountElement = document.getElementById('exchange-amount');
-    const exchangeResultElement = document.getElementById('exchange-result');
-    if (!exchangeAmountElement || !exchangeResultElement) return;
+function exchangePiToFC() {
+  const amount = parseFloat(document.getElementById('exchange-amount').value);
+  if (isNaN(amount) || amount <= 0 || pi < amount) return showNotification("Invalid or insufficient Pi!");
 
-    const amount = parseFloat(exchangeAmountElement.value) || 0;
-    const farmCoinsResult = amount * piToFarmRate;
-    exchangeResultElement.textContent = farmCoinsResult;
+  const result = amount * piToFarmRate;
+  pi -= amount;
+  farmCoins += result;
+  update(ref(database, `exchangeRate`), { demand: increment(amount) });
+
+  updateWallet();
+  showNotification(`You got ${result.toLocaleString()} FC!`);
+  document.getElementById('exchange-result').textContent = `You will get: ${result.toLocaleString()} FC`;
+}
+
+function exchangeFCToPi() {
+  const amount = parseFloat(document.getElementById('exchange-amount').value);
+  const neededFC = amount * piToFarmRate;
+  if (isNaN(amount) || amount <= 0 || farmCoins < neededFC) return showNotification("Invalid or insufficient FC!");
+
+  pi += amount;
+  farmCoins -= neededFC;
+  update(ref(database, `exchangeRate`), { supply: increment(amount) });
+
+  updateWallet();
+  showNotification(`You got ${amount.toLocaleString()} Pi!`);
+  document.getElementById('exchange-result').textContent = `You will get: ${amount.toLocaleString()} Pi`;
+}
+
+// Update exchange rate
+function updateExchangeRate() {
+  const refPath = ref(database, 'exchangeRate');
+  get(refPath).then((snapshot) => {
+    const data = snapshot.val();
+    const { baseRate, currentRate, demand, supply } = data;
+    
+    const ratio = (demand + 1) / (supply + 1);
+    let newRate = baseRate * ratio;
+
+    // Koreksi ±10%
+    const maxChange = 0.10;
+    const changePercent = Math.max(-maxChange, Math.min((newRate - currentRate) / currentRate, maxChange));
+    newRate = Math.round(currentRate * (1 + changePercent));
+
+    update(refPath, {
+      yesterdayRate: currentRate,
+      currentRate: newRate,
+      demand: 0,
+      supply: 0,
+      lastUpdate: new Date().toISOString().split('T')[0]
+    });
+  });
 }
 
 // Modal untuk daily reward

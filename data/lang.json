@@ -56,6 +56,8 @@
     "deposit_placeholder": "Enter PI amount",
     "deposit_button": "Deposit PI to Farm Coin",
     "deposit_note": "Minimum deposit 1 PI",
+    "deposit_error": "Error during deposit.",
+    "deposit_success_prefix": "You received",
     "withdraw_title": "Withdraw",
     "withdraw_button": "Withdraw PI",
     "withdraw_note": "This feature will unlock when you reach:\n- Level 10\n- Farm Coin ≥ 1,000,000\n- Total Deposit ≥ 10 PI"
@@ -122,6 +124,8 @@
     "deposit_placeholder": "Masukkan jumlah PI",
     "deposit_button": "Setor PI ke Farm Coin",
     "deposit_note": "Minimal setor 1 PI",
+    "deposit_error": "Terjadi kesalahan saat setor.",
+    "deposit_success_prefix": "Kamu menerima",
     "withdraw_title": "Tarik",
     "withdraw_button": "Tarik PI",
     "withdraw_note": "Fitur akan terbuka setelah kamu mencapai:\n- Level 10\n- Farm Coin ≥ 1.000.000\n- Total Deposit ≥ 10 PI"

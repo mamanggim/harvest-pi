@@ -1169,60 +1169,37 @@ input[type="range"] {
 
 /* === EXCHANGE CENTER ===*/
 .exchange-container {
-  background: #111827;
+  background: linear-gradient(135deg, #1e1e2f, #2b2b40);
   padding: 20px;
-  border-radius: 12px;
-  color: #ffffff;
-  box-shadow: 0 0 20px #00ffc8;
-  max-width: 400px;
-  margin: 30px auto;
-  font-family: 'Segoe UI', sans-serif;
+  border-radius: 15px;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(0, 255, 170, 0.5);
 }
-
 .exchange-title {
-  font-size: 24px;
-  margin-bottom: 8px;
-  color: #00ffc8;
-  text-align: center;
+  font-size: 1.5rem;
+  color: #00ffaa;
 }
-
 .exchange-rate {
-  text-align: center;
-  font-size: 14px;
-  margin-bottom: 14px;
-  color: #c4f5ff;
+  font-weight: bold;
+  color: #00ffaa;
+  margin-bottom: 10px;
 }
-
-.exchange-section input,
-.exchange-section select {
-  width: 100%;
-  padding: 10px;
+.exchange-result {
+  margin: 10px 0;
+  color: #ffeb3b;
+}
+.exchange-section input, .exchange-section select {
+  padding: 8px;
   border-radius: 8px;
   border: none;
-  font-size: 16px;
   margin-bottom: 10px;
-  background-color: #1f2937;
-  color: #fff;
-}
-
-.exchange-section button {
   width: 100%;
-  padding: 12px;
-  background-color: #00ffc8;
+}
+#exchange-btn {
+  background: #00ffaa;
   color: #000;
   font-weight: bold;
-  border: none;
+  padding: 10px;
   border-radius: 10px;
   cursor: pointer;
-  transition: 0.3s;
-}
-
-.exchange-section button:hover {
-  background-color: #00e6b8;
-}
-
-.exchange-result {
-  text-align: center;
-  margin: 8px 0;
-  font-weight: bold;
 }

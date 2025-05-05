@@ -1025,7 +1025,7 @@ input[type="range"] {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/*-- Finance --*/
+/* === FINANCE ===*/
 #finance {
   background: #333;
   border-radius: 10px;
@@ -1165,4 +1165,40 @@ input[type="range"] {
   #finance p#withdraw-note {
     font-size: 9px;
   }
+}
+
+/* === EXCHANGE CENTER ===*/
+.exchange-container {
+  background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+  padding: 20px;
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 0 15px #00fff7cc;
+  max-width: 400px;
+  margin: auto;
+  text-align: center;
+}
+
+.exchange-buttons button {
+  margin: 5px;
+  padding: 10px 15px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  background-color: #00c9ff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.exchange-buttons button:hover {
+  background-color: #005eff;
+}
+
+.rate-change.positive {
+  color: #00ff88;
+}
+
+.rate-change.negative {
+  color: #ff4b4b;
 }

@@ -1680,27 +1680,6 @@ function updateUIText() {
         sellSectionTitleElement.textContent = langData[currentLang]?.sellSectionTitle || 'Sell Items';
     }
 
-    // Tambah untuk tab depositPi
-    const financeTitleElement = document.getElementById('finance-title');
-    if (financeTitleElement) {
-        financeTitleElement.textContent = langData[currentLang]?.depositPiTab || 'Deposit Pi Coin';
-    }
-
-    const confirmDepositElement = document.getElementById('confirm-deposit');
-    if (confirmDepositElement) {
-        confirmDepositElement.textContent = langData[currentLang]?.deposit || 'Deposit';
-    }
-
-    const withdrawBtnElement = document.getElementById('withdraw-btn');
-    if (withdrawBtnElement) {
-        withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
-    }
-
-    const withdrawNoteElement = document.getElementById('withdraw-note');
-    if (withdrawNoteElement) {
-        withdrawNoteElement.textContent = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
-    }
-
     updateWallet();
     renderShop();
     renderInventory();

@@ -491,6 +491,11 @@ async function loadPlayerData() {
                 });
             }
 
+            const piBalanceElement = document.getElementById('pi-balance');
+            const fcBalanceElement = document.getElementById('fc-balance');
+            if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
+            if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
+            
             isDataLoaded = true;
             updateWallet();
             updateVolumes();

@@ -1325,7 +1325,7 @@ function switchTab(tab) {
 }
 
 // Exchange PI to Farm Coins to PI
-let currentExchangeRate = 1000000; // default awal 1 Pi = 1.000.000 FC
+let currentExchangeRate = 1000000;
 
 function loadExchangeRate() {
     const rateRef = ref(database, "exchangeRate/liveRate");
@@ -1344,11 +1344,13 @@ function updateExchangeResult() {
     const direction = document.getElementById("exchange-direction").value;
 
     const result = (direction === "piToFc")
-        ? amount * currentExchangeRate
+        ? Math.floor(amount * currentExchangeRate)
         : amount / currentExchangeRate;
 
     document.getElementById("exchange-result").textContent =
-        `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 4 })}`;
+        `You will get: ${direction === "piToFc"
+            ? result.toLocaleString()
+            : result.toLocaleString(undefined, { maximumFractionDigits: 4 })}`;
 }
 
 async function handleExchange() {
@@ -1362,29 +1364,29 @@ async function handleExchange() {
     if (!data) return showNotification("Player data not found!");
     if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-    let pi = parseFloat(data.piBalance || 0);
-    let fc = parseFloat(data.farmCoins || 0);
+    let pi = Number(data.piBalance || 0);
+    let fc = Number(data.farmCoins || 0);
 
     if (direction === "piToFc") {
         if (pi < amount) return showNotification("Not enough Pi!");
         pi -= amount;
-        fc += amount * currentExchangeRate;
+        fc += Math.floor(amount * currentExchangeRate);
     } else {
         if (fc < amount) return showNotification("Not enough FC!");
         fc -= amount;
         pi += amount / currentExchangeRate;
     }
 
-    const roundedPi = Math.round(pi * 10000) / 10000;
-    const roundedFc = Math.round(fc * 10000) / 10000;
+    pi = Math.round(pi * 10000) / 10000;
+    fc = Math.floor(fc); // pastikan FC selalu integer
 
     await update(playerRef, {
-        piBalance: roundedPi,
-        farmCoins: roundedFc
+        piBalance: pi,
+        farmCoins: fc
     });
 
-    document.getElementById("pi-balance").textContent = roundedPi.toLocaleString(undefined, { maximumFractionDigits: 4 });
-    document.getElementById("fc-balance").textContent = roundedFc.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    document.getElementById("fc-balance").textContent = fc.toLocaleString();
     document.getElementById("exchange-amount").value = "";
     updateExchangeResult();
     coinSound.play();

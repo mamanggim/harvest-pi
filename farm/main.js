@@ -263,7 +263,7 @@ async function authenticateWithPi() {
             userId = user.uid; // Gunain UID, lebih unik
             const playerRef = ref(database, `players/${userId}`);
 
-            loadUserBalances(); // Tampilkan saldo Pi & FC dari database
+            loadPlayerData(); // Tampilkan saldo Pi & FC dari database
             
             update(playerRef, {
                 piUser: {

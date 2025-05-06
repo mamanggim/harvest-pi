@@ -569,7 +569,7 @@ function updateWallet() {
     }
 
     if (piCoinsElement) {
-        piCoinsElement.textContent = `${pi.toFixed(4)} PI`;
+        piCoinsElement.textContent = `${pi.toFixed(5)} PI`;
     } else {
         console.warn('Element with ID "pi-coins" not found');
     }
@@ -600,7 +600,7 @@ function updateWallet() {
         farmCoinBalanceElement.textContent = farmCoins;
     }
     if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = pi.toFixed(4);
+        piCoinBalanceElement.textContent = pi.toFixed(5);
     }
 
     savePlayerData();
@@ -1350,7 +1350,7 @@ function updateExchangeResult() {
     document.getElementById("exchange-result").textContent =
         `You will get: ${direction === "piToFc"
             ? result.toLocaleString()
-            : result.toLocaleString(undefined, { maximumFractionDigits: 4 })}`;
+            : result.toLocaleString(undefined, { maximumFractionDigits: 5 })}`;
 }
 
 async function handleExchange() {
@@ -1385,7 +1385,7 @@ async function handleExchange() {
         farmCoins: fc
     });
 
-    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 5 });
     document.getElementById("fc-balance").textContent = fc.toLocaleString();
     document.getElementById("exchange-amount").value = "";
     updateExchangeResult();
@@ -1895,12 +1895,12 @@ const withdrawNoteElement = document.getElementById('withdraw-note');
 // Atur teks tombol & note dari lang.json
 if (withdrawBtnElement && withdrawNoteElement) {
     withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
-    withdrawNoteElement.innerText = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
+    withdrawNoteElement.innerText = langData[currentLang]?.withdraw_note || 'You need Level 10, 10M FC, and 10 Pi deposited to withdraw.';
 }
 
 // Fungsi cek kelayakan withdraw
 function checkWithdrawEligibility(level, farmCoins, totalDeposit) {
-    const eligible = level >= 10 && farmCoins >= 1000000 && totalDeposit >= 10;
+    const eligible = level >= 10 && farmCoins >= 10000000 && totalDeposit >= 10;
     if (withdrawBtnElement && withdrawNoteElement) {
         withdrawBtnElement.disabled = !eligible;
         withdrawNoteElement.style.display = eligible ? 'none' : 'block';

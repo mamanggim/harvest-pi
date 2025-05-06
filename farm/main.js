@@ -1327,7 +1327,6 @@ function switchTab(tab) {
 // Exchange PI to Farm Coins to PI
 let currentExchangeRate = 1000000; // default awal 1 Pi = 1.000.000 FC
 
-// Ambil rate dari Firebase
 function loadExchangeRate() {
     const rateRef = ref(database, "exchangeRate/liveRate");
     onValue(rateRef, (snapshot) => {
@@ -1340,30 +1339,31 @@ function loadExchangeRate() {
 loadExchangeRate();
 
 function updateExchangeResult() {
-    const amount = parseFloat(document.getElementById("exchange-amount").value) || 0;
+    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
+    const amount = parseFloat(rawAmount) || 0;
     const direction = document.getElementById("exchange-direction").value;
+
     const result = (direction === "piToFc")
         ? amount * currentExchangeRate
         : amount / currentExchangeRate;
 
-    document.getElementById("exchange-result").textContent = `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    document.getElementById("exchange-result").textContent =
+        `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 4 })}`;
 }
 
 async function handleExchange() {
-    const amount = parseFloat(document.getElementById("exchange-amount").value);
+    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
+    const amount = parseFloat(rawAmount);
     const direction = document.getElementById("exchange-direction").value;
     const playerRef = ref(database, `players/${userId}`);
     const snapshot = await get(playerRef);
     const data = snapshot.val();
 
     if (!data) return showNotification("Player data not found!");
+    if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-    let pi = data.piBalance || 0;
-    let fc = data.farmCoins || 0;
-
-    if (isNaN(amount) || amount <= 0) {
-        return showNotification("Invalid amount!");
-    }
+    let pi = parseFloat(data.piBalance || 0);
+    let fc = parseFloat(data.farmCoins || 0);
 
     if (direction === "piToFc") {
         if (pi < amount) return showNotification("Not enough Pi!");
@@ -1375,13 +1375,16 @@ async function handleExchange() {
         pi += amount / currentExchangeRate;
     }
 
+    const roundedPi = Math.round(pi * 10000) / 10000;
+    const roundedFc = Math.round(fc * 10000) / 10000;
+
     await update(playerRef, {
-        piBalance: Math.floor(pi),
-        farmCoins: Math.floor(fc)
+        piBalance: roundedPi,
+        farmCoins: roundedFc
     });
 
-    document.getElementById("pi-balance").textContent = Math.floor(pi).toLocaleString();
-    document.getElementById("fc-balance").textContent = Math.floor(fc).toLocaleString();
+    document.getElementById("pi-balance").textContent = roundedPi.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    document.getElementById("fc-balance").textContent = roundedFc.toLocaleString(undefined, { maximumFractionDigits: 4 });
     document.getElementById("exchange-amount").value = "";
     updateExchangeResult();
     coinSound.play();

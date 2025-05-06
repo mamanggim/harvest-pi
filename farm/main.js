@@ -558,25 +558,7 @@ function updateWallet() {
     if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
     if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
     
-    // Simpan data setelah update (jika perlu)
-    savePlayerData();
-}
-
-    // Update elemen di tab depositPi
-    const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
-    const piCoinBalanceElement = document.getElementById('pi-coin-balance');
-    if (farmCoinBalanceElement) {
-        farmCoinBalanceElement.textContent = farmCoins;
-    }
-    if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = pi.toFixed(6);
-    }
-
-    const piBalanceElement = document.getElementById('pi-balance');
-    const fcBalanceElement = document.getElementById('fc-balance');
-    if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
-    if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
-
+    // Simpan data setelah update
     savePlayerData();
 }
 

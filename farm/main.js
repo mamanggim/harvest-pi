@@ -427,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
       directionSelect.addEventListener("change", updateExchangeResult);
     }
 
-    const exchangeAmountElement = document.getElementById("exchange-amount");
     if (exchangeAmountElement) {
       exchangeAmountElement.addEventListener("input", updateExchangeResult);
     }

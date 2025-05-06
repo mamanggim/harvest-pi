@@ -107,23 +107,28 @@
   </div>
 
   <!-- EXCHANGE -->
-  <div class="exchange-container">
   <div class="exchange-box">
-  <h3 style="margin-bottom: 10px;">Exchange PI ↔ FC</h3>
-  <div id="live-rate" class="rate-indicator">Loading rate...</div>
+  <h3 id="live-rate">Loading rate...</h3>
 
   <select id="exchange-direction">
-    <option value="piToFc">Pi → FC</option>
-    <option value="fcToPi">FC → Pi</option>
+    <option value="piToFc">PI to FC</option>
+    <option value="fcToPi">FC to PI</option>
   </select>
 
-  <input id="exchange-amount" type="number" placeholder="Enter amount">
-  <div id="exchange-result" style="margin: 10px 0;">You will get: 0</div>
-  <button id="exchange-btn">Exchange</button>
-</div>
+  <input id="exchange-amount" type="number" placeholder="Enter amount" step="any" />
 
-<div id="notification" class="notification" style="display:none;"></div>
-<audio id="coin-sound" src="assets/sfx/coin.mp3" preload="auto"></audio>
+  <p id="exchange-result">You will get: 0</p>
+
+  <button id="confirm-exchange">Confirm Exchange</button>
+
+  <button id="quick-exchange-pi">1 Pi = 1,000,000 FC</button>
+  <button id="quick-exchange-fc">1,000,000 FC = 1 Pi</button>
+
+  <div>
+    <span>PI: <span id="pi-balance">0.0000</span></span> |
+    <span>FC: <span id="fc-balance">0.0000</span></span>
+  </div>
+</div>
 
   <!-- FINANCE -->
 <div id="finance" class="tab-content">

@@ -542,42 +542,25 @@ function savePlayerData() {
 
 // Update wallet UI
 function updateWallet() {
-    const farmCoinsElement = document.getElementById('farm-coins');
-    const piCoinsElement = document.getElementById('pi-coins');
-    const waterElement = document.getElementById('water');
-    const levelElement = document.getElementById('level');
-    const xpFillElement = document.getElementById('xp-fill');
-
-    if (farmCoinsElement) {
-        farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
-    } else {
-        console.warn('Element with ID "farm-coins" not found');
+    // Update elemen di tab depositPi
+    const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
+    const piCoinBalanceElement = document.getElementById('pi-coin-balance');
+    if (farmCoinBalanceElement) {
+        farmCoinBalanceElement.textContent = farmCoins;
+    }
+    if (piCoinBalanceElement) {
+        piCoinBalanceElement.textContent = pi.toFixed(6);
     }
 
-    if (piCoinsElement) {
-        piCoinsElement.textContent = `${pi.toFixed(6)} PI`;
-    } else {
-        console.warn('Element with ID "pi-coins" not found');
-    }
-
-    if (waterElement) {
-        waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
-    } else {
-        console.warn('Element with ID "water" not found');
-    }
-
-    if (levelElement) {
-        levelElement.textContent = `Level: ${level} | XP: ${xp}`;
-    } else {
-        console.warn('Element with ID "level" not found');
-    }
-
-    if (xpFillElement) {
-        const xpPercentage = (xp / (level * 100)) * 100;
-        xpFillElement.style.width = `${xpPercentage}%`;
-    } else {
-        console.warn('Element with ID "xp-fill" not found');
-    }
+    // Update elemen utama
+    const piBalanceElement = document.getElementById('pi-balance');
+    const fcBalanceElement = document.getElementById('fc-balance');
+    if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
+    if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
+    
+    // Simpan data setelah update (jika perlu)
+    savePlayerData();
+}
 
     // Update elemen di tab depositPi
     const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
@@ -588,6 +571,11 @@ function updateWallet() {
     if (piCoinBalanceElement) {
         piCoinBalanceElement.textContent = pi.toFixed(6);
     }
+
+    const piBalanceElement = document.getElementById('pi-balance');
+    const fcBalanceElement = document.getElementById('fc-balance');
+    if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
+    if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
 
     savePlayerData();
 }

@@ -1324,8 +1324,7 @@ function switchTab(tab) {
     playMenuSound();
 }
 
-// Exchange PI to Farm Coins to PI
-// Final Exchange Script
+// Exchange PI to Farm Coins to PI Live Rate
 let currentExchangeRate = 1000000; // Default awal
 let currentSupply = 0;
 
@@ -1359,19 +1358,22 @@ function updateExchangeResult() {
 
 async function handleExchange() {
   const amount = parseFloat(document.getElementById("exchange-amount").value);
-  const direction = document.getElementById("exchange-direction").value;
-  const playerRef = ref(database, `players/${userId}`);
+  const direction = document.querySelector('input[name="exchange-direction"]:checked').value;
+
+  if (isNaN(amount) || amount <= 0) {
+    return showNotification("Enter a valid amount!");
+  }
+
+  const playerRef = ref(database, `players/${playerId}`);
   const snapshot = await get(playerRef);
   const data = snapshot.val();
-
   if (!data) return showNotification("Player data not found!");
 
   let pi = data.piBalance || 0;
   let fc = data.farmCoins || 0;
+  const currentExchangeRate = parseFloat(document.getElementById("exchange-rate").textContent);
 
-  if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
-
-  // Cek minimum dan maksimum
+  // Validasi batas minimum & maksimum per hari
   if (direction === "piToFc") {
     if (amount < 0.0001) return showNotification("Minimum exchange is 0.0001 Pi");
     if (amount > 100) return showNotification("Maximum 100 Pi per day");
@@ -1382,9 +1384,8 @@ async function handleExchange() {
     if (fc < amount) return showNotification("Not enough FC!");
   }
 
-  // Update rate supply
+  // Update supply dinamis
   const supplyRef = ref(database, "exchangeRate/supply");
-
   await runTransaction(supplyRef, (current) => {
     current = current || 0;
     return direction === "piToFc"
@@ -1392,7 +1393,7 @@ async function handleExchange() {
       : current - (amount / currentExchangeRate);
   });
 
-  // Proses tukar
+  // Proses tukar saldo
   if (direction === "piToFc") {
     pi -= amount;
     fc += amount * currentExchangeRate;
@@ -1406,6 +1407,7 @@ async function handleExchange() {
     farmCoins: Math.floor(fc),
   });
 
+  // Update UI
   document.getElementById("pi-balance").textContent = Math.floor(pi).toLocaleString();
   document.getElementById("fc-balance").textContent = Math.floor(fc).toLocaleString();
   document.getElementById("exchange-amount").value = "";

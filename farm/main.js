@@ -452,8 +452,8 @@ async function loadPlayerData() {
             console.warn('No userId, please login first!');
             return;
         }
-        const playerRef = ref(database, `players/${userId}`);
 
+        const playerRef = ref(database, `players/${userId}`);
         onValue(playerRef, (snapshot) => {
             if (isDataLoaded) return;
 
@@ -491,11 +491,12 @@ async function loadPlayerData() {
                 });
             }
 
+            // Update UI balance langsung di sini
             const piBalanceElement = document.getElementById('pi-balance');
             const fcBalanceElement = document.getElementById('fc-balance');
             if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
             if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
-            
+
             isDataLoaded = true;
             updateWallet();
             updateVolumes();

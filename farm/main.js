@@ -569,7 +569,7 @@ function updateWallet() {
     }
 
     if (piCoinsElement) {
-        piCoinsElement.textContent = `${pi.toFixed(5)} PI`;
+        piCoinsElement.textContent = `${pi.toFixed(4)} PI`;
     } else {
         console.warn('Element with ID "pi-coins" not found');
     }
@@ -600,7 +600,7 @@ function updateWallet() {
         farmCoinBalanceElement.textContent = farmCoins;
     }
     if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = pi.toFixed(5);
+        piCoinBalanceElement.textContent = pi.toFixed(4);
     }
 
     savePlayerData();
@@ -1350,7 +1350,7 @@ function updateExchangeResult() {
     document.getElementById("exchange-result").textContent =
         `You will get: ${direction === "piToFc"
             ? result.toLocaleString()
-            : result.toLocaleString(undefined, { maximumFractionDigits: 5 })}`;
+            : result.toLocaleString(undefined, { maximumFractionDigits: 4 })}`;
 }
 
 async function handleExchange() {
@@ -1385,7 +1385,7 @@ async function handleExchange() {
         farmCoins: fc
     });
 
-    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 5 });
+    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 4 });
     document.getElementById("fc-balance").textContent = fc.toLocaleString();
     document.getElementById("exchange-amount").value = "";
     updateExchangeResult();

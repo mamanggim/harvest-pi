@@ -1168,38 +1168,48 @@ input[type="range"] {
 }
 
 /* === EXCHANGE CENTER ===*/
-.exchange-container {
-  background: linear-gradient(135deg, #1e1e2f, #2b2b40);
+.exchange-box {
+  background-color: #1e293b;
+  border-radius: 12px;
   padding: 20px;
-  border-radius: 15px;
-  color: #fff;
-  box-shadow: 0 0 15px rgba(0, 255, 170, 0.5);
+  color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
-.exchange-title {
-  font-size: 1.5rem;
-  color: #00ffaa;
-}
-.exchange-rate {
-  font-weight: bold;
-  color: #00ffaa;
-  margin-bottom: 10px;
-}
-.exchange-result {
-  margin: 10px 0;
-  color: #ffeb3b;
-}
-.exchange-section input, .exchange-section select {
-  padding: 8px;
+
+.exchange-box input, .exchange-box select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
   border-radius: 8px;
   border: none;
-  margin-bottom: 10px;
-  width: 100%;
+  font-size: 16px;
+  background-color: #334155;
+  color: white;
 }
-#exchange-btn {
-  background: #00ffaa;
-  color: #000;
+
+.exchange-box button {
+  width: 100%;
+  background-color: #3b82f6;
+  color: white;
+  padding: 12px;
   font-weight: bold;
-  padding: 10px;
+  font-size: 16px;
+  border: none;
   border-radius: 10px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.exchange-box button:hover {
+  background-color: #2563eb;
+}
+
+.notification {
+  background-color: #0f172a;
+  color: #facc15;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+  text-align: center;
+  font-weight: bold;
 }

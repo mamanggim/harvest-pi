@@ -1325,10 +1325,9 @@ function switchTab(tab) {
 }
 
 // Exchange PI to Farm Coins to PI Live Rate
-let currentExchangeRate = 1000000; // Default awal
+let currentExchangeRate = 1000000;
 let currentSupply = 0;
 
-// Load live rate
 function loadExchangeRate() {
   const rateRef = ref(database, "exchangeRate/liveRate");
   onValue(rateRef, (snapshot) => {
@@ -1346,7 +1345,7 @@ function loadExchangeRate() {
 loadExchangeRate();
 
 function updateExchangeResult() {
-  const amount = parseFloat(document.getElementById("exchange-amount").value) || 0;
+  const amount = parseFloat(document.getElementById("exchange-amount").value.replace(",", ".")) || 0;
   const direction = document.getElementById("exchange-direction").value;
   const result = (direction === "piToFc")
     ? amount * currentExchangeRate
@@ -1356,7 +1355,6 @@ function updateExchangeResult() {
     `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
-// Exchange Dinamis Supply Demand
 async function handleExchange() {
   const amountInput = document.getElementById("exchange-amount");
   const direction = document.getElementById("exchange-direction").value;
@@ -1367,10 +1365,8 @@ async function handleExchange() {
   const snapshot = await get(playerRef);
   let pi = snapshot.val().piBalance || 0;
   let fc = snapshot.val().farmCoins || 0;
+  const rate = currentExchangeRate || 1;
 
-  const currentExchangeRate = window.currentExchangeRate || 1;
-
-  // Validasi batas
   if (direction === "piToFc") {
     if (amount < 0.0001) return showNotification("Minimum 0.0001 Pi");
     if (amount > 100) return showNotification("Maximum 100 Pi per day");
@@ -1381,36 +1377,57 @@ async function handleExchange() {
     if (fc < amount) return showNotification("Not enough FC!");
   }
 
-  // Update supply untuk rate dinamis
   const supplyRef = ref(database, "exchangeRate/supply");
   await runTransaction(supplyRef, (current) => {
     current = current || 0;
     return direction === "piToFc"
       ? current + amount
-      : current - (amount / currentExchangeRate);
+      : current - (amount / rate);
   });
 
-  // Tukar saldo
   if (direction === "piToFc") {
     pi -= amount;
-    fc += amount * currentExchangeRate;
+    fc += amount * rate;
   } else {
     fc -= amount;
-    pi += amount / currentExchangeRate;
+    pi += amount / rate;
   }
 
+  pi = Math.round(pi * 10000) / 10000;
+  fc = Math.round(fc * 10000) / 10000;
+
   await update(playerRef, {
-    piBalance: Math.round(pi * 10000) / 10000,
-    farmCoins: Math.round(fc * 10000) / 10000,
+    piBalance: pi,
+    farmCoins: fc,
   });
 
-  document.getElementById("pi-balance").textContent = (Math.round(pi * 10000) / 10000).toFixed(4);
-  document.getElementById("fc-balance").textContent = (Math.round(fc * 10000) / 10000).toFixed(4);
+  document.getElementById("pi-balance").textContent = pi.toFixed(4);
+  document.getElementById("fc-balance").textContent = fc.toFixed(4);
   amountInput.value = "";
   updateExchangeResult();
   coinSound.play();
   showNotification("Exchange success!");
 }
+
+// Tambahkan semua listener
+addSafeClickListener("confirm-exchange", handleExchange);
+
+addSafeClickListener("quick-exchange-pi", () => {
+  document.getElementById("exchange-direction").value = "piToFc";
+  document.getElementById("exchange-amount").value = "1";
+  updateExchangeResult();
+  handleExchange();
+});
+
+addSafeClickListener("quick-exchange-fc", () => {
+  document.getElementById("exchange-direction").value = "fcToPi";
+  document.getElementById("exchange-amount").value = "1000000";
+  updateExchangeResult();
+  handleExchange();
+});
+
+document.getElementById("exchange-amount").addEventListener("input", updateExchangeResult);
+document.getElementById("exchange-direction").addEventListener("change", updateExchangeResult);
 
 // Modal untuk daily reward
 if (claimModalBtn) {

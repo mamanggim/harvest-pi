@@ -1203,3 +1203,9 @@ input[type="range"] {
   border-radius: 10px;
   cursor: pointer;
 }
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}

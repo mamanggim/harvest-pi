@@ -569,7 +569,7 @@ function updateWallet() {
     }
 
     if (piCoinsElement) {
-        piCoinsElement.textContent = `${pi.toFixed(2)} PI`;
+        piCoinsElement.textContent = `${pi.toFixed(4)} PI`;
     } else {
         console.warn('Element with ID "pi-coins" not found');
     }
@@ -600,7 +600,7 @@ function updateWallet() {
         farmCoinBalanceElement.textContent = farmCoins;
     }
     if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = pi.toFixed(2);
+        piCoinBalanceElement.textContent = pi.toFixed(4);
     }
 
     savePlayerData();

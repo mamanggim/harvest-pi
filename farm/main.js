@@ -1356,35 +1356,32 @@ function updateExchangeResult() {
     `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
+// Exchange Dinamis Supply Demand
 async function handleExchange() {
-  const amount = parseFloat(document.getElementById("exchange-amount").value);
-  const direction = document.querySelector('input[name="exchange-direction"]:checked').value;
+  const amountInput = document.getElementById("exchange-amount");
+  const direction = document.getElementById("exchange-direction").value;
+  const rawAmount = amountInput.value.replace(",", ".");
+  const amount = parseFloat(rawAmount);
+  if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-  if (isNaN(amount) || amount <= 0) {
-    return showNotification("Enter a valid amount!");
-  }
-
-  const playerRef = ref(database, `players/${playerId}`);
   const snapshot = await get(playerRef);
-  const data = snapshot.val();
-  if (!data) return showNotification("Player data not found!");
+  let pi = snapshot.val().piBalance || 0;
+  let fc = snapshot.val().farmCoins || 0;
 
-  let pi = data.piBalance || 0;
-  let fc = data.farmCoins || 0;
-  const currentExchangeRate = parseFloat(document.getElementById("exchange-rate").textContent);
+  const currentExchangeRate = window.currentExchangeRate || 1;
 
-  // Validasi batas minimum & maksimum per hari
+  // Validasi batas
   if (direction === "piToFc") {
-    if (amount < 0.0001) return showNotification("Minimum exchange is 0.0001 Pi");
+    if (amount < 0.0001) return showNotification("Minimum 0.0001 Pi");
     if (amount > 100) return showNotification("Maximum 100 Pi per day");
     if (pi < amount) return showNotification("Not enough Pi!");
   } else {
-    if (amount < 100) return showNotification("Minimum exchange is 100 FC");
+    if (amount < 100) return showNotification("Minimum 100 FC");
     if (amount > 100000000) return showNotification("Maximum 100,000,000 FC per day");
     if (fc < amount) return showNotification("Not enough FC!");
   }
 
-  // Update supply dinamis
+  // Update supply untuk rate dinamis
   const supplyRef = ref(database, "exchangeRate/supply");
   await runTransaction(supplyRef, (current) => {
     current = current || 0;
@@ -1393,7 +1390,7 @@ async function handleExchange() {
       : current - (amount / currentExchangeRate);
   });
 
-  // Proses tukar saldo
+  // Tukar saldo
   if (direction === "piToFc") {
     pi -= amount;
     fc += amount * currentExchangeRate;
@@ -1403,14 +1400,13 @@ async function handleExchange() {
   }
 
   await update(playerRef, {
-    piBalance: Math.floor(pi),
-    farmCoins: Math.floor(fc),
+    piBalance: Math.round(pi * 10000) / 10000,
+    farmCoins: Math.round(fc * 10000) / 10000,
   });
 
-  // Update UI
-  document.getElementById("pi-balance").textContent = Math.floor(pi).toLocaleString();
-  document.getElementById("fc-balance").textContent = Math.floor(fc).toLocaleString();
-  document.getElementById("exchange-amount").value = "";
+  document.getElementById("pi-balance").textContent = (Math.round(pi * 10000) / 10000).toFixed(4);
+  document.getElementById("fc-balance").textContent = (Math.round(fc * 10000) / 10000).toFixed(4);
+  amountInput.value = "";
   updateExchangeResult();
   coinSound.play();
   showNotification("Exchange success!");

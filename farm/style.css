@@ -1167,133 +1167,39 @@ input[type="range"] {
   }
 }
 
-/* === EXCHANGE === */
-#exchange-countainer {
-  background: #333;
-  border-radius: 10px;
+/* === EXCHANGE CENTER ===*/
+.exchange-container {
+  background: linear-gradient(135deg, #1e1e2f, #2b2b40);
   padding: 20px;
-  text-align: center;
-  max-width: 400px;
-  margin: auto;
+  border-radius: 15px;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(0, 255, 170, 0.5);
 }
-
-#exchange-title {
-  font-size: 18px;
-  color: #66ff00;
-  text-shadow: 0 0 5px #66ff00;
-  margin-bottom: 15px;
+.exchange-title {
+  font-size: 1.5rem;
+  color: #00ffaa;
 }
-
-#exchange p {
-  font-size: 12px;
-  margin: 8px 0;
-}
-
-#exchange p span#pi-balance,
-#exchange p span#fc-balance {
-  color: #66ff00;
+.exchange-rate {
   font-weight: bold;
+  color: #00ffaa;
+  margin-bottom: 10px;
 }
-
-#exchange-rate {
-  font-size: 14px;
-  color: #ffeb3b;
-  margin: 15px 0 10px;
-}
-
-#exchange-result {
-  border: 1px solid #fff;
-  margin: 15px 0;
-}
-
-#exchange-section input, .exchange-section select {
-  width: 150px;
+.exchange-result {
   margin: 10px 0;
-  padding: 8px;
-  background: #444;
-  color: #fff;
-  border: 2px solid #fff;
-  border-radius: 6px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
-}
-
-#exchange select#exchange-direction {
-  margin-top: 10px;
-  background: #444;
-  color: #fff;
-  border: 2px solid #fff;
-  border-radius: 6px;
-  padding: 6px;
-  font-size: 12px;
-  font-family: 'Press Start 2P', cursive;
-}
-
-#exchange-btn {
-  background: #4caf50;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 16px;
-  font-size: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: all 0.3s;
-}
-
-#exchange button#exchange-btn:hover {
-  background: #66bb6a;
-}
-
-#exchange button#exchange-btn:disabled {
-  background: #666;
-  cursor: not-allowed;
-}
-
-#exchange p#exchange-result,
-#exchange p#exchange-note {
-  font-size: 10px;
   color: #ffeb3b;
-  margin-top: 10px;
-  line-height: 1.4;
 }
-
-/* Responsive untuk tab exchange */
-@media (max-width: 600px) {
-  #exchange-container {
-    padding: 15px;
-  }
-
-  #exchange-title {
-    font-size: 16px;
-  }
-
-  #exchange h3 {
-    font-size: 12px;
-  }
-
-  #exchange p {
-    font-size: 10px;
-  }
-
-  #exchange input[type="number"]#exchange-amount {
-    width: 120px;
-    padding: 6px;
-    font-size: 10px;
-  }
-
-  #exchange select#exchange-direction {
-    font-size: 10px;
-    padding: 5px;
-  }
-
-  #exchange button#exchange-btn {
-    padding: 6px 12px;
-    font-size: 10px;
-  }
-
-  #exchange p#exchange-result,
-  #exchange p#exchange-note {
-    font-size: 9px;
-  }
+.exchange-section input, .exchange-section select {
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 10px;
+  width: 100%;
+}
+#exchange-btn {
+  background: #00ffaa;
+  color: #000;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
 }

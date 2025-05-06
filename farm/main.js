@@ -48,26 +48,6 @@ let claimedToday = false; // Flag sederhana buat status klaim
 let isClaiming = false; // Tambah untuk lock claim
 let isAudioPlaying = false; // Flag to track audio state
 
-function loadUserBalances() {
-    const playerRef = ref(database, `players/${userId}`);
-    onValue(playerRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        
-        // Jangan gunakan const agar isi variabel global bisa diperbarui
-        pi = data.piBalance || 0;
-        farmCoins = data.farmCoins || 0;
-
-        // Update label balance utama
-        const piBalanceElement = document.getElementById('pi-balance');
-        const fcBalanceElement = document.getElementById('fc-balance');
-        if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
-        if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
-
-        // Update elemen UI lain yang pakai updateWallet()
-        updateWallet();
-    });
-}
-
 // Audio elements
 const bgMusic = document.getElementById('bg-music');
 const bgVoice = document.getElementById('bg-voice');

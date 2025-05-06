@@ -1325,13 +1325,15 @@ function switchTab(tab) {
 }
 
 // Exchange PI to Farm Coins to PI Live Rate
-let currentExchangeRate = 1000000;
+// Variabel Global
+let currentExchangeRate = 1000000; // Default awal
 let currentSupply = 0;
 
+// Load exchange rate dan supply
 function loadExchangeRate() {
   const rateRef = ref(database, "exchangeRate/liveRate");
   onValue(rateRef, (snapshot) => {
-    currentExchangeRate = snapshot.val() || currentExchangeRate;
+    currentExchangeRate = snapshot.val() || 1;
     const rateEl = document.getElementById("live-rate");
     if (rateEl) rateEl.textContent = `1 Pi = ${currentExchangeRate.toLocaleString()} FC`;
     updateExchangeResult();
@@ -1344,6 +1346,7 @@ function loadExchangeRate() {
 }
 loadExchangeRate();
 
+// Hitung hasil penukaran
 function updateExchangeResult() {
   const amount = parseFloat(document.getElementById("exchange-amount").value.replace(",", ".")) || 0;
   const direction = document.getElementById("exchange-direction").value;
@@ -1352,21 +1355,23 @@ function updateExchangeResult() {
     : amount / currentExchangeRate;
 
   document.getElementById("exchange-result").textContent =
-    `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 4 })}`;
 }
 
+// Proses penukaran
 async function handleExchange() {
   const amountInput = document.getElementById("exchange-amount");
   const direction = document.getElementById("exchange-direction").value;
   const rawAmount = amountInput.value.replace(",", ".");
   const amount = parseFloat(rawAmount);
+
   if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
   const snapshot = await get(playerRef);
   let pi = snapshot.val().piBalance || 0;
   let fc = snapshot.val().farmCoins || 0;
-  const rate = currentExchangeRate || 1;
 
+  // Validasi batas & saldo
   if (direction === "piToFc") {
     if (amount < 0.0001) return showNotification("Minimum 0.0001 Pi");
     if (amount > 100) return showNotification("Maximum 100 Pi per day");
@@ -1377,30 +1382,31 @@ async function handleExchange() {
     if (fc < amount) return showNotification("Not enough FC!");
   }
 
+  // Update supply (supply naik saat beli FC, turun saat jual FC)
   const supplyRef = ref(database, "exchangeRate/supply");
   await runTransaction(supplyRef, (current) => {
     current = current || 0;
     return direction === "piToFc"
       ? current + amount
-      : current - (amount / rate);
+      : current - (amount / currentExchangeRate);
   });
 
+  // Update saldo
   if (direction === "piToFc") {
     pi -= amount;
-    fc += amount * rate;
+    fc += amount * currentExchangeRate;
   } else {
     fc -= amount;
-    pi += amount / rate;
+    pi += amount / currentExchangeRate;
   }
 
-  pi = Math.round(pi * 10000) / 10000;
-  fc = Math.round(fc * 10000) / 10000;
-
+  // Simpan perubahan
   await update(playerRef, {
-    piBalance: pi,
-    farmCoins: fc,
+    piBalance: Math.round(pi * 10000) / 10000,
+    farmCoins: Math.round(fc * 10000) / 10000,
   });
 
+  // Tampilkan ke UI
   document.getElementById("pi-balance").textContent = pi.toFixed(4);
   document.getElementById("fc-balance").textContent = fc.toFixed(4);
   amountInput.value = "";
@@ -1409,25 +1415,12 @@ async function handleExchange() {
   showNotification("Exchange success!");
 }
 
-// Tambahkan semua listener
-addSafeClickListener("confirm-exchange", handleExchange);
-
-addSafeClickListener("quick-exchange-pi", () => {
-  document.getElementById("exchange-direction").value = "piToFc";
-  document.getElementById("exchange-amount").value = "1";
-  updateExchangeResult();
-  handleExchange();
-});
-
-addSafeClickListener("quick-exchange-fc", () => {
-  document.getElementById("exchange-direction").value = "fcToPi";
-  document.getElementById("exchange-amount").value = "1000000";
-  updateExchangeResult();
-  handleExchange();
-});
-
+// Listener input dan select
 document.getElementById("exchange-amount").addEventListener("input", updateExchangeResult);
 document.getElementById("exchange-direction").addEventListener("change", updateExchangeResult);
+
+// Tombol tukar
+addSafeClickListener("exchange-btn", handleExchange);
 
 // Modal untuk daily reward
 if (claimModalBtn) {

@@ -427,6 +427,11 @@ document.addEventListener('DOMContentLoaded', () => {
       directionSelect.addEventListener("change", updateExchangeResult);
     }
 
+    const exchangeAmountElement = document.getElementById("exchange-amount");
+    if (exchangeAmountElement) {
+      exchangeAmountElement.addEventListener("input", updateExchangeResult);
+    }
+
     const buyTabElement = document.getElementById('shop-buy-tab');
     const sellTabElement = document.getElementById('shop-sell-tab');
     const shopContentElement = document.getElementById('shop-content');

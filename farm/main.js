@@ -422,6 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const directionSelect = document.getElementById("exchange-direction");
+    if (directionSelect) {
+      directionSelect.addEventListener("change", updateExchangeResult);
+    }
+
     const buyTabElement = document.getElementById('shop-buy-tab');
     const sellTabElement = document.getElementById('shop-sell-tab');
     const shopContentElement = document.getElementById('shop-content');

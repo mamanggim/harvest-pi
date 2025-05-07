@@ -482,6 +482,7 @@ async function loadPlayerData() {
             if (data) {
                 farmCoins = data.farmCoins || 0;
                 pi = data.pi || 0;
+                piBalance = data.piBalance || pi;
                 water = data.water || 0;
                 level = data.level || 1;
                 xp = data.xp || 0;
@@ -495,6 +496,7 @@ async function loadPlayerData() {
                 const initialData = {
                     farmCoins: 0,
                     pi: 0,
+                    piBalance: 0,
                     water: 0,
                     level: 1,
                     xp: 0,
@@ -537,6 +539,7 @@ function savePlayerData() {
     const dataToSave = {
         farmCoins,
         pi,
+        piBalance,
         water,
         level,
         xp,
@@ -570,7 +573,7 @@ function updateWallet() {
     }
 
     if (piCoinsElement) {
-        piCoinsElement.textContent = `${pi.toFixed(6)} PI`;
+        piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`;
     } else {
         console.warn('Element with ID "pi-coins" not found');
     }

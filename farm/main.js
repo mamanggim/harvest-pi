@@ -1369,8 +1369,8 @@ async function handleExchange() {
     const data = snapshot.val();
     if (!data) return showNotification("Player data not found!");
 
-    let pi = data.piBalance || 0;
-    let fc = data.farmCoins || 0;
+    let pi = parseFloat(data.piBalance || data.pi || 0);
+    let fc = parseFloat(data.farmCoins || 0);
 
     // Validasi batas minimal
     if (direction === "piToFc") {
@@ -1379,25 +1379,28 @@ async function handleExchange() {
         pi -= amount;
         fc += amount * currentExchangeRate;
     } else {
-        if (amount < 1000) return showNotification("Minimum 1000 FC");
+        if (amount < 1000) return showNotification("Minimum 1,000 FC");
         if (fc < amount) return showNotification("Not enough FC!");
         fc -= amount;
         pi += amount / currentExchangeRate;
     }
 
-    // Simpan ke Firebase
+    // Simpan hasil akhir
     pi = Math.round(pi * 1000000) / 1000000;
     fc = Math.floor(fc);
+
     await update(playerRef, {
         piBalance: pi,
+        pi: pi, // Sync ke kedua field
         farmCoins: fc
     });
 
-    // Sinkronisasi global
-    window.pi = window.piBalance = pi;
+    // Update variabel global
+    window.pi = pi;
+    window.piBalance = pi;
     window.farmCoins = fc;
 
-    // Simulasi loading tombol
+    // Simulasi tombol
     const btn = document.getElementById("exchange-btn");
     btn.disabled = true;
     btn.textContent = "Processing...";
@@ -1407,8 +1410,7 @@ async function handleExchange() {
     }, 2000);
 
     // Update UI
-    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
-    document.getElementById("fc-balance").textContent = fc.toLocaleString();
+    updateWallet();
     document.getElementById("exchange-amount").value = "";
     updateExchangeResult();
     coinSound.play();

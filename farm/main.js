@@ -1388,30 +1388,30 @@ async function handleExchange() {
     fc = Math.floor(fc);
 
     await update(playerRef, {
-        piBalance: pi,
-        farmCoins: fc
-    });
+    piBalance: pi,
+    farmCoins: fc
+});
 
-    // Simulasi loading 2 detik
-    const btn = document.getElementById("exchange-btn");
-    btn.disabled = true;
-    btn.textContent = "Processing...";
+// Sinkronkan nilai global sekali saja
+window.pi = window.piBalance = pi;
+window.farmCoins = fc;
 
-    setTimeout(() => {
-        // Sinkronisasi nilai global
-        window.pi = window.piBalance = pi;
-        window.farmCoins = fc;
+// Simulasi loading 2 detik hanya untuk tombol
+const btn = document.getElementById("exchange-btn");
+btn.disabled = true;
+btn.textContent = "Processing...";
+setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = "Exchange";
+}, 2000);
 
-        updateWallet();
-        document.getElementById("exchange-amount").value = "";
-        updateExchangeResult();
-        coinSound.play();
-        showNotification("Exchange success!");
-
-        btn.disabled = false;
-        btn.textContent = "Exchange";
-    }, 2000);
-}
+// Update UI setelah transaksi
+document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+document.getElementById("fc-balance").textContent = fc.toLocaleString();
+document.getElementById("exchange-amount").value = "";
+updateExchangeResult();
+coinSound.play();
+showNotification("Exchange success!");
 
 // Modal untuk daily reward
 if (claimModalBtn) {

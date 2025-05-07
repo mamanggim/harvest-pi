@@ -920,16 +920,17 @@ function handlePlotClick(index) {
             if (plotStatus) plotStatus.innerHTML = '';
             if (countdownFill) countdownFill.style.width = '0%';
             plotElement.classList.remove('ready');
-         }, 800);
+        }, 800);
 
-         harvestCount++;
-         savePlayerData();
-         checkHarvestAchievement();
-         showNotification(langData[currentLang]?.harvested || 'Harvested!');
-         playHarvestingSound();
-         renderInventory();
-         renderSellSection();
+        harvestCount++;
+        savePlayerData();
+        checkHarvestAchievement();
+        showNotification(langData[currentLang]?.harvested || 'Harvested!');
+        playHarvestingSound();
+        renderInventory();
+        renderSellSection();
     }
+}
 
 // Fungsi paksa layout agar grid langsung kebentuk
 function forceReflow(el) {

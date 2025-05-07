@@ -906,7 +906,7 @@ function handlePlotClick(index) {
 
         const rect = plotContent ? plotContent.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
         flyImage.style.left = `${rect.left + rect.width / 2 - 30}px`;
-        flyImage.style.top = `${rect.top}px`; // Baris ini tetap, hapus teks "elimina"
+        flyImage.style.top = `${rect.top}px`;
 
         const amountText = document.createElement('div');
         amountText.textContent = `+${yieldAmount}`;

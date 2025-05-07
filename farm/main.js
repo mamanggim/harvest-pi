@@ -1357,6 +1357,8 @@ function updateExchangeResult() {
             : result.toLocaleString(undefined, { maximumFractionDigits: 6 })}`;
 }
 
+let isSyncingExchange = false;
+
 async function handleExchange() {
     const amount = parseFloat(document.getElementById("exchange-amount").value);
     const direction = document.getElementById("exchange-direction").value;

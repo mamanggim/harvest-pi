@@ -460,7 +460,7 @@ async function loadPlayerData() {
             const data = snapshot.val();
             if (data) {
                 farmCoins = data.farmCoins || 0;
-                pi = data.piBalance || data.pi || 0;
+                pi = data.pi || 0;
                 water = data.water || 0;
                 level = data.level || 1;
                 xp = data.xp || 0;
@@ -514,10 +514,12 @@ function savePlayerData() {
     if (!userId || !isDataLoaded) return;
     const playerRef = ref(database, `players/${userId}`);
 
+    const piSynced = Math.round(pi * 1000000) / 1000000;
+
     const dataToSave = {
         farmCoins,
-        pi,
-        piBalance: pi,
+        pi: piSynced,
+        piBalance: piSynced, // sinkron
         water,
         level,
         xp,
@@ -541,18 +543,14 @@ function updateWallet() {
     // Update elemen balance
     const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
     const piCoinBalanceElement = document.getElementById('pi-coin-balance');
-    if (farmCoinBalanceElement) {
-        farmCoinBalanceElement.textContent = farmCoins;
-    }
-    if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = pi.toFixed(6);
-    }
+    if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins;
+    if (piCoinBalanceElement) piCoinBalanceElement.textContent = pi.toFixed(6);
 
     // Update elemen utama
     const piBalanceElement = document.getElementById('pi-balance');
     const fcBalanceElement = document.getElementById('fc-balance');
-    if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString(6);
-    if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
+    if (piBalanceElement) piBalanceElement.textContent = pi.toFixed(6);
+    if (fcBalanceElement) fcBalanceElement.textContent = farmCoins;
     
     // Simpan data setelah update
     savePlayerData();

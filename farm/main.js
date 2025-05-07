@@ -1360,6 +1360,7 @@ function updateExchangeResult() {
 let isSyncingExchange = false;
 
 async function handleExchange() {
+    if (isDataLoaded || isSyncingExchange) return;
     const amount = parseFloat(document.getElementById("exchange-amount").value);
     const direction = document.getElementById("exchange-direction").value;
     const playerRef = ref(database, `players/${userId}`);

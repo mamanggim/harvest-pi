@@ -1391,22 +1391,13 @@ async function handleExchange() {
 
     pi = piBalance = pi;
 
-    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
-    document.getElementById("fc-balance").textContent = fc.toLocaleString();
-    document.getElementById("exchange-amount").value = "";
-    updateExchangeResult();
-    coinSound.play();
-    showNotification("Exchange success!");
-}
+    // Simulasi loading 2 detik
+    const btn = document.getElementById("exchange-btn");
+    btn.disabled = true;
+    btn.textContent = "Processing...";
 
-// Loading simulasi 2 detik
-    document.getElementById("exchange-btn").disabled = true;
-    document.getElementById("exchange-btn").textContent = "Processing...";
     setTimeout(() => {
-        document.getElementById("exchange-btn").disabled = false;
-        document.getElementById("exchange-btn").textContent = "Exchange";
-
-        // Sinkronisasi
+        // Sinkronisasi nilai global
         window.pi = window.piBalance = pi;
         window.farmCoins = fc;
 
@@ -1415,7 +1406,18 @@ async function handleExchange() {
         updateExchangeResult();
         coinSound.play();
         showNotification("Exchange success!");
+
+        btn.disabled = false;
+        btn.textContent = "Exchange";
     }, 2000);
+
+    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+    document.getElementById("fc-balance").textContent = fc.toLocaleString();
+    document.getElementById("exchange-amount").value = "";
+    updateExchangeResult();
+    coinSound.play();
+    showNotification("Exchange success!");
+    }
 }
 
 // Modal untuk daily reward

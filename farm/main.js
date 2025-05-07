@@ -569,7 +569,7 @@ function updateWallet() {
     }
 
     if (piCoinsElement) {
-        piCoinsElement.textContent = `${pi.toFixed(2)} PI`;
+        piCoinsElement.textContent = `${pi.toFixed(6)} PI`;
     } else {
         console.warn('Element with ID "pi-coins" not found');
     }
@@ -600,7 +600,7 @@ function updateWallet() {
         farmCoinBalanceElement.textContent = farmCoins;
     }
     if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = pi.toFixed(2);
+        piCoinBalanceElement.textContent = pi.toFixed(6);
     }
 
     savePlayerData();
@@ -1047,7 +1047,6 @@ function buyVegetable(id, currency) {
                 updateWallet();
                 showTransactionAnimation(`-100`, false, document.querySelector(`.buy-btn[data-id="water"]`));
                 playBuyingSound();
-                savePlayerData(); // Simpan perubahan ke Firebase
             } else {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
@@ -1058,7 +1057,6 @@ function buyVegetable(id, currency) {
                 updateWallet();
                 showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
                 playBuyingSound();
-                savePlayerData(); // Simpan perubahan ke Firebase
             } else {
                 showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
             }
@@ -1094,10 +1092,10 @@ function buyVegetable(id, currency) {
 
     if (canBuy) {
         addToInventory('seed', veg, 1);
+        savePlayerData();
         updateWallet();
         renderInventory();
         playBuyingSound();
-        savePlayerData(); // Simpan perubahan ke Firebase
     }
 }
 
@@ -1327,9 +1325,8 @@ function switchTab(tab) {
 }
 
 // Exchange PI to Farm Coins to PI
-let currentExchangeRate = 1000000; // default awal 1 Pi = 1.000.000 FC
+let currentExchangeRate = 1000000;
 
-// Ambil rate dari Firebase
 function loadExchangeRate() {
     const rateRef = ref(database, "exchangeRate/liveRate");
     onValue(rateRef, (snapshot) => {
@@ -1342,65 +1339,58 @@ function loadExchangeRate() {
 loadExchangeRate();
 
 function updateExchangeResult() {
-    const amount = parseFloat(document.getElementById("exchange-amount").value) || 0;
+    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
+    const amount = parseFloat(rawAmount) || 0;
     const direction = document.getElementById("exchange-direction").value;
+
     const result = (direction === "piToFc")
-        ? amount * currentExchangeRate
+        ? Math.floor(amount * currentExchangeRate)
         : amount / currentExchangeRate;
 
-    document.getElementById("exchange-result").textContent = `You will get: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    document.getElementById("exchange-result").textContent =
+        `You will get: ${direction === "piToFc"
+            ? result.toLocaleString()
+            : result.toLocaleString(undefined, { maximumFractionDigits: 6 })}`;
 }
 
 async function handleExchange() {
-    const amount = parseFloat(document.getElementById("exchange-amount").value);
+    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
+    const amount = parseFloat(rawAmount);
     const direction = document.getElementById("exchange-direction").value;
     const playerRef = ref(database, `players/${userId}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
 
-    if (!userId) return showNotification("User not logged in!");
+    if (!data) return showNotification("Player data not found!");
     if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-    try {
-        // Ambil data terbaru dari Firebase untuk menghindari race condition
-        const snapshot = await get(playerRef);
-        const data = snapshot.val();
-        if (!data) return showNotification("Player data not found!");
+    let pi = Number(data.piBalance || 0);
+    let fc = Number(data.farmCoins || 0);
 
-        // Gunakan variabel global untuk memastikan konsistensi
-        pi = data.piBalance || 0;
-        farmCoins = data.farmCoins || 0;
-
-        if (direction === "piToFc") {
-            if (pi < amount) return showNotification("Not enough Pi!");
-            pi -= amount;
-            farmCoins += Math.floor(amount * currentExchangeRate);
-            showTransactionAnimation(`-${amount} PI`, false, document.getElementById("exchange-btn"));
-        } else {
-            if (farmCoins < amount) return showNotification("Not enough Farm Coins!");
-            farmCoins -= amount;
-            pi += amount / currentExchangeRate;
-            showTransactionAnimation(`-${amount} FC`, false, document.getElementById("exchange-btn"));
-        }
-
-        // Simpan perubahan ke Firebase
-        await update(playerRef, {
-            piBalance: pi,
-            farmCoins: farmCoins
-        });
-
-        // Update UI
-        const piBalanceElement = document.getElementById("pi-balance");
-        const fcBalanceElement = document.getElementById("fc-balance");
-        if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 2 });
-        if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
-
-        document.getElementById("exchange-amount").value = "";
-        updateExchangeResult();
-        playCoinSound();
-        showNotification("Exchange successful!");
-    } catch (error) {
-        console.error("Exchange error:", error.message);
-        showNotification("Exchange failed: " + error.message);
+    if (direction === "piToFc") {
+        if (pi < amount) return showNotification("Not enough Pi!");
+        pi -= amount;
+        fc += Math.floor(amount * currentExchangeRate);
+    } else {
+        if (fc < amount) return showNotification("Not enough FC!");
+        fc -= amount;
+        pi += amount / currentExchangeRate;
     }
+
+    pi = Math.round(pi * 10000) / 10000;
+    fc = Math.floor(fc); // pastikan FC selalu integer
+
+    await update(playerRef, {
+        piBalance: pi,
+        farmCoins: fc
+    });
+
+    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+    document.getElementById("fc-balance").textContent = fc.toLocaleString();
+    document.getElementById("exchange-amount").value = "";
+    updateExchangeResult();
+    coinSound.play();
+    showNotification("Exchange success!");
 }
 
 // Modal untuk daily reward
@@ -1905,12 +1895,12 @@ const withdrawNoteElement = document.getElementById('withdraw-note');
 // Atur teks tombol & note dari lang.json
 if (withdrawBtnElement && withdrawNoteElement) {
     withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
-    withdrawNoteElement.innerText = langData[currentLang]?.withdraw_note || 'You need Level 10, 1M FC, and 10 Pi deposited to withdraw.';
+    withdrawNoteElement.innerText = langData[currentLang]?.withdraw_note || 'You need Level 10, 10M FC, and 10 Pi deposited to withdraw.';
 }
 
 // Fungsi cek kelayakan withdraw
 function checkWithdrawEligibility(level, farmCoins, totalDeposit) {
-    const eligible = level >= 10 && farmCoins >= 1000000 && totalDeposit >= 10;
+    const eligible = level >= 10 && farmCoins >= 10000000 && totalDeposit >= 10;
     if (withdrawBtnElement && withdrawNoteElement) {
         withdrawBtnElement.disabled = !eligible;
         withdrawNoteElement.style.display = eligible ? 'none' : 'block';

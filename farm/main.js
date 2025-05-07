@@ -1357,64 +1357,64 @@ function updateExchangeResult() {
             : result.toLocaleString(undefined, { maximumFractionDigits: 6 })}`;
 }
 
-let isSyncingExchange = false;
-
 async function handleExchange() {
     const amount = parseFloat(document.getElementById("exchange-amount").value);
     const direction = document.getElementById("exchange-direction").value;
     const playerRef = ref(database, `players/${userId}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
+
+    if (!data) return showNotification("Player data not found!");
+
+    let pi = data.pi || 0;
+    let fc = data.farmCoins || 0;
 
     if (isNaN(amount) || amount <= 0) {
         return showNotification("Invalid amount!");
     }
 
-    const snapshot = await get(playerRef);
-    const data = snapshot.val();
-    if (!data) return showNotification("Player data not found!");
-
-    let pi = parseFloat(data.pi || data.piBalance || 0);
-    let fc = parseFloat(data.farmCoins || 0);
-
-    // Validasi minimum & saldo
     if (direction === "piToFc") {
-        if (amount < 0.001) return showNotification("Min 0.001 Pi");
+        if (amount < 0.001) return showNotification("Minimum 0.001 Pi");
         if (pi < amount) return showNotification("Not enough Pi!");
         pi -= amount;
         fc += amount * currentExchangeRate;
     } else {
-        if (amount < 1000) return showNotification("Min 1,000 FC");
+        if (amount < 1000) return showNotification("Minimum 1,000 FC");
         if (fc < amount) return showNotification("Not enough FC!");
         fc -= amount;
         pi += amount / currentExchangeRate;
     }
 
-    // Tandai sedang sync agar onValue tidak timpa ulang
-    isSyncingExchange = true;
+    // Update Firebase dan global
+    pi = Math.round(pi * 1000000) / 1000000;
+    fc = Math.floor(fc);
 
     await update(playerRef, {
-        pi: Math.round(pi * 1e6) / 1e6,
-        piBalance: Math.round(pi * 1e6) / 1e6,
-        farmCoins: Math.floor(fc)
+        pi: pi,
+        piBalance: pi,
+        farmCoins: fc
     });
 
-    // Simulasi loading 2 detik
+    // Sinkronkan global dan UI
+    window.pi = pi;
+    window.piBalance = pi;
+    window.farmCoins = fc;
+
     const btn = document.getElementById("exchange-btn");
-    btn.disabled = true;
-    btn.textContent = "Processing...";
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Processing...";
+    }
 
     setTimeout(() => {
-        isSyncingExchange = false;
-        window.pi = pi;
-        window.piBalance = pi;
-        window.farmCoins = fc;
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Exchange";
+        }
 
-        document.getElementById("pi-balance").textContent = pi.toFixed(6);
-        document.getElementById("fc-balance").textContent = fc.toLocaleString();
+        updateWallet();
         document.getElementById("exchange-amount").value = "";
         updateExchangeResult();
-        updateWallet();
-        btn.disabled = false;
-        btn.textContent = "Exchange";
         coinSound.play();
         showNotification("Exchange success!");
     }, 2000);

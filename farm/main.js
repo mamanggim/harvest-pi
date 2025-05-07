@@ -500,7 +500,7 @@ function loadPlayerData() {
                     inventory: [],
                     farmPlots: [],
                     harvestCount: 0,
-                    achievements: { harvest: false, coins: false }, // Perbaiki di sini
+                    achievements: { harvest: false, coins: false }, // Perbaiki sintaks di sini
                     lastClaim: null,
                     claimedToday: false,
                     piUser: { email: userId }

@@ -1047,6 +1047,7 @@ function buyVegetable(id, currency) {
                 updateWallet();
                 showTransactionAnimation(`-100`, false, document.querySelector(`.buy-btn[data-id="water"]`));
                 playBuyingSound();
+                savePlayerData(); // Simpan perubahan ke Firebase
             } else {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
@@ -1057,6 +1058,7 @@ function buyVegetable(id, currency) {
                 updateWallet();
                 showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
                 playBuyingSound();
+                savePlayerData(); // Simpan perubahan ke Firebase
             } else {
                 showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
             }
@@ -1092,10 +1094,10 @@ function buyVegetable(id, currency) {
 
     if (canBuy) {
         addToInventory('seed', veg, 1);
-        savePlayerData();
         updateWallet();
         renderInventory();
         playBuyingSound();
+        savePlayerData(); // Simpan perubahan ke Firebase
     }
 }
 

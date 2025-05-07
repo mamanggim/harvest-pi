@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Load player data
-async function loadPlayerData() {
+function loadPlayerData() {
     try {
         if (!userId) {
             console.warn('No userId, please login first!');
@@ -500,7 +500,7 @@ async function loadPlayerData() {
                     inventory: [],
                     farmPlots: [],
                     harvestCount: 0,
-                    achievements: { harvest: false, coins: false },
+                    achievements: { harvest: false, coins: false }, // Perbaiki di sini
                     lastClaim: null,
                     claimedToday: false,
                     piUser: { email: userId }
@@ -513,7 +513,6 @@ async function loadPlayerData() {
 
             isDataLoaded = true;
             updateWallet();
-            updateVolumes();
             initializePlots();
             renderShop();
             renderInventory();

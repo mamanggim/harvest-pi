@@ -460,7 +460,7 @@ async function loadPlayerData() {
             const data = snapshot.val();
             if (data) {
                 farmCoins = data.farmCoins || 0;
-                pi = data.pi || 0;
+                pi = data.piBalance || data.pi || 0;
                 water = data.water || 0;
                 level = data.level || 1;
                 xp = data.xp || 0;
@@ -474,6 +474,7 @@ async function loadPlayerData() {
                 const initialData = {
                     farmCoins: 0,
                     pi: 0,
+                    piBalance: 0,
                     water: 0,
                     level: 1,
                     xp: 0,
@@ -516,6 +517,7 @@ function savePlayerData() {
     const dataToSave = {
         farmCoins,
         pi,
+        piBalance: pi,
         water,
         level,
         xp,
@@ -549,7 +551,7 @@ function updateWallet() {
     // Update elemen utama
     const piBalanceElement = document.getElementById('pi-balance');
     const fcBalanceElement = document.getElementById('fc-balance');
-    if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
+    if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString(6);
     if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
     
     // Simpan data setelah update
@@ -1327,10 +1329,11 @@ async function handleExchange() {
         pi += amount / currentExchangeRate;
     }
 
-    pi = Math.round(pi * 10000) / 10000;
+    pi = Math.round(pi * 1000000) / 1000000;
     fc = Math.floor(fc); // pastikan FC selalu integer
 
     await update(playerRef, {
+        pi: pi,
         piBalance: pi,
         farmCoins: fc
     });
@@ -1816,12 +1819,13 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
             const newPiBalance = previousPiBalance + piAmount;
 
             await update(playerRef, {
+                pi: newPiBalance,
                 piBalance: newPiBalance,
                 totalDeposit: previousDeposit + piAmount
             });
 
             // Update UI
-            if (piBalanceElement) piBalanceElement.textContent = newPiBalance.toLocaleString();
+            if (piBalanceElement) piBalanceElement.textContent = newPiBalance.toLocaleString(6);
 
             depositMessageElement.textContent =
                 (langData[currentLang]?.deposit_success || 'Deposit successful! You deposited') +

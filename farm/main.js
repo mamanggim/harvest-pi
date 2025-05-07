@@ -480,7 +480,7 @@ async function loadPlayerData() {
             const data = snapshot.val();
             if (data) {
                 farmCoins = data.farmCoins || 0;
-                pi = data.pi || 0;
+                pi = data.piBalance || 0;
                 water = data.water || 0;
                 level = data.level || 1;
                 xp = data.xp || 0;
@@ -493,7 +493,7 @@ async function loadPlayerData() {
             } else {
                 const initialData = {
                     farmCoins: 0,
-                    pi: 0,
+                    piBalance: 0,
                     water: 0,
                     level: 1,
                     xp: 0,
@@ -535,7 +535,7 @@ function savePlayerData() {
 
     const dataToSave = {
         farmCoins,
-        pi,
+        piBalance: pi,
         water,
         level,
         xp,
@@ -547,11 +547,20 @@ function savePlayerData() {
         claimedToday
     };
 
-    return update(playerRef, dataToSave).catch(error => {
-        console.error('Error saving player data:', error.message);
-        showNotification('Error saving player data: ' + error.message);
-        throw error;
-    });
+    for (let i = 0; i < attempts; i++) {
+        try {
+            await update(playerRef, dataToSave);
+            console.log('Player data saved successfully');
+            return;
+        } catch (error) {
+            console.error(`Attempt ${i + 1} failed: ${error.message}`);
+            if (i === attempts - 1) {
+                showNotification('Error saving player data: ' + error.message);
+                throw error;
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Tunggu 1 detik sebelum retry
+        }
+    }
 }
 
 // Update wallet UI
@@ -1038,25 +1047,38 @@ function addToInventory(type, veg, qty = 1) {
 }
 
 // Buy vegetable or water
-function buyVegetable(id, currency) {
+let isSaving = false;
+
+async function buyVegetable(id, currency) {
+    if (isSaving) {
+        showNotification('Please wait, processing previous transaction...');
+        return;
+    }
+
     if (id === 'water') {
         if (currency === 'farm') {
             if (farmCoins >= 100) {
+                isSaving = true;
                 farmCoins -= 100;
                 water += 10;
                 updateWallet();
                 showTransactionAnimation(`-100`, false, document.querySelector(`.buy-btn[data-id="water"]`));
                 playBuyingSound();
+                await savePlayerData();
+                isSaving = false;
             } else {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
         } else {
             if (pi >= 0.0001) {
+                isSaving = true;
                 pi -= 0.0001;
                 water += 10;
                 updateWallet();
                 showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
                 playBuyingSound();
+                await savePlayerData();
+                isSaving = false;
             } else {
                 showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
             }
@@ -1091,11 +1113,13 @@ function buyVegetable(id, currency) {
     }
 
     if (canBuy) {
+        isSaving = true;
         addToInventory('seed', veg, 1);
-        savePlayerData();
         updateWallet();
         renderInventory();
         playBuyingSound();
+        await savePlayerData();
+        isSaving = false;
     }
 }
 

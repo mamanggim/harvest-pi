@@ -1358,45 +1358,59 @@ function updateExchangeResult() {
 }
 
 async function handleExchange() {
-    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
-    const amount = parseFloat(rawAmount);
+    const amount = parseFloat(document.getElementById("exchange-amount").value);
     const direction = document.getElementById("exchange-direction").value;
     const playerRef = ref(database, `players/${userId}`);
     const snapshot = await get(playerRef);
     const data = snapshot.val();
 
     if (!data) return showNotification("Player data not found!");
+
+    let pi = data.piBalance || 0;
+    let fc = data.farmCoins || 0;
+
     if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-    let pi = Number(data.piBalance || 0);
-    let fc = Number(data.farmCoins || 0);
-
     if (direction === "piToFc") {
+        if (amount < 0.001) return showNotification("Minimum 0.001 Pi");
         if (pi < amount) return showNotification("Not enough Pi!");
         pi -= amount;
-        fc += Math.floor(amount * currentExchangeRate);
+        fc += amount * currentExchangeRate;
     } else {
+        if (amount < 1000) return showNotification("Minimum 1,000 FC");
         if (fc < amount) return showNotification("Not enough FC!");
         fc -= amount;
         pi += amount / currentExchangeRate;
     }
 
-    pi = Math.round(pi * 10000) / 10000;
-    fc = Math.floor(fc); // pastikan FC selalu integer
+    // Pembulatan dan update ke Firebase
+    pi = Math.round(pi * 1000000) / 1000000;
+    fc = Math.floor(fc);
 
     await update(playerRef, {
         piBalance: pi,
         farmCoins: fc
     });
 
-    pi = piBalance = pi;
+    // Simulasi loading 2 detik
+    const btn = document.getElementById("exchange-btn");
+    btn.disabled = true;
+    btn.textContent = "Processing...";
 
-    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
-    document.getElementById("fc-balance").textContent = fc.toLocaleString();
-    document.getElementById("exchange-amount").value = "";
-    updateExchangeResult();
-    coinSound.play();
-    showNotification("Exchange success!");
+    setTimeout(() => {
+        // Sinkronisasi nilai global
+        window.pi = window.piBalance = pi;
+        window.farmCoins = fc;
+
+        updateWallet();
+        document.getElementById("exchange-amount").value = "";
+        updateExchangeResult();
+        coinSound.play();
+        showNotification("Exchange success!");
+
+        btn.disabled = false;
+        btn.textContent = "Exchange";
+    }, 2000);
 }
 
 // Modal untuk daily reward

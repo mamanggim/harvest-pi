@@ -48,6 +48,26 @@ let claimedToday = false; // Flag sederhana buat status klaim
 let isClaiming = false; // Tambah untuk lock claim
 let isAudioPlaying = false; // Flag to track audio state
 
+function loadUserBalances() {
+    const playerRef = ref(database, `players/${userId}`);
+    onValue(playerRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        
+        // Jangan gunakan const agar isi variabel global bisa diperbarui
+        pi = data.piBalance || 0;
+        farmCoins = data.farmCoins || 0;
+
+        // Update label balance utama
+        const piBalanceElement = document.getElementById('pi-balance');
+        const fcBalanceElement = document.getElementById('fc-balance');
+        if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString(6);
+        if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
+
+        // Update elemen UI lain yang pakai updateWallet()
+        updateWallet();
+    });
+}
+
 // Audio elements
 const bgMusic = document.getElementById('bg-music');
 const bgVoice = document.getElementById('bg-voice');
@@ -263,7 +283,7 @@ async function authenticateWithPi() {
             userId = user.uid; // Gunain UID, lebih unik
             const playerRef = ref(database, `players/${userId}`);
 
-            loadPlayerData(); // Tampilkan saldo Pi & FC dari database
+            loadUserBalances(); // Tampilkan saldo Pi & FC dari database
             
             update(playerRef, {
                 piUser: {
@@ -452,8 +472,8 @@ async function loadPlayerData() {
             console.warn('No userId, please login first!');
             return;
         }
-
         const playerRef = ref(database, `players/${userId}`);
+
         onValue(playerRef, (snapshot) => {
             if (isDataLoaded) return;
 
@@ -474,7 +494,6 @@ async function loadPlayerData() {
                 const initialData = {
                     farmCoins: 0,
                     pi: 0,
-                    piBalance: 0,
                     water: 0,
                     level: 1,
                     xp: 0,
@@ -514,12 +533,9 @@ function savePlayerData() {
     if (!userId || !isDataLoaded) return;
     const playerRef = ref(database, `players/${userId}`);
 
-    const piSynced = Math.round(pi * 1000000) / 1000000;
-
     const dataToSave = {
         farmCoins,
-        pi: piSynced,
-        piBalance: piSynced, // sinkron
+        pi,
         water,
         level,
         xp,
@@ -540,19 +556,53 @@ function savePlayerData() {
 
 // Update wallet UI
 function updateWallet() {
-    // Update elemen balance
+    const farmCoinsElement = document.getElementById('farm-coins');
+    const piCoinsElement = document.getElementById('pi-coins');
+    const waterElement = document.getElementById('water');
+    const levelElement = document.getElementById('level');
+    const xpFillElement = document.getElementById('xp-fill');
+
+    if (farmCoinsElement) {
+        farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
+    } else {
+        console.warn('Element with ID "farm-coins" not found');
+    }
+
+    if (piCoinsElement) {
+        piCoinsElement.textContent = `${pi.toFixed(6)} PI`;
+    } else {
+        console.warn('Element with ID "pi-coins" not found');
+    }
+
+    if (waterElement) {
+        waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
+    } else {
+        console.warn('Element with ID "water" not found');
+    }
+
+    if (levelElement) {
+        levelElement.textContent = `Level: ${level} | XP: ${xp}`;
+    } else {
+        console.warn('Element with ID "level" not found');
+    }
+
+    if (xpFillElement) {
+        const xpPercentage = (xp / (level * 100)) * 100;
+        xpFillElement.style.width = `${xpPercentage}%`;
+    } else {
+        console.warn('Element with ID "xp-fill" not found');
+    }
+
+    // Update elemen di tab depositPi
     const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
     const piCoinBalanceElement = document.getElementById('pi-coin-balance');
-    if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins;
-    if (piCoinBalanceElement) piCoinBalanceElement.textContent = pi.toFixed(6);
+    if (farmCoinBalanceElement) {
+        farmCoinBalanceElement.textContent = farmCoins;
+    }
+    if (piCoinBalanceElement) {
+        piCoinBalanceElement.textContent = pi.toFixed(6);
+    }
 
-    // Update elemen utama
-    const piBalanceElement = document.getElementById('pi-balance');
-    const fcBalanceElement = document.getElementById('fc-balance');
-    if (piBalanceElement) piBalanceElement.textContent = pi.toFixed(6);
-    if (fcBalanceElement) fcBalanceElement.textContent = farmCoins;
-    
-    // Simpan data setelah update
     savePlayerData();
 }
 
@@ -1001,8 +1051,8 @@ function buyVegetable(id, currency) {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
         } else {
-            if (pi >= 0.0001) {
-                pi -= 0.0001;
+            if (piBalance >= 0.0001) {
+                piBalance -= 0.0001;
                 water += 10;
                 updateWallet();
                 showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
@@ -1031,8 +1081,8 @@ function buyVegetable(id, currency) {
             showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
         }
     } else {
-        if (pi >= veg.piPrice) {
-            pi -= veg.piPrice;
+        if (piBalance >= veg.piPrice) {
+            piBalance -= veg.piPrice;
             canBuy = true;
             showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
         } else {
@@ -1327,11 +1377,10 @@ async function handleExchange() {
         pi += amount / currentExchangeRate;
     }
 
-    pi = Math.round(pi * 1000000) / 1000000;
+    pi = Math.round(pi * 10000) / 10000;
     fc = Math.floor(fc); // pastikan FC selalu integer
 
     await update(playerRef, {
-        pi: pi,
         piBalance: pi,
         farmCoins: fc
     });
@@ -1817,13 +1866,12 @@ if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
             const newPiBalance = previousPiBalance + piAmount;
 
             await update(playerRef, {
-                pi: newPiBalance,
                 piBalance: newPiBalance,
                 totalDeposit: previousDeposit + piAmount
             });
 
             // Update UI
-            if (piBalanceElement) piBalanceElement.textContent = newPiBalance.toLocaleString(6);
+            if (piBalanceElement) piBalanceElement.textContent = newPiBalance.toLocaleString();
 
             depositMessageElement.textContent =
                 (langData[currentLang]?.deposit_success || 'Deposit successful! You deposited') +

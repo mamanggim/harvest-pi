@@ -53,17 +53,14 @@ function loadUserBalances() {
     onValue(playerRef, (snapshot) => {
         const data = snapshot.val() || {};
         
-        // Jangan gunakan const agar isi variabel global bisa diperbarui
         pi = data.piBalance || 0;
         farmCoins = data.farmCoins || 0;
 
-        // Update label balance utama
         const piBalanceElement = document.getElementById('pi-balance');
         const fcBalanceElement = document.getElementById('fc-balance');
-        if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString();
+        if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
         if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
 
-        // Update elemen UI lain yang pakai updateWallet()
         updateWallet();
     });
 }
@@ -500,7 +497,7 @@ function loadPlayerData() {
                     inventory: [],
                     farmPlots: [],
                     harvestCount: 0,
-                    achievements: { harvest: false, coins: false }, // Perbaiki sintaks di sini
+                    achievements: { harvest: false, coins: false },
                     lastClaim: null,
                     claimedToday: false,
                     piUser: { email: userId }
@@ -528,7 +525,7 @@ function loadPlayerData() {
 }
 
 // Save player data to Firebase
-function savePlayerData() {
+async function savePlayerData() {
     if (!userId || !isDataLoaded) return;
     const playerRef = ref(database, `players/${userId}`);
 
@@ -546,19 +543,12 @@ function savePlayerData() {
         claimedToday
     };
 
-    for (let i = 0; i < attempts; i++) {
-        try {
-            await update(playerRef, dataToSave);
-            console.log('Player data saved successfully');
-            return;
-        } catch (error) {
-            console.error(`Attempt ${i + 1} failed: ${error.message}`);
-            if (i === attempts - 1) {
-                showNotification('Error saving player data: ' + error.message);
-                throw error;
-            }
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Tunggu 1 detik sebelum retry
-        }
+    try {
+        await update(playerRef, dataToSave);
+        console.log('Player data saved');
+    } catch (error) {
+        console.error('Error saving player data:', error.message);
+        showNotification('Error saving data');
     }
 }
 
@@ -1049,77 +1039,77 @@ function addToInventory(type, veg, qty = 1) {
 let isSaving = false;
 
 async function buyVegetable(id, currency) {
-    if (isSaving) {
-        showNotification('Please wait, processing previous transaction...');
-        return;
-    }
+    if (isSaving) return;
 
-    if (id === 'water') {
+    isSaving = true;
+    try {
+        if (id === 'water') {
+            if (currency === 'farm') {
+                if (farmCoins >= 100) {
+                    farmCoins -= 100;
+                    water += 10;
+                    updateWallet();
+                    showTransactionAnimation(`-100`, false, document.querySelector(`.buy-btn[data-id="water"]`));
+                    playBuyingSound();
+                    await savePlayerData();
+                } else {
+                    showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
+                }
+            } else {
+                if (pi >= 0.0001) {
+                    pi -= 0.0001;
+                    water += 10;
+                    updateWallet();
+                    showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
+                    playBuyingSound();
+                    await savePlayerData();
+                } else {
+                    showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
+                }
+            }
+            isSaving = false;
+            return;
+        }
+
+        const veg = vegetables.find(v => v.id === id);
+        if (!veg) {
+            console.warn(`Vegetable with id ${id} not found`);
+            isSaving = false;
+            return;
+        }
+
+        let canBuy = false;
+
         if (currency === 'farm') {
-            if (farmCoins >= 100) {
-                isSaving = true;
-                farmCoins -= 100;
-                water += 10;
-                updateWallet();
-                showTransactionAnimation(`-100`, false, document.querySelector(`.buy-btn[data-id="water"]`));
-                playBuyingSound();
-                await savePlayerData();
-                isSaving = false;
+            if (farmCoins >= veg.farmPrice) {
+                farmCoins -= veg.farmPrice;
+                canBuy = true;
+                showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
             } else {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
         } else {
-            if (pi >= 0.0001) {
-                isSaving = true;
-                pi -= 0.0001;
-                water += 10;
-                updateWallet();
-                showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
-                playBuyingSound();
-                await savePlayerData();
-                isSaving = false;
+            if (pi >= veg.piPrice) {
+                pi -= veg.piPrice;
+                canBuy = true;
+                showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
             } else {
                 showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
             }
         }
-        return;
-    }
 
-    const veg = vegetables.find(v => v.id === id);
-    if (!veg) {
-        console.warn(`Vegetable with id ${id} not found`);
-        return;
-    }
-
-    let canBuy = false;
-
-    if (currency === 'farm') {
-        if (farmCoins >= veg.farmPrice) {
-            farmCoins -= veg.farmPrice;
-            canBuy = true;
-            showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
-        } else {
-            showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
+        if (canBuy) {
+            addToInventory('seed', veg, 1);
+            updateWallet();
+            renderInventory();
+            playBuyingSound();
+            await savePlayerData();
         }
-    } else {
-        if (pi >= veg.piPrice) {
-            pi -= veg.piPrice;
-            canBuy = true;
-            showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
-        } else {
-            showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
-        }
+    } catch (error) {
+        console.error('Error in buyVegetable:', error.message);
+        showNotification('Error during purchase');
     }
-
-    if (canBuy) {
-        isSaving = true;
-        addToInventory('seed', veg, 1);
-        updateWallet();
-        renderInventory();
-        playBuyingSound();
-        await savePlayerData();
-        isSaving = false;
-    }
+    isSaving = false;
 }
 
 // Render inventory

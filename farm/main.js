@@ -1389,12 +1389,33 @@ async function handleExchange() {
         farmCoins: fc
     });
 
+    pi = piBalance = pi;
+
     document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
     document.getElementById("fc-balance").textContent = fc.toLocaleString();
     document.getElementById("exchange-amount").value = "";
     updateExchangeResult();
     coinSound.play();
     showNotification("Exchange success!");
+}
+
+// Loading simulasi 2 detik
+    document.getElementById("exchange-btn").disabled = true;
+    document.getElementById("exchange-btn").textContent = "Processing...";
+    setTimeout(() => {
+        document.getElementById("exchange-btn").disabled = false;
+        document.getElementById("exchange-btn").textContent = "Exchange";
+
+        // Sinkronisasi
+        window.pi = window.piBalance = pi;
+        window.farmCoins = fc;
+
+        updateWallet();
+        document.getElementById("exchange-amount").value = "";
+        updateExchangeResult();
+        coinSound.play();
+        showNotification("Exchange success!");
+    }, 2000);
 }
 
 // Modal untuk daily reward

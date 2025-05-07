@@ -906,7 +906,7 @@ function handlePlotClick(index) {
 
         const rect = plotContent ? plotContent.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
         flyImage.style.left = `${rect.left + rect.width / 2 - 30}px`;
-        fly elimina lo siguiente: Image.style.top = `${rect.top}px`;
+        flyImage.style.top = `${rect.top}px`; // Baris ini tetap, hapus teks "elimina"
 
         const amountText = document.createElement('div');
         amountText.textContent = `+${yieldAmount}`;
@@ -920,17 +920,16 @@ function handlePlotClick(index) {
             if (plotStatus) plotStatus.innerHTML = '';
             if (countdownFill) countdownFill.style.width = '0%';
             plotElement.classList.remove('ready');
-        }, 800);
+         }, 800);
 
-        harvestCount++;
-        savePlayerData();
-        checkHarvestAchievement();
-        showNotification(langData[currentLang]?.harvested || 'Harvested!');
-        playHarvestingSound();
-        renderInventory();
-        renderSellSection();
+         harvestCount++;
+         savePlayerData();
+         checkHarvestAchievement();
+         showNotification(langData[currentLang]?.harvested || 'Harvested!');
+         playHarvestingSound();
+         renderInventory();
+         renderSellSection();
     }
-}
 
 // Fungsi paksa layout agar grid langsung kebentuk
 function forceReflow(el) {

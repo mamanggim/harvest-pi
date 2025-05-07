@@ -30,6 +30,7 @@ let isDataLoaded = false;
 let piInitialized = false;
 let farmCoins = 0;
 let pi = 0;
+let piBalance = 0;
 let water = 0;
 let level = 1;
 let xp = 0;

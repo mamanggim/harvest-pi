@@ -1424,7 +1424,7 @@ async function handleExchange() {
     updateExchangeResult(resultText);
     coinSound.play();
     showNotification("Exchange success!");
-
+  } finally {
     // Sembunyikan loading
     document.getElementById("exchange-loading").style.display = "none";
   }, 3000);

@@ -1053,7 +1053,7 @@ background: #333;
   padding: 20px;
   text-align: center;
   max-width: 330px;
-  margin: 4px auto;
+  margin: 8px auto;
 }
 
 #finance h2#finance-title {
@@ -1162,7 +1162,7 @@ background: #333;
   margin: auto;
 }
 .exchange-title {
-  font-size: 14px;
+  font-size: 18px;
   color: #66ff00;
   text-shadow: 0 0 5px #66ff00;
   margin-bottom: 15px;
@@ -1187,7 +1187,7 @@ background: #333;
   white-space: nowrap;
   color: #ffeb3b;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 18px;
 }
 .exchange-section input, .exchange-section select {
   width: 150px;

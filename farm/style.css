@@ -1031,7 +1031,9 @@ input[type="range"] {
   border-radius: 10px;
   padding: 20px;
   text-align: center;
-  max-width: 400px;
+  max-width: 400px; /* Sama kayak .exchange-container */
+  width: 100%; /* Biar gak melebihi container */
+  box-sizing: border-box;
   margin: auto;
 }
 
@@ -1131,14 +1133,52 @@ input[type="range"] {
   line-height: 1.4;
 }
 
-/* Media Query untuk 600px (sama kayak sebelumnya) */
+/* Media Query untuk 600px */
 @media (max-width: 600px) {
   #finance {
+    max-width: 350px; /* Samain kayak wallet tab */
     padding: 15px;
   }
 
   #finance h2#finance-title {
     font-size: 16px;
+  }
+
+  #finance h3 {
+    font-size: 13px;
+  }
+
+  #finance p {
+    font-size: 11px;
+  }
+
+  #finance input[type="number"]#deposit-amount {
+    width: 130px;
+    padding: 7px;
+    font-size: 11px;
+  }
+
+  #finance button#confirm-deposit,
+  #finance button#withdraw-btn {
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+
+  #finance p#deposit-message,
+  #finance p#withdraw-note {
+    font-size: 9px;
+  }
+}
+
+/* Media Query untuk 480px */
+@media (max-width: 480px) {
+  #finance {
+    max-width: 300px;
+    padding: 12px;
+  }
+
+  #finance h2#finance-title {
+    font-size: 15px;
   }
 
   #finance h3 {
@@ -1163,14 +1203,15 @@ input[type="range"] {
 
   #finance p#deposit-message,
   #finance p#withdraw-note {
-    font-size: 9px;
+    font-size: 8px;
   }
 }
 
-/* Media Query untuk 480px */
-@media (max-width: 480px) {
+/* Media Query untuk 360px */
+@media (max-width: 360px) {
   #finance {
-    padding: 12px;
+    max-width: 280px;
+    padding: 10px;
   }
 
   #finance h2#finance-title {
@@ -1195,42 +1236,6 @@ input[type="range"] {
   #finance button#withdraw-btn {
     padding: 5px 10px;
     font-size: 9px;
-  }
-
-  #finance p#deposit-message,
-  #finance p#withdraw-note {
-    font-size: 8px;
-  }
-}
-
-/* Media Query untuk 360px */
-@media (max-width: 360px) {
-  #finance {
-    padding: 10px;
-  }
-
-  #finance h2#finance-title {
-    font-size: 12px;
-  }
-
-  #finance h3 {
-    font-size: 10px;
-  }
-
-  #finance p {
-    font-size: 8px;
-  }
-
-  #finance input[type="number"]#deposit-amount {
-    width: 80px;
-    padding: 4px;
-    font-size: 8px;
-  }
-
-  #finance button#confirm-deposit,
-  #finance button#withdraw-btn {
-    padding: 4px 8px;
-    font-size: 8px;
   }
 
   #finance p#deposit-message,

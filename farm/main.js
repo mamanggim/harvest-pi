@@ -1419,8 +1419,11 @@ async function handleExchange() {
           farmCoins: fc
         });
 
-        document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
-        document.getElementById("fc-balance").textContent = fc.toLocaleString();
+        const piElem = document.getElementById("pi-balance");
+        const fcElem = document.getElementById("fc-balance");
+
+        if (piElem) piElem.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+        if (fcElem) fcElem.textContent = fc.toLocaleString();
         document.getElementById("exchange-amount").value = "";
 
         updateExchangeResult(resultText);

@@ -1376,58 +1376,59 @@ function updateExchangeResult() {
 }
 
 async function handleExchange() {
-  const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
-  const amount = parseFloat(rawAmount);
-  const direction = document.getElementById("exchange-direction").value;
-  const playerRef = ref(database, `players/${userId}`);
-  const snapshot = await get(playerRef);
-  const data = snapshot.val();
+    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
+    const amount = parseFloat(rawAmount);
+    const direction = document.getElementById("exchange-direction").value;
+    const playerRef = ref(database, `players/${userId}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
 
-  if (!data) return showNotification("Player data not found!");
-  if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
+    if (!data) return showNotification("Player data not found!");
+    if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-  let pi = Number(data.piBalance || 0);
-  let fc = Number(data.farmCoins || 0);
-  let resultText = "";
+    let pi = Number(data.piBalance || 0);
+    let fc = Number(data.farmCoins || 0);
 
-  if (direction === "piToFc") {
-    if (pi < amount) return showNotification("Not enough Pi!");
-    const converted = Math.floor(amount * currentExchangeRate);
-    pi -= amount;
-    fc += converted;
-    resultText = converted.toLocaleString();
-  } else {
-    if (fc < amount) return showNotification("Not enough FC!");
-    const converted = amount / currentExchangeRate;
-    fc -= amount;
-    pi += converted;
-    resultText = converted.toFixed(6);
-  }
+    // Tampilkan loading
+    const loadingDiv = document.getElementById("loading-exchange");
+    loadingDiv.style.display = "flex";
 
-  pi = Math.round(pi * 1000000) / 1000000;
-  fc = Math.floor(fc);
+    setTimeout(async () => {
+        if (direction === "piToFc") {
+            if (pi < amount) {
+                loadingDiv.style.display = "none";
+                return showNotification("Not enough Pi!");
+            }
+            pi -= amount;
+            fc += Math.floor(amount * currentExchangeRate);
+        } else {
+            if (fc < amount) {
+                loadingDiv.style.display = "none";
+                return showNotification("Not enough FC!");
+            }
+            fc -= amount;
+            pi += amount / currentExchangeRate;
+        }
 
-  // Tampilkan loading
-  document.getElementById("exchange-loading").style.display = "block";
+        pi = Math.round(pi * 1000000) / 1000000;
+        fc = Math.floor(fc);
 
-  // Delay 3 detik
-  setTimeout(async () => {
-    await update(playerRef, {
-      piBalance: pi,
-      farmCoins: fc
-    });
+        await update(playerRef, {
+            piBalance: pi,
+            farmCoins: fc
+        });
 
-    document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
-    document.getElementById("fc-balance").textContent = fc.toLocaleString();
-    document.getElementById("exchange-amount").value = "";
+        document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+        document.getElementById("fc-balance").textContent = fc.toLocaleString();
+        document.getElementById("exchange-amount").value = "";
+        updateExchangeResult();
 
-    updateExchangeResult(resultText);
-    coinSound.play();
-    showNotification("Exchange success!");
+        // Sembunyikan loading dan mainkan suara
+        loadingDiv.style.display = "none";
+        coinSound.play();
 
-    // Sembunyikan loading
-    document.getElementById("exchange-loading").style.display = "none";
-  }, 3000);
+        showNotification("Exchange success!");
+    }, 3000);
 }
 
 // Modal untuk daily reward

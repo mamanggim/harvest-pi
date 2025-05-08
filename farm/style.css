@@ -1173,15 +1173,22 @@ input[type="range"] {
   color: #ffeb3b;
   margin-bottom: 10px;
 }
+.exchange-output {
+  width: 100%;
+  max-width: 300px; /* batas aman biar ga ngedorong */
+  margin: 0 auto;
+  overflow: hidden;
+  text-align: center;
+}
 .exchange-result {
+  display: inline-block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  word-break: break-word;
-  text-align: center;
-  margin: 10px 0;
   color: #ffeb3b;
+  font-weight: bold;
+  font-size: 18px;
 }
 .exchange-section input, .exchange-section select {
   width: 150px;

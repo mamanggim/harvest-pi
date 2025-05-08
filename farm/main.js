@@ -1408,30 +1408,31 @@ async function handleExchange() {
   fc = Math.floor(fc);
 
   // Tampilkan loading
-document.getElementById("exchange-loading").style.display = "block";
+  document.getElementById("exchange-loading").style.display = "block";
 
-// Delay 3 detik
-setTimeout(() => {
-  (async () => {
-    try {
-      await update(playerRef, {
-        piBalance: pi,
-        farmCoins: fc
-      });
+  // Delay 3 detik
+  setTimeout(() => {
+    (async () => {
+      try {
+        await update(playerRef, {
+          piBalance: pi,
+          farmCoins: fc
+        });
 
-      document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
-      document.getElementById("fc-balance").textContent = fc.toLocaleString();
-      document.getElementById("exchange-amount").value = "";
+        document.getElementById("pi-balance").textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+        document.getElementById("fc-balance").textContent = fc.toLocaleString();
+        document.getElementById("exchange-amount").value = "";
 
-      updateExchangeResult(resultText);
-      coinSound.play();
-      showNotification("Exchange success!");
-    } finally {
-      // Sembunyikan loading
-      document.getElementById("exchange-loading").style.display = "none";
-    }
-  })();
-}, 3000);
+        updateExchangeResult(resultText);
+        coinSound.play();
+        showNotification("Exchange success!");
+      } finally {
+        // Sembunyikan loading
+        document.getElementById("exchange-loading").style.display = "none";
+      }
+    })();
+  }, 3000);
+}
 
 // Modal untuk daily reward
 if (claimModalBtn) {

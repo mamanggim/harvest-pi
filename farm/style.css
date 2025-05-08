@@ -1163,7 +1163,7 @@ input[type="range"] {
   margin: auto;
 }
 .exchange-title {
-  font-size: 18px;
+  font-size: 14px;
   color: #66ff00;
   text-shadow: 0 0 5px #66ff00;
   margin-bottom: 15px;
@@ -1188,7 +1188,7 @@ input[type="range"] {
   white-space: nowrap;
   color: #ffeb3b;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 14px;
 }
 .exchange-section input, .exchange-section select {
   width: 150px;

@@ -1031,10 +1031,10 @@ input[type="range"] {
   border-radius: 10px;
   padding: 20px;
   text-align: center;
-  max-width: 420px; /* Tambah 20px dari 400px biar lebih besar */
-  width: 100%; /* Biar penuh container */
+  max-width: 420px; /* Tetep lebih besar dari 400px */
+  width: 100%;
   box-sizing: border-box;
-  margin: 0 auto 20px auto; /* Hilangin margin atas, biar naik */
+  margin: 20px auto 20px auto; /* Kembalikan margin atas 20px biar turun */
 }
 
 #finance h2#finance-title {
@@ -1136,7 +1136,7 @@ input[type="range"] {
 /* Media Query untuk 600px */
 @media (max-width: 600px) {
   #finance {
-    max-width: 380px; /* Tambah 30px dari 350px */
+    max-width: 380px; /* Tetep lebih besar dari 350px */
     padding: 15px;
   }
 
@@ -1173,7 +1173,7 @@ input[type="range"] {
 /* Media Query untuk 480px */
 @media (max-width: 480px) {
   #finance {
-    max-width: 320px; /* Tambah 20px dari 300px */
+    max-width: 320px;
     padding: 12px;
   }
 
@@ -1210,7 +1210,7 @@ input[type="range"] {
 /* Media Query untuk 360px */
 @media (max-width: 360px) {
   #finance {
-    max-width: 300px; /* Tambah 20px dari 280px */
+    max-width: 300px;
     padding: 10px;
   }
 
@@ -1247,8 +1247,8 @@ input[type="range"] {
 /* Pastiin container gak ganggu */
 .tab-content {
   display: none;
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
   width: 100%;
   box-sizing: border-box;
 }

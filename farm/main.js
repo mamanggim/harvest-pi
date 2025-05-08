@@ -1389,27 +1389,22 @@ async function handleExchange() {
     let pi = Number(data.piBalance || 0);
     let fc = Number(data.farmCoins || 0);
 
+    if (direction === "piToFc") {
+        if (pi < amount) return showNotification("Not enough Pi!");
+        pi -= amount;
+        fc += Math.floor(amount * currentExchangeRate);
+    } else {
+        if (fc < amount) return showNotification("Not enough FC!");
+        fc -= amount;
+        pi += amount / currentExchangeRate;
+    }
+
     // Tampilkan loading
     const loadingDiv = document.getElementById("loading-exchange");
     loadingDiv.style.display = "flex";
 
+    // Delay 3 detik
     setTimeout(async () => {
-        if (direction === "piToFc") {
-            if (pi < amount) {
-                loadingDiv.style.display = "none";
-                return showNotification("Not enough Pi!");
-            }
-            pi -= amount;
-            fc += Math.floor(amount * currentExchangeRate);
-        } else {
-            if (fc < amount) {
-                loadingDiv.style.display = "none";
-                return showNotification("Not enough FC!");
-            }
-            fc -= amount;
-            pi += amount / currentExchangeRate;
-        }
-
         pi = Math.round(pi * 1000000) / 1000000;
         fc = Math.floor(fc);
 
@@ -1423,9 +1418,8 @@ async function handleExchange() {
         document.getElementById("exchange-amount").value = "";
         updateExchangeResult();
 
-        // Sembunyikan loading dan mainkan suara
+        // Hide loading setelah selesai
         loadingDiv.style.display = "none";
-        coinSound.play();
 
         showNotification("Exchange success!");
     }, 3000);

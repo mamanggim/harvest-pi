@@ -415,7 +415,7 @@ input[type="range"] {
   padding: 15px;
   width: 100%;
   max-width: 700px;
-  margin: 0px auto;
+  margin: -4px auto;
   box-sizing: border-box;
 }
 
@@ -1053,7 +1053,7 @@ background: #333;
   padding: 20px;
   text-align: center;
   max-width: 330px;
-  margin: -8px auto;
+  margin: -4px auto;
 }
 
 #finance h2#finance-title {

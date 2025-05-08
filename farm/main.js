@@ -1424,15 +1424,25 @@ async function handleExchange() {
         document.getElementById("exchange-amount").value = "";
 
         updateExchangeResult(resultText);
-        coinSound.play();
-        showNotification("Exchange success!");
-      } finally {
-        // Sembunyikan loading
-        document.getElementById("exchange-loading").style.display = "none";
+       
+          // Mainkan suara
+      try {
+        await coinSound.play();
+      } catch (err) {
+        console.error("Error playing sound:", err);
       }
-    })();
-  }, 3000);
-}
+
+      // Tampilkan notifikasi
+      showNotification("Exchange success!");
+    } catch (error) {
+      console.error("Exchange failed:", error.message);
+      showNotification("Exchange failed: " + error.message);
+    } finally {
+      // Sembunyikan loading setelah semua selesai
+      document.getElementById("exchange-loading").style.display = "none";
+    }
+  })();
+}, 3000);
 
 // Modal untuk daily reward
 if (claimModalBtn) {

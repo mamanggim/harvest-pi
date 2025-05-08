@@ -1244,7 +1244,7 @@ input[type="range"] {
   }
 }
 
-/* Pastiin container gak ganggu */
+/* Pastiin container gak ganggu posisi */
 .tab-content {
   display: none;
   padding: 0;
@@ -1257,31 +1257,49 @@ input[type="range"] {
   display: block;
 }
 
-/* === EXCHANGE CENTER ===*/
+/* Atur parent container kalau ada (misalnya .main-content) */
+.main-content {
+  padding-top: 20px; /* Kasih jarak atas biar elemen lain gak naik */
+  margin: 0 auto;
+  max-width: 100%; /* Pastiin gak melebihi layar */
+  box-sizing: border-box;
+}
+
+/* === EXCHANGE CENTER === */
 .exchange-container {
   background: #333;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
-  max-width: 400px;
-  margin: auto;
+  max-width: 420px; /* Samain sama #finance biar konsisten */
+  width: 100%;
+  box-sizing: border-box;
+  margin: 20px auto; /* Jaga posisi */
+  overflow: hidden; /* Biar konten gak overflow */
 }
+
 .exchange-title {
   font-size: 18px;
   color: #66ff00;
   text-shadow: 0 0 5px #66ff00;
   margin-bottom: 15px;
 }
+
 .exchange-rate {
   font-weight: bold;
   color: #ffeb3b;
   margin-bottom: 10px;
 }
+
 .exchange-result {
   margin: 10px 0;
   color: #ffeb3b;
+  word-wrap: break-word; /* Biar teks panjang patah baris */
+  max-width: 100%; /* Batasi lebar teks */
 }
-.exchange-section input, .exchange-section select {
+
+.exchange-section input,
+.exchange-section select {
   width: 150px;
   margin: 10px 0;
   padding: 8px;
@@ -1291,7 +1309,10 @@ input[type="range"] {
   border-radius: 6px;
   font-family: 'Press Start 2P', cursive;
   font-size: 12px;
+  box-sizing: border-box; /* Pastiin padding gak nambah lebar */
+  max-width: 100%; /* Batasi lebar input */
 }
+
 #exchange-btn {
   background: #4caf50;
   color: #fff;
@@ -1303,9 +1324,120 @@ input[type="range"] {
   margin-top: 10px;
   transition: all 0.3s;
 }
+
+#exchange-btn:hover {
+  background: #66bb6a;
+}
+
+#exchange-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
 .tab-content {
   display: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 .tab-content.active {
   display: block;
+}
+
+/* Media Query untuk 600px */
+@media (max-width: 600px) {
+  .exchange-container {
+    max-width: 380px;
+    padding: 15px;
+  }
+
+  .exchange-title {
+    font-size: 16px;
+  }
+
+  .exchange-rate {
+    font-size: 13px;
+  }
+
+  .exchange-result {
+    font-size: 11px;
+  }
+
+  .exchange-section input,
+  .exchange-section select {
+    width: 130px;
+    padding: 7px;
+    font-size: 11px;
+  }
+
+  #exchange-btn {
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+}
+
+/* Media Query untuk 480px */
+@media (max-width: 480px) {
+  .exchange-container {
+    max-width: 320px;
+    padding: 12px;
+  }
+
+  .exchange-title {
+    font-size: 15px;
+  }
+
+  .exchange-rate {
+    font-size: 12px;
+  }
+
+  .exchange-result {
+    font-size: 10px;
+  }
+
+  .exchange-section input,
+  .exchange-section select {
+    width: 120px;
+    padding: 6px;
+    font-size: 10px;
+  }
+
+  #exchange-btn {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+}
+
+/* Media Query untuk 360px */
+@media (max-width: 360px) {
+  .exchange-container {
+    max-width: 300px;
+    padding: 10px;
+  }
+
+  .exchange-title {
+    font-size: 14px;
+  }
+
+  .exchange-rate {
+    font-size: 11px;
+  }
+
+  .exchange-result {
+    font-size: 9px;
+  }
+
+  .exchange-section input,
+  .exchange-section select {
+    width: 100px;
+    padding: 5px;
+    font-size: 9px;
+  }
+
+  #exchange-btn {
+    padding: 5px 10px;
+    font-size: 9px;
+  }
 }

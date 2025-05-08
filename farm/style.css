@@ -1131,114 +1131,6 @@ input[type="range"] {
   line-height: 1.4;
 }
 
-/* Responsive untuk tab finance */
-@media (max-width: 600px) {
-  #finance {
-    padding: 15px;
-  }
-
-  #finance h2#finance-title {
-    font-size: 16px;
-  }
-
-  #finance h3 {
-    font-size: 12px;
-  }
-
-  #finance p {
-    font-size: 10px;
-  }
-
-  #finance input[type="number"]#deposit-amount {
-    width: 120px;
-    padding: 6px;
-    font-size: 10px;
-  }
-
-  #finance button#confirm-deposit,
-  #finance button#withdraw-btn {
-    padding: 6px 12px;
-    font-size: 10px;
-  }
-
-  #finance p#deposit-message,
-  #finance p#withdraw-note {
-    font-size: 9px;
-  }
-}
-
-/* Untuk layar 480px */
-@media (max-width: 480px) {
-  #finance {
-    padding: 12px; /* Dikecilin dari 15px biar lebih hemat ruang */
-  }
-
-  #finance h2#finance-title {
-    font-size: 14px; /* Dikecilin dari 16px */
-  }
-
-  #finance h3 {
-    font-size: 11px; /* Dikecilin dari 12px */
-  }
-
-  #finance p {
-    font-size: 9px; /* Dikecilin dari 10px */
-  }
-
-  #finance input[type="number"]#deposit-amount {
-    width: 100px; /* Dikecilin dari 120px */
-    padding: 5px; /* Dari 6px */
-    font-size: 9px; /* Dari 10px */
-  }
-
-  #finance button#confirm-deposit,
-  #finance button#withdraw-btn {
-    padding: 5px 10px; /* Dari 6px 12px */
-    font-size: 9px; /* Dari 10px */
-  }
-
-  #finance p#deposit-message,
-  #finance p#withdraw-note {
-    font-size: 8px; /* Dari 9px */
-  }
-}
-
-/* Untuk layar 360px */
-@media (max-width: 360px) {
-  #finance {
-    padding: 10px; /* Lebih kecil lagi */
-  }
-
-  #finance h2#finance-title {
-    font-size: 12px; /* Lebih kecil dari 14px */
-  }
-
-  #finance h3 {
-    font-size: 10px; /* Dari 11px */
-  }
-
-  #finance p {
-    font-size: 8px; /* Dari 9px */
-  }
-
-  #finance input[type="number"]#deposit-amount {
-    width: 80px; /* Lebih kecil dari 100px */
-    padding: 4px; /* Dari 5px */
-    font-size: 8px; /* Dari 9px */
-  }
-
-  #finance button#confirm-deposit,
-  #finance button#withdraw-btn {
-    padding: 4px 8px; /* Dari 5px 10px */
-    font-size: 8px; /* Dari 9px */
-  }
-
-  #finance p#deposit-message,
-  #finance p#withdraw-note {
-    font-size: 7px; /* Dari 8px */
-  }
-}
-
 /* === EXCHANGE CENTER ===*/
 .exchange-container {
   background: #333;
@@ -1256,7 +1148,7 @@ input[type="range"] {
 }
 .exchange-rate {
   font-weight: bold;
-  color: #66ff00;
+  color: #ffeb3b;
   margin-bottom: 10px;
 }
 .exchange-result {

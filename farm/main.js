@@ -1360,10 +1360,19 @@ function updateExchangeResult() {
         ? Math.floor(amount * currentExchangeRate)
         : amount / currentExchangeRate;
 
-    document.getElementById("exchange-result").textContent =
-        `You will get: ${direction === "piToFc"
+    const resultText = `You will get: ${
+        direction === "piToFc"
             ? result.toLocaleString()
-            : result.toLocaleString(undefined, { maximumFractionDigits: 6 })}`;
+            : result.toLocaleString(undefined, { maximumFractionDigits: 6 })
+    }`;
+
+    const resultDiv = document.getElementById("exchange-result");
+
+    // Bikin versi singkat kalau terlalu panjang
+    const shortDisplay = resultText.length > 25 ? resultText.substring(0, 25) + "…" : resultText;
+
+    resultDiv.textContent = shortDisplay;
+    resultDiv.title = resultText; // tooltip jika dihover
 }
 
 async function handleExchange() {
@@ -1419,15 +1428,6 @@ async function handleExchange() {
     // Sembunyikan loading
     document.getElementById("exchange-loading").style.display = "none";
   }, 3000);
-}
-
-function updateExchangeResult(resultValue) {
-  const resultDiv = document.getElementById("exchangeResult");
-
-  const shortDisplay = resultValue.length > 15 ? resultValue.substring(0, 15) + "…" : resultValue;
-
-  resultDiv.innerText = shortDisplay;
-  resultDiv.title = resultValue;
 }
 
 // Modal untuk daily reward

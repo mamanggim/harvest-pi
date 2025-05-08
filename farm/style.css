@@ -415,8 +415,7 @@ input[type="range"] {
   padding: 15px;
   width: 100%;
   max-width: 700px;
-  margin: 0 auto;
-  margin-top: 4px;
+  margin: auto;
   box-sizing: border-box;
 }
 
@@ -1053,8 +1052,8 @@ input[type="range"] {
   border-radius: 10px;
   padding: 20px;
   text-align: center;
-  max-width: 400px;
-  margin: 2px auto; /* Tambahkan nilai atas agar naik */
+  max-width: 330px;
+  margin: auto; /* Tambahkan nilai atas agar naik */
   transform: scale(0.9); /* Kecilkan ukuran kontainer */
 }
 

@@ -1448,6 +1448,21 @@ async function handleExchange() {
   }, 3000);
 }
 
+const exchangeBtn = document.getElementById("exchange-button");
+const directionSelect = document.getElementById("exchange-direction");
+
+directionSelect.addEventListener("change", () => {
+  const direction = directionSelect.value;
+  if (direction === "piToFc") {
+    exchangeBtn.textContent = "Exchange to FC";
+  } else {
+    exchangeBtn.textContent = "Exchange to Pi";
+  }
+});
+
+// Trigger sekali pas awal halaman dimuat
+directionSelect.dispatchEvent(new Event("change"));
+
 // Modal untuk daily reward
 if (claimModalBtn) {
     addSafeClickListener(document.getElementById('claim-reward-btn'), async () => {

@@ -1448,7 +1448,7 @@ async function handleExchange() {
   }, 3000);
 }
 
-const exchangeBtn = document.getElementById("exchange-button");
+const exchangeBtn = document.getElementById("exchange-btn");
 const directionSelect = document.getElementById("exchange-direction");
 
 directionSelect.addEventListener("change", () => {

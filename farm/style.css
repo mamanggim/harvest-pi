@@ -1032,7 +1032,8 @@ input[type="range"] {
   padding: 20px;
   text-align: center;
   max-width: 360px;
-  margin: auto;
+  margin: 10px auto; /* Tambahkan nilai atas agar naik */
+  transform: scale(0.9); /* Kecilkan ukuran kontainer */
 }
 
 #finance h2#finance-title {

@@ -1427,8 +1427,6 @@ async function handleExchange() {
 
     // Sembunyikan loading
     document.getElementById("exchange-loading").style.display = "none";
-    // Hide loading setelah selesai
-    loadingDiv.style.display = "none";
   }, 3000);
 }
 

@@ -1041,7 +1041,7 @@ input[type="range"] {
   padding: 20px;
   text-align: center;
   max-width: 400px;
-  margin: 12px auto; /* Tambahkan nilai atas agar naik */
+  margin: 20px auto; /* Tambahkan nilai atas agar naik */
   transform: scale(0.9); /* Kecilkan ukuran kontainer */
 }
 

@@ -60,7 +60,7 @@ input[type="number"] {
 #game-title {
   font-size: 24px;
   color: #66ff00;
-  margin-bottom: 2px;
+  margin-bottom: 0px;
   text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
   animation: pulse 2s infinite ease-in-out;
   margin: 0 0 20px;
@@ -1188,7 +1188,7 @@ background: #333;
   white-space: nowrap;
   color: #ffeb3b;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 14px;
 }
 .exchange-section input, .exchange-section select {
   width: 150px;

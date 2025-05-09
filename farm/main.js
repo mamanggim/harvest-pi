@@ -1900,107 +1900,183 @@ function exitFullScreen() {
 }
 
 //Fitur Deposit
-const depositBtnElement = document.querySelector('#confirm-deposit');
-const depositAmountInputElement = document.querySelector('#deposit-amount');
-const depositMessageElement = document.querySelector('#deposit-message');
-const piBalanceElement = document.getElementById('pi-balance');
-const fcBalanceElement = document.getElementById('fc-balance');
+const realDepositBtn = document.getElementById("real-deposit-btn");
+const realDepositMsg = document.getElementById("real-deposit-msg");
 
-if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
-    addSafeClickListener(depositBtnElement, async () => {
-        const piAmount = parseFloat(depositAmountInputElement.value);
-        depositMessageElement.textContent = '';
+if (realDepositBtn) {
+  addSafeClickListener(realDepositBtn, async () => {
+    realDepositMsg.textContent = '';
 
-        if (!userId) {
-            depositMessageElement.textContent = langData[currentLang]?.deposit_user_unknown || 'User not recognized.';
-            return;
+    if (!userId || !window.Pi) {
+      realDepositMsg.textContent = 'Pi SDK not available or user not logged in.';
+      return;
+    }
+
+    const amount = 1; // Bisa diubah sesuai jumlah Pi testnet yang diminta
+    const memo = "Deposit to Harvest Pi";
+    const metadata = { userId };
+
+    try {
+      realDepositBtn.disabled = true;
+      realDepositBtn.textContent = "Processing...";
+
+      // Inisiasi transaksi (testnet)
+      const payment = await Pi.createPayment({
+        amount,
+        memo,
+        metadata,
+        onReadyForServerApproval: async (paymentId) => {
+          console.log("Payment ready for server approval", paymentId);
+          // Simulasi approve otomatis (testnet)
+          await Pi.approvePayment(paymentId);
+        },
+        onReadyForServerCompletion: async (paymentId, txid) => {
+          console.log("Payment approved, ready to complete", paymentId, txid);
+
+          // Tambahkan Pi ke database
+          const playerRef = ref(database, `players/${userId}`);
+          const snapshot = await get(playerRef);
+          const data = snapshot.val() || {};
+          const currentPi = data.pi || 0;
+          const currentDeposit = data.totalDeposit || 0;
+
+          await update(playerRef, {
+            pi: currentPi + amount,
+            piBalance: currentPi + amount,
+            totalDeposit: currentDeposit + amount
+          });
+
+          window.pi = currentPi + amount;
+          window.piBalance = currentPi + amount;
+          updateWallet();
+
+          await Pi.completePayment(paymentId, txid);
+          realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+        },
+        onCancel: (paymentId) => {
+          console.warn("Payment cancelled", paymentId);
+          realDepositMsg.textContent = 'Deposit cancelled.';
+        },
+        onError: (error) => {
+          console.error("Payment error", error);
+          realDepositMsg.textContent = 'Error during deposit.';
         }
-
-        if (isNaN(piAmount) || piAmount < 1) {
-            depositMessageElement.textContent = langData[currentLang]?.deposit_minimum || 'Minimum deposit is 1 Pi.';
-            return;
-        }
-
-        depositBtnElement.disabled = true;
-        depositBtnElement.textContent = langData[currentLang]?.deposit_processing || 'Processing...';
-
-        try {
-            const playerRef = ref(database, `players/${userId}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val() || {};
-
-            const previousPiBalance = data.piBalance || 0;
-            const previousFC = data.farmCoins || 0;
-            const previousDeposit = data.totalDeposit || 0;
-
-            const newPiBalance = previousPiBalance + piAmount;
-
-            await update(playerRef, {
-                piBalance: newPiBalance,
-                totalDeposit: previousDeposit + piAmount
-            });
-
-            // Update UI
-            if (piBalanceElement) piBalanceElement.textContent = newPiBalance.toLocaleString();
-
-            depositMessageElement.textContent =
-                (langData[currentLang]?.deposit_success || 'Deposit successful! You deposited') +
-                ` ${piAmount.toLocaleString()} Pi.`;
-
-            depositAmountInputElement.value = '';
-        } catch (error) {
-            console.error(error);
-            depositMessageElement.textContent = langData[currentLang]?.deposit_error || 'An error occurred during deposit.';
-        } finally {
-            depositBtnElement.disabled = false;
-            depositBtnElement.textContent = langData[currentLang]?.deposit || 'Deposit';
-        }
-    });
+      });
+    } catch (error) {
+      console.error("Deposit failed:", error);
+      realDepositMsg.textContent = 'Failed to process deposit.';
+    } finally {
+      realDepositBtn.disabled = false;
+      realDepositBtn.textContent = "Deposit with Pi Testnet";
+    }
+  });
 }
 
 // Fitur Withdraw
-const withdrawBtnElement = document.getElementById('withdraw-btn');
-const withdrawNoteElement = document.getElementById('withdraw-note');
+const realWithdrawBtn = document.getElementById("real-withdraw-btn");
+const withdrawMsg = document.getElementById("withdraw-message");
+const withdrawNoteElement = document.getElementById("withdraw-note");
 
-// Atur teks tombol & note dari lang.json
-if (withdrawBtnElement && withdrawNoteElement) {
-    withdrawBtnElement.textContent = langData[currentLang]?.withdraw_button || 'Withdraw';
-    withdrawNoteElement.innerText = langData[currentLang]?.withdraw_note || 'You need Level 10, 10M FC, and 10 Pi deposited to withdraw.';
-}
-
-// Fungsi cek kelayakan withdraw
-function checkWithdrawEligibility(level, farmCoins, totalDeposit) {
-    const eligible = level >= 10 && farmCoins >= 10000000 && totalDeposit >= 10;
-    if (withdrawBtnElement && withdrawNoteElement) {
-        withdrawBtnElement.disabled = !eligible;
+function checkWithdrawEligibility(level, farmCoins, totalDeposit, piBalance) {
+    const eligible = level >= 10 && farmCoins >= 10000000 && totalDeposit >= 10 && piBalance >= 1;
+    if (realWithdrawBtn && withdrawNoteElement) {
+        realWithdrawBtn.disabled = !eligible;
         withdrawNoteElement.style.display = eligible ? 'none' : 'block';
     }
 }
 
-// Ambil data user dari Firebase dan update tombol withdraw
 async function updateWithdrawStatus() {
     if (!userId) return;
 
-    const withdrawBtnElement = document.getElementById('withdraw-btn');
-    const withdrawNoteElement = document.getElementById('withdraw-note');
-    if (!withdrawBtnElement || !withdrawNoteElement) {
-        console.warn('Withdraw button or note element not found');
-        return;
-    }
-
     try {
-        const userRef = ref(database, 'users/' + userId);
+        const userRef = ref(database, 'players/' + userId);
         const snapshot = await get(userRef);
         const data = snapshot.val() || {};
 
         const level = data.level || 1;
-        const coins = data.farmCoins || 0;
-        const deposit = data.totalDeposit || 0;
+        const farmCoins = data.farmCoins || 0;
+        const totalDeposit = data.totalDeposit || 0;
+        const piBalance = data.piBalance || 0;
 
-        checkWithdrawEligibility(level, coins, deposit);
+        checkWithdrawEligibility(level, farmCoins, totalDeposit, piBalance);
     } catch (error) {
         console.error('Withdraw check error:', error);
     }
+}
+updateWithdrawStatus();
+
+// Real withdraw via Pi testnet
+if (realWithdrawBtn) {
+    addSafeClickListener(realWithdrawBtn, async () => {
+        withdrawMsg.textContent = '';
+
+        if (!userId || !window.Pi) {
+            withdrawMsg.textContent = 'User not authenticated or Pi SDK unavailable.';
+            return;
+        }
+
+        const amount = 1; // Nominal withdraw testnet (misal 1 Pi)
+        const memo = "Withdraw from Harvest Pi";
+        const metadata = { userId };
+
+        try {
+            realWithdrawBtn.disabled = true;
+            realWithdrawBtn.textContent = "Processing...";
+
+            const playerRef = ref(database, `players/${userId}`);
+            const snapshot = await get(playerRef);
+            const data = snapshot.val() || {};
+
+            let currentPi = data.piBalance || 0;
+            if (currentPi < amount) {
+                withdrawMsg.textContent = "Not enough Pi balance.";
+                return;
+            }
+
+            // Buat payment ke user (testnet)
+            const payment = await Pi.createPayment({
+                amount,
+                memo,
+                metadata,
+                to: userId, // pengirimannya ke user sendiri
+                onReadyForServerApproval: async (paymentId) => {
+                    console.log("Ready for approval:", paymentId);
+                    await Pi.approvePayment(paymentId);
+                },
+                onReadyForServerCompletion: async (paymentId, txid) => {
+                    console.log("Completing payment:", paymentId, txid);
+
+                    // Kurangi saldo Pi
+                    await update(playerRef, {
+                        pi: currentPi - amount,
+                        piBalance: currentPi - amount
+                    });
+
+                    window.pi = currentPi - amount;
+                    window.piBalance = currentPi - amount;
+
+                    updateWallet();
+                    await Pi.completePayment(paymentId, txid);
+                    withdrawMsg.textContent = `Withdraw success! -${amount} Pi`;
+                    updateWithdrawStatus(); // Cek ulang kelayakan
+                },
+                onCancel: (paymentId) => {
+                    console.warn("Payment cancelled:", paymentId);
+                    withdrawMsg.textContent = 'Withdraw cancelled.';
+                },
+                onError: (error) => {
+                    console.error("Payment error:", error);
+                    withdrawMsg.textContent = 'Error during withdraw.';
+                }
+            });
+        } catch (error) {
+            console.error("Withdraw failed:", error);
+            withdrawMsg.textContent = 'Failed to process withdraw.';
+        } finally {
+            realWithdrawBtn.disabled = false;
+            realWithdrawBtn.textContent = "Withdraw Real Pi";
+        }
+    });
 }
 
 // Jalankan saat halaman siap

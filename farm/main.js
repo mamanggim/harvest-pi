@@ -459,6 +459,67 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginPiBtnElement) addSafeClickListener(loginPiBtnElement, authenticateWithPi);
 
     initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
+
+    const depositBtnElement = document.getElementById('confirm-deposit');
+    const depositAmountInputElement = document.getElementById('deposit-amount');
+    const depositMessageElement = document.getElementById('deposit-message');
+
+    if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
+        addSafeClickListener(depositBtnElement, async () => {
+            const amount = parseFloat(depositAmountInputElement.value);
+            depositMessageElement.textContent = '';
+
+            if (!userId || !window.Pi) {
+                depositMessageElement.textContent = 'Pi SDK not available or user not logged in.';
+                return;
+            }
+
+            if (isNaN(amount) || amount < 1) {
+                depositMessageElement.textContent = 'Minimum deposit is 1 Pi.';
+                return;
+            }
+
+            depositBtnElement.disabled = true;
+            depositBtnElement.textContent = 'Processing...';
+
+            try {
+                const payment = await Pi.createPayment({
+                    amount: amount.toString(),
+                    memo: `Deposit ${amount} Pi to Harvest Pi`,
+                    metadata: { type: "deposit", app: "Harvest Pi" }
+                });
+
+                console.log('[Pi Payment Result]', payment);
+
+                if (payment.transaction && payment.transaction.txid) {
+                    const playerRef = ref(database, `players/${userId}`);
+                    const snapshot = await get(playerRef);
+                    const data = snapshot.val() || {};
+
+                    const oldBalance = data.piBalance || 0;
+                    const newBalance = oldBalance + amount;
+                    const totalDeposit = (data.totalDeposit || 0) + amount;
+
+                    await update(playerRef, {
+                        piBalance: Math.round(newBalance * 1e6) / 1e6,
+                        totalDeposit: Math.round(totalDeposit * 1e6) / 1e6
+                    });
+
+                    depositMessageElement.textContent = `Deposit of ${amount} Pi successful!`;
+                    depositAmountInputElement.value = '';
+                    updateWallet();
+                } else {
+                    depositMessageElement.textContent = 'Payment was not completed.';
+                }
+            } catch (err) {
+                console.error('[Pi Deposit Error]', err);
+                depositMessageElement.textContent = 'Failed to process deposit.';
+            } finally {
+                depositBtnElement.disabled = false;
+                depositBtnElement.textContent = 'Deposit with Pi Testnet';
+            }
+        });
+    }
     initializeGame();
 });
 

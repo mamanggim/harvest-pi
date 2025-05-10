@@ -247,7 +247,7 @@ async function initializePiSDK() {
     try {
         await Pi.init({
             version: "2.0",
-            appId: "zph8ke6h96lxogfkzxcxgekdtgcqcos3gv1ighavcwxbf8dobcadvfyifvgqutgh" // Pi API key
+            appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos" // Pi API key
         });
         piInitialized = true;
         console.log('Pi SDK initialized successfully');

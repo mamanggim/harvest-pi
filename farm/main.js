@@ -464,30 +464,22 @@ const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
 
 if (realDepositBtn) {
+  console.log("Real deposit button found, attaching click listener...");
   addSafeClickListener(realDepositBtn, async () => {
+    console.log("Deposit button clicked!");
     realDepositMsg.textContent = '';
 
     // Validasi Pi SDK dan user login
     if (!userId || !window.Pi || !Pi.createPayment) {
+      console.log("Pi SDK or user not ready:", { userId, Pi: window.Pi });
       realDepositMsg.textContent = 'Pi SDK not ready or user not logged in. Please initialize or login again.';
-      return;
-    }
-
-    // Pastikan scope "payments" sudah diinisialisasi
-    try {
-      await new Promise((resolve) => {
-        Pi.init({ version: "1.0.5", scope: "payments" }, resolve);
-        console.log("Re-initialized Pi SDK with payments scope");
-      });
-    } catch (initError) {
-      console.error("Failed to re-initialize Pi SDK:", initError);
-      realDepositMsg.textContent = 'Failed to initialize Pi SDK for payment.';
       return;
     }
 
     const amountInput = document.getElementById("deposit-amount");
     const amount = parseFloat(amountInput?.value || "1");
     if (isNaN(amount) || amount < 1) {
+      console.log("Invalid amount:", amount);
       realDepositMsg.textContent = 'Minimum 1 Pi required.';
       return;
     }
@@ -498,6 +490,7 @@ if (realDepositBtn) {
     try {
       realDepositBtn.disabled = true;
       realDepositBtn.textContent = "Processing...";
+      console.log("Starting deposit process...");
 
       const payment = await Pi.createPayment({
         amount,
@@ -564,24 +557,9 @@ if (realDepositBtn) {
     } finally {
       realDepositBtn.disabled = false;
       realDepositBtn.textContent = "Deposit with Pi Testnet";
+      console.log("Deposit process finished.");
     }
   });
-}
-
-// Modifikasi fungsi initializePiSDK (asumsi ini fungsi yang kamu buat)
-async function initializePiSDK() {
-  try {
-    if (window.Pi) {
-      await new Promise((resolve) => {
-        Pi.init({ version: "1.0.5", scope: "payments" }, resolve); // Tambah scope "payments"
-      });
-      console.log("Pi SDK initialized with payments scope");
-    } else {
-      console.error("Pi SDK not available");
-    }
-  } catch (error) {
-    console.error("Pi SDK initialization failed:", error);
-  }
 }
 
 initializeGame();

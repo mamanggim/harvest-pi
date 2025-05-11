@@ -485,21 +485,23 @@ if (realDepositBtn) {
     try {
       realDepositBtn.disabled = true;
       realDepositBtn.textContent = "Processing...";
+      console.log("Starting deposit process with Pi.createPayment...");
 
+      // Definisikan semua callback dengan jelas
       const payment = await Pi.createPayment({
         amount,
         memo,
         metadata,
         onReadyForServerApproval: async (paymentId) => {
-          console.log("Payment ready for approval:", paymentId);
+          console.log("onReadyForServerApproval triggered:", paymentId);
           if (!paymentId) {
             throw new Error("Invalid paymentId in onReadyForServerApproval");
           }
           await Pi.approvePayment(paymentId); // testnet auto-approve
-          console.log("Payment approved:", paymentId);
+          console.log("Payment approved successfully:", paymentId);
         },
         onReadyForServerCompletion: async (paymentId, txid) => {
-          console.log("Payment ready for completion:", paymentId, txid);
+          console.log("onReadyForServerCompletion triggered:", paymentId, txid);
           if (!paymentId || !txid) {
             throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
           }
@@ -521,26 +523,30 @@ if (realDepositBtn) {
           updateWallet();
 
           await Pi.completePayment(paymentId, txid);
+          console.log("Payment completed successfully:", paymentId);
           realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
         },
         onCancel: (paymentId) => {
-          console.warn("Payment cancelled:", paymentId);
+          console.log("onCancel triggered:", paymentId);
           if (!paymentId) {
             console.error("Invalid paymentId in onCancel");
           }
           realDepositMsg.textContent = 'Deposit cancelled.';
         },
         onError: (error, paymentId) => {
-          console.error("Payment error:", error, "Payment ID:", paymentId);
+          console.error("onError triggered:", error, "Payment ID:", paymentId);
           realDepositMsg.textContent = `Error during deposit: ${error.message}`;
         }
       });
+
+      console.log("Pi.createPayment executed successfully:", payment);
     } catch (err) {
       console.error("Deposit failed:", err.message);
       realDepositMsg.textContent = `Failed to process deposit: ${err.message}`;
     } finally {
       realDepositBtn.disabled = false;
       realDepositBtn.textContent = "Deposit with Pi Testnet";
+      console.log("Deposit process finished.");
     }
   });
 }

@@ -248,8 +248,8 @@ async function initializePiSDK() {
         await new Promise((resolve, reject) => {
             Pi.init({
                 version: "2.0",
-                appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos", // Pi API key
-                sandbox: true // Tambah sandbox mode untuk testnet
+                appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos",
+                sandbox: true
             }, (err) => {
                 if (err) {
                     reject(err);
@@ -268,7 +268,6 @@ async function initializePiSDK() {
     }
 }
 
-// Update fungsi authenticateWithPi
 async function authenticateWithPi() {
     if (!window.Pi) {
         console.error('Pi SDK not loaded');
@@ -277,19 +276,21 @@ async function authenticateWithPi() {
     }
 
     if (!piInitialized) {
+        console.log('Initializing Pi SDK before auth...');
         const initialized = await initializePiSDK();
         if (!initialized) return;
     }
 
-    const scopes = ['username', 'payments']; // Mulai dengan scope minimal
+    const scopes = ['username', 'payments'];
+    console.log('Attempting Pi authentication with scopes:', scopes);
     Pi.authenticate(scopes, onIncompletePaymentFound)
         .then(authResult => {
             console.log('Pi Auth success:', authResult);
             const user = authResult.user;
-            userId = user.uid; // Gunain UID, lebih unik
+            userId = user.uid;
             const playerRef = ref(database, `players/${userId}`);
 
-            loadUserBalances(); // Tampilkan saldo Pi & FC dari database
+            loadUserBalances();
             
             update(playerRef, {
                 piUser: {
@@ -299,7 +300,7 @@ async function authenticateWithPi() {
                 pi: pi || 0
             }).then(() => {
                 showNotification(`Logged in as ${user.username}`);
-                localStorage.setItem('userId', userId); // Simpan userId
+                localStorage.setItem('userId', userId);
                 const loginScreenElement = document.getElementById('login-screen');
                 const startScreenElement = document.getElementById('start-screen');
                 if (loginScreenElement && startScreenElement) {
@@ -320,7 +321,6 @@ async function authenticateWithPi() {
 
 function onIncompletePaymentFound(payment) {
     console.log("onIncompletePaymentFound:", payment);
-    // Kalau ada pembayaran yang gak selesai, bisa log atau notify user
     showNotification("Found an incomplete payment. Please try again.");
 }
 

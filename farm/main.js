@@ -556,8 +556,24 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-initializeGame();
-});
+    // Modifikasi fungsi initializePiSDK (asumsi ini fungsi yang kamu buat)
+    async function initializePiSDK() {
+      try {
+        if (window.Pi) {
+          await new Promise((resolve) => {
+            Pi.init({ version: "1.0.5", scope: "payments" }, resolve); // Tambah scope "payments"
+          });
+          console.log("Pi SDK initialized with payments scope");
+        } else {
+          console.error("Pi SDK not available");
+        }
+      } catch (error) {
+        console.error("Pi SDK initialization failed:", error);
+      }
+    }
+
+    initializeGame();
+    });
 
 // Load player data
 function loadPlayerData() {

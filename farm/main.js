@@ -467,6 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
       addSafeClickListener(realDepositBtn, async () => {
         realDepositMsg.textContent = '';
 
+        // Validasi Pi SDK dan user login
         if (!userId || !window.Pi || !Pi.createPayment) {
           realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
           return;
@@ -492,7 +493,13 @@ document.addEventListener('DOMContentLoaded', () => {
             metadata,
             onReadyForServerApproval: async (paymentId) => {
               console.log("Payment ready:", paymentId);
-              await Pi.approvePayment(paymentId); // Auto-approve (testnet)
+              try {
+                await Pi.approvePayment(paymentId); // Auto-approve (testnet)
+                console.log("Payment approved successfully:", paymentId);
+              } catch (approvalError) {
+                console.error("Approval failed:", approvalError);
+                throw new Error("Failed to approve payment");
+              }
             },
             onReadyForServerCompletion: async (paymentId, txid) => {
               console.log("Approved:", paymentId, txid);
@@ -505,36 +512,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
               const newPiBalance = currentPi + amount;
 
+              // Update database
               await update(playerRef, {
                 piBalance: newPiBalance,
                 totalDeposit: currentDeposit + amount
               });
 
-              window.piBalance = newPiBalance;
-              updateWallet();
+              // Update UI
+              try {
+                window.piBalance = newPiBalance;
+                updateWallet();
+              } catch (updateError) {
+                console.error("Failed to update wallet UI:", updateError);
+                realDepositMsg.textContent = `Deposit success! +${amount} Pi, but UI update failed.`;
+                return;
+              }
 
-              await Pi.completePayment(paymentId, txid);
-              realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+              // Selesaikan pembayaran
+              try {
+                await Pi.completePayment(paymentId, txid);
+                realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+              } catch (completeError) {
+                console.error("Failed to complete payment:", completeError);
+                realDepositMsg.textContent = `Deposit recorded, but completion failed. Contact support.`;
+              }
             },
             onCancel: (paymentId) => {
-              console.warn("Payment cancelled", paymentId);
+              console.warn("Payment cancelled:", paymentId);
               realDepositMsg.textContent = 'Deposit cancelled.';
             },
             onError: (error) => {
-              console.error("Payment error", error);
-              realDepositMsg.textContent = 'Error during deposit.';
+              console.error("Payment error:", error);
+              realDepositMsg.textContent = `Error during deposit: ${error.message}`;
             }
           });
         } catch (err) {
-          console.error("Deposit failed:", err);
-          realDepositMsg.textContent = "Failed to process deposit.";
+          console.error("Deposit failed:", err.message);
+          realDepositMsg.textContent = `Failed to process deposit: ${err.message}`;
         } finally {
           realDepositBtn.disabled = false;
           realDepositBtn.textContent = "Deposit with Pi Testnet";
         }
       });
     }
-    initializeGame();
+
+initializeGame();
 });
 
 // Load player data

@@ -461,6 +461,7 @@ const realDepositMsg = document.getElementById("real-deposit-msg");
 if (realDepositBtn) {
   console.log("Real deposit button found, attaching click listener...");
   addSafeClickListener(realDepositBtn, async () => {
+    console.log("Deposit button clicked!");
     realDepositMsg.textContent = '';
 
     // Cek SDK dan login
@@ -473,6 +474,7 @@ if (realDepositBtn) {
     const amountInput = document.getElementById("deposit-amount");
     const amount = parseFloat(amountInput?.value || "1");
     if (isNaN(amount) || amount < 1) {
+      console.log("Invalid amount:", amount);
       realDepositMsg.textContent = 'Minimum 1 Pi required.';
       return;
     }
@@ -489,11 +491,18 @@ if (realDepositBtn) {
         memo,
         metadata,
         onReadyForServerApproval: async (paymentId) => {
-          console.log("Payment ready:", paymentId);
+          console.log("Payment ready for approval:", paymentId);
+          if (!paymentId) {
+            throw new Error("Invalid paymentId in onReadyForServerApproval");
+          }
           await Pi.approvePayment(paymentId); // testnet auto-approve
+          console.log("Payment approved:", paymentId);
         },
         onReadyForServerCompletion: async (paymentId, txid) => {
-          console.log("Payment approved:", paymentId, txid);
+          console.log("Payment ready for completion:", paymentId, txid);
+          if (!paymentId || !txid) {
+            throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
+          }
 
           const playerRef = ref(database, `players/${userId}`);
           const snapshot = await get(playerRef);
@@ -516,10 +525,13 @@ if (realDepositBtn) {
         },
         onCancel: (paymentId) => {
           console.warn("Payment cancelled:", paymentId);
+          if (!paymentId) {
+            console.error("Invalid paymentId in onCancel");
+          }
           realDepositMsg.textContent = 'Deposit cancelled.';
         },
-        onError: (error) => {
-          console.error("Payment error:", error);
+        onError: (error, paymentId) => {
+          console.error("Payment error:", error, "Payment ID:", paymentId);
           realDepositMsg.textContent = `Error during deposit: ${error.message}`;
         }
       });

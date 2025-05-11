@@ -460,65 +460,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
 
-    const depositBtnElement = document.getElementById('confirm-deposit');
-    const depositAmountInputElement = document.getElementById('deposit-amount');
-    const depositMessageElement = document.getElementById('deposit-message');
+    const realDepositBtn = document.getElementById("real-deposit-btn");
+    const realDepositMsg = document.getElementById("real-deposit-msg");
 
-    if (depositBtnElement && depositAmountInputElement && depositMessageElement) {
-        addSafeClickListener(depositBtnElement, async () => {
-            const amount = parseFloat(depositAmountInputElement.value);
-            depositMessageElement.textContent = '';
+    if (realDepositBtn) {
+      addSafeClickListener(realDepositBtn, async () => {
+        realDepositMsg.textContent = '';
 
-            if (!userId || !window.Pi) {
-                depositMessageElement.textContent = 'Pi SDK not available or user not logged in.';
-                return;
+        if (!userId || !window.Pi || !Pi.createPayment) {
+          realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
+          return;
+        }
+
+        const amountInput = document.getElementById("deposit-amount");
+        const amount = parseFloat(amountInput?.value || "1");
+        if (isNaN(amount) || amount < 1) {
+          realDepositMsg.textContent = 'Minimum 1 Pi required.';
+          return;
+        }
+
+        const memo = "Deposit to Harvest Pi";
+        const metadata = { userId };
+
+        try {
+          realDepositBtn.disabled = true;
+          realDepositBtn.textContent = "Processing...";
+
+          const payment = await Pi.createPayment({
+            amount,
+            memo,
+            metadata,
+            onReadyForServerApproval: async (paymentId) => {
+              console.log("Payment ready:", paymentId);
+              await Pi.approvePayment(paymentId); // Auto-approve (testnet)
+            },
+            onReadyForServerCompletion: async (paymentId, txid) => {
+              console.log("Approved:", paymentId, txid);
+
+              const playerRef = ref(database, `players/${userId}`);
+              const snapshot = await get(playerRef);
+              const data = snapshot.val() || {};
+              const currentPi = data.piBalance || 0;
+              const currentDeposit = data.totalDeposit || 0;
+
+              const newPiBalance = currentPi + amount;
+
+              await update(playerRef, {
+                piBalance: newPiBalance,
+                totalDeposit: currentDeposit + amount
+              });
+
+              window.piBalance = newPiBalance;
+              updateWallet();
+
+              await Pi.completePayment(paymentId, txid);
+              realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+            },
+            onCancel: (paymentId) => {
+              console.warn("Payment cancelled", paymentId);
+              realDepositMsg.textContent = 'Deposit cancelled.';
+            },
+            onError: (error) => {
+              console.error("Payment error", error);
+              realDepositMsg.textContent = 'Error during deposit.';
             }
-
-            if (isNaN(amount) || amount < 1) {
-                depositMessageElement.textContent = 'Minimum deposit is 1 Pi.';
-                return;
-            }
-
-            depositBtnElement.disabled = true;
-            depositBtnElement.textContent = 'Processing...';
-
-            try {
-                const payment = await Pi.createPayment({
-                    amount: amount.toString(),
-                    memo: `Deposit ${amount} Pi to Harvest Pi`,
-                    metadata: { type: "deposit", app: "Harvest Pi" }
-                });
-
-                console.log('[Pi Payment Result]', payment);
-
-                if (payment.transaction && payment.transaction.txid) {
-                    const playerRef = ref(database, `players/${userId}`);
-                    const snapshot = await get(playerRef);
-                    const data = snapshot.val() || {};
-
-                    const oldBalance = data.piBalance || 0;
-                    const newBalance = oldBalance + amount;
-                    const totalDeposit = (data.totalDeposit || 0) + amount;
-
-                    await update(playerRef, {
-                        piBalance: Math.round(newBalance * 1e6) / 1e6,
-                        totalDeposit: Math.round(totalDeposit * 1e6) / 1e6
-                    });
-
-                    depositMessageElement.textContent = `Deposit of ${amount} Pi successful!`;
-                    depositAmountInputElement.value = '';
-                    updateWallet();
-                } else {
-                    depositMessageElement.textContent = 'Payment was not completed.';
-                }
-            } catch (err) {
-                console.error('[Pi Deposit Error]', err);
-                depositMessageElement.textContent = 'Failed to process deposit.';
-            } finally {
-                depositBtnElement.disabled = false;
-                depositBtnElement.textContent = 'Deposit with Pi Testnet';
-            }
-        });
+          });
+        } catch (err) {
+          console.error("Deposit failed:", err);
+          realDepositMsg.textContent = "Failed to process deposit.";
+        } finally {
+          realDepositBtn.disabled = false;
+          realDepositBtn.textContent = "Deposit with Pi Testnet";
+        }
+      });
     }
     initializeGame();
 });

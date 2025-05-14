@@ -245,21 +245,12 @@ async function initializePiSDK() {
     }
 
     try {
-        await new Promise((resolve, reject) => {
-            Pi.init({
-                version: "2.0",
-                appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos",
-                sandbox: true
-            }, (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
+        await Pi.init({
+            version: "2.0",
+            appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos" // Pi API key
         });
         piInitialized = true;
-        console.log('Pi SDK initialized successfully in sandbox mode');
+        console.log('Pi SDK initialized successfully');
         return true;
     } catch (error) {
         console.error('Pi init failed:', error);
@@ -268,6 +259,7 @@ async function initializePiSDK() {
     }
 }
 
+// Update fungsi authenticateWithPi
 async function authenticateWithPi() {
     if (!window.Pi) {
         console.error('Pi SDK not loaded');
@@ -276,21 +268,19 @@ async function authenticateWithPi() {
     }
 
     if (!piInitialized) {
-        console.log('Initializing Pi SDK before auth...');
         const initialized = await initializePiSDK();
         if (!initialized) return;
     }
 
-    const scopes = ['username', 'payments'];
-    console.log('Attempting Pi authentication with scopes:', scopes);
+    const scopes = ['username']; // Mulai dengan scope minimal
     Pi.authenticate(scopes, onIncompletePaymentFound)
         .then(authResult => {
             console.log('Pi Auth success:', authResult);
             const user = authResult.user;
-            userId = user.uid;
+            userId = user.uid; // Gunain UID, lebih unik
             const playerRef = ref(database, `players/${userId}`);
 
-            loadUserBalances();
+            loadUserBalances(); // Tampilkan saldo Pi & FC dari database
             
             update(playerRef, {
                 piUser: {
@@ -300,7 +290,7 @@ async function authenticateWithPi() {
                 pi: pi || 0
             }).then(() => {
                 showNotification(`Logged in as ${user.username}`);
-                localStorage.setItem('userId', userId);
+                localStorage.setItem('userId', userId); // Simpan userId
                 const loginScreenElement = document.getElementById('login-screen');
                 const startScreenElement = document.getElementById('start-screen');
                 if (loginScreenElement && startScreenElement) {
@@ -320,8 +310,8 @@ async function authenticateWithPi() {
 }
 
 function onIncompletePaymentFound(payment) {
-    console.log("onIncompletePaymentFound:", payment);
-    showNotification("Found an incomplete payment. Please try again.");
+    console.log("onIncompletePaymentFound", payment);
+    // Kalo gak pake backend, biarin kosong kayak gini
 }
 
 // Document ready event listener
@@ -465,7 +455,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const realDepositBtn = document.getElementById("real-deposit-btn");
+    const loginPiBtnElement = document.getElementById('login-pi-btn');
+if (loginPiBtnElement) addSafeClickListener(loginPiBtnElement, authenticateWithPi);
+
+initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
+
+const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
 
 if (realDepositBtn) {
@@ -474,10 +469,10 @@ if (realDepositBtn) {
     console.log("Deposit button clicked!");
     realDepositMsg.textContent = '';
 
-    // Cek SDK dan login
-    if (!userId || !window.Pi || typeof Pi.createPayment !== "function") {
-      console.warn("Pi SDK or user not ready:", { userId, Pi: window.Pi });
-      realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
+    // Validasi Pi SDK dan user login
+    if (!userId || !window.Pi || !Pi.createPayment) {
+      console.log("Pi SDK or user not ready:", { userId, Pi: window.Pi });
+      realDepositMsg.textContent = 'Pi SDK not ready or user not logged in. Please initialize or login again.';
       return;
     }
 
@@ -495,64 +490,67 @@ if (realDepositBtn) {
     try {
       realDepositBtn.disabled = true;
       realDepositBtn.textContent = "Processing...";
-      console.log("Starting deposit process with Pi.createPayment...");
+      console.log("Starting deposit process...");
 
-      const payment = await Pi.createPayment(
-        {
-          amount,
-          memo,
-          metadata
-        },
-        {
-          onReadyForServerApproval: async (paymentId) => {
-            console.log("onReadyForServerApproval triggered:", paymentId);
-            if (!paymentId) {
-              throw new Error("Invalid paymentId in onReadyForServerApproval");
-            }
-            await Pi.approvePayment(paymentId); // testnet auto-approve
+      const payment = await Pi.createPayment({
+        amount,
+        memo,
+        metadata,
+        onReadyForServerApproval: async (paymentId) => {
+          console.log("Payment ready:", paymentId);
+          try {
+            await Pi.approvePayment(paymentId); // Auto-approve (testnet)
             console.log("Payment approved successfully:", paymentId);
-          },
-          onReadyForServerCompletion: async (paymentId, txid) => {
-            console.log("onReadyForServerCompletion triggered:", paymentId, txid);
-            if (!paymentId || !txid) {
-              throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
-            }
-
-            const playerRef = ref(database, `players/${userId}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val() || {};
-            const currentPi = data.piBalance || 0;
-            const currentDeposit = data.totalDeposit || 0;
-
-            const newPi = currentPi + amount;
-
-            await update(playerRef, {
-              piBalance: newPi,
-              totalDeposit: currentDeposit + amount
-            });
-
-            window.piBalance = newPi;
-            updateWallet();
-
-            await Pi.completePayment(paymentId, txid);
-            console.log("Payment completed successfully:", paymentId);
-            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
-          },
-          onCancel: (paymentId) => {
-            console.log("onCancel triggered:", paymentId);
-            if (!paymentId) {
-              console.error("Invalid paymentId in onCancel");
-            }
-            realDepositMsg.textContent = 'Deposit cancelled.';
-          },
-          onError: (error, paymentId) => {
-            console.error("onError triggered:", error, "Payment ID:", paymentId);
-            realDepositMsg.textContent = `Error during deposit: ${error.message}`;
+          } catch (approvalError) {
+            console.error("Approval failed:", approvalError);
+            throw new Error("Failed to approve payment");
           }
-        }
-      );
+        },
+        onReadyForServerCompletion: async (paymentId, txid) => {
+          console.log("Approved:", paymentId, txid);
 
-      console.log("Pi.createPayment executed successfully:", payment);
+          const playerRef = ref(database, `players/${userId}`);
+          const snapshot = await get(playerRef);
+          const data = snapshot.val() || {};
+          const currentPi = data.piBalance || 0;
+          const currentDeposit = data.totalDeposit || 0;
+
+          const newPiBalance = currentPi + amount;
+
+          // Update database
+          await update(playerRef, {
+            piBalance: newPiBalance,
+            totalDeposit: currentDeposit + amount
+          });
+
+          // Update UI
+          try {
+            window.piBalance = newPiBalance;
+            updateWallet();
+          } catch (updateError) {
+            console.error("Failed to update wallet UI:", updateError);
+            realDepositMsg.textContent = `Deposit success! +${amount} Pi, but UI update failed.`;
+            return;
+          }
+
+          // Selesaikan pembayaran
+          try {
+            await Pi.completePayment(paymentId, txid);
+            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+          } catch (completeError) {
+            console.error("Failed to complete payment:", completeError);
+            realDepositMsg.textContent = `Deposit recorded, but completion failed. Contact support.`;
+          }
+        },
+        onCancel: (paymentId) => {
+          console.warn("Payment cancelled:", paymentId);
+          realDepositMsg.textContent = 'Deposit cancelled.';
+        },
+        onError: (error) => {
+          console.error("Payment error:", error);
+          realDepositMsg.textContent = `Error during deposit: ${error.message}`;
+        }
+      });
     } catch (err) {
       console.error("Deposit failed:", err.message);
       realDepositMsg.textContent = `Failed to process deposit: ${err.message}`;

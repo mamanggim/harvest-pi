@@ -237,6 +237,8 @@ async function loadData() {
 // END loadData fix
 
 // Authenticate with Pi Network
+let piInitialized = false;
+
 async function initializePiSDK() {
     if (!window.Pi) {
         console.error('Pi SDK not loaded');
@@ -283,40 +285,35 @@ async function authenticateWithPi() {
 
     const scopes = ['username', 'payments'];
     console.log('Attempting Pi authentication with scopes:', scopes);
-    Pi.authenticate(scopes, onIncompletePaymentFound)
-        .then(authResult => {
-            console.log('Pi Auth success:', authResult);
-            const user = authResult.user;
-            userId = user.uid;
-            const playerRef = ref(database, `players/${userId}`);
+    try {
+        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+        console.log('Pi Auth success:', authResult);
+        const user = authResult.user;
+        userId = user.uid;
+        const playerRef = ref(database, `players/${userId}`);
 
-            loadUserBalances();
-            
-            update(playerRef, {
-                piUser: {
-                    uid: user.uid,
-                    username: user.username
-                },
-                pi: pi || 0
-            }).then(() => {
-                showNotification(`Logged in as ${user.username}`);
-                localStorage.setItem('userId', userId);
-                const loginScreenElement = document.getElementById('login-screen');
-                const startScreenElement = document.getElementById('start-screen');
-                if (loginScreenElement && startScreenElement) {
-                    loginScreenElement.style.display = 'none';
-                    startScreenElement.style.display = 'flex';
-                }
-                loadPlayerData();
-            }).catch(error => {
-                console.error('Error saving Pi user data:', error);
-                showNotification('Failed to save Pi user data: ' + error.message);
-            });
-        })
-        .catch(error => {
-            console.error('Pi Auth failed:', error);
-            showNotification('Pi Network login failed: ' + error.message);
+        loadUserBalances();
+
+        await update(playerRef, {
+            piUser: {
+                uid: user.uid,
+                username: user.username
+            },
+            pi: 0 // Ganti pi jadi 0 karena variabel pi gak ada
         });
+        showNotification(`Logged in as ${user.username}`);
+        localStorage.setItem('userId', userId);
+        const loginScreenElement = document.getElementById('login-screen');
+        const startScreenElement = document.getElementById('start-screen');
+        if (loginScreenElement && startScreenElement) {
+            loginScreenElement.style.display = 'none';
+            startScreenElement.style.display = 'flex';
+        }
+        loadPlayerData();
+    } catch (error) {
+        console.error('Pi Auth failed:', error);
+        showNotification('Pi Network login failed: ' + error.message);
+    }
 }
 
 function onIncompletePaymentFound(payment) {

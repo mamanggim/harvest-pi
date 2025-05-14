@@ -237,8 +237,6 @@ async function loadData() {
 // END loadData fix
 
 // Authenticate with Pi Network
-let piInitialized = false;
-
 async function initializePiSDK() {
     if (!window.Pi) {
         console.error('Pi SDK not loaded');

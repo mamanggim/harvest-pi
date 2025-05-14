@@ -272,7 +272,7 @@ async function authenticateWithPi() {
         if (!initialized) return;
     }
 
-    const scopes = ['username']; // Mulai dengan scope minimal
+    const scopes = ['username', 'payments'];
     Pi.authenticate(scopes, onIncompletePaymentFound)
         .then(authResult => {
             console.log('Pi Auth success:', authResult);

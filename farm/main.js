@@ -237,6 +237,13 @@ async function loadData() {
 // END loadData fix
 
 // Authenticate with Pi Network
+// Show notification function (asumsi ada)
+function showNotification(message) {
+    console.log("Notification:", message);
+    // Tambahin logika UI kalau perlu, misalnya alert atau elemen DOM
+}
+
+// Authenticate with Pi Network
 async function initializePiSDK() {
     if (!window.Pi) {
         console.error('Pi SDK not loaded');
@@ -321,6 +328,28 @@ function onIncompletePaymentFound(payment) {
 
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
+    // Tambah event listener untuk tombol login
+    const loginPiBtnElement = document.getElementById('login-pi-btn');
+    if (loginPiBtnElement) {
+        console.log("Login button found, attaching click listener...", loginPiBtnElement);
+        try {
+            addSafeClickListener(loginPiBtnElement, authenticateWithPi);
+            console.log("Click listener attached successfully using addSafeClickListener for login button");
+        } catch (error) {
+            console.error("Failed to attach listener with addSafeClickListener for login button:", error);
+            // Fallback: pakai addEventListener biasa
+            loginPiBtnElement.addEventListener('click', authenticateWithPi);
+            console.log("Fallback: Click listener attached using addEventListener for login button");
+        }
+        // Pastikan tombol tidak disabled
+        if (loginPiBtnElement.disabled) {
+            console.warn("Login button is disabled, enabling it...");
+            loginPiBtnElement.disabled = false;
+        }
+    } else {
+        console.error("Login button (#login-pi-btn) not found in the DOM!");
+    }
+
     const startTextElement = document.getElementById('start-text');
     if (startTextElement) addSafeClickListener(startTextElement, startGame);
 
@@ -461,105 +490,105 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const realDepositBtn = document.getElementById("real-deposit-btn");
-const realDepositMsg = document.getElementById("real-deposit-msg");
+    const realDepositMsg = document.getElementById("real-deposit-msg");
 
-if (realDepositBtn) {
-  console.log("Real deposit button found, attaching click listener...");
-  addSafeClickListener(realDepositBtn, async () => {
-    console.log("Deposit button clicked!");
-    realDepositMsg.textContent = '';
+    if (realDepositBtn) {
+        console.log("Real deposit button found, attaching click listener...");
+        addSafeClickListener(realDepositBtn, async () => {
+            console.log("Deposit button clicked!");
+            realDepositMsg.textContent = '';
 
-    // Cek SDK dan login
-    if (!userId || !window.Pi || typeof Pi.createPayment !== "function") {
-      console.warn("Pi SDK or user not ready:", { userId, Pi: window.Pi });
-      realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
-      return;
-    }
-
-    const amountInput = document.getElementById("deposit-amount");
-    const amount = parseFloat(amountInput?.value || "1");
-    if (isNaN(amount) || amount < 1) {
-      console.log("Invalid amount:", amount);
-      realDepositMsg.textContent = 'Minimum 1 Pi required.';
-      return;
-    }
-
-    const memo = "Deposit to Harvest Pi";
-    const metadata = { userId };
-
-    try {
-      realDepositBtn.disabled = true;
-      realDepositBtn.textContent = "Processing...";
-      console.log("Starting deposit process with Pi.createPayment...");
-
-      const payment = await Pi.createPayment(
-        {
-          amount,
-          memo,
-          metadata
-        },
-        {
-          onReadyForServerApproval: async (paymentId) => {
-            console.log("onReadyForServerApproval triggered:", paymentId);
-            if (!paymentId) {
-              throw new Error("Invalid paymentId in onReadyForServerApproval");
-            }
-            await Pi.approvePayment(paymentId); // testnet auto-approve
-            console.log("Payment approved successfully:", paymentId);
-          },
-          onReadyForServerCompletion: async (paymentId, txid) => {
-            console.log("onReadyForServerCompletion triggered:", paymentId, txid);
-            if (!paymentId || !txid) {
-              throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
+            // Cek SDK dan login
+            if (!userId || !window.Pi || typeof Pi.createPayment !== "function") {
+                console.warn("Pi SDK or user not ready:", { userId, Pi: window.Pi });
+                realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
+                return;
             }
 
-            const playerRef = ref(database, `players/${userId}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val() || {};
-            const currentPi = data.piBalance || 0;
-            const currentDeposit = data.totalDeposit || 0;
-
-            const newPi = currentPi + amount;
-
-            await update(playerRef, {
-              piBalance: newPi,
-              totalDeposit: currentDeposit + amount
-            });
-
-            window.piBalance = newPi;
-            updateWallet();
-
-            await Pi.completePayment(paymentId, txid);
-            console.log("Payment completed successfully:", paymentId);
-            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
-          },
-          onCancel: (paymentId) => {
-            console.log("onCancel triggered:", paymentId);
-            if (!paymentId) {
-              console.error("Invalid paymentId in onCancel");
+            const amountInput = document.getElementById("deposit-amount");
+            const amount = parseFloat(amountInput?.value || "1");
+            if (isNaN(amount) || amount < 1) {
+                console.log("Invalid amount:", amount);
+                realDepositMsg.textContent = 'Minimum 1 Pi required.';
+                return;
             }
-            realDepositMsg.textContent = 'Deposit cancelled.';
-          },
-          onError: (error, paymentId) => {
-            console.error("onError triggered:", error, "Payment ID:", paymentId);
-            realDepositMsg.textContent = `Error during deposit: ${error.message}`;
-          }
-        }
-      );
 
-      console.log("Pi.createPayment executed successfully:", payment);
-    } catch (err) {
-      console.error("Deposit failed:", err.message);
-      realDepositMsg.textContent = `Failed to process deposit: ${err.message}`;
-    } finally {
-      realDepositBtn.disabled = false;
-      realDepositBtn.textContent = "Deposit with Pi Testnet";
-      console.log("Deposit process finished.");
+            const memo = "Deposit to Harvest Pi";
+            const metadata = { userId };
+
+            try {
+                realDepositBtn.disabled = true;
+                realDepositBtn.textContent = "Processing...";
+                console.log("Starting deposit process with Pi.createPayment...");
+
+                const payment = await Pi.createPayment(
+                    {
+                        amount,
+                        memo,
+                        metadata
+                    },
+                    {
+                        onReadyForServerApproval: async (paymentId) => {
+                            console.log("onReadyForServerApproval triggered:", paymentId);
+                            if (!paymentId) {
+                                throw new Error("Invalid paymentId in onReadyForServerApproval");
+                            }
+                            await Pi.approvePayment(paymentId); // testnet auto-approve
+                            console.log("Payment approved successfully:", paymentId);
+                        },
+                        onReadyForServerCompletion: async (paymentId, txid) => {
+                            console.log("onReadyForServerCompletion triggered:", paymentId, txid);
+                            if (!paymentId || !txid) {
+                                throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
+                            }
+
+                            const playerRef = ref(database, `players/${userId}`);
+                            const snapshot = await get(playerRef);
+                            const data = snapshot.val() || {};
+                            const currentPi = data.piBalance || 0;
+                            const currentDeposit = data.totalDeposit || 0;
+
+                            const newPi = currentPi + amount;
+
+                            await update(playerRef, {
+                                piBalance: newPi,
+                                totalDeposit: currentDeposit + amount
+                            });
+
+                            window.piBalance = newPi;
+                            updateWallet();
+
+                            await Pi.completePayment(paymentId, txid);
+                            console.log("Payment completed successfully:", paymentId);
+                            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+                        },
+                        onCancel: (paymentId) => {
+                            console.log("onCancel triggered:", paymentId);
+                            if (!paymentId) {
+                                console.error("Invalid paymentId in onCancel");
+                            }
+                            realDepositMsg.textContent = 'Deposit cancelled.';
+                        },
+                        onError: (error, paymentId) => {
+                            console.error("onError triggered:", error, "Payment ID:", paymentId);
+                            realDepositMsg.textContent = `Error during deposit: ${error.message}`;
+                        }
+                    }
+                );
+
+                console.log("Pi.createPayment executed successfully:", payment);
+            } catch (err) {
+                console.error("Deposit failed:", err.message);
+                realDepositMsg.textContent = `Failed to process deposit: ${err.message}`;
+            } finally {
+                realDepositBtn.disabled = false;
+                realDepositBtn.textContent = "Deposit with Pi Testnet";
+                console.log("Deposit process finished.");
+            }
+        });
     }
-  });
-}
 
-initializeGame();
+    initializeGame();
 });
 
 // Load player data

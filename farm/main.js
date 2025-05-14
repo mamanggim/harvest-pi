@@ -469,17 +469,17 @@ if (realDepositBtn) {
         console.log("Deposit button clicked!");
         realDepositMsg.textContent = '';
 
-        // Cek SDK dan login
-        if (!userId || !window.Pi || typeof Pi.createPayment !== "function") {
-            console.warn("Pi SDK or user not ready:", { userId, Pi: window.Pi });
-            realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
+        // Validasi Pi SDK dan user login
+        if (!userId || !window.Pi || !Pi.createPayment) {
+            console.log("Pi SDK or user not ready:", { userId, Pi: window.Pi });
+            realDepositMsg.textContent = 'Pi SDK not ready or user not logged in. Please initialize or login again.';
             return;
         }
 
         // Pastikan scope "payments" aktif dengan re-authentikasi
         try {
             console.log("Verifying 'payments' scope...");
-            const scopes = ['payments']; // Cukup cek "payments" aja
+            const scopes = ['payments'];
             const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
             console.log("Scope 'payments' verified:", authResult);
             userId = authResult.user.uid; // Update userId
@@ -505,7 +505,12 @@ if (realDepositBtn) {
             realDepositBtn.textContent = "Processing...";
             console.log("Starting deposit process with Pi.createPayment...");
 
-            const payment = await Pi.createPayment(
+            // Tambah timeout untuk seluruh proses
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("Deposit process timed out")), 30000); // Timeout 30 detik
+            });
+
+            const paymentPromise = Pi.createPayment(
                 {
                     amount,
                     memo,
@@ -517,8 +522,9 @@ if (realDepositBtn) {
                         if (!paymentId) {
                             throw new Error("Invalid paymentId in onReadyForServerApproval");
                         }
+                        const approvalStart = Date.now();
                         await Pi.approvePayment(paymentId); // testnet auto-approve
-                        console.log("Payment approved successfully:", paymentId);
+                        console.log(`Payment approved successfully in ${Date.now() - approvalStart}ms:`, paymentId);
                     },
                     onReadyForServerCompletion: async (paymentId, txid) => {
                         console.log("onReadyForServerCompletion triggered:", paymentId, txid);
@@ -526,24 +532,29 @@ if (realDepositBtn) {
                             throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
                         }
 
+                        const dbStart = Date.now();
                         const playerRef = ref(database, `players/${userId}`);
                         const snapshot = await get(playerRef);
                         const data = snapshot.val() || {};
                         const currentPi = data.piBalance || 0;
                         const currentDeposit = data.totalDeposit || 0;
+                        console.log(`Database read completed in ${Date.now() - dbStart}ms`);
 
-                        const newPi = currentPi + amount;
+                        const newPiBalance = currentPi + amount;
 
+                        const updateStart = Date.now();
                         await update(playerRef, {
-                            piBalance: newPi,
+                            piBalance: newPiBalance,
                             totalDeposit: currentDeposit + amount
                         });
+                        console.log(`Database update completed in ${Date.now() - updateStart}ms`);
 
-                        window.piBalance = newPi;
+                        window.piBalance = newPiBalance;
                         updateWallet();
 
+                        const completeStart = Date.now();
                         await Pi.completePayment(paymentId, txid);
-                        console.log("Payment completed successfully:", paymentId);
+                        console.log(`Payment completed successfully in ${Date.now() - completeStart}ms:`, paymentId);
                         realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
                     },
                     onCancel: (paymentId) => {
@@ -563,7 +574,9 @@ if (realDepositBtn) {
                 }
             );
 
-            console.log("Pi.createPayment executed successfully:", payment);
+            // Balapan antara payment dan timeout
+            await Promise.race([paymentPromise, timeoutPromise]);
+            console.log("Pi.createPayment executed successfully");
         } catch (err) {
             console.error("Deposit failed:", err.message);
             realDepositMsg.textContent = `Failed to process deposit: ${err.message}`;

@@ -505,10 +505,13 @@ if (realDepositBtn) {
             realDepositBtn.textContent = "Processing...";
             console.log("Starting deposit process with Pi.createPayment...");
 
-            // Tambah timeout untuk seluruh proses
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error("Deposit process timed out")), 30000); // Timeout 30 detik
-            });
+            // Timeout per langkah (10 detik)
+            const withTimeout = (promise, message, timeout = 10000) => {
+                return Promise.race([
+                    promise,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), timeout))
+                ]);
+            };
 
             const paymentPromise = Pi.createPayment(
                 {
@@ -523,7 +526,11 @@ if (realDepositBtn) {
                             throw new Error("Invalid paymentId in onReadyForServerApproval");
                         }
                         const approvalStart = Date.now();
-                        await Pi.approvePayment(paymentId); // testnet auto-approve
+                        await withTimeout(
+                            Pi.approvePayment(paymentId),
+                            "Approval timed out",
+                            10000
+                        );
                         console.log(`Payment approved successfully in ${Date.now() - approvalStart}ms:`, paymentId);
                     },
                     onReadyForServerCompletion: async (paymentId, txid) => {
@@ -532,9 +539,14 @@ if (realDepositBtn) {
                             throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
                         }
 
+                        // Operasi database
                         const dbStart = Date.now();
                         const playerRef = ref(database, `players/${userId}`);
-                        const snapshot = await get(playerRef);
+                        const snapshot = await withTimeout(
+                            get(playerRef),
+                            "Database read timed out",
+                            5000
+                        );
                         const data = snapshot.val() || {};
                         const currentPi = data.piBalance || 0;
                         const currentDeposit = data.totalDeposit || 0;
@@ -543,19 +555,36 @@ if (realDepositBtn) {
                         const newPiBalance = currentPi + amount;
 
                         const updateStart = Date.now();
-                        await update(playerRef, {
-                            piBalance: newPiBalance,
-                            totalDeposit: currentDeposit + amount
-                        });
+                        await withTimeout(
+                            update(playerRef, {
+                                piBalance: newPiBalance,
+                                totalDeposit: currentDeposit + amount
+                            }),
+                            "Database update timed out",
+                            5000
+                        );
                         console.log(`Database update completed in ${Date.now() - updateStart}ms`);
 
+                        // Simpan balance untuk UI
                         window.piBalance = newPiBalance;
-                        updateWallet();
 
+                        // Selesaikan pembayaran dulu
                         const completeStart = Date.now();
-                        await Pi.completePayment(paymentId, txid);
+                        await withTimeout(
+                            Pi.completePayment(paymentId, txid),
+                            "Payment completion timed out",
+                            10000
+                        );
                         console.log(`Payment completed successfully in ${Date.now() - completeStart}ms:`, paymentId);
-                        realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+
+                        // Update UI setelah pembayaran selesai
+                        try {
+                            updateWallet();
+                            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+                        } catch (uiError) {
+                            console.error("UI update failed:", uiError);
+                            realDepositMsg.textContent = `Deposit success! +${amount} Pi, but UI update failed.`;
+                        }
                     },
                     onCancel: (paymentId) => {
                         console.log("onCancel triggered:", paymentId);
@@ -574,8 +603,8 @@ if (realDepositBtn) {
                 }
             );
 
-            // Balapan antara payment dan timeout
-            await Promise.race([paymentPromise, timeoutPromise]);
+            // Timeout keseluruhan proses (50 detik, biar gak nyampe 60 detik)
+            await withTimeout(paymentPromise, "Deposit process timed out", 50000);
             console.log("Pi.createPayment executed successfully");
         } catch (err) {
             console.error("Deposit failed:", err.message);

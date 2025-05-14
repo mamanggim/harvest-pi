@@ -498,7 +498,7 @@ if (realDepositBtn) {
         }
 
         const memo = "Deposit to Harvest Pi";
-        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" }; // Set redirect URL
+        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
 
         try {
             realDepositBtn.disabled = true;
@@ -520,6 +520,10 @@ if (realDepositBtn) {
                     metadata
                 },
                 {
+                    onReadyForClientReview: () => {
+                        console.log("onReadyForClientReview triggered - waiting for user confirmation...");
+                        realDepositMsg.textContent = 'Please confirm the payment on wallet.pinet.com...';
+                    },
                     onReadyForServerApproval: async (paymentId) => {
                         console.log("onReadyForServerApproval triggered:", paymentId);
                         if (!paymentId) {
@@ -544,7 +548,7 @@ if (realDepositBtn) {
                             throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
                         }
 
-                        // Operasi database cepat
+                        // Operasi database
                         const dbStart = Date.now();
                         const playerRef = ref(database, `players/${userId}`);
                         const snapshot = await withTimeout(
@@ -597,7 +601,7 @@ if (realDepositBtn) {
                         realDepositMsg.textContent = 'Deposit cancelled. Returning to harvestpi.biz.id...';
                         setTimeout(() => {
                             window.location.href = "https://harvestpi.biz.id";
-                        }, 1000); // Delay sedikit biar pesan kebaca
+                        }, 1000);
                     },
                     onError: (error, paymentId) => {
                         console.error("onError triggered:", error, "Payment ID:", paymentId);
@@ -605,9 +609,6 @@ if (realDepositBtn) {
                         setTimeout(() => {
                             window.location.href = "https://harvestpi.biz.id";
                         }, 1000);
-                    },
-                    onReadyForClientReview: () => {
-                        console.log("onReadyForClientReview triggered");
                     }
                 }
             );

@@ -498,14 +498,14 @@ if (realDepositBtn) {
         }
 
         const memo = "Deposit to Harvest Pi";
-        const metadata = { userId };
+        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" }; // Set redirect URL
 
         try {
             realDepositBtn.disabled = true;
             realDepositBtn.textContent = "Processing...";
             console.log("Starting deposit process with Pi.createPayment...");
 
-            // Timeout per langkah (10 detik)
+            // Fungsi timeout
             const withTimeout = (promise, message, timeout = 10000) => {
                 return Promise.race([
                     promise,
@@ -529,7 +529,7 @@ if (realDepositBtn) {
                         await withTimeout(
                             Pi.approvePayment(paymentId),
                             "Approval timed out",
-                            10000
+                            5000
                         );
                         console.log(`Payment approved successfully in ${Date.now() - approvalStart}ms:`, paymentId);
                     },
@@ -539,13 +539,13 @@ if (realDepositBtn) {
                             throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
                         }
 
-                        // Operasi database
+                        // Operasi database cepat
                         const dbStart = Date.now();
                         const playerRef = ref(database, `players/${userId}`);
                         const snapshot = await withTimeout(
                             get(playerRef),
                             "Database read timed out",
-                            5000
+                            3000
                         );
                         const data = snapshot.val() || {};
                         const currentPi = data.piBalance || 0;
@@ -561,24 +561,22 @@ if (realDepositBtn) {
                                 totalDeposit: currentDeposit + amount
                             }),
                             "Database update timed out",
-                            5000
+                            3000
                         );
                         console.log(`Database update completed in ${Date.now() - updateStart}ms`);
-
-                        // Simpan balance untuk UI
-                        window.piBalance = newPiBalance;
 
                         // Selesaikan pembayaran dulu
                         const completeStart = Date.now();
                         await withTimeout(
                             Pi.completePayment(paymentId, txid),
                             "Payment completion timed out",
-                            10000
+                            5000
                         );
                         console.log(`Payment completed successfully in ${Date.now() - completeStart}ms:`, paymentId);
 
                         // Update UI setelah pembayaran selesai
                         try {
+                            window.piBalance = newPiBalance;
                             updateWallet();
                             realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
                         } catch (uiError) {
@@ -591,11 +589,13 @@ if (realDepositBtn) {
                         if (!paymentId) {
                             console.error("Invalid paymentId in onCancel");
                         }
-                        realDepositMsg.textContent = 'Deposit cancelled.';
+                        realDepositMsg.textContent = 'Deposit cancelled. Returning to harvestpi.biz.id...';
+                        window.location.href = "https://harvestpi.biz.id"; // Force redirect
                     },
                     onError: (error, paymentId) => {
                         console.error("onError triggered:", error, "Payment ID:", paymentId);
-                        realDepositMsg.textContent = `Error during deposit: ${error.message}`;
+                        realDepositMsg.textContent = `Error during deposit: ${error.message}. Returning to harvestpi.biz.id...`;
+                        window.location.href = "https://harvestpi.biz.id"; // Force redirect
                     },
                     onReadyForClientReview: () => {
                         console.log("onReadyForClientReview triggered");
@@ -603,12 +603,13 @@ if (realDepositBtn) {
                 }
             );
 
-            // Timeout keseluruhan proses (50 detik, biar gak nyampe 60 detik)
-            await withTimeout(paymentPromise, "Deposit process timed out", 50000);
+            // Timeout keseluruhan proses (45 detik)
+            await withTimeout(paymentPromise, "Deposit process timed out", 45000);
             console.log("Pi.createPayment executed successfully");
         } catch (err) {
             console.error("Deposit failed:", err.message);
-            realDepositMsg.textContent = `Failed to process deposit: ${err.message}`;
+            realDepositMsg.textContent = `Failed to process deposit: ${err.message}. Returning to harvestpi.biz.id...`;
+            window.location.href = "https://harvestpi.biz.id"; // Force redirect
         } finally {
             realDepositBtn.disabled = false;
             realDepositBtn.textContent = "Deposit with Pi Testnet";

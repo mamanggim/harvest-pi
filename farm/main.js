@@ -237,13 +237,6 @@ async function loadData() {
 // END loadData fix
 
 // Authenticate with Pi Network
-// Show notification function (asumsi ada)
-function showNotification(message) {
-    console.log("Notification:", message);
-    // Tambahin logika UI kalau perlu, misalnya alert atau elemen DOM
-}
-
-// Authenticate with Pi Network
 async function initializePiSDK() {
     if (!window.Pi) {
         console.error('Pi SDK not loaded');

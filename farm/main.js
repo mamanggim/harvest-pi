@@ -248,7 +248,6 @@ async function initializePiSDK() {
         console.log('Mencoba inisialisasi Pi.init...');
         await Pi.init({
             version: "2.0",
-            sandbox: true,
             appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos" // Ganti dengan App ID valid dari Pi Developer Portal kalau gagal
         });
         piInitialized = true;

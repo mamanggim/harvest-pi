@@ -540,16 +540,22 @@ if (realDepositBtn) {
             };
 
             const checkWalletConnection = async () => {
-                try {
-                    console.log("Mengecek koneksi ke wallet.minepi.com...");
-                    const walletCheckStart = Date.now();
-                    const response = await fetch('https://wallet.minepi.com', { method: 'HEAD', timeout: 5000 });
-                    if (!response.ok) throw new Error('Gagal terkoneksi ke wallet.minepi.com');
-                    console.log(`Koneksi ke wallet.minepi.com berhasil dalam ${Date.now() - walletCheckStart}ms`);
-                    return true;
-                } catch (error) {
-                    console.error("Gagal terkoneksi ke wallet.minepi.com:", error.message);
-                    throw new Error('Tidak dapat terhubung ke wallet.minepi.com. Cek jaringan atau coba lagi nanti.');
+                const maxRetries = 3;
+                let attempt = 0;
+                while (attempt < maxRetries) {
+                    try {
+                        console.log(`Mengecek koneksi ke wallet.minepi.com, percobaan ${attempt + 1}...`);
+                        const walletCheckStart = Date.now();
+                        const response = await fetch('https://wallet.minepi.com', { method: 'HEAD', timeout: 10000 }); // Perpanjang jadi 10 detik
+                        if (!response.ok) throw new Error('Gagal terkoneksi ke wallet.minepi.com');
+                        console.log(`Koneksi ke wallet.minepi.com berhasil dalam ${Date.now() - walletCheckStart}ms`);
+                        return true;
+                    } catch (error) {
+                        attempt++;
+                        console.error(`Percobaan koneksi ke wallet.minepi.com ke-${attempt} gagal:`, error.message);
+                        if (attempt === maxRetries) throw new Error('Tidak dapat terhubung ke wallet.minepi.com setelah 3 percobaan.');
+                        await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+                    }
                 }
             };
 
@@ -576,8 +582,6 @@ if (realDepositBtn) {
                             }
                         }, 1000);
 
-                        // Redirect manual buat HP
-                        console.log("Mengarahkan ke Pi Wallet untuk konfirmasi...");
                         setTimeout(() => {
                             const walletWindow = window.open('https://wallet.minepi.com', '_blank');
                             if (!walletWindow) {
@@ -586,7 +590,6 @@ if (realDepositBtn) {
                             }
                         }, 1000);
 
-                        // Fallback kalau wallet gak respons
                         setTimeout(() => {
                             if (realDepositMsg.textContent.includes('31 detik')) {
                                 console.error("Wallet gagal merespons setelah 30 detik.");
@@ -697,7 +700,7 @@ if (realDepositBtn) {
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
             console.error("Deposit gagal:", err.message, "at", new Date().toISOString());
-            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Tetap di halaman ini...`;
+            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Coba periksa jaringan atau coba lagi nanti. Tetap di halaman ini...`;
             realDepositBtn.disabled = false;
             realDepositBtn.textContent = "Deposit with Pi Testnet";
         }

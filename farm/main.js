@@ -479,7 +479,7 @@ if (depositAmountInput) {
     if (savedAmount) {
         depositAmountInput.value = savedAmount;
     } else {
-        depositAmountInput.value = ""; // Default kosong
+        depositAmountInput.value = "0"; // Default nol
     }
 
     depositAmountInput.addEventListener("input", () => {

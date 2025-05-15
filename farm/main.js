@@ -484,6 +484,16 @@ if (realDepositBtn) {
             return;
         }
 
+        // Cek apakah di Pi Browser
+        const isPiBrowser = navigator.userAgent.includes("PiBrowser");
+        if (!isPiBrowser) {
+            console.log("Not in Pi Browser:", navigator.userAgent);
+            realDepositMsg.textContent = 'Harap buka aplikasi ini di Pi Browser untuk deposit. Unduh Pi Browser kalau belum ada.';
+            realDepositBtn.disabled = false;
+            realDepositBtn.textContent = "Deposit with Pi Testnet";
+            return;
+        }
+
         try {
             console.log("Verifying 'payments' scope with onIncompletePaymentFound...");
             const scopes = ['payments'];
@@ -539,27 +549,6 @@ if (realDepositBtn) {
                 }
             };
 
-            const checkWalletConnection = async () => {
-                const maxRetries = 3;
-                let attempt = 0;
-                while (attempt < maxRetries) {
-                    try {
-                        console.log(`Mengecek koneksi ke wallet.minepi.com, percobaan ${attempt + 1}...`);
-                        const walletCheckStart = Date.now();
-                        const response = await fetch('https://wallet.minepi.com', { method: 'HEAD', timeout: 10000 }); // Perpanjang jadi 10 detik
-                        if (!response.ok) throw new Error('Gagal terkoneksi ke wallet.minepi.com');
-                        console.log(`Koneksi ke wallet.minepi.com berhasil dalam ${Date.now() - walletCheckStart}ms`);
-                        return true;
-                    } catch (error) {
-                        attempt++;
-                        console.error(`Percobaan koneksi ke wallet.minepi.com ke-${attempt} gagal:`, error.message);
-                        if (attempt === maxRetries) throw new Error('Tidak dapat terhubung ke wallet.minepi.com setelah 3 percobaan.');
-                        await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
-                    }
-                }
-            };
-
-            await checkWalletConnection();
             await wakeUpServer();
 
             const paymentPromise = Pi.createPayment(
@@ -571,33 +560,19 @@ if (realDepositBtn) {
                 {
                     onReadyForClientReview: (paymentId) => {
                         console.log("onReadyForClientReview triggered:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di wallet.minepi.com dalam 31 detik...';
+                        realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di Pi Wallet dalam 31 detik...';
                         let timeLeft = 30;
                         const interval = setInterval(() => {
                             if (timeLeft > 0) {
-                                realDepositMsg.textContent = `Silakan konfirmasi pembayaran di wallet.minepi.com... (${timeLeft}s)`;
+                                realDepositMsg.textContent = `Silakan konfirmasi pembayaran di Pi Wallet... (${timeLeft}s)`;
                                 timeLeft--;
                             } else {
                                 clearInterval(interval);
                             }
                         }, 1000);
 
-                        setTimeout(() => {
-                            const walletWindow = window.open('https://wallet.minepi.com', '_blank');
-                            if (!walletWindow) {
-                                console.error("Gagal membuka wallet.minepi.com di tab baru.");
-                                realDepositMsg.textContent = 'Gagal membuka wallet.minepi.com. Silakan buka manual di https://wallet.minepi.com.';
-                            }
-                        }, 1000);
-
-                        setTimeout(() => {
-                            if (realDepositMsg.textContent.includes('31 detik')) {
-                                console.error("Wallet gagal merespons setelah 30 detik.");
-                                realDepositMsg.textContent = 'Wallet gagal merespons. Coba lagi atau periksa koneksi.';
-                                realDepositBtn.disabled = false;
-                                realDepositBtn.textContent = "Deposit with Pi Testnet";
-                            }
-                        }, 30000);
+                        // Di Pi Browser, gak perlu redirect manual
+                        console.log("Menunggu konfirmasi di Pi Wallet...");
                     },
                     onReadyForServerApproval: async (paymentId) => {
                         console.log("onReadyForServerApproval triggered:", paymentId, "at", new Date().toISOString());

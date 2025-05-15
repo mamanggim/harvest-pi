@@ -237,6 +237,55 @@ async function loadData() {
 // END loadData fix
 
 // Authenticate with Pi Network
+async function authenticateWithPi() {
+  if (!window.Pi) {
+    console.error('Pi SDK not loaded');
+    showNotification('Pi SDK not available.');
+    return;
+  }
+
+  if (!piInitialized) {
+    const initialized = await initializePiSDK();
+    if (!initialized) return;
+  }
+
+  const scopes = ['username', 'payments'];
+  try {
+    const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+    console.log('Authenticated with Pi:', authResult);
+    const user = authResult.user;
+    userId = user.uid;
+    localStorage.setItem('userId', userId);
+
+    const playerRef = ref(database, `players/${userId}`);
+    await update(playerRef, {
+      piUser: {
+        uid: user.uid,
+        username: user.username
+      }
+    });
+
+    showNotification(`Logged in as ${user.username}`);
+    const loginScreen = document.getElementById('login-screen');
+    const startScreen = document.getElementById('start-screen');
+    if (loginScreen && startScreen) {
+      loginScreen.style.display = 'none';
+      startScreen.style.display = 'flex';
+    }
+
+    loadPlayerData();
+  } catch (err) {
+    console.error('Pi login failed:', err);
+    showNotification('Login failed: ' + err.message);
+  }
+}
+
+function onIncompletePaymentFound(payment) {
+  console.log("Incomplete payment found:", payment);
+  showNotification("You have an unfinished transaction.");
+}
+
+// Initialize Pi SDK
 async function initializePiSDK() {
   return new Promise((resolve, reject) => {
     if (!window.Pi) {

@@ -479,7 +479,7 @@ if (depositAmountInput) {
     if (savedAmount) {
         depositAmountInput.value = savedAmount;
     } else {
-        depositAmountInput.value = "0"; // Default nol
+        depositAmountInput.value = "1"; // Default 1 kalau belum ada
     }
 
     depositAmountInput.addEventListener("input", () => {
@@ -511,7 +511,15 @@ if (realDepositBtn) {
             return;
         }
 
-        const amount = parseFloat(depositAmountInput?.value || "1");
+        // Validasi input lebih ketat
+        const inputValue = depositAmountInput?.value?.trim();
+        if (!inputValue) {
+            console.log("Input amount kosong.");
+            realDepositMsg.textContent = 'Jumlah deposit tidak boleh kosong. Minimal 1 Pi diperlukan.';
+            return;
+        }
+
+        const amount = parseFloat(inputValue);
         if (isNaN(amount) || amount < 1) {
             console.log("Invalid amount:", amount);
             realDepositMsg.textContent = 'Minimal 1 Pi diperlukan.';
@@ -555,138 +563,157 @@ if (realDepositBtn) {
                 }
             };
 
-            await wakeUpServer();
+            // Pastiin server aktif sebelum create payment
+            try {
+                await wakeUpServer();
+            } catch (serverError) {
+                console.error("Failed to wake up server:", serverError.message);
+                realDepositMsg.textContent = 'Gagal menghubungi server backend. Coba lagi nanti.';
+                realDepositBtn.disabled = false;
+                realDepositBtn.textContent = "Deposit with Pi Testnet";
+                return;
+            }
 
-            const paymentPromise = Pi.createPayment(
-                {
-                    amount,
-                    memo,
-                    metadata
-                },
-                {
-                    onReadyForClientReview: (paymentId) => {
-                        console.log("onReadyForClientReview triggered:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = 'Menunggu Pi Wallet terbuka untuk konfirmasi biometrik dalam 31 detik...';
-                        let timeLeft = 30;
-                        const interval = setInterval(() => {
-                            if (timeLeft > 0) {
-                                realDepositMsg.textContent = `Menunggu Pi Wallet terbuka untuk konfirmasi biometrik... (${timeLeft}s)`;
-                                timeLeft--;
-                            } else {
-                                clearInterval(interval);
-                            }
-                        }, 1000);
-
-                        setTimeout(() => {
-                            if (realDepositMsg.textContent.includes('31 detik')) {
-                                console.error("Pi Wallet gagal merespons setelah 30 detik.");
-                                realDepositMsg.textContent = 'Pi Wallet gagal merespons. Cek backend atau coba lagi nanti.';
-                                realDepositBtn.disabled = false;
-                                realDepositBtn.textContent = "Deposit with Pi Testnet";
-                                window.location.href = "https://harvestpi.biz.id";
-                            }
-                        }, 30000);
+            // Tambah try-catch buat Pi.createPayment
+            let paymentPromise;
+            try {
+                paymentPromise = Pi.createPayment(
+                    {
+                        amount,
+                        memo,
+                        metadata
                     },
-                    onReadyForServerApproval: async (paymentId) => {
-                        console.log("onReadyForServerApproval triggered:", paymentId, "at", new Date().toISOString());
-                        if (!paymentId) throw new Error("Invalid paymentId di onReadyForServerApproval");
-
-                        const maxRetries = 5;
-                        let attempt = 0;
-                        while (attempt < maxRetries) {
-                            try {
-                                const approvalStart = Date.now();
-                                const response = await withTimeout(
-                                    fetch('https://harvestpi-backend.glitch.me/approve-payment', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ paymentId })
-                                    }),
-                                    "Permintaan approval timeout",
-                                    30000
-                                );
-                                const result = await response.json();
-                                if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
-                                console.log(`Pembayaran disetujui oleh backend dalam ${Date.now() - approvalStart}ms:`, paymentId);
-                                return;
-                            } catch (approvalError) {
-                                attempt++;
-                                console.error(`Percobaan approval ke-${attempt} gagal:`, approvalError.message);
-                                if (attempt === maxRetries) throw new Error("Gagal menyetujui pembayaran setelah 5 percobaan: " + approvalError.message);
-                                await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
-                            }
-                        }
-                    },
-                    onReadyForServerCompletion: async (paymentId, txid) => {
-                        console.log("onReadyForServerCompletion triggered:", paymentId, txid, "at", new Date().toISOString());
-                        if (!paymentId || !txid) throw new Error("Invalid paymentId atau txid di onReadyForServerCompletion");
-
-                        const maxRetries = 5;
-                        let attempt = 0;
-                        while (attempt < maxRetries) {
-                            try {
-                                const completeStart = Date.now();
-                                const response = await withTimeout(
-                                    fetch('https://harvestpi-backend.glitch.me/complete-payment', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ paymentId, txid })
-                                    }),
-                                    "Permintaan completion timeout",
-                                    30000
-                                );
-                                const result = await response.json();
-                                if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
-                                console.log(`Pembayaran selesai oleh backend dalam ${Date.now() - completeStart}ms:`, paymentId);
-
-                                if (response.ok && result.success) {
-                                    const dbStart = Date.now();
-                                    const playerRef = ref(database, `players/${userId}`);
-                                    const snapshot = await withTimeout(get(playerRef), "Pembacaan database timeout", 2000);
-                                    const data = snapshot.val() || {};
-                                    const currentPi = data.piBalance || 0;
-                                    const currentDeposit = data.totalDeposit || 0;
-
-                                    const newPiBalance = currentPi + amount;
-                                    await withTimeout(
-                                        update(playerRef, {
-                                            piBalance: newPiBalance,
-                                            totalDeposit: currentDeposit + amount
-                                        }),
-                                        "Update database timeout",
-                                        2000
-                                    );
-                                    console.log(`Database diperbarui dalam ${Date.now() - dbStart}ms`);
-
-                                    window.piBalance = newPiBalance;
-                                    updateWallet();
-                                    realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
+                    {
+                        onReadyForClientReview: (paymentId) => {
+                            console.log("onReadyForClientReview triggered:", paymentId, "at", new Date().toISOString());
+                            realDepositMsg.textContent = 'Menunggu Pi Wallet terbuka untuk konfirmasi biometrik dalam 31 detik...';
+                            let timeLeft = 30;
+                            const interval = setInterval(() => {
+                                if (timeLeft > 0) {
+                                    realDepositMsg.textContent = `Menunggu Pi Wallet terbuka untuk konfirmasi biometrik... (${timeLeft}s)`;
+                                    timeLeft--;
+                                } else {
+                                    clearInterval(interval);
                                 }
-                                return;
-                            } catch (completeError) {
-                                attempt++;
-                                console.error(`Percobaan completion ke-${attempt} gagal:`, completeError.message);
-                                if (attempt === maxRetries) throw new Error("Gagal menyelesaikan pembayaran setelah 5 percobaan: " + completeError.message);
-                                await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
+                            }, 1000);
+
+                            setTimeout(() => {
+                                if (realDepositMsg.textContent.includes('31 detik')) {
+                                    console.error("Pi Wallet gagal merespons setelah 30 detik.");
+                                    realDepositMsg.textContent = 'Pi Wallet gagal merespons. Cek backend atau coba lagi nanti.';
+                                    realDepositBtn.disabled = false;
+                                    realDepositBtn.textContent = "Deposit with Pi Testnet";
+                                    window.location.href = "https://harvestpi.biz.id";
+                                }
+                            }, 30000);
+                        },
+                        onReadyForServerApproval: async (paymentId) => {
+                            console.log("onReadyForServerApproval triggered:", paymentId, "at", new Date().toISOString());
+                            if (!paymentId) throw new Error("Invalid paymentId di onReadyForServerApproval");
+
+                            const maxRetries = 5;
+                            let attempt = 0;
+                            while (attempt < maxRetries) {
+                                try {
+                                    const approvalStart = Date.now();
+                                    const response = await withTimeout(
+                                        fetch('https://harvestpi-backend.glitch.me/approve-payment', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ paymentId })
+                                        }),
+                                        "Permintaan approval timeout",
+                                        30000
+                                    );
+                                    const result = await response.json();
+                                    if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
+                                    console.log(`Pembayaran disetujui oleh backend dalam ${Date.now() - approvalStart}ms:`, paymentId);
+                                    return;
+                                } catch (approvalError) {
+                                    attempt++;
+                                    console.error(`Percobaan approval ke-${attempt} gagal:`, approvalError.message);
+                                    if (attempt === maxRetries) throw new Error("Gagal menyetujui pembayaran setelah 5 percobaan: " + approvalError.message);
+                                    await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
+                                }
                             }
+                        },
+                        onReadyForServerCompletion: async (paymentId, txid) => {
+                            console.log("onReadyForServerCompletion triggered:", paymentId, txid, "at", new Date().toISOString());
+                            if (!paymentId || !txid) throw new Error("Invalid paymentId atau txid di onReadyForServerCompletion");
+
+                            const maxRetries = 5;
+                            let attempt = 0;
+                            while (attempt < maxRetries) {
+                                try {
+                                    const completeStart = Date.now();
+                                    const response = await withTimeout(
+                                        fetch('https://harvestpi-backend.glitch.me/complete-payment', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ paymentId, txid })
+                                        }),
+                                        "Permintaan completion timeout",
+                                        30000
+                                    );
+                                    const result = await response.json();
+                                    if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
+                                    console.log(`Pembayaran selesai oleh backend dalam ${Date.now() - completeStart}ms:`, paymentId);
+
+                                    if (response.ok && result.success) {
+                                        const dbStart = Date.now();
+                                        const playerRef = ref(database, `players/${userId}`);
+                                        const snapshot = await withTimeout(get(playerRef), "Pembacaan database timeout", 2000);
+                                        const data = snapshot.val() || {};
+                                        const currentPi = data.piBalance || 0;
+                                        const currentDeposit = data.totalDeposit || 0;
+
+                                        const newPiBalance = currentPi + amount;
+                                        await withTimeout(
+                                            update(playerRef, {
+                                                piBalance: newPiBalance,
+                                                totalDeposit: currentDeposit + amount
+                                            }),
+                                            "Update database timeout",
+                                            2000
+                                        );
+                                        console.log(`Database diperbarui dalam ${Date.now() - dbStart}ms`);
+
+                                        window.piBalance = newPiBalance;
+                                        updateWallet();
+                                        realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
+                                    }
+                                    return;
+                                } catch (completeError) {
+                                    attempt++;
+                                    console.error(`Percobaan completion ke-${attempt} gagal:`, completeError.message);
+                                    if (attempt === maxRetries) throw new Error("Gagal menyelesaikan pembayaran setelah 5 percobaan: " + completeError.message);
+                                    await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
+                                }
+                            }
+                        },
+                        onCancel: (paymentId) => {
+                            console.log("onCancel triggered:", paymentId, "at", new Date().toISOString());
+                            realDepositMsg.textContent = 'Deposit dibatalkan. Kembali ke aplikasi...';
+                            realDepositBtn.disabled = false;
+                            realDepositBtn.textContent = "Deposit with Pi Testnet";
+                            window.location.href = "https://harvestpi.biz.id";
+                        },
+                        onError: (error, paymentId) => {
+                            console.error("onError triggered:", error.message, "Payment ID:", paymentId, "at", new Date().toISOString());
+                            realDepositMsg.textContent = `Error saat deposit: ${error.message}. Kembali ke aplikasi...`;
+                            realDepositBtn.disabled = false;
+                            realDepositBtn.textContent = "Deposit with Pi Testnet";
+                            window.location.href = "https://harvestpi.biz.id";
                         }
-                    },
-                    onCancel: (paymentId) => {
-                        console.log("onCancel triggered:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = 'Deposit dibatalkan. Kembali ke aplikasi...';
-                        realDepositBtn.disabled = false;
-                        realDepositBtn.textContent = "Deposit with Pi Testnet";
-                        window.location.href = "https://harvestpi.biz.id";
-                    },
-                    onError: (error, paymentId) => {
-                        console.error("onError triggered:", error.message, "Payment ID:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = `Error saat deposit: ${error.message}. Kembali ke aplikasi...`;
-                        realDepositBtn.disabled = false;
-                        realDepositBtn.textContent = "Deposit with Pi Testnet";
-                        window.location.href = "https://harvestpi.biz.id";
                     }
-                }
-            );
+                );
+            } catch (createError) {
+                console.error("Failed to create payment:", createError.message);
+                realDepositMsg.textContent = 'Gagal memulai proses deposit. Cek Pi SDK atau coba lagi nanti.';
+                realDepositBtn.disabled = false;
+                realDepositBtn.textContent = "Deposit with Pi Testnet";
+                return;
+            }
 
             await withTimeout(paymentPromise, "Proses deposit timeout", 120000);
             console.log("Pi.createPayment berhasil dijalankan");

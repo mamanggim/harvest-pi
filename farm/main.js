@@ -481,6 +481,11 @@ if (depositAmountInput) {
     } else {
         depositAmountInput.value = "1"; // Default 1 kalau belum ada
     }
+
+    // Simpan nilai tiap kali input berubah
+    depositAmountInput.addEventListener("input", () => {
+        localStorage.setItem("depositAmount", depositAmountInput.value);
+    });
 }
 
 if (realDepositBtn) {
@@ -563,18 +568,39 @@ if (realDepositBtn) {
                 {
                     onReadyForClientReview: (paymentId) => {
                         console.log("onReadyForClientReview triggered:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di Pi Wallet dalam 31 detik...';
+                        realDepositMsg.textContent = 'Menunggu Pi Wallet terbuka untuk konfirmasi biometrik dalam 31 detik...';
                         let timeLeft = 30;
                         const interval = setInterval(() => {
                             if (timeLeft > 0) {
-                                realDepositMsg.textContent = `Silakan konfirmasi pembayaran di Pi Wallet... (${timeLeft}s)`;
+                                realDepositMsg.textContent = `Menunggu Pi Wallet terbuka untuk konfirmasi biometrik... (${timeLeft}s)`;
                                 timeLeft--;
                             } else {
                                 clearInterval(interval);
                             }
                         }, 1000);
 
-                        // Fallback kalau wallet loading lama
+                        // Retry cek status wallet
+                        let retryCount = 0;
+                        const maxRetries = 3;
+                        const checkWallet = setInterval(() => {
+                            if (retryCount < maxRetries) {
+                                fetch('https://wallet.pinet.com', { method: 'HEAD', timeout: 5000 })
+                                    .then(response => {
+                                        if (response.ok) {
+                                            console.log("Wallet terdeteksi, lanjut ke konfirmasi biometrik.");
+                                            clearInterval(checkWallet);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        retryCount++;
+                                        console.error(`Retry ${retryCount} gagal cek wallet:`, error.message);
+                                    });
+                            } else {
+                                clearInterval(checkWallet);
+                            }
+                        }, 5000);
+
+                        // Fallback kalau wallet gak respons
                         setTimeout(() => {
                             if (realDepositMsg.textContent.includes('31 detik')) {
                                 console.error("Pi Wallet gagal merespons setelah 30 detik.");
@@ -600,7 +626,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId })
                                     }),
                                     "Permintaan approval timeout",
-                                    20000
+                                    30000 // Perpanjang jadi 30 detik
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
@@ -610,7 +636,7 @@ if (realDepositBtn) {
                                 attempt++;
                                 console.error(`Percobaan approval ke-${attempt} gagal:`, approvalError.message);
                                 if (attempt === maxRetries) throw new Error("Gagal menyetujui pembayaran setelah 5 percobaan: " + approvalError.message);
-                                await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
+                                await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
                             }
                         }
                     },
@@ -630,39 +656,42 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId, txid })
                                     }),
                                     "Permintaan completion timeout",
-                                    20000
+                                    30000 // Perpanjang jadi 30 detik
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
                                 console.log(`Pembayaran selesai oleh backend dalam ${Date.now() - completeStart}ms:`, paymentId);
 
-                                const dbStart = Date.now();
-                                const playerRef = ref(database, `players/${userId}`);
-                                const snapshot = await withTimeout(get(playerRef), "Pembacaan database timeout", 2000);
-                                const data = snapshot.val() || {};
-                                const currentPi = data.piBalance || 0;
-                                const currentDeposit = data.totalDeposit || 0;
+                                // Cek security: gak mark complete sampe sukses
+                                if (response.ok && result.success) {
+                                    const dbStart = Date.now();
+                                    const playerRef = ref(database, `players/${userId}`);
+                                    const snapshot = await withTimeout(get(playerRef), "Pembacaan database timeout", 2000);
+                                    const data = snapshot.val() || {};
+                                    const currentPi = data.piBalance || 0;
+                                    const currentDeposit = data.totalDeposit || 0;
 
-                                const newPiBalance = currentPi + amount;
-                                await withTimeout(
-                                    update(playerRef, {
-                                        piBalance: newPiBalance,
-                                        totalDeposit: currentDeposit + amount
-                                    }),
-                                    "Update database timeout",
-                                    2000
-                                );
-                                console.log(`Database diperbarui dalam ${Date.now() - dbStart}ms`);
+                                    const newPiBalance = currentPi + amount;
+                                    await withTimeout(
+                                        update(playerRef, {
+                                            piBalance: newPiBalance,
+                                            totalDeposit: currentDeposit + amount
+                                        }),
+                                        "Update database timeout",
+                                        2000
+                                    );
+                                    console.log(`Database diperbarui dalam ${Date.now() - dbStart}ms`);
 
-                                window.piBalance = newPiBalance;
-                                updateWallet();
-                                realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
+                                    window.piBalance = newPiBalance;
+                                    updateWallet();
+                                    realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
+                                }
                                 return;
                             } catch (completeError) {
                                 attempt++;
                                 console.error(`Percobaan completion ke-${attempt} gagal:`, completeError.message);
                                 if (attempt === maxRetries) throw new Error("Gagal menyelesaikan pembayaran setelah 5 percobaan: " + completeError.message);
-                                await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
+                                await new Promise(resolve => setTimeout(resolve, 5000 * attempt));
                             }
                         }
                     },
@@ -681,7 +710,7 @@ if (realDepositBtn) {
                 }
             );
 
-            await withTimeout(paymentPromise, "Proses deposit timeout", 90000);
+            await withTimeout(paymentPromise, "Proses deposit timeout", 120000); // Perpanjang jadi 120 detik
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
             console.error("Deposit gagal:", err.message, "at", new Date().toISOString());

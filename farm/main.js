@@ -247,6 +247,7 @@ async function initializePiSDK() {
     try {
         await Pi.init({
             version: "2.0",
+            sandbox: false,
             appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos" // Pi API key
         });
         piInitialized = true;
@@ -497,7 +498,7 @@ if (realDepositBtn) {
         }
 
         const memo = "Deposit to Harvest Pi";
-        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
+        const metadata = { userId, redirectUrl: window.location.href }; // Ubah redirect biar gak logout
 
         try {
             realDepositBtn.disabled = true;
@@ -511,7 +512,6 @@ if (realDepositBtn) {
                 ]);
             };
 
-            // Wake up Glitch server
             const wakeUpServer = async () => {
                 const maxRetries = 5;
                 let attempt = 0;
@@ -527,7 +527,7 @@ if (realDepositBtn) {
                         attempt++;
                         console.error(`Percobaan bangun server ke-${attempt} gagal:`, wakeError.message);
                         if (attempt === maxRetries) throw new Error('Gagal membangunkan server Glitch setelah 5 percobaan');
-                        await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Delay lebih lama
+                        await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
                     }
                 }
             };
@@ -543,7 +543,17 @@ if (realDepositBtn) {
                 {
                     onReadyForClientReview: (paymentId) => {
                         console.log("onReadyForClientReview triggered:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di wallet.minepi.com...';
+                        realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di wallet.minepi.com dalam 31 detik...';
+                        // Tambah polling ringan buat cek status
+                        let timeLeft = 30;
+                        const interval = setInterval(() => {
+                            if (timeLeft > 0) {
+                                realDepositMsg.textContent = `Silakan konfirmasi pembayaran di wallet.minepi.com... (${timeLeft}s)`;
+                                timeLeft--;
+                            } else {
+                                clearInterval(interval);
+                            }
+                        }, 1000);
                     },
                     onReadyForServerApproval: async (paymentId) => {
                         console.log("onReadyForServerApproval triggered:", paymentId, "at", new Date().toISOString());
@@ -561,7 +571,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId })
                                     }),
                                     "Permintaan approval timeout",
-                                    10000 // Tambah timeout jadi 10 detik
+                                    10000
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
@@ -591,13 +601,12 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId, txid })
                                     }),
                                     "Permintaan completion timeout",
-                                    10000 // Tambah timeout jadi 10 detik
+                                    10000
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
                                 console.log(`Pembayaran selesai oleh backend dalam ${Date.now() - completeStart}ms:`, paymentId);
 
-                                // Update database
                                 const dbStart = Date.now();
                                 const playerRef = ref(database, `players/${userId}`);
                                 const snapshot = await withTimeout(get(playerRef), "Pembacaan database timeout", 2000);
@@ -616,7 +625,6 @@ if (realDepositBtn) {
                                 );
                                 console.log(`Database diperbarui dalam ${Date.now() - dbStart}ms`);
 
-                                // Update UI
                                 window.piBalance = newPiBalance;
                                 updateWallet();
                                 realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
@@ -631,33 +639,26 @@ if (realDepositBtn) {
                     },
                     onCancel: (paymentId) => {
                         console.log("onCancel triggered:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = 'Deposit dibatalkan. Kembali ke harvestpi.biz.id...';
-                        setTimeout(() => {
-                            window.location.href = "https://harvestpi.biz.id";
-                        }, 1000);
+                        realDepositMsg.textContent = 'Deposit dibatalkan. Tetap di halaman ini...';
+                        realDepositBtn.disabled = false;
+                        realDepositBtn.textContent = "Deposit with Pi Testnet";
                     },
                     onError: (error, paymentId) => {
                         console.error("onError triggered:", error.message, "Payment ID:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = `Error saat deposit: ${error.message}. Kembali ke harvestpi.biz.id...`;
-                        setTimeout(() => {
-                            window.location.href = "https://harvestpi.biz.id";
-                        }, 1000);
+                        realDepositMsg.textContent = `Error saat deposit: ${error.message}. Tetap di halaman ini...`;
+                        realDepositBtn.disabled = false;
+                        realDepositBtn.textContent = "Deposit with Pi Testnet";
                     }
                 }
             );
 
-            await withTimeout(paymentPromise, "Proses deposit timeout", 40000); // Tambah jadi 40 detik
+            await withTimeout(paymentPromise, "Proses deposit timeout", 40000);
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
             console.error("Deposit gagal:", err.message, "at", new Date().toISOString());
-            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Kembali ke harvestpi.biz.id...`;
-            setTimeout(() => {
-                window.location.href = "https://harvestpi.biz.id";
-            }, 1000);
-        } finally {
+            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Tetap di halaman ini...`;
             realDepositBtn.disabled = false;
             realDepositBtn.textContent = "Deposit with Pi Testnet";
-            console.log("Proses deposit selesai at", new Date().toISOString());
         }
     });
 }

@@ -256,7 +256,7 @@ async function initializePiSDK() {
         return true;
     } catch (error) {
         console.error('Pi init failed:', error.message, 'Details:', error);
-        showNotification('Failed to initialize Pi SDK: ' + error.message);
+        showNotification('Failed to initialize Pi SDK: ' + error.message + '. Check console for details.');
         return false;
     }
 }
@@ -287,15 +287,20 @@ async function authenticateWithPi() {
 
         loadUserBalances();
         
+        // Simpan data user ke database, tapi jangan bikin login gagal
         try {
-            await update(playerRef, {
-                piUser: {
-                    uid: user.uid,
-                    username: user.username
-                },
-                piBalance: pi || 0
-            });
-            console.log('User data saved to database successfully');
+            const dbStart = Date.now();
+            await Promise.race([
+                update(playerRef, {
+                    piUser: {
+                        uid: user.uid,
+                        username: user.username
+                    },
+                    piBalance: pi || 0
+                }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Database update timed out')), 5000))
+            ]);
+            console.log(`User data saved to database in ${Date.now() - dbStart}ms`);
         } catch (dbError) {
             console.error('Failed to save user data to database:', dbError.message);
             showNotification('Logged in, but failed to save user data. You may need to log in again later.');

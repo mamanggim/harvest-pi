@@ -252,7 +252,6 @@ async function authenticateWithPi() {
   const scopes = ['username', 'payments'];
   try {
     const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-    console.log('Authenticated with Pi:', authResult);
     const user = authResult.user;
     userId = user.uid;
     localStorage.setItem('userId', userId);
@@ -266,13 +265,8 @@ async function authenticateWithPi() {
     });
 
     showNotification(`Logged in as ${user.username}`);
-    const loginScreen = document.getElementById('login-screen');
-    const startScreen = document.getElementById('start-screen');
-    if (loginScreen && startScreen) {
-      loginScreen.style.display = 'none';
-      startScreen.style.display = 'flex';
-    }
-
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'flex';
     loadPlayerData();
   } catch (err) {
     console.error('Pi login failed:', err);

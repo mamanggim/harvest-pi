@@ -311,8 +311,15 @@ async function authenticateWithPi() {
 }
 
 function onIncompletePaymentFound(payment) {
-    console.log("onIncompletePaymentFound", payment);
-    // Kalo gak pake backend, biarin kosong kayak gini
+    console.log("onIncompletePaymentFound triggered:", payment, "at", new Date().toISOString());
+    // Cek kalau paymentId ada, coba resolve manual (opsional)
+    if (payment && payment.paymentId) {
+        console.log("Incomplete payment detected with paymentId:", payment.paymentId);
+        realDepositMsg.textContent = 'Terdeteksi pembayaran sebelumnya yang belum selesai. Coba lagi atau hubungi support.';
+        // Kalau mau handle, bisa panggil backend di sini, tapi skip dulu kalau gak perlu
+    } else {
+        console.log("No valid payment data in onIncompletePaymentFound.");
+    }
 }
 
 // Document ready event listener
@@ -478,7 +485,7 @@ if (realDepositBtn) {
         }
 
         try {
-            console.log("Verifying 'payments' scope...");
+            console.log("Verifying 'payments' scope with onIncompletePaymentFound...");
             const scopes = ['payments'];
             const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
             console.log("Scope 'payments' verified:", authResult);
@@ -532,6 +539,21 @@ if (realDepositBtn) {
                 }
             };
 
+            const checkWalletConnection = async () => {
+                try {
+                    console.log("Mengecek koneksi ke wallet.minepi.com...");
+                    const walletCheckStart = Date.now();
+                    const response = await fetch('https://wallet.minepi.com', { method: 'HEAD', timeout: 5000 });
+                    if (!response.ok) throw new Error('Gagal terkoneksi ke wallet.minepi.com');
+                    console.log(`Koneksi ke wallet.minepi.com berhasil dalam ${Date.now() - walletCheckStart}ms`);
+                    return true;
+                } catch (error) {
+                    console.error("Gagal terkoneksi ke wallet.minepi.com:", error.message);
+                    throw new Error('Tidak dapat terhubung ke wallet.minepi.com. Cek jaringan atau coba lagi nanti.');
+                }
+            };
+
+            await checkWalletConnection();
             await wakeUpServer();
 
             const paymentPromise = Pi.createPayment(
@@ -554,11 +576,25 @@ if (realDepositBtn) {
                             }
                         }, 1000);
 
-                        // Tambah redirect manual buat HP
+                        // Redirect manual buat HP
                         console.log("Mengarahkan ke Pi Wallet untuk konfirmasi...");
                         setTimeout(() => {
-                            window.open('https://wallet.minepi.com', '_blank');
+                            const walletWindow = window.open('https://wallet.minepi.com', '_blank');
+                            if (!walletWindow) {
+                                console.error("Gagal membuka wallet.minepi.com di tab baru.");
+                                realDepositMsg.textContent = 'Gagal membuka wallet.minepi.com. Silakan buka manual di https://wallet.minepi.com.';
+                            }
                         }, 1000);
+
+                        // Fallback kalau wallet gak respons
+                        setTimeout(() => {
+                            if (realDepositMsg.textContent.includes('31 detik')) {
+                                console.error("Wallet gagal merespons setelah 30 detik.");
+                                realDepositMsg.textContent = 'Wallet gagal merespons. Coba lagi atau periksa koneksi.';
+                                realDepositBtn.disabled = false;
+                                realDepositBtn.textContent = "Deposit with Pi Testnet";
+                            }
+                        }, 30000);
                     },
                     onReadyForServerApproval: async (paymentId) => {
                         console.log("onReadyForServerApproval triggered:", paymentId, "at", new Date().toISOString());
@@ -576,7 +612,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId })
                                     }),
                                     "Permintaan approval timeout",
-                                    20000 // Perpanjang jadi 20 detik
+                                    20000
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
@@ -606,7 +642,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId, txid })
                                     }),
                                     "Permintaan completion timeout",
-                                    20000 // Perpanjang jadi 20 detik
+                                    20000
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
@@ -657,7 +693,7 @@ if (realDepositBtn) {
                 }
             );
 
-            await withTimeout(paymentPromise, "Proses deposit timeout", 90000); // Perpanjang jadi 90 detik
+            await withTimeout(paymentPromise, "Proses deposit timeout", 90000);
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
             console.error("Deposit gagal:", err.message, "at", new Date().toISOString());

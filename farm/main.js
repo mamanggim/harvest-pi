@@ -532,7 +532,7 @@ if (realDepositBtn) {
                         try {
                             const approvalStart = Date.now();
                             await withTimeout(
-  fetch("https://harvest-pi.glitch.me/approve-payment", {
+  fetch("https://harvestpi-backend.glitch.me/approve-payment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ paymentId })
@@ -583,7 +583,7 @@ if (realDepositBtn) {
                         // Selesaikan pembayaran
                         const completeStart = Date.now();
                         await withTimeout(
-  fetch("https://harvest-pi.glitch.me/complete-payment", {
+  fetch("https://harvestpi-backend.glitch.me/complete-payment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ paymentId, txid })

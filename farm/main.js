@@ -497,43 +497,60 @@ if (realDepositBtn) {
             realDepositBtn.disabled = true;
             realDepositBtn.textContent = "Processing...";
 
-            const payment = await Pi.createPayment({
-                amount,
-                memo,
-                metadata
-            }, {
-                onReadyForServerApproval: async (paymentId) => {
-                    console.log("Approval ready:", paymentId);
-                    await Pi.approvePayment(paymentId); // Testnet: auto approve
-                },
-                onReadyForServerCompletion: async (paymentId, txid) => {
-                    const playerRef = ref(database, `players/${userId}`);
-                    const snapshot = await get(playerRef);
-                    const data = snapshot.val() || {};
-                    const currentPi = data.piBalance || 0;
-                    const currentDeposit = data.totalDeposit || 0;
+            const payment = await Pi.createPayment(
+  {
+    amount,
+    memo,
+    metadata,
+    redirectUrl: "https://harvestpi.biz.id" // redirect ke game setelah sukses
+  },
+  {
+    onReadyForClientReview: () => {
+      console.log("Waiting for user confirmation in wallet...");
+      realDepositMsg.textContent = 'Please confirm the payment in Pi Wallet...';
+      // User akan dibawa ke wallet.pinet.com
+    },
+    onCancel: (paymentId) => {
+      console.warn("User cancelled payment:", paymentId);
+      realDepositMsg.textContent = 'Deposit cancelled. Redirecting back...';
+      setTimeout(() => {
+        window.location.href = "https://harvestpi.biz.id";
+      }, 1500);
+    },
+    onError: (error, paymentId) => {
+      console.error("Payment error:", error, paymentId);
+      realDepositMsg.textContent = 'Error during payment. Redirecting back...';
+      setTimeout(() => {
+        window.location.href = "https://harvestpi.biz.id";
+      }, 1500);
+    },
+    onReadyForServerApproval: async (paymentId) => {
+      console.log("Approving payment:", paymentId);
+      await Pi.approvePayment(paymentId); // Testnet auto approve
+    },
+    onReadyForServerCompletion: async (paymentId, txid) => {
+      console.log("Completing payment:", paymentId, txid);
 
-                    const newPiBalance = currentPi + amount;
+      const playerRef = ref(database, `players/${userId}`);
+      const snapshot = await get(playerRef);
+      const data = snapshot.val() || {};
+      const currentPi = data.piBalance || 0;
+      const currentDeposit = data.totalDeposit || 0;
 
-                    await update(playerRef, {
-                        piBalance: newPiBalance,
-                        totalDeposit: currentDeposit + amount
-                    });
+      const newPi = currentPi + amount;
+      await update(playerRef, {
+        piBalance: newPi,
+        totalDeposit: currentDeposit + amount
+      });
 
-                    window.piBalance = newPiBalance;
-                    updateWallet();
+      window.piBalance = newPi;
+      updateWallet();
 
-                    await Pi.completePayment(paymentId, txid);
-                    realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
-                },
-                onCancel: (paymentId) => {
-                    realDepositMsg.textContent = 'Deposit cancelled.';
-                },
-                onError: (error) => {
-                    console.error("Deposit error:", error);
-                    realDepositMsg.textContent = `Error during deposit: ${error.message}`;
-                }
-            });
+      await Pi.completePayment(paymentId, txid);
+      realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+    }
+  }
+);
 
         } catch (err) {
             console.error("Deposit failed:", err.message);

@@ -484,16 +484,6 @@ if (realDepositBtn) {
             return;
         }
 
-        // Cek apakah di Pi Browser
-        const isPiBrowser = navigator.userAgent.includes("PiBrowser");
-        if (!isPiBrowser) {
-            console.log("Not in Pi Browser:", navigator.userAgent);
-            realDepositMsg.textContent = 'Harap buka aplikasi ini di Pi Browser untuk deposit. Unduh Pi Browser kalau belum ada.';
-            realDepositBtn.disabled = false;
-            realDepositBtn.textContent = "Deposit with Pi Testnet";
-            return;
-        }
-
         try {
             console.log("Verifying 'payments' scope with onIncompletePaymentFound...");
             const scopes = ['payments'];
@@ -571,8 +561,15 @@ if (realDepositBtn) {
                             }
                         }, 1000);
 
-                        // Di Pi Browser, gak perlu redirect manual
-                        console.log("Menunggu konfirmasi di Pi Wallet...");
+                        // Tambah pengecekan kalau wallet gak respons
+                        setTimeout(() => {
+                            if (realDepositMsg.textContent.includes('31 detik')) {
+                                console.error("Pi Wallet gagal merespons setelah 30 detik.");
+                                realDepositMsg.textContent = 'Pi Wallet gagal merespons. Coba bersihkan cache Pi Browser atau coba lagi nanti.';
+                                realDepositBtn.disabled = false;
+                                realDepositBtn.textContent = "Deposit with Pi Testnet";
+                            }
+                        }, 30000);
                     },
                     onReadyForServerApproval: async (paymentId) => {
                         console.log("onReadyForServerApproval triggered:", paymentId, "at", new Date().toISOString());
@@ -664,7 +661,7 @@ if (realDepositBtn) {
                     },
                     onError: (error, paymentId) => {
                         console.error("onError triggered:", error.message, "Payment ID:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = `Error saat deposit: ${error.message}. Tetap di halaman ini...`;
+                        realDepositMsg.textContent = `Error saat deposit: ${error.message}. Coba bersihkan cache Pi Browser atau coba lagi nanti.`;
                         realDepositBtn.disabled = false;
                         realDepositBtn.textContent = "Deposit with Pi Testnet";
                     }
@@ -675,7 +672,7 @@ if (realDepositBtn) {
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
             console.error("Deposit gagal:", err.message, "at", new Date().toISOString());
-            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Coba periksa jaringan atau coba lagi nanti. Tetap di halaman ini...`;
+            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Coba bersihkan cache Pi Browser atau coba lagi nanti.`;
             realDepositBtn.disabled = false;
             realDepositBtn.textContent = "Deposit with Pi Testnet";
         }

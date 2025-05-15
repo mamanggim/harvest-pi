@@ -468,27 +468,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
 
-// Simpan status autentikasi di localStorage
-const checkAuthStatus = () => {
-    return localStorage.getItem("pi_authenticated") === "true" && localStorage.getItem("pi_user_id");
-};
-
-const setAuthStatus = (userId) => {
-    localStorage.setItem("pi_authenticated", "true");
-    localStorage.setItem("pi_user_id", userId);
-};
-
-const clearAuthStatus = () => {
-    localStorage.removeItem("pi_authenticated");
-    localStorage.removeItem("pi_user_id");
-};
-
-// Fitur Deposit
+// ======= DOM Element =======
 const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
 const depositAmountInput = document.getElementById("deposit-amount");
 
-// Simpan & ambil input jumlah dari localStorage
+// ======= LocalStorage: Input jumlah =======
 if (depositAmountInput) {
     const savedAmount = localStorage.getItem("depositAmount");
     depositAmountInput.value = savedAmount || "1";
@@ -497,19 +482,27 @@ if (depositAmountInput) {
     });
 }
 
-// Cek auth
-const checkAuthStatus = () => {
+// ======= LocalStorage: Auth Status =======
+const isAuthenticated = () => {
     return localStorage.getItem("pi_authenticated") === "true" && localStorage.getItem("pi_user_id");
 };
-const setAuthStatus = (userId) => {
+const saveAuth = (userId) => {
     localStorage.setItem("pi_authenticated", "true");
     localStorage.setItem("pi_user_id", userId);
 };
-const clearAuthStatus = () => {
+const clearAuth = () => {
     localStorage.removeItem("pi_authenticated");
     localStorage.removeItem("pi_user_id");
 };
 
+// ======= Fungsi Timeout Promise =======
+const withTimeout = (promise, msg, timeout = 15000) =>
+    Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), timeout))
+    ]);
+
+// ======= Deposit Logic =======
 if (realDepositBtn) {
     addSafeClickListener(realDepositBtn, async () => {
         realDepositMsg.textContent = '';
@@ -519,40 +512,36 @@ if (realDepositBtn) {
             return;
         }
 
-        // Autentikasi
-        if (!checkAuthStatus()) {
+        // ===== Autentikasi dengan Pi Network =====
+        if (!isAuthenticated()) {
             try {
                 const scopes = ['payments'];
-                const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-                userId = authResult.user.uid;
-                setAuthStatus(userId);
+                const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+                userId = auth.user.uid;
+                saveAuth(userId);
             } catch (e) {
-                clearAuthStatus();
-                realDepositMsg.textContent = 'Autentikasi gagal. Coba lagi.';
+                clearAuth();
+                realDepositMsg.textContent = 'Autentikasi gagal. Silakan login ulang.';
                 return;
             }
         } else {
             userId = localStorage.getItem("pi_user_id");
         }
 
+        // ===== Validasi jumlah =====
         const amount = parseFloat(depositAmountInput?.value || "1");
         if (isNaN(amount) || amount < 1) {
             realDepositMsg.textContent = 'Minimal 1 Pi.';
             return;
         }
 
+        // ===== Setup payment =====
         realDepositBtn.disabled = true;
         realDepositBtn.textContent = "Memproses...";
-
+        const memo = "Deposit to Harvest Pi";
         const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
 
-        const withTimeout = (promise, msg, timeout = 15000) =>
-            Promise.race([
-                promise,
-                new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), timeout))
-            ]);
-
-        // Wake up Glitch server
+        // ===== Wake up backend Glitch =====
         try {
             await fetch('https://harvestpi-backend.glitch.me/', { method: 'GET' });
         } catch {
@@ -562,12 +551,13 @@ if (realDepositBtn) {
             return;
         }
 
+        // ===== Mulai pembayaran =====
         try {
             await Pi.createPayment(
-                { amount, memo: "Deposit to Harvest Pi", metadata },
+                { amount, memo, metadata },
                 {
                     onReadyForClientReview: () => {
-                        realDepositMsg.textContent = 'Konfirmasi di Pi Wallet...';
+                        realDepositMsg.textContent = 'Silakan konfirmasi di Pi Wallet...';
                     },
                     onReadyForServerApproval: async (paymentId) => {
                         const res = await fetch("https://harvestpi-backend.glitch.me/approve-payment", {
@@ -587,6 +577,7 @@ if (realDepositBtn) {
                         const result = await res.json();
                         if (!result.success) throw new Error("Completion gagal di server");
 
+                        // ===== Simpan ke Firebase =====
                         const playerRef = ref(database, `players/${userId}`);
                         const snap = await get(playerRef);
                         const data = snap.val() || {};

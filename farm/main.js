@@ -527,7 +527,7 @@ if (realDepositBtn) {
                         attempt++;
                         console.error(`Percobaan bangun server ke-${attempt} gagal:`, wakeError.message);
                         if (attempt === maxRetries) throw new Error('Gagal membangunkan server Glitch setelah 5 percobaan');
-                        await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+                        await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
                     }
                 }
             };
@@ -553,6 +553,12 @@ if (realDepositBtn) {
                                 clearInterval(interval);
                             }
                         }, 1000);
+
+                        // Tambah redirect manual buat HP
+                        console.log("Mengarahkan ke Pi Wallet untuk konfirmasi...");
+                        setTimeout(() => {
+                            window.open('https://wallet.minepi.com', '_blank');
+                        }, 1000);
                     },
                     onReadyForServerApproval: async (paymentId) => {
                         console.log("onReadyForServerApproval triggered:", paymentId, "at", new Date().toISOString());
@@ -570,7 +576,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId })
                                     }),
                                     "Permintaan approval timeout",
-                                    15000 // Perpanjang jadi 15 detik
+                                    20000 // Perpanjang jadi 20 detik
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
@@ -600,7 +606,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId, txid })
                                     }),
                                     "Permintaan completion timeout",
-                                    15000 // Perpanjang jadi 15 detik
+                                    20000 // Perpanjang jadi 20 detik
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
@@ -651,7 +657,7 @@ if (realDepositBtn) {
                 }
             );
 
-            await withTimeout(paymentPromise, "Proses deposit timeout", 60000); // Perpanjang jadi 60 detik
+            await withTimeout(paymentPromise, "Proses deposit timeout", 90000); // Perpanjang jadi 90 detik
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
             console.error("Deposit gagal:", err.message, "at", new Date().toISOString());

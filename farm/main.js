@@ -532,10 +532,16 @@ if (realDepositBtn) {
                         try {
                             const approvalStart = Date.now();
                             await withTimeout(
-                                Pi.approvePayment(paymentId),
-                                "Approval timed out - server may be slow",
-                                2000 // Timeout sangat ketat 2 detik
-                            );
+    fetch("https://harvestpi-backend.glitch.me/approve-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId })
+    }).then(res => res.json()).then(res => {
+        if (!res.success) throw new Error("Approval failed on server");
+    }),
+    "Approval request to backend timed out",
+    5000
+);
                             console.log(`Payment approved successfully in ${Date.now() - approvalStart}ms:`, paymentId);
                         } catch (approvalError) {
                             console.error("Approval failed:", approvalError.message);
@@ -577,10 +583,16 @@ if (realDepositBtn) {
                         // Selesaikan pembayaran
                         const completeStart = Date.now();
                         await withTimeout(
-                            Pi.completePayment(paymentId, txid),
-                            "Payment completion timed out",
-                            3000
-                        );
+    fetch("https://harvestpi-backend.glitch.me/complete-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId, txid })
+    }).then(res => res.json()).then(res => {
+        if (!res.success) throw new Error("Completion failed on server");
+    }),
+    "Payment completion request to backend timed out",
+    5000
+);
                         console.log(`Payment completed successfully in ${Date.now() - completeStart}ms:`, paymentId);
 
                         // Update UI

@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const loginPiBtnElement = document.getElementById('login-pi-btn');
-if (loginPiBtnElement) addSafeClickListener(loginPiBtnElement, authenticateWithPi);
+    if (loginPiBtnElement) addSafeClickListener(loginPiBtnElement, authenticateWithPi);
 
 initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
 

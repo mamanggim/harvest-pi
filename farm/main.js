@@ -239,37 +239,26 @@ async function loadData() {
 // Authenticate with Pi Network
 async function initializePiSDK() {
     if (!window.Pi) {
-        console.error('Pi SDK not loaded. Check if <script src="https://sdk.pi.network/v2/"></script> is included in your HTML.');
-        showNotification('Pi Network SDK not available. Please ensure the SDK script is loaded and try again.');
+        console.error('Pi SDK not loaded. Ensure <script src="https://sdk.pi.network/v2/"></script> is in your HTML.');
+        showNotification('Pi Network SDK not available. Please check your network and reload the page.');
         return false;
     }
 
-    const maxRetries = 5;
-    let attempt = 0;
-
-    while (attempt < maxRetries) {
-        try {
-            console.log(`Attempting Pi.init, attempt ${attempt + 1} of ${maxRetries}...`);
-            await Pi.init({
-                version: "2.0",
-                sandbox: true,
-                appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos" // Ganti dengan App ID valid dari Pi Developer Portal
-            });
-            piInitialized = true;
-            console.log('Pi SDK initialized successfully on attempt', attempt + 1);
-            return true;
-        } catch (error) {
-            attempt++;
-            console.error(`Pi init failed on attempt ${attempt}:`, error.message);
-            if (attempt === maxRetries) {
-                console.error('Max retries reached for Pi SDK initialization. Possible issues: invalid App ID, network issue, or Pi server down.');
-                showNotification('Failed to initialize Pi SDK after multiple attempts. Check your App ID, network, or contact Pi support.');
-                return false;
-            }
-            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
-        }
+    try {
+        console.log('Attempting Pi.init...');
+        await Pi.init({
+            version: "2.0",
+            sandbox: true,
+            appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos" // Ganti dengan App ID valid kalau ini gak jalan
+        });
+        piInitialized = true;
+        console.log('Pi SDK initialized successfully');
+        return true;
+    } catch (error) {
+        console.error('Pi init failed:', error.message, 'Details:', error);
+        showNotification('Failed to initialize Pi SDK: ' + error.message);
+        return false;
     }
-    return false;
 }
 
 async function authenticateWithPi() {

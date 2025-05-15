@@ -502,52 +502,43 @@ if (realDepositBtn) {
       realDepositBtn.textContent = "Processing...";
 
       const payment = await Pi.createPayment(
-        {
-          amount,
-          memo,
-          metadata
-        },
-        {
-          onReadyForClientReview: () => {
-            console.log("Waiting for user to confirm payment...");
-            realDepositMsg.textContent = "Please confirm the payment in wallet...";
-          },
-          onReadyForServerApproval: async (paymentId) => {
-            console.log("onReadyForServerApproval:", paymentId);
-            await Pi.approvePayment(paymentId);
-            console.log("Payment approved.");
-          },
-          onReadyForServerCompletion: async (paymentId, txid) => {
-            console.log("onReadyForServerCompletion:", paymentId, txid);
-            const playerRef = ref(database, `players/${userId}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val() || {};
-            const currentPi = data.piBalance || 0;
-            const currentDeposit = data.totalDeposit || 0;
-            const newPi = currentPi + amount;
+  {
+    amount,
+    memo,
+    metadata
+  },
+  {
+    onReadyForClientReview: () => {
+      realDepositMsg.textContent = 'Please approve the transaction...';
+    },
+    onReadyForServerApproval: (paymentId) => {
+      console.log("Skipping approval step in testnet for:", paymentId);
+      // Don't call Pi.approvePayment() in testnet
+    },
+    onReadyForServerCompletion: async (paymentId, txid) => {
+      const playerRef = ref(database, `players/${userId}`);
+      const snapshot = await get(playerRef);
+      const data = snapshot.val() || {};
+      const newPiBalance = (data.piBalance || 0) + amount;
+      const newDeposit = (data.totalDeposit || 0) + amount;
 
-            await update(playerRef, {
-              piBalance: newPi,
-              totalDeposit: currentDeposit + amount
-            });
+      await update(playerRef, {
+        piBalance: newPiBalance,
+        totalDeposit: newDeposit
+      });
 
-            window.piBalance = newPi;
-            updateWallet();
-
-            await Pi.completePayment(paymentId, txid);
-            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
-          },
-          onCancel: () => {
-            realDepositMsg.textContent = 'Deposit cancelled.';
-            window.location.href = "https://harvestpi.biz.id";
-          },
-          onError: (error) => {
-            console.error("Payment error:", error);
-            realDepositMsg.textContent = 'Deposit failed: ' + error.message;
-            window.location.href = "https://harvestpi.biz.id";
-          }
-        }
-      );
+      await Pi.completePayment(paymentId, txid);
+      updateWallet();
+      realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+    },
+    onCancel: () => {
+      realDepositMsg.textContent = "Deposit cancelled.";
+    },
+    onError: (err) => {
+      realDepositMsg.textContent = "Error during deposit: " + err.message;
+    }
+  }
+);
 
     } catch (err) {
       console.error("Deposit failed:", err);

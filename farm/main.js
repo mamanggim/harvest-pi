@@ -542,17 +542,37 @@ if (realDepositBtn) {
                 ]);
             };
 
-            // Cek server backend dengan lebih simpel
+            // Wake up server dengan timeout lebih fleksibel
             try {
                 console.log("Membangunkan server Glitch...");
-                const response = await fetch('https://harvestpi-backend.glitch.me/', { method: 'GET', timeout: 5000 });
-                if (!response.ok) throw new Error('Server backend tidak respons');
-                console.log("Server Glitch aktif.");
+                const maxRetries = 5;
+                let attempt = 0;
+                let serverAwake = false;
+                while (attempt < maxRetries && !serverAwake) {
+                    try {
+                        const wakeStart = Date.now();
+                        const response = await fetch('https://harvestpi-backend.glitch.me/', { method: 'GET', timeout: 10000 }); // 10 detik timeout
+                        if (response.ok) {
+                            console.log(`Server Glitch aktif dalam ${Date.now() - wakeStart}ms`);
+                            serverAwake = true;
+                        } else {
+                            throw new Error(`Status ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (wakeError) {
+                        attempt++;
+                        console.error(`Percobaan ke-${attempt} gagal: ${wakeError.message}`);
+                        if (attempt === maxRetries) {
+                            throw new Error('Gagal menghubungi server backend setelah 5 percobaan');
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 5000 * attempt)); // Tunggu lebih lama
+                    }
+                }
             } catch (serverError) {
                 console.error("Server backend error:", serverError.message);
-                realDepositMsg.textContent = 'Gagal menghubungi server backend. Coba lagi nanti.';
+                realDepositMsg.textContent = `Gagal menghubungi server backend: ${serverError.message}. Coba lagi nanti.`;
                 realDepositBtn.disabled = false;
                 realDepositBtn.textContent = "Deposit with Pi Testnet";
+                window.location.href = "https://harvestpi.biz.id";
                 return;
             }
 

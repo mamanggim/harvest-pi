@@ -280,11 +280,6 @@ async function authenticateWithPi() {
   }
 }
 
-function onIncompletePaymentFound(payment) {
-  console.log("Incomplete payment found:", payment);
-  showNotification("You have an unfinished transaction.");
-}
-
 // Initialize Pi SDK
 async function initializePiSDK() {
   return new Promise((resolve, reject) => {
@@ -334,6 +329,7 @@ async function autoLoginWithPi() {
 
 function onIncompletePaymentFound(payment) {
   console.log("Found unfinished payment:", payment);
+    showNotification("You have an unfinished transaction.");
 }
 
 // Document ready event listener

@@ -239,7 +239,7 @@ async function loadData() {
 // Authenticate with Pi Network
 async function initializePiSDK() {
     if (!window.Pi) {
-        console.error('Pi SDK not loaded. Ensure <script src="https://sdk.pi.network/v2/"></script> is in your HTML.');
+        console.error('Pi SDK not loaded. Ensure <script src="https://sdk.minepi.com/pi-sdk.js"></script> is in your HTML and network is stable.');
         showNotification('Pi Network SDK not available. Please check your network and reload the page.');
         return false;
     }
@@ -287,7 +287,6 @@ async function authenticateWithPi() {
 
         loadUserBalances();
         
-        // Simpan data user ke database, tapi jangan bikin login gagal
         try {
             const dbStart = Date.now();
             await Promise.race([

@@ -467,20 +467,8 @@ if (realDepositBtn) {
   addSafeClickListener(realDepositBtn, async () => {
     realDepositMsg.textContent = '';
 
-    if (!userId || !window.Pi || typeof Pi.createPayment !== "function") {
-      console.warn("Pi SDK or user not ready:", { userId, Pi: window.Pi });
+    if (!userId || !window.Pi || !Pi.createPayment) {
       realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
-      return;
-    }
-
-    // Autentikasi ulang dengan scope "payments"
-    try {
-      const scopes = ['payments'];
-      const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-      userId = authResult.user.uid;
-    } catch (authErr) {
-      console.error("Failed to authenticate for payment:", authErr);
-      realDepositMsg.textContent = 'Failed to verify payment scope.';
       return;
     }
 
@@ -492,57 +480,61 @@ if (realDepositBtn) {
     }
 
     const memo = "Deposit to Harvest Pi";
-    const metadata = {
-      userId,
-      redirectUrl: "https://harvestpi.biz.id"
-    };
+    const metadata = { userId };
 
     try {
       realDepositBtn.disabled = true;
       realDepositBtn.textContent = "Processing...";
 
-      const payment = await Pi.createPayment(
-  {
-    amount,
-    memo,
-    metadata
-  },
-  {
-    onReadyForClientReview: () => {
-      realDepositMsg.textContent = 'Please approve the transaction...';
-    },
-    onReadyForServerApproval: (paymentId) => {
-      console.log("Skipping approval step in testnet for:", paymentId);
-      // Don't call Pi.approvePayment() in testnet
-    },
-    onReadyForServerCompletion: async (paymentId, txid) => {
-      const playerRef = ref(database, `players/${userId}`);
-      const snapshot = await get(playerRef);
-      const data = snapshot.val() || {};
-      const newPiBalance = (data.piBalance || 0) + amount;
-      const newDeposit = (data.totalDeposit || 0) + amount;
+      await Pi.createPayment(
+        {
+          amount,
+          memo,
+          metadata
+        },
+        {
+          onReadyForClientReview: () => {
+            realDepositMsg.textContent = "Please approve payment in Pi Browser...";
+          },
+          // SKIP approvePayment to avoid testnet timeout
+          onReadyForServerApproval: (paymentId) => {
+            console.log("Skipping server approval in testnet:", paymentId);
+          },
+          onReadyForServerCompletion: async (paymentId, txid) => {
+            console.log("Completing payment:", paymentId, txid);
 
-      await update(playerRef, {
-        piBalance: newPiBalance,
-        totalDeposit: newDeposit
-      });
+            const playerRef = ref(database, `players/${userId}`);
+            const snapshot = await get(playerRef);
+            const data = snapshot.val() || {};
 
-      await Pi.completePayment(paymentId, txid);
-      updateWallet();
-      realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
-    },
-    onCancel: () => {
-      realDepositMsg.textContent = "Deposit cancelled.";
-    },
-    onError: (err) => {
-      realDepositMsg.textContent = "Error during deposit: " + err.message;
-    }
-  }
-);
+            const currentPi = data.piBalance || 0;
+            const currentDeposit = data.totalDeposit || 0;
+            const newPiBalance = currentPi + amount;
 
+            await update(playerRef, {
+              piBalance: newPiBalance,
+              totalDeposit: currentDeposit + amount
+            });
+
+            await Pi.completePayment(paymentId, txid);
+
+            window.piBalance = newPiBalance;
+            updateWallet();
+
+            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+          },
+          onCancel: () => {
+            realDepositMsg.textContent = "Deposit cancelled.";
+          },
+          onError: (err) => {
+            console.error("Deposit error:", err);
+            realDepositMsg.textContent = "Deposit failed: " + err.message;
+          }
+        }
+      );
     } catch (err) {
       console.error("Deposit failed:", err);
-      realDepositMsg.textContent = 'Failed to process deposit: ' + err.message;
+      realDepositMsg.textContent = "Error: " + err.message;
     } finally {
       realDepositBtn.disabled = false;
       realDepositBtn.textContent = "Deposit with Pi Testnet";

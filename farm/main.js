@@ -479,10 +479,9 @@ if (depositAmountInput) {
     if (savedAmount) {
         depositAmountInput.value = savedAmount;
     } else {
-        depositAmountInput.value = "1"; // Default 1 kalau belum ada
+        depositAmountInput.value = ""; // Default kosong
     }
 
-    // Simpan nilai tiap kali input berubah
     depositAmountInput.addEventListener("input", () => {
         localStorage.setItem("depositAmount", depositAmountInput.value);
     });
@@ -522,7 +521,7 @@ if (realDepositBtn) {
         localStorage.setItem("depositAmount", amount.toString());
 
         const memo = "Deposit to Harvest Pi";
-        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" }; // Pastiin redirect URL
+        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
 
         try {
             realDepositBtn.disabled = true;
@@ -578,35 +577,12 @@ if (realDepositBtn) {
                             }
                         }, 1000);
 
-                        // Retry cek wallet status
-                        let retryCount = 0;
-                        const maxRetries = 3;
-                        const checkWallet = setInterval(() => {
-                            if (retryCount < maxRetries) {
-                                fetch('https://wallet.pinet.com', { method: 'HEAD', timeout: 5000 })
-                                    .then(response => {
-                                        if (response.ok) {
-                                            console.log("Wallet terdeteksi, lanjut ke konfirmasi biometrik.");
-                                            clearInterval(checkWallet);
-                                        }
-                                    })
-                                    .catch(error => {
-                                        retryCount++;
-                                        console.error(`Retry ${retryCount} gagal cek wallet:`, error.message);
-                                    });
-                            } else {
-                                clearInterval(checkWallet);
-                            }
-                        }, 5000);
-
-                        // Fallback kalau wallet gak respons
                         setTimeout(() => {
                             if (realDepositMsg.textContent.includes('31 detik')) {
                                 console.error("Pi Wallet gagal merespons setelah 30 detik.");
-                                realDepositMsg.textContent = 'Pi Wallet gagal merespons. Coba bersihkan cache Pi Browser atau coba lagi nanti.';
+                                realDepositMsg.textContent = 'Pi Wallet gagal merespons. Cek backend atau coba lagi nanti.';
                                 realDepositBtn.disabled = false;
                                 realDepositBtn.textContent = "Deposit with Pi Testnet";
-                                // Redirect manual balik ke app
                                 window.location.href = "https://harvestpi.biz.id";
                             }
                         }, 30000);
@@ -700,14 +676,14 @@ if (realDepositBtn) {
                         realDepositMsg.textContent = 'Deposit dibatalkan. Kembali ke aplikasi...';
                         realDepositBtn.disabled = false;
                         realDepositBtn.textContent = "Deposit with Pi Testnet";
-                        window.location.href = "https://harvestpi.biz.id"; // Redirect balik
+                        window.location.href = "https://harvestpi.biz.id";
                     },
                     onError: (error, paymentId) => {
                         console.error("onError triggered:", error.message, "Payment ID:", paymentId, "at", new Date().toISOString());
                         realDepositMsg.textContent = `Error saat deposit: ${error.message}. Kembali ke aplikasi...`;
                         realDepositBtn.disabled = false;
                         realDepositBtn.textContent = "Deposit with Pi Testnet";
-                        window.location.href = "https://harvestpi.biz.id"; // Redirect balik
+                        window.location.href = "https://harvestpi.biz.id";
                     }
                 }
             );
@@ -719,7 +695,7 @@ if (realDepositBtn) {
             realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Kembali ke aplikasi...`;
             realDepositBtn.disabled = false;
             realDepositBtn.textContent = "Deposit with Pi Testnet";
-            window.location.href = "https://harvestpi.biz.id"; // Redirect balik
+            window.location.href = "https://harvestpi.biz.id";
         }
     });
 }

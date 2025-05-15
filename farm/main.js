@@ -239,48 +239,48 @@ async function loadData() {
 // Authenticate with Pi Network
 async function initializePiSDK() {
     if (!window.Pi) {
-        console.error('Pi SDK not loaded. Ensure <script src="https://sdk.minepi.com/pi-sdk.js"></script> is in your HTML and network is stable.');
-        showNotification('Pi Network SDK not available. Please check your network and reload the page.');
+        console.error('Pi SDK not loaded. Pastikan <script src="https://sdk.minepi.com/pi-sdk.js"></script> ada di HTML dan jaringan stabil.');
+        showNotification('Pi Network SDK tidak tersedia. Cek jaringan dan reload halaman.');
         return false;
     }
 
     try {
-        console.log('Attempting Pi.init...');
+        console.log('Mencoba inisialisasi Pi.init...');
         await Pi.init({
             version: "2.0",
             sandbox: true,
-            appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos" // Ganti dengan App ID valid kalau ini gak jalan
+            appId: "0k7py9pfz2zpndv3azmsx3utawgrfdkc1e1dlgfrbl4fywolpdl8q9s9c9iguvos" // Ganti dengan App ID valid dari Pi Developer Portal kalau gagal
         });
         piInitialized = true;
-        console.log('Pi SDK initialized successfully');
+        console.log('Pi SDK berhasil diinisialisasi');
         return true;
     } catch (error) {
-        console.error('Pi init failed:', error.message, 'Details:', error);
-        showNotification('Failed to initialize Pi SDK: ' + error.message + '. Check console for details.');
+        console.error('Gagal inisialisasi Pi:', error.message, 'Detail:', error);
+        showNotification('Gagal inisialisasi Pi SDK: ' + error.message + '. Cek console untuk detail.');
         return false;
     }
 }
 
 async function authenticateWithPi() {
     if (!window.Pi) {
-        console.error('Pi SDK not loaded');
-        showNotification('Pi Network SDK not available. Please try again later.');
+        console.error('Pi SDK tidak dimuat');
+        showNotification('Pi Network SDK tidak tersedia. Coba lagi nanti.');
         return;
     }
 
     if (!piInitialized) {
         const initialized = await initializePiSDK();
         if (!initialized) {
-            console.error('Pi SDK initialization failed, cannot authenticate');
+            console.error('Inisialisasi Pi SDK gagal, tidak bisa autentikasi');
             return;
         }
     }
 
     const scopes = ['username', 'payments'];
     try {
-        console.log('Attempting Pi.authenticate with scopes:', scopes);
+        console.log('Mencoba autentikasi Pi dengan scopes:', scopes);
         const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-        console.log('Pi Auth success:', authResult);
+        console.log('Autentikasi Pi berhasil:', authResult);
         const user = authResult.user;
         userId = user.uid;
         const playerRef = ref(database, `players/${userId}`);
@@ -297,15 +297,15 @@ async function authenticateWithPi() {
                     },
                     piBalance: pi || 0
                 }),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Database update timed out')), 5000))
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Update database timeout')), 5000))
             ]);
-            console.log(`User data saved to database in ${Date.now() - dbStart}ms`);
+            console.log(`Data user tersimpan ke database dalam ${Date.now() - dbStart}ms`);
         } catch (dbError) {
-            console.error('Failed to save user data to database:', dbError.message);
-            showNotification('Logged in, but failed to save user data. You may need to log in again later.');
+            console.error('Gagal simpan data user ke database:', dbError.message);
+            showNotification('Berhasil login, tapi gagal simpan data user. Coba login lagi nanti.');
         }
 
-        showNotification(`Logged in as ${user.username}`);
+        showNotification(`Berhasil login sebagai ${user.username}`);
         localStorage.setItem('userId', userId);
         const loginScreenElement = document.getElementById('login-screen');
         const startScreenElement = document.getElementById('start-screen');
@@ -315,8 +315,8 @@ async function authenticateWithPi() {
         }
         loadPlayerData();
     } catch (error) {
-        console.error('Pi Auth failed:', error.message, 'Details:', error);
-        showNotification('Pi Network login failed: ' + error.message + '. Check console for details.');
+        console.error('Autentikasi Pi gagal:', error.message, 'Detail:', error);
+        showNotification('Login Pi Network gagal: ' + error.message + '. Cek console untuk detail.');
     }
 }
 

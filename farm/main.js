@@ -464,102 +464,99 @@ const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
 
 if (realDepositBtn) {
-    addSafeClickListener(realDepositBtn, async () => {
-        realDepositMsg.textContent = '';
+  addSafeClickListener(realDepositBtn, async () => {
+    realDepositMsg.textContent = '';
 
-        if (!userId || !window.Pi || typeof Pi.createPayment !== "function") {
-            console.warn("Pi SDK or user not ready:", { userId, Pi: window.Pi });
-            realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
-            return;
-        }
-
-        // Auth ulang untuk dapat scope payments
-        try {
-            const scopes = ['payments'];
-            const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-            userId = authResult.user.uid;
-        } catch (authError) {
-            realDepositMsg.textContent = 'Failed to verify scope. Please log in again.';
-            return;
-        }
-
-        const amountInput = document.getElementById("deposit-amount");
-        const amount = parseFloat(amountInput?.value || "1");
-        if (isNaN(amount) || amount < 1) {
-            realDepositMsg.textContent = 'Minimum 1 Pi required.';
-            return;
-        }
-
-        const memo = "Deposit to Harvest Pi";
-        const metadata = { userId };
-
-        try {
-            realDepositBtn.disabled = true;
-            realDepositBtn.textContent = "Processing...";
-
-            const payment = await Pi.createPayment(
-  {
-    amount,
-    memo,
-    metadata,
-    redirectUrl: "https://harvestpi.biz.id" // redirect ke game setelah sukses
-  },
-  {
-    onReadyForClientReview: () => {
-      console.log("Waiting for user confirmation in wallet...");
-      realDepositMsg.textContent = 'Please confirm the payment in Pi Wallet...';
-      // User akan dibawa ke wallet.pinet.com
-    },
-    onCancel: (paymentId) => {
-      console.warn("User cancelled payment:", paymentId);
-      realDepositMsg.textContent = 'Deposit cancelled. Redirecting back...';
-      setTimeout(() => {
-        window.location.href = "https://harvestpi.biz.id";
-      }, 1500);
-    },
-    onError: (error, paymentId) => {
-      console.error("Payment error:", error, paymentId);
-      realDepositMsg.textContent = 'Error during payment. Redirecting back...';
-      setTimeout(() => {
-        window.location.href = "https://harvestpi.biz.id";
-      }, 1500);
-    },
-    onReadyForServerApproval: async (paymentId) => {
-      console.log("Approving payment:", paymentId);
-      await Pi.approvePayment(paymentId); // Testnet auto approve
-    },
-    onReadyForServerCompletion: async (paymentId, txid) => {
-      console.log("Completing payment:", paymentId, txid);
-
-      const playerRef = ref(database, `players/${userId}`);
-      const snapshot = await get(playerRef);
-      const data = snapshot.val() || {};
-      const currentPi = data.piBalance || 0;
-      const currentDeposit = data.totalDeposit || 0;
-
-      const newPi = currentPi + amount;
-      await update(playerRef, {
-        piBalance: newPi,
-        totalDeposit: currentDeposit + amount
-      });
-
-      window.piBalance = newPi;
-      updateWallet();
-
-      await Pi.completePayment(paymentId, txid);
-      realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+    if (!userId || !window.Pi || typeof Pi.createPayment !== "function") {
+      console.warn("Pi SDK or user not ready:", { userId, Pi: window.Pi });
+      realDepositMsg.textContent = 'Pi SDK not ready or user not logged in.';
+      return;
     }
-  }
-);
 
-        } catch (err) {
-            console.error("Deposit failed:", err.message);
-            realDepositMsg.textContent = `Failed to process deposit: ${err.message}`;
-        } finally {
-            realDepositBtn.disabled = false;
-            realDepositBtn.textContent = "Deposit with Pi Testnet";
+    // Autentikasi ulang dengan scope "payments"
+    try {
+      const scopes = ['payments'];
+      const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+      userId = authResult.user.uid;
+    } catch (authErr) {
+      console.error("Failed to authenticate for payment:", authErr);
+      realDepositMsg.textContent = 'Failed to verify payment scope.';
+      return;
+    }
+
+    const amountInput = document.getElementById("deposit-amount");
+    const amount = parseFloat(amountInput?.value || "1");
+    if (isNaN(amount) || amount < 1) {
+      realDepositMsg.textContent = 'Minimum 1 Pi required.';
+      return;
+    }
+
+    const memo = "Deposit to Harvest Pi";
+    const metadata = {
+      userId,
+      redirectUrl: "https://harvestpi.biz.id"
+    };
+
+    try {
+      realDepositBtn.disabled = true;
+      realDepositBtn.textContent = "Processing...";
+
+      const payment = await Pi.createPayment(
+        {
+          amount,
+          memo,
+          metadata
+        },
+        {
+          onReadyForClientReview: () => {
+            console.log("Waiting for user to confirm payment...");
+            realDepositMsg.textContent = "Please confirm the payment in wallet...";
+          },
+          onReadyForServerApproval: async (paymentId) => {
+            console.log("onReadyForServerApproval:", paymentId);
+            await Pi.approvePayment(paymentId);
+            console.log("Payment approved.");
+          },
+          onReadyForServerCompletion: async (paymentId, txid) => {
+            console.log("onReadyForServerCompletion:", paymentId, txid);
+            const playerRef = ref(database, `players/${userId}`);
+            const snapshot = await get(playerRef);
+            const data = snapshot.val() || {};
+            const currentPi = data.piBalance || 0;
+            const currentDeposit = data.totalDeposit || 0;
+            const newPi = currentPi + amount;
+
+            await update(playerRef, {
+              piBalance: newPi,
+              totalDeposit: currentDeposit + amount
+            });
+
+            window.piBalance = newPi;
+            updateWallet();
+
+            await Pi.completePayment(paymentId, txid);
+            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
+          },
+          onCancel: () => {
+            realDepositMsg.textContent = 'Deposit cancelled.';
+            window.location.href = "https://harvestpi.biz.id";
+          },
+          onError: (error) => {
+            console.error("Payment error:", error);
+            realDepositMsg.textContent = 'Deposit failed: ' + error.message;
+            window.location.href = "https://harvestpi.biz.id";
+          }
         }
-    });
+      );
+
+    } catch (err) {
+      console.error("Deposit failed:", err);
+      realDepositMsg.textContent = 'Failed to process deposit: ' + err.message;
+    } finally {
+      realDepositBtn.disabled = false;
+      realDepositBtn.textContent = "Deposit with Pi Testnet";
+    }
+  });
 }
 
 initializeGame();

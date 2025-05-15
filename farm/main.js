@@ -532,15 +532,15 @@ if (realDepositBtn) {
                         try {
                             const approvalStart = Date.now();
                             await withTimeout(
-    fetch("https://harvestpi-backend.glitch.me/approve-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentId })
-    }).then(res => res.json()).then(res => {
-        if (!res.success) throw new Error("Approval failed on server");
-    }),
-    "Approval request to backend timed out",
-    5000
+  fetch("https://harvest-pi.glitch.me/approve-payment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paymentId })
+  }).then(res => res.json()).then(res => {
+    if (!res.success) throw new Error("Approval failed on server");
+  }),
+  "Approval request to backend timed out",
+  5000
 );
                             console.log(`Payment approved successfully in ${Date.now() - approvalStart}ms:`, paymentId);
                         } catch (approvalError) {
@@ -583,15 +583,15 @@ if (realDepositBtn) {
                         // Selesaikan pembayaran
                         const completeStart = Date.now();
                         await withTimeout(
-    fetch("https://harvestpi-backend.glitch.me/complete-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentId, txid })
-    }).then(res => res.json()).then(res => {
-        if (!res.success) throw new Error("Completion failed on server");
-    }),
-    "Payment completion request to backend timed out",
-    5000
+  fetch("https://harvest-pi.glitch.me/complete-payment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paymentId, txid })
+  }).then(res => res.json()).then(res => {
+    if (!res.success) throw new Error("Completion failed on server");
+  }),
+  "Completion request to backend timed out",
+  5000
 );
                         console.log(`Payment completed successfully in ${Date.now() - completeStart}ms:`, paymentId);
 

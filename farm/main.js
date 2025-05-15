@@ -477,7 +477,7 @@ const realDepositMsg = document.getElementById("real-deposit-msg");
 if (realDepositBtn) {
     console.log("Real deposit button found, attaching click listener...");
     addSafeClickListener(realDepositBtn, async () => {
-        console.log("Deposit button clicked!");
+        console.log("Deposit button clicked at", new Date().toISOString());
         realDepositMsg.textContent = '';
 
         if (!userId || !window.Pi || !Pi.createPayment) {
@@ -523,18 +523,20 @@ if (realDepositBtn) {
 
             // Wake up Glitch server
             const wakeUpServer = async () => {
-                const maxRetries = 3;
+                const maxRetries = 5;
                 let attempt = 0;
                 while (attempt < maxRetries) {
                     try {
                         console.log(`Membangunkan server Glitch, percobaan ${attempt + 1}...`);
-                        await fetch('https://harvestpi-backend.glitch.me/', { method: 'GET', timeout: 5000 });
-                        console.log('Server Glitch sudah aktif');
+                        const wakeStart = Date.now();
+                        const response = await fetch('https://harvestpi-backend.glitch.me/', { method: 'GET', timeout: 5000 });
+                        if (!response.ok) throw new Error(`Wake up failed: ${response.statusText}`);
+                        console.log(`Server Glitch aktif dalam ${Date.now() - wakeStart}ms`);
                         return true;
                     } catch (wakeError) {
                         attempt++;
                         console.error(`Percobaan bangun server ke-${attempt} gagal:`, wakeError.message);
-                        if (attempt === maxRetries) throw new Error('Gagal membangunkan server Glitch');
+                        if (attempt === maxRetries) throw new Error('Gagal membangunkan server Glitch setelah 5 percobaan');
                         await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                     }
                 }
@@ -549,15 +551,15 @@ if (realDepositBtn) {
                     metadata
                 },
                 {
-                    onReadyForClientReview: () => {
-                        console.log("onReadyForClientReview triggered - menunggu konfirmasi user...");
+                    onReadyForClientReview: (paymentId) => {
+                        console.log("onReadyForClientReview triggered:", paymentId, "at", new Date().toISOString());
                         realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di wallet.minepi.com...';
                     },
                     onReadyForServerApproval: async (paymentId) => {
-                        console.log("onReadyForServerApproval triggered:", paymentId);
+                        console.log("onReadyForServerApproval triggered:", paymentId, "at", new Date().toISOString());
                         if (!paymentId) throw new Error("Invalid paymentId di onReadyForServerApproval");
 
-                        const maxRetries = 3;
+                        const maxRetries = 5;
                         let attempt = 0;
                         while (attempt < maxRetries) {
                             try {
@@ -571,22 +573,23 @@ if (realDepositBtn) {
                                     "Permintaan approval timeout",
                                     5000
                                 );
-                                if (!response.ok) throw new Error(`Approval gagal: ${response.statusText}`);
+                                const result = await response.json();
+                                if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
                                 console.log(`Pembayaran disetujui oleh backend dalam ${Date.now() - approvalStart}ms:`, paymentId);
                                 return;
                             } catch (approvalError) {
                                 attempt++;
                                 console.error(`Percobaan approval ke-${attempt} gagal:`, approvalError.message);
-                                if (attempt === maxRetries) throw new Error("Gagal menyetujui pembayaran setelah retry: " + approvalError.message);
+                                if (attempt === maxRetries) throw new Error("Gagal menyetujui pembayaran setelah 5 percobaan: " + approvalError.message);
                                 await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                             }
                         }
                     },
                     onReadyForServerCompletion: async (paymentId, txid) => {
-                        console.log("onReadyForServerCompletion triggered:", paymentId, txid);
+                        console.log("onReadyForServerCompletion triggered:", paymentId, txid, "at", new Date().toISOString());
                         if (!paymentId || !txid) throw new Error("Invalid paymentId atau txid di onReadyForServerCompletion");
 
-                        const maxRetries = 3;
+                        const maxRetries = 5;
                         let attempt = 0;
                         while (attempt < maxRetries) {
                             try {
@@ -600,7 +603,8 @@ if (realDepositBtn) {
                                     "Permintaan completion timeout",
                                     5000
                                 );
-                                if (!response.ok) throw new Error(`Completion gagal: ${response.statusText}`);
+                                const result = await response.json();
+                                if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
                                 console.log(`Pembayaran selesai oleh backend dalam ${Date.now() - completeStart}ms:`, paymentId);
 
                                 // Update database
@@ -630,20 +634,20 @@ if (realDepositBtn) {
                             } catch (completeError) {
                                 attempt++;
                                 console.error(`Percobaan completion ke-${attempt} gagal:`, completeError.message);
-                                if (attempt === maxRetries) throw new Error("Gagal menyelesaikan pembayaran setelah retry: " + completeError.message);
+                                if (attempt === maxRetries) throw new Error("Gagal menyelesaikan pembayaran setelah 5 percobaan: " + completeError.message);
                                 await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                             }
                         }
                     },
                     onCancel: (paymentId) => {
-                        console.log("onCancel triggered:", paymentId);
+                        console.log("onCancel triggered:", paymentId, "at", new Date().toISOString());
                         realDepositMsg.textContent = 'Deposit dibatalkan. Kembali ke harvestpi.biz.id...';
                         setTimeout(() => {
                             window.location.href = "https://harvestpi.biz.id";
                         }, 1000);
                     },
                     onError: (error, paymentId) => {
-                        console.error("onError triggered:", error.message, "Payment ID:", paymentId);
+                        console.error("onError triggered:", error.message, "Payment ID:", paymentId, "at", new Date().toISOString());
                         realDepositMsg.textContent = `Error saat deposit: ${error.message}. Kembali ke harvestpi.biz.id...`;
                         setTimeout(() => {
                             window.location.href = "https://harvestpi.biz.id";
@@ -655,7 +659,7 @@ if (realDepositBtn) {
             await withTimeout(paymentPromise, "Proses deposit timeout", 30000);
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
-            console.error("Deposit gagal:", err.message);
+            console.error("Deposit gagal:", err.message, "at", new Date().toISOString());
             realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Kembali ke harvestpi.biz.id...`;
             setTimeout(() => {
                 window.location.href = "https://harvestpi.biz.id";
@@ -663,7 +667,7 @@ if (realDepositBtn) {
         } finally {
             realDepositBtn.disabled = false;
             realDepositBtn.textContent = "Deposit with Pi Testnet";
-            console.log("Proses deposit selesai.");
+            console.log("Proses deposit selesai at", new Date().toISOString());
         }
     });
 }

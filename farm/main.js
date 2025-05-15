@@ -519,11 +519,10 @@ if (realDepositBtn) {
             return;
         }
 
-        // Simpan nilai input ke localStorage
         localStorage.setItem("depositAmount", amount.toString());
 
         const memo = "Deposit to Harvest Pi";
-        const metadata = { userId, redirectUrl: window.location.href };
+        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" }; // Pastiin redirect URL
 
         try {
             realDepositBtn.disabled = true;
@@ -579,7 +578,7 @@ if (realDepositBtn) {
                             }
                         }, 1000);
 
-                        // Retry cek status wallet
+                        // Retry cek wallet status
                         let retryCount = 0;
                         const maxRetries = 3;
                         const checkWallet = setInterval(() => {
@@ -604,9 +603,11 @@ if (realDepositBtn) {
                         setTimeout(() => {
                             if (realDepositMsg.textContent.includes('31 detik')) {
                                 console.error("Pi Wallet gagal merespons setelah 30 detik.");
-                                realDepositMsg.textContent = 'Pi Wallet gagal merespons. Coba bersihkan cache Pi Browser, pastikan biometrik aktif, atau coba lagi nanti.';
+                                realDepositMsg.textContent = 'Pi Wallet gagal merespons. Coba bersihkan cache Pi Browser atau coba lagi nanti.';
                                 realDepositBtn.disabled = false;
                                 realDepositBtn.textContent = "Deposit with Pi Testnet";
+                                // Redirect manual balik ke app
+                                window.location.href = "https://harvestpi.biz.id";
                             }
                         }, 30000);
                     },
@@ -626,7 +627,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId })
                                     }),
                                     "Permintaan approval timeout",
-                                    30000 // Perpanjang jadi 30 detik
+                                    30000
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
@@ -656,13 +657,12 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId, txid })
                                     }),
                                     "Permintaan completion timeout",
-                                    30000 // Perpanjang jadi 30 detik
+                                    30000
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
                                 console.log(`Pembayaran selesai oleh backend dalam ${Date.now() - completeStart}ms:`, paymentId);
 
-                                // Cek security: gak mark complete sampe sukses
                                 if (response.ok && result.success) {
                                     const dbStart = Date.now();
                                     const playerRef = ref(database, `players/${userId}`);
@@ -697,26 +697,29 @@ if (realDepositBtn) {
                     },
                     onCancel: (paymentId) => {
                         console.log("onCancel triggered:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = 'Deposit dibatalkan. Tetap di halaman ini...';
+                        realDepositMsg.textContent = 'Deposit dibatalkan. Kembali ke aplikasi...';
                         realDepositBtn.disabled = false;
                         realDepositBtn.textContent = "Deposit with Pi Testnet";
+                        window.location.href = "https://harvestpi.biz.id"; // Redirect balik
                     },
                     onError: (error, paymentId) => {
                         console.error("onError triggered:", error.message, "Payment ID:", paymentId, "at", new Date().toISOString());
-                        realDepositMsg.textContent = `Error saat deposit: ${error.message}. Coba bersihkan cache Pi Browser atau coba lagi nanti.`;
+                        realDepositMsg.textContent = `Error saat deposit: ${error.message}. Kembali ke aplikasi...`;
                         realDepositBtn.disabled = false;
                         realDepositBtn.textContent = "Deposit with Pi Testnet";
+                        window.location.href = "https://harvestpi.biz.id"; // Redirect balik
                     }
                 }
             );
 
-            await withTimeout(paymentPromise, "Proses deposit timeout", 120000); // Perpanjang jadi 120 detik
+            await withTimeout(paymentPromise, "Proses deposit timeout", 120000);
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
             console.error("Deposit gagal:", err.message, "at", new Date().toISOString());
-            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Coba bersihkan cache Pi Browser atau coba lagi nanti.`;
+            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}. Kembali ke aplikasi...`;
             realDepositBtn.disabled = false;
             realDepositBtn.textContent = "Deposit with Pi Testnet";
+            window.location.href = "https://harvestpi.biz.id"; // Redirect balik
         }
     });
 }

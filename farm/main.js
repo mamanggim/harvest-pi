@@ -471,6 +471,17 @@ initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', er
 // Fitur Deposit
 const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
+const depositAmountInput = document.getElementById("deposit-amount");
+
+// Load nilai input dari localStorage kalau ada
+if (depositAmountInput) {
+    const savedAmount = localStorage.getItem("depositAmount");
+    if (savedAmount) {
+        depositAmountInput.value = savedAmount;
+    } else {
+        depositAmountInput.value = "1"; // Default 1 kalau belum ada
+    }
+}
 
 if (realDepositBtn) {
     console.log("Real deposit button found, attaching click listener...");
@@ -496,13 +507,15 @@ if (realDepositBtn) {
             return;
         }
 
-        const amountInput = document.getElementById("deposit-amount");
-        const amount = parseFloat(amountInput?.value || "1");
+        const amount = parseFloat(depositAmountInput?.value || "1");
         if (isNaN(amount) || amount < 1) {
             console.log("Invalid amount:", amount);
             realDepositMsg.textContent = 'Minimal 1 Pi diperlukan.';
             return;
         }
+
+        // Simpan nilai input ke localStorage
+        localStorage.setItem("depositAmount", amount.toString());
 
         const memo = "Deposit to Harvest Pi";
         const metadata = { userId, redirectUrl: window.location.href };
@@ -561,11 +574,11 @@ if (realDepositBtn) {
                             }
                         }, 1000);
 
-                        // Tambah pengecekan kalau wallet gak respons
+                        // Fallback kalau wallet loading lama
                         setTimeout(() => {
                             if (realDepositMsg.textContent.includes('31 detik')) {
                                 console.error("Pi Wallet gagal merespons setelah 30 detik.");
-                                realDepositMsg.textContent = 'Pi Wallet gagal merespons. Coba bersihkan cache Pi Browser atau coba lagi nanti.';
+                                realDepositMsg.textContent = 'Pi Wallet gagal merespons. Coba bersihkan cache Pi Browser, pastikan biometrik aktif, atau coba lagi nanti.';
                                 realDepositBtn.disabled = false;
                                 realDepositBtn.textContent = "Deposit with Pi Testnet";
                             }

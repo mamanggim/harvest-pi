@@ -498,7 +498,7 @@ if (realDepositBtn) {
         }
 
         const memo = "Deposit to Harvest Pi";
-        const metadata = { userId, redirectUrl: window.location.href }; // Ubah redirect biar gak logout
+        const metadata = { userId, redirectUrl: window.location.href };
 
         try {
             realDepositBtn.disabled = true;
@@ -544,7 +544,6 @@ if (realDepositBtn) {
                     onReadyForClientReview: (paymentId) => {
                         console.log("onReadyForClientReview triggered:", paymentId, "at", new Date().toISOString());
                         realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di wallet.minepi.com dalam 31 detik...';
-                        // Tambah polling ringan buat cek status
                         let timeLeft = 30;
                         const interval = setInterval(() => {
                             if (timeLeft > 0) {
@@ -571,7 +570,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId })
                                     }),
                                     "Permintaan approval timeout",
-                                    10000
+                                    15000 // Perpanjang jadi 15 detik
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Approval gagal: ${result.message || response.statusText}`);
@@ -581,7 +580,7 @@ if (realDepositBtn) {
                                 attempt++;
                                 console.error(`Percobaan approval ke-${attempt} gagal:`, approvalError.message);
                                 if (attempt === maxRetries) throw new Error("Gagal menyetujui pembayaran setelah 5 percobaan: " + approvalError.message);
-                                await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+                                await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
                             }
                         }
                     },
@@ -601,7 +600,7 @@ if (realDepositBtn) {
                                         body: JSON.stringify({ paymentId, txid })
                                     }),
                                     "Permintaan completion timeout",
-                                    10000
+                                    15000 // Perpanjang jadi 15 detik
                                 );
                                 const result = await response.json();
                                 if (!response.ok || !result.success) throw new Error(`Completion gagal: ${result.message || response.statusText}`);
@@ -633,7 +632,7 @@ if (realDepositBtn) {
                                 attempt++;
                                 console.error(`Percobaan completion ke-${attempt} gagal:`, completeError.message);
                                 if (attempt === maxRetries) throw new Error("Gagal menyelesaikan pembayaran setelah 5 percobaan: " + completeError.message);
-                                await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+                                await new Promise(resolve => setTimeout(resolve, 3000 * attempt));
                             }
                         }
                     },
@@ -652,7 +651,7 @@ if (realDepositBtn) {
                 }
             );
 
-            await withTimeout(paymentPromise, "Proses deposit timeout", 40000);
+            await withTimeout(paymentPromise, "Proses deposit timeout", 60000); // Perpanjang jadi 60 detik
             console.log("Pi.createPayment berhasil dijalankan");
         } catch (err) {
             console.error("Deposit gagal:", err.message, "at", new Date().toISOString());

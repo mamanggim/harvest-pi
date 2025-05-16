@@ -247,7 +247,7 @@ async function initializePiSDK() {
     try {
         await Pi.init({
             version: "2.0",
-            appId: "harvestPi" // Pi API key
+            appId: "harvestminepi4870"
         });
         piInitialized = true;
         console.log('Pi SDK initialized successfully');

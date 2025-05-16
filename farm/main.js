@@ -531,12 +531,18 @@ if (realDepositBtn) {
                         }
                         try {
                             const approvalStart = Date.now();
-                            await withTimeout(
-                                Pi.approvePayment(paymentId),
-                                "Approval timed out - server may be slow",
-                                2000 // Timeout sangat ketat 2 detik
+                            const response = await withTimeout(
+                                fetch('https://harvestpi-backend.glitch.me/approve-payment', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ paymentId })
+                                }),
+                                "Approval request timed out",
+                                10000
                             );
-                            console.log(`Payment approved successfully in ${Date.now() - approvalStart}ms:`, paymentId);
+                            const result = await response.json();
+                            if (!response.ok || !result.success) throw new Error(`Approval failed: ${result.message || response.statusText}`);
+                            console.log(`Payment approved by backend in ${Date.now() - approvalStart}ms:`, paymentId);
                         } catch (approvalError) {
                             console.error("Approval failed:", approvalError.message);
                             throw new Error("Failed to approve payment: " + approvalError.message);
@@ -547,50 +553,23 @@ if (realDepositBtn) {
                         if (!paymentId || !txid) {
                             throw new Error("Invalid paymentId or txid in onReadyForServerCompletion");
                         }
-
-                        // Operasi database
-                        const dbStart = Date.now();
-                        const playerRef = ref(database, `players/${userId}`);
-                        const snapshot = await withTimeout(
-                            get(playerRef),
-                            "Database read timed out",
-                            2000
-                        );
-                        const data = snapshot.val() || {};
-                        const currentPi = data.piBalance || 0;
-                        const currentDeposit = data.totalDeposit || 0;
-                        console.log(`Database read completed in ${Date.now() - dbStart}ms`);
-
-                        const newPiBalance = currentPi + amount;
-
-                        const updateStart = Date.now();
-                        await withTimeout(
-                            update(playerRef, {
-                                piBalance: newPiBalance,
-                                totalDeposit: currentDeposit + amount
-                            }),
-                            "Database update timed out",
-                            2000
-                        );
-                        console.log(`Database update completed in ${Date.now() - updateStart}ms`);
-
-                        // Selesaikan pembayaran
-                        const completeStart = Date.now();
-                        await withTimeout(
-                            Pi.completePayment(paymentId, txid),
-                            "Payment completion timed out",
-                            3000
-                        );
-                        console.log(`Payment completed successfully in ${Date.now() - completeStart}ms:`, paymentId);
-
-                        // Update UI
                         try {
-                            window.piBalance = newPiBalance;
-                            updateWallet();
-                            realDepositMsg.textContent = `Deposit success! +${amount} Pi`;
-                        } catch (uiError) {
-                            console.error("UI update failed:", uiError);
-                            realDepositMsg.textContent = `Deposit success! +${amount} Pi, but UI update failed.`;
+                            const completeStart = Date.now();
+                            const response = await withTimeout(
+                                fetch('https://harvestpi-backend.glitch.me/complete-payment', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ paymentId, txid })
+                                }),
+                                "Completion request timed out",
+                                10000
+                            );
+                            const result = await response.json();
+                            if (!response.ok || !result.success) throw new Error(`Completion failed: ${result.message || response.statusText}`);
+                            console.log(`Payment completed by backend in ${Date.now() - completeStart}ms:`, paymentId);
+                        } catch (completeError) {
+                            console.error("Completion failed:", completeError.message);
+                            throw new Error("Failed to complete payment: " + completeError.message);
                         }
                     },
                     onCancel: (paymentId) => {

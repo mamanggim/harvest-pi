@@ -507,7 +507,7 @@ if (realDepositBtn) {
                 userId = authResult.user.uid;
                 setAuthStatus(userId); // Simpan status autentikasi
             } catch (authError) {
-                console.error("Authentication failed:", authError.message);
+                console.error("Authentication failed:", authError.message, authError.stack);
                 realDepositMsg.textContent = 'Gagal autentikasi. Silakan login lagi.';
                 clearAuthStatus();
                 window.location.href = "https://harvestpi.biz.id"; // Redirect ke login
@@ -521,7 +521,7 @@ if (realDepositBtn) {
         const amountInput = document.getElementById("deposit-amount");
         const amount = parseFloat(amountInput?.value || "1");
         if (isNaN(amount) || amount < 1) {
-            console.log("Invalid amount:", amount);
+            console.log("Invalid amount:", amountInput?.value);
             realDepositMsg.textContent = 'Minimal 1 Pi diperlukan.';
             return;
         }
@@ -567,9 +567,9 @@ if (realDepositBtn) {
                             );
                             const result = await response.json();
                             if (!response.ok || !result.success) throw new Error(`Approval failed: ${result.message}`);
-                            console.log("Payment approved by backend:", paymentId);
+                            console.log("Payment approved by backend:", paymentId, "Response:", result);
                         } catch (approvalError) {
-                            console.error("Approval failed:", approvalError.message);
+                            console.error("Approval failed:", approvalError.message, approvalError.stack);
                             throw new Error("Failed to approve payment: " + approvalError.message);
                         }
                     },
@@ -588,23 +588,23 @@ if (realDepositBtn) {
                             );
                             const result = await response.json();
                             if (!response.ok || !result.success) throw new Error(`Completion failed: ${result.message}`);
-                            console.log("Payment completed by backend:", paymentId);
+                            console.log("Payment completed by backend:", paymentId, "New balance:", result.newBalance);
 
                             // Update UI
                             window.piBalance = result.newBalance;
                             updateWallet();
                             realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
                         } catch (completeError) {
-                            console.error("Completion failed:", completeError.message);
+                            console.error("Completion failed:", completeError.message, completeError.stack);
                             throw new Error("Failed to complete payment: " + completeError.message);
                         }
                     },
                     onCancel: (paymentId) => {
-                        console.log("onCancel triggered:", paymentId);
+                        console.log("onCancel triggered:", paymentId, "Reason: User cancelled or timeout");
                         realDepositMsg.textContent = 'Deposit dibatalkan.';
                     },
                     onError: (error, paymentId) => {
-                        console.error("onError triggered:", error, "Payment ID:", paymentId);
+                        console.error("onError triggered:", error.message, "Stack:", error.stack, "Payment ID:", paymentId);
                         realDepositMsg.textContent = `Error saat deposit: ${error.message}.`;
                     }
                 }
@@ -613,7 +613,7 @@ if (realDepositBtn) {
             await withTimeout(paymentPromise, "Deposit process timed out", 45000);
             console.log("Pi.createPayment executed successfully");
         } catch (err) {
-            console.error("Deposit failed:", err.message);
+            console.error("Deposit failed:", err.message, err.stack);
             realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}.`;
         } finally {
             realDepositBtn.disabled = false;

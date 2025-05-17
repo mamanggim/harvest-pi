@@ -223,7 +223,7 @@ async function initializePiSDK() {
     }
     try {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Tunggu SDK siap
-        await Pi.init({ version: "2.0", sandbox: true });
+        await Pi.init({ version: "2.0", sandbox: false });
         console.log('Pi SDK jalan, mode:', Pi.sandbox ? 'Testnet' : 'Mainnet');
         return true;
     } catch (error) {

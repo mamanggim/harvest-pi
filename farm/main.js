@@ -1930,141 +1930,108 @@ function exitFullScreen() {
 // Fitur Deposit
 const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
+const amountInput = document.getElementById("deposit-amount");
 
-if (realDepositBtn) {
+if (realDepositBtn && amountInput) {
     console.log("Real deposit button found, attaching click listener...");
+
     addSafeClickListener(realDepositBtn, async () => {
         console.log("Deposit button clicked!");
         realDepositMsg.textContent = '';
 
-        if (!window.Pi || !Pi.createPayment) {
-            console.log("Pi SDK not ready:", { Pi: window.Pi });
-            realDepositMsg.textContent = 'Pi SDK tidak siap. Silakan refresh aplikasi.';
+        if (!window.Pi || typeof Pi.createPayment !== "function") {
+            realDepositMsg.textContent = 'Pi SDK tidak siap. Silakan refresh.';
             return;
         }
 
-        // Cek status autentikasi
+        // Cek login
         if (!checkAuthStatus()) {
             try {
-                console.log("Authenticating user...");
-                const scopes = ['payments'];
-                const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-                console.log("Authentication successful:", authResult);
+                const authResult = await Pi.authenticate(['payments'], onIncompletePaymentFound);
                 userId = authResult.user.uid;
-                setAuthStatus(userId); // Simpan status autentikasi
-            } catch (authError) {
-                console.error("Authentication failed:", authError.message);
-                realDepositMsg.textContent = 'Gagal autentikasi. Silakan login lagi.';
+                setAuthStatus(userId);
+            } catch (err) {
+                console.error("Auth error:", err);
                 clearAuthStatus();
-                window.location.href = "https://harvestpi.biz.id"; // Redirect ke login
+                realDepositMsg.textContent = 'Autentikasi gagal.';
                 return;
             }
         } else {
             userId = localStorage.getItem("pi_user_id");
-            console.log("User already authenticated, using stored userId:", userId);
         }
 
-        const amountInput = document.getElementById("deposit-amount");
-        const amount = parseFloat(amountInput?.value || "1");
+        const amount = parseFloat(amountInput.value || "1");
         if (isNaN(amount) || amount < 1) {
-            console.log("Invalid amount:", amount);
-            realDepositMsg.textContent = 'Minimal 1 Pi diperlukan.';
+            realDepositMsg.textContent = 'Minimal 1 Pi.';
             return;
         }
+
+        realDepositBtn.disabled = true;
+        realDepositBtn.textContent = "Memproses...";
 
         const memo = "Deposit to Harvest Pi";
         const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
 
+        const withTimeout = (promise, msg, timeout = 15000) =>
+            Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), timeout))
+            ]);
+
         try {
-            realDepositBtn.disabled = true;
-            realDepositBtn.textContent = "Memproses...";
-            console.log("Starting deposit process with Pi.createPayment...");
-
-            const withTimeout = (promise, message, timeout = 15000) => {
-                return Promise.race([
-                    promise,
-                    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), timeout))
-                ]);
-            };
-
-            const paymentPromise = Pi.createPayment(
-                {
-                    amount,
-                    memo,
-                    metadata
-                },
+            await Pi.createPayment(
+                { amount, memo, metadata },
                 {
                     onReadyForClientReview: () => {
-                        console.log("onReadyForClientReview triggered - waiting for user confirmation...");
                         realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di wallet.pinet.com...';
                     },
                     onReadyForServerApproval: async (paymentId) => {
-                        console.log("onReadyForServerApproval triggered:", paymentId);
-                        if (!paymentId) throw new Error("Invalid paymentId");
-                        try {
-                            const response = await withTimeout(
-                                fetch('https://harvestpi-backend.glitch.me/approve-payment', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ paymentId })
-                                }),
-                                "Approval request timed out",
-                                15000
-                            );
-                            const result = await response.json();
-                            if (!response.ok || !result.success) throw new Error(`Approval failed: ${result.message}`);
-                            console.log("Payment approved by backend:", paymentId);
-                        } catch (approvalError) {
-                            console.error("Approval failed:", approvalError.message);
-                            throw new Error("Failed to approve payment: " + approvalError.message);
-                        }
+                        console.log("Approving payment:", paymentId);
+                        const res = await withTimeout(
+                            fetch("https://harvestpi-backend.glitch.me/approve-payment", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ paymentId })
+                            }),
+                            "Approval request timed out",
+                            15000
+                        );
+                        const result = await res.json();
+                        if (!result.success) throw new Error("Approval failed: " + result.message);
                     },
                     onReadyForServerCompletion: async (paymentId, txid) => {
-                        console.log("onReadyForServerCompletion triggered:", paymentId, txid);
-                        if (!paymentId || !txid) throw new Error("Invalid paymentId or txid");
-                        try {
-                            const response = await withTimeout(
-                                fetch('https://harvestpi-backend.glitch.me/complete-payment', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ paymentId, txid })
-                                }),
-                                "Completion request timed out",
-                                15000
-                            );
-                            const result = await response.json();
-                            if (!response.ok || !result.success) throw new Error(`Completion failed: ${result.message}`);
-                            console.log("Payment completed by backend:", paymentId);
+                        console.log("Completing payment:", paymentId);
+                        const res = await withTimeout(
+                            fetch("https://harvestpi-backend.glitch.me/complete-payment", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ paymentId, txid })
+                            }),
+                            "Completion request timed out",
+                            15000
+                        );
+                        const result = await res.json();
+                        if (!result.success) throw new Error("Completion failed: " + result.message);
 
-                            // Update UI
-                            window.piBalance = result.newBalance;
-                            updateWallet();
-                            realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
-                        } catch (completeError) {
-                            console.error("Completion failed:", completeError.message);
-                            throw new Error("Failed to complete payment: " + completeError.message);
-                        }
+                        window.piBalance = result.newBalance || (window.piBalance || 0) + amount;
+                        updateWallet();
+                        realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
                     },
-                    onCancel: (paymentId) => {
-                        console.log("onCancel triggered:", paymentId);
+                    onCancel: () => {
                         realDepositMsg.textContent = 'Deposit dibatalkan.';
                     },
-                    onError: (error, paymentId) => {
-                        console.error("onError triggered:", error, "Payment ID:", paymentId);
-                        realDepositMsg.textContent = `Error saat deposit: ${error.message}.`;
+                    onError: (error) => {
+                        realDepositMsg.textContent = `Error saat deposit: ${error.message}`;
+                        console.error("Payment error:", error);
                     }
                 }
             );
-
-            await withTimeout(paymentPromise, "Deposit process timed out", 45000);
-            console.log("Pi.createPayment executed successfully");
         } catch (err) {
-            console.error("Deposit failed:", err.message);
-            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}.`;
+            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}`;
+            console.error("Deposit failed:", err);
         } finally {
             realDepositBtn.disabled = false;
             realDepositBtn.textContent = "Deposit with Pi Testnet";
-            console.log("Deposit process finished.");
         }
     });
 }

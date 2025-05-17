@@ -229,9 +229,8 @@ async function initializePiSDK() {
     }
     try {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Tunggu SDK siap
-        await window.Pi.init({ version: "2.0", sandbox: true });
+        await window.Pi.init({ version: "2.0", sandbox: false });
         console.log('Pi SDK initialized successfully, sandbox mode:', window.Pi.sandbox ? 'Testnet' : 'Mainnet');
-        piInitialized = true; // Set flag bahwa Pi SDK udah siap
         return true;
     } catch (error) {
         console.error('Pi init failed:', error.message, error.stack);
@@ -250,10 +249,7 @@ async function authenticateWithPi() {
 
     if (!piInitialized) {
         const initialized = await initializePiSDK();
-        if (!initialized) {
-            showNotification('Pi SDK initialization failed. Please try again.');
-            return;
-        }
+        if (!initialized) return;
     }
 
     const scopes = ['username', 'payments'];
@@ -262,29 +258,28 @@ async function authenticateWithPi() {
         console.log('Pi Auth success:', authResult);
         const user = authResult.user;
         userId = user.uid;
-        localStorage.setItem('userId', userId); // Simpan userId ke localStorage
-
         const playerRef = ref(database, `players/${userId}`);
+
         await update(playerRef, {
             piUser: {
                 uid: user.uid,
                 username: user.username
             },
             piBalance: piBalance || 0
+        }).then(() => {
+            showNotification(`Logged in as ${user.username}`);
+            localStorage.setItem('userId', userId);
+            const loginScreenElement = document.getElementById('login-screen');
+            const startScreenElement = document.getElementById('start-screen');
+            if (loginScreenElement && startScreenElement) {
+                loginScreenElement.style.display = 'none';
+                startScreenElement.style.display = 'flex';
+            }
+            loadPlayerData();
+        }).catch(error => {
+            console.error('Error saving Pi user data:', error);
+            showNotification('Failed to save Pi user data: ' + error.message);
         });
-
-        showNotification(`Logged in as ${user.username}`);
-        const loginScreenElement = document.getElementById('login-screen');
-        const startScreenElement = document.getElementById('start-screen');
-        if (loginScreenElement && startScreenElement) {
-            loginScreenElement.style.display = 'none';
-            startScreenElement.style.display = 'flex';
-        } else {
-            console.error('Login or start screen element not found');
-            showNotification('UI error: Screens not found.');
-            return;
-        }
-        loadPlayerData(); // Load data pemain setelah login berhasil
     } catch (error) {
         console.error('Pi Auth failed:', error.message, error.stack);
         showNotification('Pi Network login failed: ' + error.message + '. Ensure sandbox mode is active in the Pi app.');
@@ -293,7 +288,6 @@ async function authenticateWithPi() {
 
 function onIncompletePaymentFound(payment) {
     console.log("onIncompletePaymentFound", payment);
-    // Handle incomplete payment if needed
 }
 
 // Save player data to Firebase
@@ -414,23 +408,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const loginPiBtnElement = document.getElementById('login-pi-btn');
-    if (loginPiBtnElement) {
-        loginPiBtnElement.style.display = 'block'; // Pastikan tombol visible
-        addSafeClickListener(loginPiBtnElement, async () => {
-            console.log('Login button clicked, attempting to authenticate...');
-            await authenticateWithPi();
-        });
-    } else {
-        console.error('Login button (login-pi-btn) not found in DOM');
-        showNotification('Login button not found. Please check your HTML.');
-    }
+    if (loginPiBtnElement) addSafeClickListener(loginPiBtnElement, authenticateWithPi);
 
-    // Inisialisasi Pi SDK saat halaman dimuat
-    initializePiSDK().catch(error => {
-        console.error('Initial Pi SDK init failed:', error);
-        showNotification('Failed to initialize Pi SDK on load.');
-    });
-    
+    initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
+
     // Load player data
     function loadPlayerData() {
         try {

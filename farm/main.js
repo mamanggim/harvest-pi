@@ -29,7 +29,7 @@ function addSafeClickListener(element, callback) {
 let isDataLoaded = false;
 let piInitialized = false;
 let farmCoins = 0;
-let piBalance = 0; // Ganti dari pi
+let piBalance = 0;
 let water = 0;
 let level = 1;
 let xp = 0;
@@ -44,16 +44,17 @@ let userId = null;
 let lastClaim = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
-let claimedToday = false; // Flag sederhana buat status klaim
-let isClaiming = false; // Tambah untuk lock claim
-let isAudioPlaying = false; // Flag to track audio state
+let claimedToday = false;
+let isClaiming = false;
+let isAudioPlaying = false;
 
+// Load user balances from Firebase
 function loadUserBalances() {
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
         const data = snapshot.val() || {};
         
-        piBalance = data.piBalance || 0; // Ubah ke piBalance
+        piBalance = data.piBalance || 0;
         farmCoins = data.farmCoins || 0;
 
         const piBalanceElement = document.getElementById('pi-balance');
@@ -92,8 +93,6 @@ function playBgMusic() {
                     }, 100);
                 });
         }
-    } else {
-        console.log('BG Music already playing or bgMusic not found:', bgMusic, isAudioPlaying);
     }
 }
 
@@ -112,62 +111,42 @@ function playBgVoice() {
                     }, 100);
                 });
         }
-    } else {
-        console.log('BG Voice already playing or bgVoice not found:', bgVoice, isAudioPlaying);
     }
 }
 
 function playHarvestingSound() {
     if (harvestingSound) {
-        const playPromise = harvestingSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Harvest sound failed:', e.message));
-        }
+        harvestingSound.play().catch(e => console.log('Harvest sound failed:', e.message));
     }
 }
 
 function playWateringSound() {
     if (wateringSound) {
-        const playPromise = wateringSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Watering sound failed:', e.message));
-        }
+        wateringSound.play().catch(e => console.log('Watering sound failed:', e.message));
     }
 }
 
 function playPlantingSound() {
     if (plantingSound) {
-        const playPromise = plantingSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Planting sound failed:', e.message));
-        }
+        plantingSound.play().catch(e => console.log('Planting sound failed:', e.message));
     }
 }
 
 function playMenuSound() {
     if (menuSound) {
-        const playPromise = menuSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Menu sound failed:', e.message));
-        }
+        menuSound.play().catch(e => console.log('Menu sound failed:', e.message));
     }
 }
 
 function playBuyingSound() {
     if (buyingSound) {
-        const playPromise = buyingSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Buying sound failed:', e.message));
-        }
+        buyingSound.play().catch(e => console.log('Buying sound failed:', e.message));
     }
 }
 
 function playCoinSound() {
     if (coinSound) {
-        const playPromise = coinSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Coin sound failed:', e.message));
-        }
+        coinSound.play().catch(e => console.log('Coin sound failed:', e.message));
     }
 }
 
@@ -218,7 +197,7 @@ function updateVolumes() {
 // Panggil update pertama kali setelah semua siap
 updateVolumes();
 
-// START loadData fix
+// Load data
 async function loadData() {
     try {
         const langRes = await fetch('/data/lang.json');
@@ -234,7 +213,6 @@ async function loadData() {
         showNotification('Error loading game data.');
     }
 }
-// END loadData fix
 
 // Authenticate with Pi Network
 async function initializePiSDK() {
@@ -277,20 +255,20 @@ async function authenticateWithPi() {
         .then(authResult => {
             console.log('Pi Auth success:', authResult);
             const user = authResult.user;
-            userId = user.uid; // Gunain UID, lebih unik
+            userId = user.uid;
             const playerRef = ref(database, `players/${userId}`);
 
-            loadUserBalances(); // Tampilkan saldo Pi & FC dari database
+            loadUserBalances();
             
             update(playerRef, {
                 piUser: {
                     uid: user.uid,
                     username: user.username
                 },
-                piBalance: piBalance || 0 // Ubah ke piBalance
+                piBalance: piBalance || 0
             }).then(() => {
                 showNotification(`Logged in as ${user.username}`);
-                localStorage.setItem('userId', userId); // Simpan userId
+                localStorage.setItem('userId', userId);
                 const loginScreenElement = document.getElementById('login-screen');
                 const startScreenElement = document.getElementById('start-screen');
                 if (loginScreenElement && startScreenElement) {
@@ -311,7 +289,6 @@ async function authenticateWithPi() {
 
 function onIncompletePaymentFound(payment) {
     console.log("onIncompletePaymentFound", payment);
-    // Kalo gak pake backend, biarin kosong kayak gini
 }
 
 // Document ready event listener
@@ -420,12 +397,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const directionSelect = document.getElementById("exchange-direction");
-    if (directionSelect) {
-      directionSelect.addEventListener("change", updateExchangeResult);
+    const exchangeBtn = document.getElementById("exchange-btn");
+    if (directionSelect && exchangeBtn) {
+        directionSelect.addEventListener("change", () => {
+            updateExchangeResult();
+            const direction = directionSelect.value;
+            exchangeBtn.textContent = direction === "piToFc" 
+                ? langData[currentLang]?.exchangeToFc || "Exchange to FC" 
+                : langData[currentLang]?.exchangeToPi || "Exchange to Pi";
+        });
+
+        // Set teks awal berdasarkan nilai default directionSelect
+        exchangeBtn.textContent = directionSelect.value === "piToFc" 
+            ? langData[currentLang]?.exchangeToFc || "Exchange to FC" 
+            : langData[currentLang]?.exchangeToPi || "Exchange to Pi";
     }
 
     if (exchangeAmountElement) {
-      exchangeAmountElement.addEventListener("input", updateExchangeResult);
+        exchangeAmountElement.addEventListener("input", updateExchangeResult);
     }
 
     const buyTabElement = document.getElementById('shop-buy-tab');
@@ -478,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fungsi logout
     const logout = () => {
         clearAuthStatus();
-        window.location.href = "https://harvestpi.biz.id"; // Redirect ke login
+        window.location.href = "https://harvestpi.biz.id";
     };
 
     // Load player data
@@ -496,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = snapshot.val();
                 if (data) {
                     farmCoins = data.farmCoins || 0;
-                    piBalance = data.piBalance || 0; // Ubah ke piBalance
+                    piBalance = data.piBalance || 0;
                     water = data.water || 0;
                     level = data.level || 1;
                     xp = data.xp || 0;
@@ -509,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     const initialData = {
                         farmCoins: 0,
-                        piBalance: 0, // Ubah ke piBalance
+                        piBalance: 0,
                         water: 0,
                         level: 1,
                         xp: 0,
@@ -550,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const dataToSave = {
             farmCoins,
-            piBalance, // Ubah ke piBalance langsung
+            piBalance,
             water,
             level,
             xp,
@@ -586,7 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (piCoinsElement) {
-            piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`; // Ubah ke piBalance
+            piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`;
         } else {
             console.warn('Element with ID "pi-coins" not found');
         }
@@ -610,14 +599,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn('Element with ID "xp-fill" not found');
         }
 
-        // Update elemen di tab depositPi
         const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
         const piCoinBalanceElement = document.getElementById('pi-coin-balance');
         if (farmCoinBalanceElement) {
             farmCoinBalanceElement.textContent = farmCoins;
         }
         if (piCoinBalanceElement) {
-            piCoinBalanceElement.textContent = piBalance.toFixed(6); // Ubah ke piBalance
+            piCoinBalanceElement.textContent = piBalance.toFixed(6);
         }
 
         savePlayerData();
@@ -949,7 +937,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fungsi paksa layout agar grid langsung kebentuk
     function forceReflow(el) {
         void el.offsetHeight;
     }
@@ -1075,8 +1062,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
                     }
                 } else {
-                    if (piBalance >= 0.0001) { // Ubah ke piBalance
-                        piBalance -= 0.0001; // Ubah ke piBalance
+                    if (piBalance >= 0.0001) {
+                        piBalance -= 0.0001;
                         water += 10;
                         updateWallet();
                         showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
@@ -1108,8 +1095,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
                 }
             } else {
-                if (piBalance >= veg.piPrice) { // Ubah ke piBalance
-                    piBalance -= veg.piPrice; // Ubah ke piBalance
+                if (piBalance >= veg.piPrice) {
+                    piBalance -= veg.piPrice;
                     canBuy = true;
                     showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
                 } else {
@@ -1186,7 +1173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inventoryContentElement.appendChild(sellButton);
     }
 
-    // START renderSellSection
+    // Render sell section
     function renderSellSection() {
         const sellContentElement = document.getElementById('sell-content');
         if (!sellContentElement) {
@@ -1254,9 +1241,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-    // END renderSellSection
 
-    // START sellItem
+    // Sell item
     function sellItem(index) {
         const item = inventory[index];
         if (!item || item.type !== 'harvest') return;
@@ -1285,7 +1271,6 @@ document.addEventListener('DOMContentLoaded', () => {
         checkLevelUp();
         checkCoinAchievement();
     }
-    // END sellItem
 
     // Fungsi untuk langsung buka tab Sell di dalam Shop
     function openSellTab() {
@@ -1371,9 +1356,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadExchangeRate();
 
     function updateExchangeResult() {
-        const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
+        const rawAmount = document.getElementById("exchange-amount")?.value.replace(",", ".") || "0";
         const amount = parseFloat(rawAmount) || 0;
-        const direction = document.getElementById("exchange-direction").value;
+        const directionSelect = document.getElementById("exchange-direction");
+        const direction = directionSelect?.value || "piToFc";
 
         const result = (direction === "piToFc")
             ? Math.floor(amount * currentExchangeRate)
@@ -1386,101 +1372,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }`;
 
         const resultDiv = document.getElementById("exchange-result");
-
-        // Bikin versi singkat kalau terlalu panjang
-        const shortDisplay = resultText.length > 25 ? resultText.substring(0, 25) + "…" : resultText;
-
-        resultDiv.textContent = shortDisplay;
-        resultDiv.title = resultText; // tooltip jika dihover
+        if (resultDiv) {
+            const shortDisplay = resultText.length > 25 ? resultText.substring(0, 25) + "…" : resultText;
+            resultDiv.textContent = shortDisplay;
+            resultDiv.title = resultText;
+        }
     }
 
     async function handleExchange() {
-      const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
-      const amount = parseFloat(rawAmount);
-      const direction = document.getElementById("exchange-direction").value;
-      const playerRef = ref(database, `players/${userId}`);
-      const snapshot = await get(playerRef);
-      const data = snapshot.val();
+        const rawAmount = document.getElementById("exchange-amount")?.value.replace(",", ".") || "0";
+        const amount = parseFloat(rawAmount);
+        const directionSelect = document.getElementById("exchange-direction");
+        const direction = directionSelect?.value || "piToFc";
+        const playerRef = ref(database, `players/${userId}`);
+        const snapshot = await get(playerRef);
+        const data = snapshot.val();
 
-      if (!data) return showNotification("Player data not found!");
-      if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
+        if (!data) return showNotification("Player data not found!");
+        if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-      let piBalance = Number(data.piBalance || 0); // Ubah ke piBalance
-      let fc = Number(data.farmCoins || 0);
-      let resultText = "";
+        let piBalance = Number(data.piBalance || 0);
+        let fc = Number(data.farmCoins || 0);
+        let resultText = "";
 
-      if (direction === "piToFc") {
-        if (piBalance < amount) return showNotification("Not enough Pi!"); // Ubah ke piBalance
-        const converted = Math.floor(amount * currentExchangeRate);
-        piBalance -= amount; // Ubah ke piBalance
-        fc += converted;
-        resultText = converted.toLocaleString();
-      } else {
-        if (fc < amount) return showNotification("Not enough FC!");
-        const converted = amount / currentExchangeRate;
-        fc -= amount;
-        piBalance += converted; // Ubah ke piBalance
-        resultText = converted.toFixed(6);
-      }
+        if (direction === "piToFc") {
+            if (piBalance < amount) return showNotification("Not enough Pi!");
+            const converted = Math.floor(amount * currentExchangeRate);
+            piBalance -= amount;
+            fc += converted;
+            resultText = converted.toLocaleString();
+        } else {
+            if (fc < amount) return showNotification("Not enough FC!");
+            const converted = amount / currentExchangeRate;
+            fc -= amount;
+            piBalance += converted;
+            resultText = converted.toFixed(6);
+        }
 
-      piBalance = Math.round(piBalance * 1000000) / 1000000; // Ubah ke piBalance
-      fc = Math.floor(fc);
+        piBalance = Math.round(piBalance * 1000000) / 1000000;
+        fc = Math.floor(fc);
 
-      // Tampilkan loading
-      document.getElementById("exchange-loading").style.display = "block";
+        document.getElementById("exchange-loading").style.display = "block";
 
-      // Delay 3 detik
-      setTimeout(() => {
-        (async () => {
-          try {
-            await update(playerRef, {
-              piBalance, // Ubah ke piBalance
-              farmCoins: fc
-            });
+        setTimeout(() => {
+            (async () => {
+                try {
+                    await update(playerRef, {
+                        piBalance,
+                        farmCoins: fc
+                    });
 
-            const piElem = document.getElementById("pi-balance");
-            const fcElem = document.getElementById("fc-balance");
+                    const piElem = document.getElementById("pi-balance");
+                    const fcElem = document.getElementById("fc-balance");
 
-            if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 }); // Ubah ke piBalance
-            if (fcElem) fcElem.textContent = fc.toLocaleString();
-            document.getElementById("exchange-amount").value = "";
+                    if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+                    if (fcElem) fcElem.textContent = fc.toLocaleString();
+                    document.getElementById("exchange-amount").value = "";
 
-            updateExchangeResult(resultText);
-           
-            // Mainkan suara
-            try {
-              await coinSound.play();
-            } catch (err) {
-              console.error("Error playing sound:", err);
-            }
-
-            // Tampilkan notifikasi
-            showNotification("Exchange success!");
-          } catch (error) {
-            console.error("Exchange failed:", error.message);
-            showNotification("Exchange failed: " + error.message);
-          } finally {
-            // Sembunyikan loading setelah semua selesai
-            document.getElementById("exchange-loading").style.display = "none";
-          }
-        })();
-      }, 3000);
+                    updateExchangeResult(resultText);
+                    showNotification("Exchange success!");
+                    playCoinSound();
+                } catch (error) {
+                    console.error("Exchange failed:", error.message);
+                    showNotification("Exchange failed: " + error.message);
+                } finally {
+                    document.getElementById("exchange-loading").style.display = "none";
+                }
+            })();
+        }, 3000);
     }
-
-    const exchangeBtn = document.getElementById("exchange-btn");
-    const directionSelect = document.getElementById("exchange-direction");
-
-    directionSelect.addEventListener("change", () => {
-      const direction = directionSelect.value;
-      if (direction === "piToFc") {
-        exchangeBtn.textContent = "Exchange to FC";
-      } else {
-        exchangeBtn.textContent = "Exchange to Pi";
-      }
-    });
-
-    // Trigger sekali pas awal halaman dimuat
-    directionSelect.dispatchEvent(new Event("change"));
 
     // Modal untuk daily reward
     if (claimModalBtn) {
@@ -1934,7 +1894,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Cek status autentikasi
             if (!checkAuthStatus()) {
                 try {
                     console.log("Authenticating user...");
@@ -1942,12 +1901,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
                     console.log("Authentication successful:", authResult);
                     userId = authResult.user.uid;
-                    setAuthStatus(userId); // Simpan status autentikasi
+                    setAuthStatus(userId);
                 } catch (authError) {
                     console.error("Authentication failed:", authError.message, authError.stack);
                     realDepositMsg.textContent = 'Gagal autentikasi. Silakan login lagi.';
                     clearAuthStatus();
-                    window.location.href = "https://harvestpi.biz.id"; // Redirect ke login
+                    window.location.href = "https://harvestpi.biz.id";
                     return;
                 }
             } else {
@@ -1971,13 +1930,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 realDepositBtn.textContent = "Memproses...";
                 console.log("Starting deposit process with Pi.createPayment...");
 
-                const withTimeout = (promise, message, timeout = 15000) => {
-                    return Promise.race([
-                        promise,
-                        new Promise((_, reject) => setTimeout(() => reject(new Error(message)), timeout))
-                    ]);
-                };
-
                 const paymentPromise = Pi.createPayment(
                     {
                         amount,
@@ -1986,51 +1938,50 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     {
                         onReady: (payment) => {
-                        console.log("Payment created successfully:", payment);
-                        realDepositMsg.textContent = 'Pembayaran sedang diproses...';
-                        // Kirim ke backend Glitch untuk verifikasi
-                        fetch('https://your-glitch-backend.glitch.me/verify-payment', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                paymentId: payment.transaction.id,
-                                userId: userId,
-                                amount: amount
+                            console.log("Payment created successfully:", payment);
+                            realDepositMsg.textContent = 'Pembayaran sedang diproses...';
+                            fetch('https://your-glitch-backend.glitch.me/verify-payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    paymentId: payment.transaction.id,
+                                    userId: userId,
+                                    amount: amount
+                                })
                             })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                piBalance += amount; // Update piBalance dari backend
-                                updateWallet();
-                                realDepositMsg.textContent = `Deposit berhasil! +${amount} PI`;
-                                savePlayerData();
-                            } else {
-                                realDepositMsg.textContent = 'Verifikasi gagal: ' + data.error;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error verifying payment:', error);
-                            realDepositMsg.textContent = 'Gagal memverifikasi pembayaran.';
-                        })
-                        .finally(() => {
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    piBalance += amount;
+                                    updateWallet();
+                                    realDepositMsg.textContent = `Deposit berhasil! +${amount} PI`;
+                                    savePlayerData();
+                                } else {
+                                    realDepositMsg.textContent = 'Verifikasi gagal: ' + data.error;
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error verifying payment:', error);
+                                realDepositMsg.textContent = 'Gagal memverifikasi pembayaran.';
+                            })
+                            .finally(() => {
+                                realDepositBtn.disabled = false;
+                                realDepositBtn.textContent = 'Deposit';
+                            });
+                        },
+                        onCancel: (payment) => {
+                            console.log("Payment cancelled:", payment);
+                            realDepositMsg.textContent = 'Pembayaran dibatalkan.';
                             realDepositBtn.disabled = false;
                             realDepositBtn.textContent = 'Deposit';
-                        });
-                    },
-                    onCancel: (payment) => {
-                        console.log("Payment cancelled:", payment);
-                        realDepositMsg.textContent = 'Pembayaran dibatalkan.';
-                        realDepositBtn.disabled = false;
-                        realDepositBtn.textContent = 'Deposit';
-                    },
-                    onError: (error, payment) => {
-                        console.error("Payment error:", error, payment);
-                        realDepositMsg.textContent = 'Error: ' + error.message;
-                        realDepositBtn.disabled = false;
-                        realDepositBtn.textContent = 'Deposit';
+                        },
+                        onError: (error, payment) => {
+                            console.error("Payment error:", error, payment);
+                            realDepositMsg.textContent = 'Error: ' + error.message;
+                            realDepositBtn.disabled = false;
+                            realDepositBtn.textContent = 'Deposit';
+                        }
                     }
-                }
                 );
             } catch (paymentError) {
                 console.error("Payment creation failed:", paymentError.message, paymentError.stack);
@@ -2050,7 +2001,7 @@ document.addEventListener('DOMContentLoaded', () => {
             withdrawMsg.textContent = '';
             const amountInput = document.getElementById("withdraw-amount");
             const amount = parseFloat(amountInput?.value || "0");
-            if (isNaN(amount) || amount <= 0 || amount > piBalance) { // Cek piBalance
+            if (isNaN(amount) || amount <= 0 || amount > piBalance) {
                 withdrawMsg.textContent = 'Jumlah tidak valid atau saldo PI tidak cukup!';
                 return;
             }
@@ -2059,10 +2010,9 @@ document.addEventListener('DOMContentLoaded', () => {
             withdrawBtn.textContent = 'Memproses...';
 
             try {
-                // Simulasi proses withdraw ke Pi Network (harus diganti dengan API Pi sesungguhnya)
                 const playerRef = ref(database, `players/${userId}`);
-                piBalance -= amount; // Kurangi piBalance
-                await update(playerRef, { piBalance }); // Ubah ke piBalance
+                piBalance -= amount;
+                await update(playerRef, { piBalance });
                 updateWallet();
                 withdrawMsg.textContent = `Withdraw berhasil! -${amount} PI`;
                 showTransactionAnimation(`-${amount} PI`, false, withdrawBtn);

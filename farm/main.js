@@ -216,7 +216,6 @@ async function loadData() {
 
 // Authenticate with Pi Network
 async function initializePiSDK() {
-async function initializePiSDK() {
     if (!window.Pi) {
         console.error('Pi SDK not loaded');
         showNotification('Pi SDK ga tersedia, coba reload halaman.');

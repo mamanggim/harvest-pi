@@ -2054,8 +2054,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Simpan data secara berkala (setiap 30 detik)
     setInterval(savePlayerData, 30000);
 
-    // Hapus console log yang tidak perlu di production
-    if (process.env.NODE_ENV === 'production') {
+    // Hapus console log di production (ganti pendekatan karena process.env tidak tersedia di browser)
+    if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
         console.log = () => {};
     }
 });

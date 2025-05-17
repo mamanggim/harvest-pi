@@ -247,13 +247,13 @@ async function initializePiSDK() {
     try {
         await Pi.init({
             version: "2.0",
-            appId: "harvestminepi4870"
+            sandbox: true
         });
         piInitialized = true;
-        console.log('Pi SDK initialized successfully');
+        console.log('Pi SDK initialized successfully, sandbox mode:', Pi.sandbox ? 'Testnet' : 'Mainnet');
         return true;
     } catch (error) {
-        console.error('Pi init failed:', error);
+        console.error('Pi init failed:', error.message, error.stack);
         showNotification('Failed to initialize Pi SDK: ' + error.message);
         return false;
     }

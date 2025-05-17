@@ -216,27 +216,24 @@ async function loadData() {
 
 // Authenticate with Pi Network
 async function initializePiSDK() {
+async function initializePiSDK() {
     if (!window.Pi) {
         console.error('Pi SDK not loaded');
-        showNotification('Pi Network SDK not available. Please try again later.');
+        showNotification('Pi SDK ga tersedia, coba reload halaman.');
         return false;
     }
-
     try {
-        await Pi.init({
-            version: "2.0",
-            sandbox: true
-        });
-        piInitialized = true;
-        console.log('Pi SDK initialized successfully, sandbox mode:', Pi.sandbox ? 'Testnet' : 'Mainnet');
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Tunggu SDK siap
+        await Pi.init({ version: "2.0", sandbox: true });
+        console.log('Pi SDK jalan, mode:', Pi.sandbox ? 'Testnet' : 'Mainnet');
         return true;
     } catch (error) {
-        console.error('Pi init failed:', error.message, error.stack);
-        showNotification('Failed to initialize Pi SDK: ' + error.message);
+        console.error('Gagal init Pi:', error.message);
+        showNotification('Gagal init Pi SDK: ' + error.message + '. Pastiin mode sandbox aktif.');
         return false;
     }
 }
-
+    
 // Update fungsi authenticateWithPi
 async function authenticateWithPi() {
     if (!window.Pi) {

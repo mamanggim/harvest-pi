@@ -2066,9 +2066,6 @@ if (logoutBtn) {
     logoutBtn.addEventListener("click", logout);
 }
 
-initializeGame();
-});
-
 // Fitur Withdraw
 const realWithdrawBtn = document.getElementById("real-withdraw-btn");
 const withdrawMsg = document.getElementById("withdraw-message");

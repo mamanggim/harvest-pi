@@ -29,7 +29,7 @@ function addSafeClickListener(element, callback) {
 let isDataLoaded = false;
 let piInitialized = false;
 let farmCoins = 0;
-let piBalance = 0;
+let pi = 0;
 let water = 0;
 let level = 1;
 let xp = 0;
@@ -53,12 +53,12 @@ function loadUserBalances() {
     onValue(playerRef, (snapshot) => {
         const data = snapshot.val() || {};
         
-        piBalance = data.piBalance || 0;
+        pi = data.piBalance || 0;
         farmCoins = data.farmCoins || 0;
 
         const piBalanceElement = document.getElementById('pi-balance');
         const fcBalanceElement = document.getElementById('fc-balance');
-        if (piBalanceElement) piBalanceElement.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+        if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
         if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
 
         updateWallet();
@@ -283,22 +283,22 @@ async function authenticateWithPi() {
             loadUserBalances(); // Tampilkan saldo Pi & FC dari database
             
             update(playerRef, {
-    piUser: {
-        uid: user.uid,
-        username: user.username
-    },
-    piBalance: piBalance || 0
-}).then(() => {
-    showNotification(`Logged in as ${user.username}`);
-    localStorage.setItem('userId', userId);
-    const loginScreenElement = document.getElementById('login-screen');
-    const startScreenElement = document.getElementById('start-screen');
-    if (loginScreenElement && startScreenElement) {
-        loginScreenElement.style.display = 'none';
-        startScreenElement.style.display = 'flex';
-    }
-    loadPlayerData();
-});.catch(error => {
+                piUser: {
+                    uid: user.uid,
+                    username: user.username
+                },
+                pi: pi || 0
+            }).then(() => {
+                showNotification(`Logged in as ${user.username}`);
+                localStorage.setItem('userId', userId); // Simpan userId
+                const loginScreenElement = document.getElementById('login-screen');
+                const startScreenElement = document.getElementById('start-screen');
+                if (loginScreenElement && startScreenElement) {
+                    loginScreenElement.style.display = 'none';
+                    startScreenElement.style.display = 'flex';
+                }
+                loadPlayerData();
+            }).catch(error => {
                 console.error('Error saving Pi user data:', error);
                 showNotification('Failed to save Pi user data: ' + error.message);
             });
@@ -481,15 +481,6 @@ const logout = () => {
     window.location.href = "https://harvestpi.biz.id"; // Redirect ke login
 };
 
-// Tambah listener untuk tombol logout (opsional, tambah di HTML kalau perlu)
-const logoutBtn = document.getElementById("logout-btn");
-if (logoutBtn) {
-    logoutBtn.addEventListener("click", logout);
-}
-
-initializeGame();
-});
-
 // Load player data
 function loadPlayerData() {
     try {
@@ -559,7 +550,7 @@ async function savePlayerData() {
 
     const dataToSave = {
         farmCoins,
-        piBalance,
+        piBalance: pi,
         water,
         level,
         xp,
@@ -595,7 +586,7 @@ function updateWallet() {
     }
 
     if (piCoinsElement) {
-    piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`;
+        piCoinsElement.textContent = `${pi.toFixed(6)} PI`;
     } else {
         console.warn('Element with ID "pi-coins" not found');
     }
@@ -626,7 +617,7 @@ function updateWallet() {
         farmCoinBalanceElement.textContent = farmCoins;
     }
     if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = piBalance.toFixed(6);
+        piCoinBalanceElement.textContent = pi.toFixed(6);
     }
 
     savePlayerData();
@@ -1084,14 +1075,14 @@ async function buyVegetable(id, currency) {
                     showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
                 }
             } else {
-                if (piBalance >= 0.0001) {
-                    piBalance -= 0.0001;
+                if (pi >= 0.0001) {
+                    pi -= 0.0001;
                     water += 10;
                     updateWallet();
                     showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
                     playBuyingSound();
                     await savePlayerData();
-            } else {
+                } else {
                     showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
                 }
             }
@@ -1117,11 +1108,11 @@ async function buyVegetable(id, currency) {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
         } else {
-            if (piBalance >= veg.piPrice) {
-                piBalance -= veg.piPrice;
+            if (pi >= veg.piPrice) {
+                pi -= veg.piPrice;
                 canBuy = true;
                 showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
-        } else {
+            } else {
                 showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
             }
         }
@@ -1927,33 +1918,156 @@ function exitFullScreen() {
     }
 }
 
-//Fitur Deposit
-onReadyForServerCompletion: async (paymentId, txid) => {
-    console.log("onReadyForServerCompletion triggered:", paymentId, txid);
-    if (!paymentId || !txid) throw new Error("Invalid paymentId or txid");
-    try {
-        const response = await withTimeout(
-            fetch('https://harvestpi-backend.glitch.me/complete-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, txid })
-            }),
-            "Completion request timed out",
-            15000
-        );
-        const result = await response.json();
-        if (!response.ok || !result.success) throw new Error(`Completion failed: ${result.message}`);
-        console.log("Payment completed by backend:", paymentId, "New balance:", result.newBalance);
+// Fitur Deposit
+const realDepositBtn = document.getElementById("real-deposit-btn");
+const realDepositMsg = document.getElementById("real-deposit-msg");
 
-        // Update UI
-        piBalance = result.newBalance; // Ganti window.piBalance jadi piBalance
-        updateWallet();
-        realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
-    } catch (completeError) {
-        console.error("Completion failed:", completeError.message, completeError.stack);
-        throw new Error("Failed to complete payment: " + completeError.message);
-    }
+if (realDepositBtn) {
+    console.log("Real deposit button found, attaching click listener...");
+    addSafeClickListener(realDepositBtn, async () => {
+        console.log("Deposit button clicked!");
+        realDepositMsg.textContent = '';
+
+        if (!window.Pi || !Pi.createPayment) {
+            console.log("Pi SDK not ready:", { Pi: window.Pi });
+            realDepositMsg.textContent = 'Pi SDK tidak siap. Silakan refresh aplikasi.';
+            return;
+        }
+
+        // Cek status autentikasi
+        if (!checkAuthStatus()) {
+            try {
+                console.log("Authenticating user...");
+                const scopes = ['payments'];
+                const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+                console.log("Authentication successful:", authResult);
+                userId = authResult.user.uid;
+                setAuthStatus(userId); // Simpan status autentikasi
+            } catch (authError) {
+                console.error("Authentication failed:", authError.message, authError.stack);
+                realDepositMsg.textContent = 'Gagal autentikasi. Silakan login lagi.';
+                clearAuthStatus();
+                window.location.href = "https://harvestpi.biz.id"; // Redirect ke login
+                return;
+            }
+        } else {
+            userId = localStorage.getItem("pi_user_id");
+            console.log("User already authenticated, using stored userId:", userId);
+        }
+
+        const amountInput = document.getElementById("deposit-amount");
+        const amount = parseFloat(amountInput?.value || "1");
+        if (isNaN(amount) || amount < 1) {
+            console.log("Invalid amount:", amountInput?.value);
+            realDepositMsg.textContent = 'Minimal 1 Pi diperlukan.';
+            return;
+        }
+
+        const memo = "Deposit to Harvest Pi";
+        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
+
+        try {
+            realDepositBtn.disabled = true;
+            realDepositBtn.textContent = "Memproses...";
+            console.log("Starting deposit process with Pi.createPayment...");
+
+            const withTimeout = (promise, message, timeout = 15000) => {
+                return Promise.race([
+                    promise,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), timeout))
+                ]);
+            };
+
+            const paymentPromise = Pi.createPayment(
+                {
+                    amount,
+                    memo,
+                    metadata
+                },
+                {
+                    onReadyForClientReview: () => {
+                        console.log("onReadyForClientReview triggered - waiting for user confirmation...");
+                        realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di wallet.pinet.com...';
+                    },
+                    onReadyForServerApproval: async (paymentId) => {
+                        console.log("onReadyForServerApproval triggered:", paymentId);
+                        if (!paymentId) throw new Error("Invalid paymentId");
+                        try {
+                            const response = await withTimeout(
+                                fetch('https://harvestpi-backend.glitch.me/approve-payment', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ paymentId })
+                                }),
+                                "Approval request timed out",
+                                15000
+                            );
+                            const result = await response.json();
+                            if (!response.ok || !result.success) throw new Error(`Approval failed: ${result.message}`);
+                            console.log("Payment approved by backend:", paymentId, "Response:", result);
+                        } catch (approvalError) {
+                            console.error("Approval failed:", approvalError.message, approvalError.stack);
+                            throw new Error("Failed to approve payment: " + approvalError.message);
+                        }
+                    },
+                    onReadyForServerCompletion: async (paymentId, txid) => {
+                        console.log("onReadyForServerCompletion triggered:", paymentId, txid);
+                        if (!paymentId || !txid) throw new Error("Invalid paymentId or txid");
+                        try {
+                            const response = await withTimeout(
+                                fetch('https://harvestpi-backend.glitch.me/complete-payment', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ paymentId, txid })
+                                }),
+                                "Completion request timed out",
+                                15000
+                            );
+                            const result = await response.json();
+                            if (!response.ok || !result.success) throw new Error(`Completion failed: ${result.message}`);
+                            console.log("Payment completed by backend:", paymentId, "New balance:", result.newBalance);
+
+                            // Update UI
+                            window.piBalance = result.newBalance;
+                            updateWallet();
+                            realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
+                        } catch (completeError) {
+                            console.error("Completion failed:", completeError.message, completeError.stack);
+                            throw new Error("Failed to complete payment: " + completeError.message);
+                        }
+                    },
+                    onCancel: (paymentId) => {
+                        console.log("onCancel triggered:", paymentId, "Reason: User cancelled or timeout");
+                        realDepositMsg.textContent = 'Deposit dibatalkan.';
+                    },
+                    onError: (error, paymentId) => {
+                        console.error("onError triggered:", error.message, "Stack:", error.stack, "Payment ID:", paymentId);
+                        realDepositMsg.textContent = `Error saat deposit: ${error.message}.`;
+                    }
+                }
+            );
+
+            await withTimeout(paymentPromise, "Deposit process timed out", 45000);
+            console.log("Pi.createPayment executed successfully");
+        } catch (err) {
+            console.error("Deposit failed:", err.message, err.stack);
+            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}.`;
+        } finally {
+            realDepositBtn.disabled = false;
+            realDepositBtn.textContent = "Deposit with Pi Testnet";
+            console.log("Deposit process finished.");
+        }
+    });
 }
+
+// Tambah listener untuk tombol logout (opsional, tambah di HTML kalau perlu)
+const logoutBtn = document.getElementById("logout-btn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", logout);
+}
+
+initializeGame();
+});
 
 // Fitur Withdraw
 const realWithdrawBtn = document.getElementById("real-withdraw-btn");
@@ -2026,25 +2140,23 @@ if (realWithdrawBtn) {
                     console.log("Ready for approval:", paymentId);
                     await Pi.approvePayment(paymentId);
                 },
-                if (piBalance < amount) {
-                    withdrawMsg.textContent = "Not enough Pi balance.";
-                    return;
-                }
-
                 onReadyForServerCompletion: async (paymentId, txid) => {
-                   console.log("Completing payment:", paymentId, txid);
+                    console.log("Completing payment:", paymentId, txid);
 
-               // Kurangi saldo Pi
-               piBalance = piBalance - amount; // Update piBalance langsung
-               await update(playerRef, {
-                   piBalance: piBalance
-               });
+                    // Kurangi saldo Pi
+                    await update(playerRef, {
+                        pi: currentPi - amount,
+                        piBalance: currentPi - amount
+                    });
 
-               updateWallet();
-               await Pi.completePayment(paymentId, txid);
-               withdrawMsg.textContent = `Withdraw success! -${amount} Pi`;
-               updateWithdrawStatus();
-           }
+                    window.pi = currentPi - amount;
+                    window.piBalance = currentPi - amount;
+
+                    updateWallet();
+                    await Pi.completePayment(paymentId, txid);
+                    withdrawMsg.textContent = `Withdraw success! -${amount} Pi`;
+                    updateWithdrawStatus(); // Cek ulang kelayakan
+                },
                 onCancel: (paymentId) => {
                     console.warn("Payment cancelled:", paymentId);
                     withdrawMsg.textContent = 'Withdraw cancelled.';

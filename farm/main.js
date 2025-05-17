@@ -247,7 +247,7 @@ async function initializePiSDK() {
     try {
         await Pi.init({
             version: "2.0",
-            sandbox: false
+            sandbox: true
         });
         piInitialized = true;
         console.log('Pi SDK initialized successfully');

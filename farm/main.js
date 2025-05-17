@@ -481,6 +481,114 @@ const logout = () => {
     window.location.href = "https://harvestpi.biz.id"; // Redirect ke login
 };
 
+// Fungsi Deposit Testnet Backend
+const realDepositBtn = document.getElementById("real-deposit-btn");
+const realDepositMsg = document.getElementById("real-deposit-msg");
+const amountInput = document.getElementById("deposit-amount");
+
+if (realDepositBtn && realDepositMsg && amountInput) {
+  addSafeClickListener(realDepositBtn, async () => {
+    realDepositMsg.textContent = '';
+    realDepositBtn.disabled = true;
+    realDepositBtn.textContent = 'Memproses...';
+
+    // Cek SDK
+    if (!window.Pi || typeof Pi.createPayment !== "function") {
+      realDepositMsg.textContent = 'Pi SDK tidak siap. Silakan buka di Pi Browser.';
+      realDepositBtn.disabled = false;
+      realDepositBtn.textContent = 'Deposit with Pi Testnet';
+      return;
+    }
+
+    // Autentikasi jika belum
+    if (!checkAuthStatus()) {
+      try {
+        const scopes = ['payments'];
+        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
+        userId = authResult.user.uid;
+        setAuthStatus(userId);
+      } catch (err) {
+        realDepositMsg.textContent = 'Autentikasi gagal. Silakan login ulang.';
+        clearAuthStatus();
+        realDepositBtn.disabled = false;
+        realDepositBtn.textContent = 'Deposit with Pi Testnet';
+        return;
+      }
+    } else {
+      userId = localStorage.getItem("pi_user_id");
+    }
+
+    // Validasi jumlah
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount < 1) {
+      realDepositMsg.textContent = 'Jumlah minimal 1 Pi.';
+      realDepositBtn.disabled = false;
+      realDepositBtn.textContent = 'Deposit with Pi Testnet';
+      return;
+    }
+
+    const memo = "Deposit to Harvest Pi";
+    const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
+
+    try {
+      await Pi.createPayment(
+        { amount, memo, metadata },
+        {
+          onReadyForClientReview: () => {
+            realDepositMsg.textContent = "Silakan konfirmasi di wallet Pi...";
+          },
+          onReadyForServerApproval: async (paymentId) => {
+            const res = await fetch("https://harvestpi-backend.glitch.me/approve-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ paymentId })
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error("Gagal approve di server");
+          },
+          onReadyForServerCompletion: async (paymentId, txid) => {
+            const res = await fetch("https://harvestpi-backend.glitch.me/complete-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ paymentId, txid })
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error("Gagal complete di server");
+
+            // Update balance dari Firebase
+            const playerRef = ref(database, `players/${userId}`);
+            const snapshot = await get(playerRef);
+            const data = snapshot.val() || {};
+            const currentPi = data.piBalance || 0;
+            const currentDeposit = data.totalDeposit || 0;
+
+            const newBalance = currentPi + amount;
+            await update(playerRef, {
+              piBalance: newBalance,
+              totalDeposit: currentDeposit + amount
+            });
+
+            window.piBalance = newBalance;
+            updateWallet();
+            realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
+          },
+          onCancel: () => {
+            realDepositMsg.textContent = 'Deposit dibatalkan.';
+          },
+          onError: (err) => {
+            realDepositMsg.textContent = `Error saat deposit: ${err.message}`;
+          }
+        }
+      );
+    } catch (e) {
+      realDepositMsg.textContent = `Gagal memulai pembayaran: ${e.message}`;
+    } finally {
+      realDepositBtn.disabled = false;
+      realDepositBtn.textContent = 'Deposit with Pi Testnet';
+    }
+  });
+}
+    
 // Tambah listener untuk tombol logout (opsional, tambah di HTML kalau perlu)
 const logoutBtn = document.getElementById("logout-btn");
 if (logoutBtn) {
@@ -1925,115 +2033,6 @@ function exitFullScreen() {
     } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
     }
-}
-
-// Fitur Deposit
-const realDepositBtn = document.getElementById("real-deposit-btn");
-const realDepositMsg = document.getElementById("real-deposit-msg");
-const amountInput = document.getElementById("deposit-amount");
-
-if (realDepositBtn && amountInput) {
-    console.log("Real deposit button found, attaching click listener...");
-
-    addSafeClickListener(realDepositBtn, async () => {
-        console.log("Deposit button clicked!");
-        realDepositMsg.textContent = '';
-
-        if (!window.Pi || typeof Pi.createPayment !== "function") {
-            realDepositMsg.textContent = 'Pi SDK tidak siap. Silakan refresh.';
-            return;
-        }
-
-        // Cek login
-        if (!checkAuthStatus()) {
-            try {
-                const authResult = await Pi.authenticate(['payments'], onIncompletePaymentFound);
-                userId = authResult.user.uid;
-                setAuthStatus(userId);
-            } catch (err) {
-                console.error("Auth error:", err);
-                clearAuthStatus();
-                realDepositMsg.textContent = 'Autentikasi gagal.';
-                return;
-            }
-        } else {
-            userId = localStorage.getItem("pi_user_id");
-        }
-
-        const amount = parseFloat(amountInput.value || "1");
-        if (isNaN(amount) || amount < 1) {
-            realDepositMsg.textContent = 'Minimal 1 Pi.';
-            return;
-        }
-
-        realDepositBtn.disabled = true;
-        realDepositBtn.textContent = "Memproses...";
-
-        const memo = "Deposit to Harvest Pi";
-        const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
-
-        const withTimeout = (promise, msg, timeout = 15000) =>
-            Promise.race([
-                promise,
-                new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), timeout))
-            ]);
-
-        try {
-            await Pi.createPayment(
-                { amount, memo, metadata },
-                {
-                    onReadyForClientReview: () => {
-                        realDepositMsg.textContent = 'Silakan konfirmasi pembayaran di wallet.pinet.com...';
-                    },
-                    onReadyForServerApproval: async (paymentId) => {
-                        console.log("Approving payment:", paymentId);
-                        const res = await withTimeout(
-                            fetch("https://harvestpi-backend.glitch.me/approve-payment", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ paymentId })
-                            }),
-                            "Approval request timed out",
-                            15000
-                        );
-                        const result = await res.json();
-                        if (!result.success) throw new Error("Approval failed: " + result.message);
-                    },
-                    onReadyForServerCompletion: async (paymentId, txid) => {
-                        console.log("Completing payment:", paymentId);
-                        const res = await withTimeout(
-                            fetch("https://harvestpi-backend.glitch.me/complete-payment", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ paymentId, txid })
-                            }),
-                            "Completion request timed out",
-                            15000
-                        );
-                        const result = await res.json();
-                        if (!result.success) throw new Error("Completion failed: " + result.message);
-
-                        window.piBalance = result.newBalance || (window.piBalance || 0) + amount;
-                        updateWallet();
-                        realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
-                    },
-                    onCancel: () => {
-                        realDepositMsg.textContent = 'Deposit dibatalkan.';
-                    },
-                    onError: (error) => {
-                        realDepositMsg.textContent = `Error saat deposit: ${error.message}`;
-                        console.error("Payment error:", error);
-                    }
-                }
-            );
-        } catch (err) {
-            realDepositMsg.textContent = `Gagal memproses deposit: ${err.message}`;
-            console.error("Deposit failed:", err);
-        } finally {
-            realDepositBtn.disabled = false;
-            realDepositBtn.textContent = "Deposit with Pi Testnet";
-        }
-    });
 }
 
 // Fitur Withdraw

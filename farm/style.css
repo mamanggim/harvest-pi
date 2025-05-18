@@ -788,19 +788,32 @@ input[type="range"] {
   text-shadow: 0 0 10px #66ff00;
 }
 
-#login-pi-btn {
-  background: #4caf50;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
+/* Styling untuk form login dan register */
+.login-form, .register-form {
+  margin: 15px 0;
 }
 
-#login-pi-btn:hover {
-  background: #66bb6a;
+.login-form input, .register-form input {
+  display: block;
+  width: 200px;
+  margin: 10px auto;
+  padding: 8px;
+  background: #444;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+.login-form button, .register-form button {
+  margin-top: 10px;
+}
+
+.login-form #login-error, .login-form #verify-email-msg,
+.register-form #register-error {
+  font-size: 10px;
+  margin-top: 8px;
 }
 
 .policy-links {
@@ -1011,15 +1024,22 @@ input[type="range"] {
   animation: blink 1s infinite;
   cursor: pointer;
   margin-top: 15px;
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  padding: 15px;
+  user-select: none;
 }
 
 .start-text:hover {
   background: #66bb6a;
   transform: scale(1.05);
+}
+
+.start-text:active {
+  transform: scale(0.95);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 #start-screen {
@@ -1040,6 +1060,7 @@ input[type="range"] {
   animation: pulse 2s infinite ease-in-out;
   margin: 0 0 20px;
 }
+
 @keyframes pulse {
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.05); opacity: 0.85; }
@@ -1048,7 +1069,7 @@ input[type="range"] {
 
 /* === FINANCE ===*/
 #finance {
-background: #333;
+  background: #333;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
@@ -1097,7 +1118,7 @@ background: #333;
   font-size: 12px;
 }
 
-#finance button#confirm-deposit {
+#finance button#real-deposit-btn {
   background: #4caf50;
   color: #fff;
   border: 2px solid #fff;
@@ -1109,11 +1130,11 @@ background: #333;
   transition: all 0.3s;
 }
 
-#finance button#confirm-deposit:hover {
+#finance button#real-deposit-btn:hover {
   background: #66bb6a;
 }
 
-#finance button#confirm-deposit:disabled {
+#finance button#real-deposit-btn:disabled {
   background: #666;
   cursor: not-allowed;
 }
@@ -1139,7 +1160,7 @@ background: #333;
   cursor: not-allowed;
 }
 
-#finance p#deposit-message {
+#finance .deposit-message {
   font-size: 10px;
   color: #ffeb3b;
   margin-top: 10px;
@@ -1161,18 +1182,21 @@ background: #333;
   max-width: 330px;
   margin: auto;
 }
+
 .exchange-title {
   font-size: 18px;
   color: #66ff00;
   text-shadow: 0 0 5px #66ff00;
   margin-bottom: 15px;
 }
+
 .exchange-rate {
   font-weight: bold;
   font-size: 14px;
   color: #ffeb3b;
   margin-bottom: 10px;
 }
+
 .exchange-output {
   width: 100%;
   max-width: 300px; /* batas aman biar ga ngedorong */
@@ -1180,6 +1204,7 @@ background: #333;
   overflow: hidden;
   text-align: center;
 }
+
 .exchange-result {
   display: inline-block;
   max-width: 100%;
@@ -1190,6 +1215,7 @@ background: #333;
   font-weight: bold;
   font-size: 14px;
 }
+
 .exchange-section input, .exchange-section select {
   width: 150px;
   margin: 10px 0;
@@ -1201,6 +1227,7 @@ background: #333;
   font-family: 'Press Start 2P', cursive;
   font-size: 12px;
 }
+
 #exchange-btn {
   background: #4caf50;
   color: #fff;
@@ -1212,6 +1239,7 @@ background: #333;
   margin-top: 10px;
   transition: all 0.3s;
 }
+
 #exchange-loading {
   display: none;
   text-align: center;
@@ -1237,6 +1265,7 @@ background: #333;
 .tab-content {
   display: none;
 }
+
 .tab-content.active {
   display: block;
 }

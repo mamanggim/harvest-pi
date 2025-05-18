@@ -1,5 +1,5 @@
 // Ambil database dan auth dari firebase-config.js
-import { database, auth } from '../firebase/firebase-config.js';
+import { auth, database, messaging, ref } from '/firebase/firebase-config.js';
 import { ref, onValue, set, update, get, push } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
@@ -1901,188 +1901,41 @@ const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
 const depositAmountInput = document.getElementById("deposit-amount");
 
-if (realDepositBtn && depositAmountInput) {
-    console.log("Real deposit button found, attaching click listener...");
+// Setup Deposit Request
+realDepositBtn.addEventListener('click', () => {
+  const amount = parseFloat(depositAmountInput.value);
+  if (!amount || amount <= 0) {
+    realDepositMsg.textContent = 'Please enter a valid amount.';
+    return;
+  }
 
-    addSafeClickListener(realDepositBtn, async () => {
-        console.log("Deposit button clicked!");
-        realDepositMsg.textContent = '';
+  const user = auth.currentUser;
+  if (!user) {
+    realDepositMsg.textContent = 'Please login first.';
+    return;
+  }
 
-        const amount = parseFloat(depositAmountInput.value);
-        if (isNaN(amount) || amount <= 0) {
-            realDepositMsg.textContent = 'Please enter a valid amount.';
-            return;
-        }
+  const depositId = `DEPOSIT-${user.uid}-${Date.now()}`;
+  const memo = `DEPOSIT-${user.uid}-${Date.now().toString().slice(-5)}`;
 
-        realDepositBtn.disabled = true;
-        realDepositBtn.textContent = "Processing...";
+  ref(database, `deposits/${depositId}`).set({
+    userId: user.uid,
+    amount: amount,
+    memo: memo,
+    status: 'pending',
+    timestamp: Date.now()
+  }).then(() => {
+    realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: YOUR_WALLET_ADDRESS with memo: ${memo}`;
+  }).catch((err) => {
+    realDepositMsg.textContent = 'Error creating deposit request: ' + err.message;
+  });
+});
 
-        try {
-            const playerRef = ref(database, `players/${userId}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val() || {};
-            let currentPiBalance = data.piBalance || 0;
-
-            const transactionId = `DEP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            const transactionsRef = ref(database, 'transactions');
-            const newTransactionRef = push(transactionsRef);
-            await set(newTransactionRef, {
-                transactionId,
-                userId,
-                type: 'deposit',
-                amount,
-                status: 'pending',
-                timestamp: new Date().toISOString()
-            });
-
-            currentPiBalance += amount;
-            await update(playerRef, { piBalance: currentPiBalance });
-            piBalance = currentPiBalance;
-            updateWallet();
-
-            let totalDeposit = data.totalDeposit || 0;
-            totalDeposit += amount;
-            await update(playerRef, { totalDeposit });
-
-            await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    service_id: 'your_service_id',
-                    template_id: 'your_template_id',
-                    user_id: 'your_user_id',
-                    template_params: {
-                        to_email: 'mamanggim@gmail.com',
-                        subject: 'Deposit Success Notification',
-                        message: `Deposit of ${amount} PI successful for user ${userId}. Transaction ID: ${transactionId}`
-                    }
-                })
-            }).catch(err => console.error('Email notification failed:', err));
-
-            realDepositMsg.textContent = `Deposit successful! +${amount} PI`;
-            showNotification(`Deposit successful! Transaction ID: ${transactionId}`);
-            playCoinSound();
-        } catch (error) {
-            console.error('Deposit failed:', error);
-            realDepositMsg.textContent = 'Failed to process deposit.';
-            showNotification('Deposit failed: ' + error.message);
-        } finally {
-            realDepositBtn.disabled = false;
-            realDepositBtn.textContent = "Deposit PI";
-            depositAmountInput.value = '';
-        }
-    });
-}
-
-// Fitur Withdraw
-const withdrawBtn = document.getElementById("withdraw-btn"); // Gunakan withdraw-btn sesuai HTML
-const withdrawMsg = document.getElementById("real-withdraw-msg");
-const withdrawNote = document.getElementById("withdraw-note");
-
-if (withdrawBtn && depositAmountInput) {
-    console.log("Real withdraw button found, attaching click listener...");
-
-    // Tambah elemen pesan withdraw kalau belum ada di HTML
-    if (!withdrawMsg) {
-        const msgElement = document.createElement('div');
-        msgElement.id = 'real-withdraw-msg';
-        msgElement.className = 'deposit-message';
-        withdrawBtn.insertAdjacentElement('afterend', msgElement);
-    }
-
-    // Cek kondisi untuk unlock withdraw
-    onValue(ref(database, `players/${userId}`), (snapshot) => {
-        const data = snapshot.val() || {};
-        const level = data.level || 1;
-        const farmCoins = data.farmCoins || 0;
-        const totalDeposit = data.totalDeposit || 0;
-
-        if (level >= 10 && farmCoins >= 10000000 && totalDeposit >= 10) {
-            withdrawBtn.disabled = false;
-            if (withdrawNote) withdrawNote.style.display = 'none';
-        } else {
-            withdrawBtn.disabled = true;
-            if (withdrawNote) withdrawNote.style.display = 'block';
-        }
-    });
-
-    addSafeClickListener(withdrawBtn, async () => {
-        console.log("Withdraw button clicked!");
-        const withdrawMsgElement = document.getElementById("real-withdraw-msg");
-        withdrawMsgElement.textContent = '';
-
-        const amount = parseFloat(depositAmountInput.value);
-        if (isNaN(amount) || amount <= 0) {
-            withdrawMsgElement.textContent = 'Please enter a valid amount.';
-            return;
-        }
-
-        withdrawBtn.disabled = true;
-        withdrawBtn.textContent = "Processing...";
-
-        try {
-            const playerRef = ref(database, `players/${userId}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val() || {};
-            let currentPiBalance = data.piBalance || 0;
-
-            if (currentPiBalance < amount) {
-                withdrawMsgElement.textContent = 'Not enough PI balance!';
-                return;
-            }
-
-            const transactionId = `WDR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            const transactionsRef = ref(database, 'transactions');
-            const newTransactionRef = push(transactionsRef);
-            await set(newTransactionRef, {
-                transactionId,
-                userId,
-                type: 'withdraw',
-                amount,
-                status: 'pending',
-                timestamp: new Date().toISOString()
-            });
-
-            currentPiBalance -= amount;
-            await update(playerRef, { piBalance: currentPiBalance });
-            piBalance = currentPiBalance;
-            updateWallet();
-
-            await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    service_id: 'your_service_id',
-                    template_id: 'your_template_id',
-                    user_id: 'your_user_id',
-                    template_params: {
-                        to_email: 'mamanggim@gmail.com',
-                        subject: 'Withdraw Success Notification',
-                        message: `Withdraw of ${amount} PI successful for user ${userId}. Transaction ID: ${transactionId}`
-                    }
-                })
-            }).catch(err => console.error('Email notification failed:', err));
-
-            withdrawMsgElement.textContent = `Withdraw successful! -${amount} PI`;
-            showNotification(`Withdraw successful! Transaction ID: ${transactionId}`);
-            playCoinSound();
-        } catch (error) {
-            console.error('Withdraw failed:', error);
-            withdrawMsgElement.textContent = 'Failed to process withdraw.';
-            showNotification('Withdraw failed: ' + error.message);
-        } finally {
-            withdrawBtn.disabled = false;
-            withdrawBtn.textContent = "Withdraw PI";
-            depositAmountInput.value = '';
-        }
-    });
-}
-
-// Inisialisasi FCM (pastikan firebase di-import di firebase-config.js)
-let isAdmin = false; // Ganti jadi true kalau user adalah admin (cek role dari Firebase Auth)
+// Setup FCM
+let isAdmin = false;
 auth.onAuthStateChanged((user) => {
   if (user) {
-    database.ref(`players/${user.uid}/role`).once('value').then((snapshot) => {
+    ref(database, `players/${user.uid}/role`).once('value').then((snapshot) => {
       isAdmin = snapshot.val() === 'admin';
       if (isAdmin && 'serviceWorker' in navigator) {
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
@@ -2090,15 +1943,15 @@ auth.onAuthStateChanged((user) => {
             messaging.useServiceWorker(registration);
             return messaging.getToken();
           }).then((token) => {
-            database.ref('adminTokens/' + user.uid).set(token);
+            ref(database, 'adminTokens/' + user.uid).set(token);
           }).catch((err) => console.log('FCM Error:', err));
       }
     });
   }
 });
 
-// Real-time listener untuk Admin Panel
-database.ref('deposits').on('value', (snapshot) => {
+// Admin Panel
+ref(database, 'deposits').on('value', (snapshot) => {
   const deposits = snapshot.val();
   const depositItems = document.getElementById('deposit-items');
   depositItems.innerHTML = '';
@@ -2120,25 +1973,28 @@ database.ref('deposits').on('value', (snapshot) => {
   }
 });
 
-// Fungsi Approve dan Reject
 window.approveDeposit = function(id) {
-  database.ref(`deposits/${id}/status`).set('approved');
-  const deposit = database.ref(`deposits/${id}`).once('value').then((snap) => snap.val());
-  const userRef = database.ref(`players/${deposit.userId}`);
-  userRef.transaction(player => {
-    if (player) player.piBalance = (player.piBalance || 0) + parseFloat(deposit.amount);
-    return player;
+  ref(database, `deposits/${id}/status`).set('approved');
+  ref(database, `deposits/${id}`).once('value').then((snap) => {
+    const deposit = snap.val();
+    const userRef = ref(database, `players/${deposit.userId}`);
+    userRef.transaction(player => {
+      if (player) player.piBalance = (player.piBalance || 0) + parseFloat(deposit.amount);
+      return player;
+    });
+  }).then(() => {
+    showUserNotification(`Deposit ${deposit.amount} PI approved!`);
   });
-  showUserNotification(`Deposit ${deposit.amount} PI approved!`);
 };
 
 window.rejectDeposit = function(id) {
-  database.ref(`deposits/${id}/status`).set('rejected');
-  const deposit = database.ref(`deposits/${id}`).once('value').then((snap) => snap.val());
-  showUserNotification(`Deposit ${deposit.amount} PI rejected. Contact support.`);
+  ref(database, `deposits/${id}/status`).set('rejected');
+  ref(database, `deposits/${id}`).once('value').then((snap) => {
+    const deposit = snap.val();
+    showUserNotification(`Deposit ${deposit.amount} PI rejected. Contact support.`);
+  });
 };
 
-// Notifikasi ke User
 function showUserNotification(message) {
   const notification = document.getElementById('notification');
   notification.textContent = message;
@@ -2146,51 +2002,19 @@ function showUserNotification(message) {
   setTimeout(() => notification.style.display = 'none', 5000);
 }
 
-// Setup Deposit Request
-realDepositBtn.addEventListener('click', () => {
-  const amount = parseFloat(depositAmountInput.value);
-  if (!amount || amount <= 0) {
-    realDepositMsg.textContent = 'Please enter a valid amount.';
-    return;
-  }
-
-  const user = auth.currentUser;
-  if (!user) {
-    realDepositMsg.textContent = 'Please login first.';
-    return;
-  }
-
-  const depositId = `DEPOSIT-${user.uid}-${Date.now()}`;
-  const memo = `DEPOSIT-${user.uid}-${Date.now().toString().slice(-5)}`;
-
-  // Simpan deposit request ke Firebase (nanti backend simulasi deteksi transaksi)
-  database.ref(`deposits/${depositId}`).set({
-    userId: user.uid,
-    amount: amount,
-    memo: memo,
-    status: 'pending',
-    timestamp: Date.now()
-  }).then(() => {
-    realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN with memo: ${memo}`;
-  }).catch((err) => {
-    realDepositMsg.textContent = 'Error creating deposit request: ' + err.message;
-  });
-});
-
-// Simulasi deteksi transaksi (nanti ganti dengan Pi Network API/webhook)
+// Simulasi Deteksi Transaksi (Opsional, hapus kalau udah pakai Pi API)
 setInterval(() => {
-  database.ref('deposits').once('value', (snapshot) => {
+  ref(database, 'deposits').once('value', (snapshot) => {
     const deposits = snapshot.val();
     for (let id in deposits) {
       const deposit = deposits[id];
       if (deposit.status === 'pending') {
-        // Simulasi: anggap transaksi masuk setelah 30 detik
         setTimeout(() => {
-          database.ref(`deposits/${id}`).update({
+          ref(database, `deposits/${id}`).update({
             status: 'detected'
           });
-        }, 30000);
+        }, 30000); // Simulasi deteksi setelah 30 detik
       }
     }
   });
-}, 10000);
+}, 10000); // Cek setiap 10 detik

@@ -1,6 +1,6 @@
 import { database, auth } from '../firebase/firebase-config.js';
 import { ref, onValue, set, update, get, push } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import { signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Deklarasi claimModalBtn dan rewardModal sebagai global
 const claimModalBtn = document.getElementById('claim-modal-btn');
@@ -47,6 +47,58 @@ let isClaiming = false;
 let isAudioPlaying = false;
 let currentExchangeRate = 1000000;
 
+// Fungsi register dengan Email/Password
+const registerEmailBtn = document.getElementById('register-email-btn');
+const registerEmailInput = document.getElementById('register-email-input');
+const registerPasswordInput = document.getElementById('register-password-input');
+const registerError = document.getElementById('register-error');
+
+if (registerEmailBtn) {
+    addSafeClickListener(registerEmailBtn, async () => {
+        const email = registerEmailInput.value;
+        const password = registerPasswordInput.value;
+
+        if (!email || !password) {
+            registerError.style.display = 'block';
+            registerError.textContent = 'Please enter email and password.';
+            return;
+        }
+
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            await sendEmailVerification(user);
+            registerError.style.display = 'block';
+            registerError.textContent = 'Registration successful! Please verify your email.';
+            showNotification('Registration successful! Check your email for verification.');
+
+            // Inisialisasi data player baru
+            const playerRef = ref(database, `players/${user.uid}`);
+            await set(playerRef, {
+                farmCoins: 0,
+                piBalance: 0,
+                water: 0,
+                level: 1,
+                xp: 0,
+                inventory: [],
+                farmPlots: [],
+                harvestCount: 0,
+                achievements: { harvest: false, coins: false },
+                lastClaim: null,
+                claimedToday: false
+            });
+
+            // Reset input
+            registerEmailInput.value = '';
+            registerPasswordInput.value = '';
+        } catch (error) {
+            registerError.style.display = 'block';
+            registerError.textContent = 'Registration failed: ' + error.message;
+        }
+    });
+}
+
 // Fungsi login dengan Email/Password
 const loginEmailBtn = document.getElementById('login-email-btn');
 const emailInput = document.getElementById('email-input');
@@ -79,7 +131,7 @@ if (loginEmailBtn) {
             userId = user.uid;
             userEmail = user.email;
             localStorage.setItem('userId', userId);
-            showNotification(`Logged in as ${user.email}`);
+            showNotification('Logged in as ' + user.email);
 
             const loginScreenElement = document.getElementById('login-screen');
             const startScreenElement = document.getElementById('start-screen');
@@ -160,9 +212,9 @@ function updateWallet() {
     const levelElement = document.getElementById('level');
     const xpFillElement = document.getElementById('xp-fill');
 
-    if (farmCoinsElement) farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
+    if (farmCoinsElement) farmCoinsElement.textContent = `${farmCoins} Coins`;
     if (piCoinsElement) piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`;
-    if (waterElement) waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
+    if (waterElement) waterElement.textContent = `${water} Water`;
     if (levelElement) levelElement.textContent = `Level: ${level} | XP: ${xp}`;
     if (xpFillElement) xpFillElement.style.width = `${(xp / (level * 100)) * 100}%`;
 
@@ -260,6 +312,51 @@ async function loadData() {
         console.error('Error loading data:', error.message);
         showNotification('Error loading game data.');
     }
+}
+
+// Show notification
+function showNotification(message) {
+    const notificationElement = document.getElementById('notification');
+    if (!notificationElement) return;
+
+    notificationElement.textContent = message;
+    notificationElement.style.display = 'block';
+    notificationElement.style.opacity = '1';
+
+    setTimeout(() => {
+        notificationElement.style.opacity = '0';
+        setTimeout(() => {
+            notificationElement.style.display = 'none';
+        }, 500);
+    }, 3000);
+}
+
+// Toggle language
+function toggleLanguage() {
+    const langToggleElement = document.getElementById('lang-toggle');
+    const gameLangToggleElement = document.getElementById('game-lang-toggle');
+
+    currentLang = currentLang === 'en' ? 'id' : 'en';
+    localStorage.setItem('language', currentLang);
+
+    if (langToggleElement) langToggleElement.textContent = currentLang === 'en' ? 'ID' : 'EN';
+    if (gameLangToggleElement) gameLangToggleElement.textContent = currentLang === 'en' ? 'ID' : 'EN';
+
+    document.querySelectorAll('[data-lang-key]').forEach(element => {
+        const key = element.getAttribute('data-lang-key');
+        if (langData[currentLang] && langData[currentLang][key]) {
+            element.textContent = langData[currentLang][key];
+        }
+    });
+
+    updateWallet();
+    renderShop();
+    renderSellSection();
+    renderInventory();
+    renderAchievements();
+    checkDailyReward();
+    playMenuSound();
+    showNotification(langData[currentLang]?.languageChanged || 'Language changed!');
 }
 
 // Load player data
@@ -388,13 +485,13 @@ function updatePlotDisplay(plotElement, plot) {
     plantImg.classList.add('loaded');
     if (plot.currentFrame >= plot.vegetable.frames) {
         plotElement.classList.add('ready');
-        plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
+        plotStatus.textContent = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
         countdownFill.style.width = '100%';
     } else if (plot.watered) {
-        plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
+        plotStatus.textContent = langData[currentLang]?.growing || 'Growing';
         countdownFill.style.width = `${(1 - plot.countdown / plot.totalCountdown) * 100}%`;
     } else {
-        plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+        plotStatus.textContent = langData[currentLang]?.needsWater || 'Needs Water';
         countdownFill.style.width = '0%';
     }
 }
@@ -418,7 +515,7 @@ function handlePlotClick(index) {
             plot.countdown = vegetable.growthTime;
             plot.totalCountdown = vegetable.growthTime;
             animatePlanting(plotContent, vegetable);
-            plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+            plotStatus.textContent = langData[currentLang]?.needsWater || 'Needs Water';
             countdownFill.style.width = '0%';
             inventory[seedIndex].quantity--;
             if (inventory[seedIndex].quantity <= 0) inventory.splice(seedIndex, 1);
@@ -469,7 +566,7 @@ function startCountdown(plot, plotElement, plotContent, plotStatus, countdownFil
         if (plot.currentFrame >= plot.vegetable.frames) {
             clearInterval(interval);
             plotElement.classList.add('ready');
-            plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
+            plotStatus.textContent = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
             countdownFill.style.width = '100%';
             return;
         }
@@ -485,15 +582,15 @@ function startCountdown(plot, plotElement, plotContent, plotStatus, countdownFil
                 updatePlotDisplay(plotElement, plot);
                 if (plot.currentFrame >= plot.vegetable.frames) {
                     plotElement.classList.add('ready');
-                    plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
+                    plotStatus.textContent = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
                     countdownFill.style.width = '100%';
                 } else {
-                    plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+                    plotStatus.textContent = langData[currentLang]?.needsWater || 'Needs Water';
                     countdownFill.style.width = '0%';
                 }
-            } else plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
+            } else plotStatus.textContent = langData[currentLang]?.growing || 'Growing';
         } else {
-            plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+            plotStatus.textContent = langData[currentLang]?.needsWater || 'Needs Water';
             countdownFill.style.width = '0%';
             clearInterval(interval);
         }
@@ -564,6 +661,179 @@ async function handleExchange() {
             document.getElementById("exchange-loading").style.display = "none";
         }
     }, 3000);
+}
+
+// Initialize game
+async function initializeGame() {
+    await loadData();
+    const savedLang = localStorage.getItem('language') || 'en';
+    currentLang = savedLang;
+    const langToggleElement = document.getElementById('lang-toggle');
+    const gameLangToggleElement = document.getElementById('game-lang-toggle');
+    if (langToggleElement) langToggleElement.textContent = currentLang === 'en' ? 'ID' : 'EN';
+    if (gameLangToggleElement) gameLangToggleElement.textContent = currentLang === 'en' ? 'ID' : 'EN';
+    updateVolumes();
+    loadUserBalances();
+}
+
+// Render inventory
+function renderInventory() {
+    const inventoryContentElement = document.getElementById('inventory-content');
+    if (!inventoryContentElement) return;
+
+    inventoryContentElement.innerHTML = '';
+    inventory.forEach((item, index) => {
+        const itemElement = document.createElement('div');
+        itemElement.classList.add('inventory-item');
+        itemElement.innerHTML = `
+            <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="inventory-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+            <h3>${item.vegetable.name[currentLang]}</h3>
+            <p>Type: ${item.type === 'seed' ? 'Seed' : 'Harvest'}</p>
+            <p>Quantity: ${item.quantity}</p>
+        `;
+        inventoryContentElement.appendChild(itemElement);
+    });
+}
+
+// Check harvest achievement
+function checkHarvestAchievement() {
+    if (harvestCount >= 10 && !achievements.harvest) {
+        achievements.harvest = true;
+        farmCoins += 500;
+        showNotification('Achievement Unlocked: Harvest Master! +500 Coins');
+        playCoinSound();
+        updateWallet();
+    }
+}
+
+// Check coin achievement
+function checkCoinAchievement() {
+    if (farmCoins >= 1000 && !achievements.coins) {
+        achievements.coins = true;
+        water += 100;
+        showNotification('Achievement Unlocked: Coin Collector! +100 Water');
+        playCoinSound();
+        updateWallet();
+    }
+}
+
+// Render achievements
+function renderAchievements() {
+    const achievementsContentElement = document.getElementById('achievements-content');
+    if (!achievementsContentElement) return;
+
+    achievementsContentElement.innerHTML = '';
+    const harvestAchievement = document.createElement('div');
+    harvestAchievement.classList.add('achievement-item');
+    harvestAchievement.innerHTML = `
+        <h3>Harvest Master</h3>
+        <p>Harvest 10 crops</p>
+        <p>${achievements.harvest ? 'Completed' : `${harvestCount}/10`}</p>
+    `;
+    achievementsContentElement.appendChild(harvestAchievement);
+
+    const coinAchievement = document.createElement('div');
+    coinAchievement.classList.add('achievement-item');
+    coinAchievement.innerHTML = `
+        <h3>Coin Collector</h3>
+        <p>Collect 1000 Farm Coins</p>
+        <p>${achievements.coins ? 'Completed' : `${farmCoins}/1000`}</p>
+    `;
+    achievementsContentElement.appendChild(coinAchievement);
+}
+
+// Render admin panel
+function renderAdminPanel() {
+    const adminContentElement = document.getElementById('admin-content');
+    if (!adminContentElement) return;
+
+    adminContentElement.innerHTML = `
+        <h2>Admin Panel</h2>
+        <p>Manage Exchange Rate</p>
+        <input type="number" id="admin-exchange-rate" value="${currentExchangeRate}" />
+        <button id="update-rate-btn">Update Rate</button>
+        <div id="admin-message"></div>
+    `;
+
+    const updateRateBtn = document.getElementById('update-rate-btn');
+    if (updateRateBtn) {
+        addSafeClickListener(updateRateBtn, async () => {
+            const newRate = parseFloat(document.getElementById('admin-exchange-rate').value);
+            if (isNaN(newRate) || newRate <= 0) {
+                showNotification('Invalid exchange rate!');
+                return;
+            }
+            const rateRef = ref(database, 'exchangeRate/liveRate');
+            await set(rateRef, newRate);
+            showNotification('Exchange rate updated!');
+            playMenuSound();
+        });
+    }
+}
+
+// Animasi sederhana
+function animatePlanting(plotContent, vegetable) {
+    const img = plotContent.querySelector('img');
+    if (img) {
+        img.style.transform = 'scale(0)';
+        setTimeout(() => {
+            img.style.transition = 'transform 0.5s ease';
+            img.style.transform = 'scale(1)';
+        }, 100);
+    }
+}
+
+function animateWatering(plotContent) {
+    const img = plotContent.querySelector('img');
+    if (img) {
+        img.style.transition = 'transform 0.3s ease';
+        img.style.transform = 'rotate(10deg)';
+        setTimeout(() => {
+            img.style.transform = 'rotate(-10deg)';
+            setTimeout(() => {
+                img.style.transform = 'rotate(0deg)';
+            }, 300);
+        }, 300);
+    }
+}
+
+function animateHarvest(plotContent, vegetable) {
+    const img = plotContent.querySelector('img');
+    if (img) {
+        img.style.transition = 'opacity 0.5s ease';
+        img.style.opacity = '0';
+        setTimeout(() => {
+            plotContent.innerHTML = '';
+        }, 500);
+    }
+}
+
+// Fullscreen functions
+function enterFullScreen() {
+    const element = document.documentElement;
+    if (element.requestFullscreen) {
+        element.requestFullscreen();
+    } else if (element.mozRequestFullScreen) {
+        element.mozRequestFullScreen();
+    } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+    } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+    }
+    document.getElementById('fullscreen-toggle').textContent = 'Exit Fullscreen';
+}
+
+function exitFullScreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
+    document.getElementById('fullscreen-toggle').textContent = 'Fullscreen';
 }
 
 // Document ready event listener
@@ -708,7 +978,7 @@ function startGame() {
         gameScreenElement.style.display = 'block';
         playBgMusic();
         playBgVoice();
-        switchTab('farm'); // Mulai di tab farm
+        switchTab('farm');
     }
 }
 
@@ -723,8 +993,8 @@ function renderShop() {
         vegItem.innerHTML = `
             <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
             <h3>${veg.name[currentLang]}</h3>
-            <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${veg.farmPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
-            <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${veg.piPrice} PI</p>
+            <p>Farm Price: ${veg.farmPrice} Coins</p>
+            <p>PI Price: ${veg.piPrice} PI</p>
             <button class="buy-btn" data-id="${veg.id}">Buy (Farm)</button>
             <button class="buy-pi-btn" data-id="${veg.id}">Buy (PI)</button>
         `;
@@ -735,8 +1005,8 @@ function renderShop() {
     waterItem.innerHTML = `
         <img src="assets/img/ui/water_icon.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
         <h3>${langData[currentLang]?.waterLabel || 'Water'}</h3>
-        <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 ${langData[currentLang]?.coinLabel || 'Coins'}</p>
-        <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: 0.0001 PI</p>
+        <p>Farm Price: 100 Coins</p>
+        <p>PI Price: 0.0001 PI</p>
         <button class="buy-btn" data-id="water">Buy (Farm)</button>
         <button class="buy-pi-btn" data-id="water">Buy (PI)</button>
     `;
@@ -763,8 +1033,8 @@ function renderSellSection() {
         sellDiv.innerHTML = `
             <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
             <h3>${item.vegetable.name[currentLang]}</h3>
-            <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-            <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${item.vegetable.sellPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
+            <p>Quantity: ${item.quantity}</p>
+            <p>Sell Price: ${item.vegetable.sellPrice} Coins</p>
             <button class="sell-btn" data-index="${item.index}">Sell</button>
         `;
         sellContentElement.appendChild(sellDiv);
@@ -787,7 +1057,7 @@ async function buyVegetable(id, currency) {
             updateWallet();
             playBuyingSound();
             await savePlayerData();
-        } else showNotification(currency === 'farm' ? langData[currentLang]?.notEnoughCoins : langData[currentLang]?.notEnoughPi);
+        } else showNotification(currency === 'farm' ? 'Not enough Coins!' : 'Not enough PI!');
         return;
     }
     const veg = vegetables.find(v => v.id === id);
@@ -806,7 +1076,7 @@ async function buyVegetable(id, currency) {
         renderInventory();
         playBuyingSound();
         await savePlayerData();
-    } else showNotification(currency === 'farm' ? langData[currentLang]?.notEnoughCoins : langData[currentLang]?.notEnoughPi);
+    } else showNotification(currency === 'farm' ? 'Not enough Coins!' : 'Not enough PI!');
 }
 
 // Sell item
@@ -831,7 +1101,7 @@ function checkLevelUp() {
     while (xp >= xpRequired) {
         xp -= xpRequired;
         level++;
-        showNotification(`${langData[currentLang]?.levelUp || 'Level Up!'} ${level}`);
+        showNotification(`Level Up! ${level}`);
     }
     updateWallet();
 }
@@ -858,14 +1128,14 @@ if (claimModalBtn) {
         const today = new Date().toISOString().split('T')[0];
         if (lastClaim && new Date(lastClaim).toISOString().split('T')[0] === today) {
             document.getElementById('claim-reward-btn').classList.add('claimed');
-            document.getElementById('claim-reward-btn').textContent = langData[currentLang]?.claimed || 'Claimed!';
+            document.getElementById('claim-reward-btn').textContent = 'Claimed!';
             document.getElementById('claim-reward-btn').disabled = true;
             claimedToday = true;
             isClaiming = false;
             return;
         }
         rewardModal.style.display = 'block';
-        document.getElementById('daily-reward-text').textContent = langData[currentLang]?.dailyRewardText || 'You got +100 Farm Coins & +50 Water!';
+        document.getElementById('daily-reward-text').textContent = 'You got +100 Farm Coins & +50 Water!';
     });
 
     addSafeClickListener(claimModalBtn, async () => {
@@ -879,11 +1149,11 @@ if (claimModalBtn) {
         updateWallet();
         rewardModal.style.display = 'none';
         document.getElementById('claim-reward-btn').classList.add('claimed');
-        document.getElementById('claim-reward-btn').textContent = langData[currentLang]?.claimed || 'Claimed!';
+        document.getElementById('claim-reward-btn').textContent = 'Claimed!';
         document.getElementById('claim-reward-btn').disabled = true;
         checkLevelUp();
         playCoinSound();
-        showNotification(langData[currentLang]?.rewardClaimed || 'Reward Claimed!');
+        showNotification('Reward Claimed!');
         isClaiming = false;
     });
 }
@@ -894,7 +1164,7 @@ function checkDailyReward() {
     const today = new Date().toISOString().split('T')[0];
     if (lastClaim && new Date(lastClaim).toISOString().split('T')[0] === today) {
         document.getElementById('claim-reward-btn').classList.add('claimed');
-        document.getElementById('claim-reward-btn').textContent = langData[currentLang]?.claimed || 'Claimed!';
+        document.getElementById('claim-reward-btn').textContent = 'Claimed!';
         document.getElementById('claim-reward-btn').disabled = true;
         claimedToday = true;
     }

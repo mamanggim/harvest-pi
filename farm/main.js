@@ -224,14 +224,13 @@ async function loadData() {
 const provider = new GoogleAuthProvider();
 async function loginWithGoogle() {
     try {
-        // Pastikan popup tidak diblokir
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         userId = user.uid;
-        userEmail = user.email; // Simpan email user untuk notifikasi
+        userEmail = user.email;
         localStorage.setItem('userId', userId);
         showNotification(`Logged in as ${user.displayName || user.email}`);
-        
+
         const loginScreenElement = document.getElementById('login-screen');
         const startScreenElement = document.getElementById('start-screen');
         if (loginScreenElement && startScreenElement) {
@@ -239,8 +238,7 @@ async function loginWithGoogle() {
             startScreenElement.style.display = 'flex';
         }
 
-        // Cek apakah user adalah admin
-        if (user.email === 'admin@example.com') { // Ganti dengan email admin kamu
+        if (user.email === 'admin@example.com') {
             const adminTab = document.querySelector('.tab-btn[data-tab="admin"]');
             if (adminTab) adminTab.style.display = 'block';
         }
@@ -248,13 +246,7 @@ async function loginWithGoogle() {
         loadPlayerData();
     } catch (error) {
         console.error('Google login failed:', error.message);
-        if (error.code === 'auth/popup-blocked') {
-            showNotification('Popup blocked. Please allow popups for this site and try again.');
-        } else if (error.code === 'auth/unauthorized-domain') {
-            showNotification('Unauthorized domain. Please add this domain to Firebase Authorized Domains.');
-        } else {
-            showNotification('Google login failed: ' + error.message);
-        }
+        showNotification('Google login failed: ' + error.message);
     }
 }
 

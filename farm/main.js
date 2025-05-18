@@ -1928,16 +1928,16 @@ function exitFullScreen() {
 // Fitur Deposit
 const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
-const amountInput = document.getElementById("deposit-amount");
+const depositAmountInput = document.getElementById("deposit-amount"); // Gunakan input khusus di tab finance
 
-if (realDepositBtn && amountInput) {
+if (realDepositBtn && depositAmountInput) {
     console.log("Real deposit button found, attaching click listener...");
 
     addSafeClickListener(realDepositBtn, async () => {
         console.log("Deposit button clicked!");
         realDepositMsg.textContent = '';
 
-        const amount = parseFloat(amountInput.value);
+        const amount = parseFloat(depositAmountInput.value);
         if (isNaN(amount) || amount <= 0) {
             realDepositMsg.textContent = 'Please enter a valid amount.';
             return;
@@ -1950,7 +1950,7 @@ if (realDepositBtn && amountInput) {
             const playerRef = ref(database, `players/${userId}`);
             const snapshot = await get(playerRef);
             const data = snapshot.val() || {};
-            let currentPiBalance = data.piBalance || 0; // Ganti pi jadi piBalance
+            let currentPiBalance = data.piBalance || 0;
 
             const transactionId = `DEP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const transactionsRef = ref(database, 'transactions');
@@ -1966,9 +1966,14 @@ if (realDepositBtn && amountInput) {
 
             // Simulasi sukses deposit manual
             currentPiBalance += amount;
-            await update(playerRef, { piBalance: currentPiBalance }); // Ganti pi jadi piBalance
-            piBalance = currentPiBalance; // Ganti pi jadi piBalance
+            await update(playerRef, { piBalance: currentPiBalance });
+            piBalance = currentPiBalance;
             updateWallet();
+
+            // Update totalDeposit di database
+            let totalDeposit = data.totalDeposit || 0;
+            totalDeposit += amount;
+            await update(playerRef, { totalDeposit });
 
             // Kirim notifikasi ke email
             await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -1986,7 +1991,7 @@ if (realDepositBtn && amountInput) {
                 })
             }).catch(err => console.error('Email notification failed:', err));
 
-            realDepositMsg.textContent = `Deposit successful! +${amount} Pi`;
+            realDepositMsg.textContent = `Deposit successful! +${amount} PI`;
             showNotification(`Deposit successful! Transaction ID: ${transactionId}`);
             playCoinSound();
         } catch (error) {
@@ -1995,8 +2000,112 @@ if (realDepositBtn && amountInput) {
             showNotification('Deposit failed: ' + error.message);
         } finally {
             realDepositBtn.disabled = false;
-            realDepositBtn.textContent = "Deposit";
-            amountInput.value = '';
+            realDepositBtn.textContent = "Deposit with Pi Testnet";
+            depositAmountInput.value = '';
+        }
+    });
+}
+
+// Fitur Withdraw
+const realWithdrawBtn = document.getElementById("withdraw-btn"); // Gunakan ID yang sesuai di HTML
+const realWithdrawMsg = document.getElementById("real-withdraw-msg");
+const withdrawNote = document.getElementById("withdraw-note");
+
+if (realWithdrawBtn && depositAmountInput) {
+    console.log("Real withdraw button found, attaching click listener...");
+
+    // Tambah elemen pesan withdraw kalau belum ada di HTML
+    if (!realWithdrawMsg) {
+        const withdrawMsg = document.createElement('div');
+        withdrawMsg.id = 'real-withdraw-msg';
+        withdrawMsg.className = 'deposit-message';
+        realWithdrawBtn.insertAdjacentElement('afterend', withdrawMsg);
+    }
+
+    // Cek kondisi untuk unlock withdraw
+    onValue(ref(database, `players/${userId}`), (snapshot) => {
+        const data = snapshot.val() || {};
+        const level = data.level || 1;
+        const farmCoins = data.farmCoins || 0;
+        const totalDeposit = data.totalDeposit || 0;
+
+        if (level >= 10 && farmCoins >= 10000000 && totalDeposit >= 10) {
+            realWithdrawBtn.disabled = false;
+            if (withdrawNote) withdrawNote.style.display = 'none';
+        } else {
+            realWithdrawBtn.disabled = true;
+            if (withdrawNote) withdrawNote.style.display = 'block';
+        }
+    });
+
+    addSafeClickListener(realWithdrawBtn, async () => {
+        console.log("Withdraw button clicked!");
+        const withdrawMsgElement = document.getElementById("real-withdraw-msg");
+        withdrawMsgElement.textContent = '';
+
+        const amount = parseFloat(depositAmountInput.value);
+        if (isNaN(amount) || amount <= 0) {
+            withdrawMsgElement.textContent = 'Please enter a valid amount.';
+            return;
+        }
+
+        realWithdrawBtn.disabled = true;
+        realWithdrawBtn.textContent = "Processing...";
+
+        try {
+            const playerRef = ref(database, `players/${userId}`);
+            const snapshot = await get(playerRef);
+            const data = snapshot.val() || {};
+            let currentPiBalance = data.piBalance || 0;
+
+            if (currentPiBalance < amount) {
+                withdrawMsgElement.textContent = 'Not enough PI balance!';
+                return;
+            }
+
+            const transactionId = `WDR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const transactionsRef = ref(database, 'transactions');
+            const newTransactionRef = push(transactionsRef);
+            await set(newTransactionRef, {
+                transactionId,
+                userId,
+                type: 'withdraw',
+                amount,
+                status: 'pending',
+                timestamp: new Date().toISOString()
+            });
+
+            currentPiBalance -= amount;
+            await update(playerRef, { piBalance: currentPiBalance });
+            piBalance = currentPiBalance;
+            updateWallet();
+
+            await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    service_id: 'your_service_id',
+                    template_id: 'your_template_id',
+                    user_id: 'your_user_id',
+                    template_params: {
+                        to_email: 'mamanggim@gmail.com',
+                        subject: 'Withdraw Success Notification',
+                        message: `Withdraw of ${amount} PI successful for user ${userId}. Transaction ID: ${transactionId}`
+                    }
+                })
+            }).catch(err => console.error('Email notification failed:', err));
+
+            withdrawMsgElement.textContent = `Withdraw successful! -${amount} PI`;
+            showNotification(`Withdraw successful! Transaction ID: ${transactionId}`);
+            playCoinSound();
+        } catch (error) {
+            console.error('Withdraw failed:', error);
+            withdrawMsgElement.textContent = 'Failed to process withdraw.';
+            showNotification('Withdraw failed: ' + error.message);
+        } finally {
+            realWithdrawBtn.disabled = false;
+            realWithdrawBtn.textContent = "Withdraw PI";
+            depositAmountInput.value = '';
         }
     });
 }

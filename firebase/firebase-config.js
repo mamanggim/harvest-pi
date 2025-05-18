@@ -9,7 +9,7 @@ const firebaseConfig = {
   authDomain: "harvest-pi.firebaseapp.com",
   databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "harvest-pi",
-  storageBucket: "harvest-pi.appspot.com",
+  storageBucket: "harvest-pi.firebasestorage.app",
   messagingSenderId: "650006770674",
   appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
 };

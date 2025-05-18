@@ -208,6 +208,26 @@
   </div>
 </div>
 
+  <!-- Tab Content -->
+  <div id="finance" class="tab-content">
+    <h2>Finance</h2>
+    <input type="number" id="deposit-amount" placeholder="Enter PI amount" value="" min="1">
+    <button id="real-deposit-btn">Deposit</button>
+    <p id="real-deposit-msg"></p>
+    <!-- Pop-up Container -->
+    <div id="deposit-popup" class="popup" style="display:none;">
+      <div class="popup-content">
+        <h3>Deposit Details</h3>
+        <p><strong>Amount:</strong> <span id="popup-amount"></span> PI</p>
+        <p><strong>Memo:</strong> <span id="popup-memo"></span></p>
+        <p><strong>User ID:</strong> <span id="popup-userid"></span></p>
+        <p>Transfer <span id="popup-amount"></span> PI to wallet address: <strong>YOUR_WALLET_ADDRESS</strong> with memo: <span id="popup-memo"></span></p>
+        <button id="confirm-deposit">Confirm</button>
+        <button id="cancel-deposit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
 <!-- NOTIFIKASI -->
 <div id="notification"></div>
 

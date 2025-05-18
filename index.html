@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="farm/style.css?v=42" />
+  <link rel="stylesheet" href="farm/style.css?v=40" />
   <style>
     #start-text {
       cursor: pointer;
@@ -18,38 +18,6 @@
     #start-text:active {
       transform: scale(0.95);
     }
-    /* Perbesar tombol dan input login */
-    #login-email-btn {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 20px;
-      padding: 15px 30px;
-      margin: 20px 0;
-      background-color: #4285f4;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: transform 0.1s;
-    }
-    #login-email-btn:hover {
-      background-color: #3267d6;
-    }
-    #login-email-btn:active {
-      transform: scale(0.95);
-    }
-    #email-input, #password-input {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 16px;
-      padding: 10px;
-      width: 200px;
-      margin: 5px 0;
-      border-radius: 5px;
-    }
-    #login-error, #verify-email-msg {
-      color: white;
-      margin-top: 10px;
-      font-size: 14px;
-    }
   </style>
 </head>
 <body>
@@ -61,14 +29,10 @@
 </div>
 
 <!-- LOGIN SCREEN -->
-<div id="login-screen" class="center-screen" style="background-image: url('assets/img/background-login.jpg'); background-size: cover; background-position: center;">
+<div id="login-screen" style="display: flex;">
   <div class="login-container">
     <h1>Harvest Pi</h1>
-    <input type="email" id="email-input" placeholder="Email">
-    <input type="password" id="password-input" placeholder="Password">
-    <button id="login-email-btn">Login with Email</button>
-    <div id="login-error" style="display: none;"></div>
-    <div id="verify-email-msg" style="display: none;">Please verify your email to continue.</div>
+    <button id="login-pi-btn">Login with Pi</button>
     <div class="policy-links">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
       <a href="/term-of-service.html" target="_blank">Terms of Service</a>
@@ -99,7 +63,7 @@
       <button class="tab-btn" data-tab="upgrades">Upgrades</button>
       <button class="tab-btn" data-tab="inventory">Inventory</button>
       <button class="tab-btn" data-tab="exchange">Exchange</button>
-      <button class="tab-btn" data-tab="admin" style="display: none;">Admin</button>
+      <button class="tab-btn" data-tab="finance">Finance</button>
       <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
       <button class="tab-btn" data-tab="achievements">Achievements</button>
     </div>
@@ -161,36 +125,37 @@
         <span id="pi-balance" style="display:none;"></span>
         <span id="fc-balance" style="display:none;"></span>
         <button id="exchange-btn">Exchange</button>
-        <div id="exchange-loading" style="display:none;">
+        <div id="exchange-loading">
           <div class="loader"></div>
           <div>Processing exchange...</div>
         </div>
       </div>
-
-      <div id="deposit-manual">
-        <h3>Deposit PI (Manual Transfer)</h3>
-        <p>Send PI to this wallet address:</p>
-        <p><strong>YOUR_WALLET_ADDRESS_HERE</strong></p>
-        <p>After transferring, please click the button below to notify admin.</p>
-        <input type="number" id="deposit-amount" placeholder="Enter PI Amount" />
-        <button id="notify-deposit-btn">Notify Deposit</button>
-      </div>
-
-      <div id="withdraw-manual">
-        <h3>Withdraw PI (Manual Request)</h3>
-        <p>Request withdrawal to your wallet address:</p>
-        <input type="text" id="withdraw-wallet" placeholder="Enter your PI wallet address" />
-        <input type="number" id="withdraw-amount" placeholder="Enter PI Amount" />
-        <button id="notify-withdraw-btn">Request Withdraw</button>
-      </div>
     </div>
+    <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
   </div>
 
-  <!-- ADMIN -->
-  <div id="admin" class="tab-content">
-    <h2>Admin Panel</h2>
-    <p>Transaction History</p>
-    <div id="admin-transactions"></div>
+  <!-- FINANCE -->
+  <div id="finance" class="tab-content">
+    <h2 id="finance-title">Finance</h2>
+
+    <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
+    <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
+    <hr/>
+
+    <h3>Deposit (Testnet)</h3>
+    <input type="number" id="deposit-amount" placeholder="Enter PI Amount" value="1" />
+    <button id="real-deposit-btn">Deposit with Pi Testnet</button>
+    <div id="real-deposit-msg" class="deposit-message"></div>
+
+    <h3>Withdraw</h3>
+    <button id="withdraw-btn" disabled>Withdraw PI</button>
+    <div id="real-withdraw-msg" class="deposit-message"></div> <!-- Ditambahkan agar sinkron dengan JS -->
+    <p id="withdraw-note" class="note">
+      This feature will unlock when you reach: <br />
+      - Level 10<br />
+      - Farm Coin ≥ 10.000.000<br />
+      - Total Deposit ≥ 10 PI
+    </p>
   </div>
 
   <!-- LEADERBOARD -->
@@ -247,8 +212,14 @@
 <!-- FIREBASE -->
 <script type="module" src="firebase/firebase-config.js"></script>
 
+<!-- PI NETWORK SDK -->
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>
+  Pi.init({ version: "2.0" }); // Inisialisasi SDK dengan versi 2.0 (saat ini yang terbaru)
+</script>
+
 <!-- MAIN GAME SCRIPT -->
-<script type="module" src="farm/main.js?v=42"></script>
+<script type="module" src="farm/main.js?v=40"></script>
 
 <!-- FALLBACK ERROR HANDLING -->
 <script>

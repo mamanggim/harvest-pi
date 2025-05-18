@@ -2145,3 +2145,56 @@ function showUserNotification(message) {
   notification.style.display = 'block';
   setTimeout(() => notification.style.display = 'none', 5000);
 }
+
+// Setup Deposit Request
+const depositAmountInput = document.getElementById('deposit-amount');
+const realDepositBtn = document.getElementById('real-deposit-btn');
+const realDepositMsg = document.getElementById('real-deposit-msg');
+
+realDepositBtn.addEventListener('click', () => {
+  const amount = parseFloat(depositAmountInput.value);
+  if (!amount || amount <= 0) {
+    realDepositMsg.textContent = 'Please enter a valid amount.';
+    return;
+  }
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    realDepositMsg.textContent = 'Please login first.';
+    return;
+  }
+
+  const depositId = `DEPOSIT-${user.uid}-${Date.now()}`;
+  const memo = `DEPOSIT-${user.uid}-${Date.now().toString().slice(-5)}`;
+
+  // Simpan deposit request ke Firebase (nanti backend simulasi deteksi transaksi)
+  firebase.database().ref(`deposits/${depositId}`).set({
+    userId: user.uid,
+    amount: amount,
+    memo: memo,
+    status: 'pending',
+    timestamp: Date.now()
+  }).then(() => {
+    realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN with memo: ${memo}`;
+  }).catch((err) => {
+    realDepositMsg.textContent = 'Error creating deposit request: ' + err.message;
+  });
+});
+
+// Simulasi deteksi transaksi (nanti ganti dengan Pi Network API/webhook)
+setInterval(() => {
+  firebase.database().ref('deposits').once('value', (snapshot) => {
+    const deposits = snapshot.val();
+    for (let id in deposits) {
+      const deposit = deposits[id];
+      if (deposit.status === 'pending') {
+        // Simulasi: anggap transaksi masuk setelah 30 detik
+        setTimeout(() => {
+          firebase.database().ref(`deposits/${id}`).update({
+            status: 'detected'
+          });
+        }, 30000);
+      }
+    }
+  });
+}, 10000);

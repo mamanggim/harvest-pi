@@ -1968,7 +1968,7 @@ if (realDepositBtn && depositAmountInput) {
             showNotification('Deposit failed: ' + error.message);
         } finally {
             realDepositBtn.disabled = false;
-            realDepositBtn.textContent = "Deposit with Pi Testnet";
+            realDepositBtn.textContent = "Deposit PI";
             depositAmountInput.value = '';
         }
     });
@@ -2080,17 +2080,17 @@ if (withdrawBtn && depositAmountInput) {
 
 // Inisialisasi FCM (pastikan firebase di-import di firebase-config.js)
 let isAdmin = false; // Ganti jadi true kalau user adalah admin (cek role dari Firebase Auth)
-firebase.auth().onAuthStateChanged((user) => {
+auth.onAuthStateChanged((user) => {
   if (user) {
-    firebase.database().ref(`players/${user.uid}/role`).once('value').then((snapshot) => {
+    database.ref(`players/${user.uid}/role`).once('value').then((snapshot) => {
       isAdmin = snapshot.val() === 'admin';
       if (isAdmin && 'serviceWorker' in navigator) {
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
           .then((registration) => {
-            firebase.messaging().useServiceWorker(registration);
-            return firebase.messaging().getToken();
+            messaging.useServiceWorker(registration);
+            return messaging.getToken();
           }).then((token) => {
-            firebase.database().ref('adminTokens/' + user.uid).set(token);
+            database.ref('adminTokens/' + user.uid).set(token);
           }).catch((err) => console.log('FCM Error:', err));
       }
     });
@@ -2098,7 +2098,7 @@ firebase.auth().onAuthStateChanged((user) => {
 });
 
 // Real-time listener untuk Admin Panel
-firebase.database().ref('deposits').on('value', (snapshot) => {
+database.ref('deposits').on('value', (snapshot) => {
   const deposits = snapshot.val();
   const depositItems = document.getElementById('deposit-items');
   depositItems.innerHTML = '';
@@ -2122,9 +2122,9 @@ firebase.database().ref('deposits').on('value', (snapshot) => {
 
 // Fungsi Approve dan Reject
 window.approveDeposit = function(id) {
-  firebase.database().ref(`deposits/${id}/status`).set('approved');
-  const deposit = firebase.database().ref(`deposits/${id}`).once('value').then((snap) => snap.val());
-  const userRef = firebase.database().ref(`players/${deposit.userId}`);
+  database.ref(`deposits/${id}/status`).set('approved');
+  const deposit = database.ref(`deposits/${id}`).once('value').then((snap) => snap.val());
+  const userRef = database.ref(`players/${deposit.userId}`);
   userRef.transaction(player => {
     if (player) player.piBalance = (player.piBalance || 0) + parseFloat(deposit.amount);
     return player;
@@ -2133,8 +2133,8 @@ window.approveDeposit = function(id) {
 };
 
 window.rejectDeposit = function(id) {
-  firebase.database().ref(`deposits/${id}/status`).set('rejected');
-  const deposit = firebase.database().ref(`deposits/${id}`).once('value').then((snap) => snap.val());
+  database.ref(`deposits/${id}/status`).set('rejected');
+  const deposit = database.ref(`deposits/${id}`).once('value').then((snap) => snap.val());
   showUserNotification(`Deposit ${deposit.amount} PI rejected. Contact support.`);
 };
 
@@ -2154,7 +2154,7 @@ realDepositBtn.addEventListener('click', () => {
     return;
   }
 
-  const user = firebase.auth().currentUser;
+  const user = auth.currentUser;
   if (!user) {
     realDepositMsg.textContent = 'Please login first.';
     return;
@@ -2164,7 +2164,7 @@ realDepositBtn.addEventListener('click', () => {
   const memo = `DEPOSIT-${user.uid}-${Date.now().toString().slice(-5)}`;
 
   // Simpan deposit request ke Firebase (nanti backend simulasi deteksi transaksi)
-  firebase.database().ref(`deposits/${depositId}`).set({
+  database.ref(`deposits/${depositId}`).set({
     userId: user.uid,
     amount: amount,
     memo: memo,
@@ -2179,14 +2179,14 @@ realDepositBtn.addEventListener('click', () => {
 
 // Simulasi deteksi transaksi (nanti ganti dengan Pi Network API/webhook)
 setInterval(() => {
-  firebase.database().ref('deposits').once('value', (snapshot) => {
+  database.ref('deposits').once('value', (snapshot) => {
     const deposits = snapshot.val();
     for (let id in deposits) {
       const deposit = deposits[id];
       if (deposit.status === 'pending') {
         // Simulasi: anggap transaksi masuk setelah 30 detik
         setTimeout(() => {
-          firebase.database().ref(`deposits/${id}`).update({
+          database.ref(`deposits/${id}`).update({
             status: 'detected'
           });
         }, 30000);

@@ -1909,6 +1909,19 @@ function exitFullScreen() {
   const confirmDepositBtn = document.getElementById("confirm-deposit");
   const cancelDepositBtn = document.getElementById("cancel-deposit");
 
+  // Logging untuk debug
+  console.log('Elemen deposit:', {
+    realDepositBtn,
+    realDepositMsg,
+    depositAmountInput,
+    depositPopup,
+    popupAmount,
+    popupMemo,
+    popupUserId,
+    confirmDepositBtn,
+    cancelDepositBtn
+  });
+
   // Pengecekan elemen
   if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUserId || !confirmDepositBtn || !cancelDepositBtn) {
     console.error('Salah satu elemen tidak ditemukan. Cek ID di HTML.');
@@ -1917,55 +1930,61 @@ function exitFullScreen() {
 
   // Setup Deposit Request
   realDepositBtn.addEventListener('click', () => {
+    console.log('Tombol deposit diklik'); // Debug
+
     const amount = parseFloat(depositAmountInput.value);
     if (!amount || amount < 1) {
-      if (realDepositMsg) realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
+      realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
+      console.log('Validasi gagal: Amount < 1');
       return;
     }
 
     const user = auth.currentUser;
     if (!user) {
-      if (realDepositMsg) realDepositMsg.textContent = 'Please login first.';
+      realDepositMsg.textContent = 'Please login first.';
+      console.log('Validasi gagal: User belum login');
       return;
     }
 
-    const transactionId = `DEPOSIT-${user.uid}-${Date.now()}`;
-    const memo = `DEPOSIT-${user.uid}-${Date.now().toString().slice(-5)}`;
+    const transactionId = `DEPOSIT-${user.email}-${Date.now()}`; // Ganti UID jadi email
+    const memo = `DEPOSIT-${user.email}-${Date.now().toString().slice(-5)}`;
 
     // Isi pop-up
-    if (popupAmount) popupAmount.textContent = amount;
-    if (popupMemo) popupMemo.textContent = memo;
-    if (popupUserId) popupUserId.textContent = user.uid;
+    popupAmount.textContent = amount;
+    popupMemo.textContent = memo;
+    popupUserId.textContent = user.email; // Ganti UID jadi email
+    console.log('Pop-up diisi:', { amount, memo, email: user.email });
 
     // Tampilkan pop-up
-    if (depositPopup) depositPopup.style.display = "flex";
+    depositPopup.style.display = "flex";
+    console.log('Pop-up ditampilkan');
 
     // Konfirmasi deposit
-    if (confirmDepositBtn) {
-      confirmDepositBtn.onclick = () => {
-        set(ref(database, `transactions/${transactionId}`), {
-          amount: amount,
-          type: "deposit",
-          status: 'pending',
-          timestamp: Date.now(),
-          userId: user.uid,
-          memo: memo
-        }).then(() => {
-          if (realDepositMsg) realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: YOUR_WALLET_ADDRESS with memo: ${memo}`;
-          if (depositPopup) depositPopup.style.display = "none"; // Tutup pop-up
-        }).catch((err) => {
-          if (realDepositMsg) realDepositMsg.textContent = 'Error creating deposit request: ' + err.message;
-        });
-      };
-    }
+    confirmDepositBtn.onclick = () => {
+      console.log('Tombol confirm diklik');
+      set(ref(database, `transactions/${transactionId}`), {
+        amount: amount,
+        type: "deposit",
+        status: 'pending',
+        timestamp: Date.now(),
+        email: user.email, // Ganti userId jadi email
+        memo: memo
+      }).then(() => {
+        realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: YOUR_WALLET_ADDRESS with memo: ${memo}`;
+        depositPopup.style.display = "none";
+        console.log('Deposit berhasil disimpan');
+      }).catch((err) => {
+        realDepositMsg.textContent = 'Error creating deposit request: ' + err.message;
+        console.error('Error saat simpan deposit:', err);
+      });
+    };
 
     // Batal deposit
-    if (cancelDepositBtn) {
-      cancelDepositBtn.onclick = () => {
-        if (depositPopup) depositPopup.style.display = "none";
-        if (realDepositMsg) realDepositMsg.textContent = 'Deposit cancelled.';
-      };
-    }
+    cancelDepositBtn.onclick = () => {
+      console.log('Tombol cancel diklik');
+      depositPopup.style.display = "none";
+      realDepositMsg.textContent = 'Deposit cancelled.';
+    };
   });
 
   // Setup FCM
@@ -1980,7 +1999,7 @@ function exitFullScreen() {
               messaging.useServiceWorker(registration);
               return messaging.getToken();
             }).then((token) => {
-              set(ref(database, 'adminTokens/' + user.uid), token);
+              set(ref(database, `adminTokens/${user.email}`), token); // Ganti UID jadi email
             }).catch((err) => console.log('FCM Error:', err));
         }
       });
@@ -1999,7 +2018,7 @@ function exitFullScreen() {
           if (t.type === "deposit") {
             depositItems.innerHTML += `
               <tr>
-                <td>${t.userId}</td><td>${t.amount} PI</td><td>${t.memo || '-'}</td>
+                <td>${t.email}</td><td>${t.amount} PI</td><td>${t.memo || '-'}</td>
                 <td>${new Date(t.timestamp).toLocaleString()}</td>
                 <td>${t.status}</td>
                 <td>
@@ -2019,7 +2038,7 @@ function exitFullScreen() {
     get(ref(database, `transactions/${id}`)).then((snap) => {
       const transaction = snap.val();
       if (transaction.type === "deposit") {
-        const userRef = ref(database, `players/${transaction.userId}`);
+        const userRef = ref(database, `players/${transaction.email}`); // Ganti UID jadi email
         userRef.transaction(player => {
           if (player) player.piBalance = (player.piBalance || 0) + parseFloat(transaction.amount);
           return player;

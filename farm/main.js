@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
         shopContentElement.style.display = 'block';
         sellContentElement.style.display = 'none';
         renderShop();
-        playMenuSellSound();
+        playMenuSound();
     });
 
     if (sellTabElement) addSafeClickListener(sellTabElement, () => {
@@ -693,11 +693,24 @@ document.addEventListener('DOMContentLoaded', () => {
         shopContentElement.style.display = 'none';
         sellContentElement.style.display = 'block';
         renderSellSection();
-        playMenuSellSound();
+        playMenuSound();
     });
 
     initializeGame();
 });
+
+// Fungsi startGame
+function startGame() {
+    const startScreenElement = document.getElementById('start-screen');
+    const gameScreenElement = document.getElementById('game-screen');
+    if (startScreenElement && gameScreenElement) {
+        startScreenElement.style.display = 'none';
+        gameScreenElement.style.display = 'block';
+        playBgMusic();
+        playBgVoice();
+        switchTab('farm'); // Mulai di tab farm
+    }
+}
 
 // Render shop
 function renderShop() {

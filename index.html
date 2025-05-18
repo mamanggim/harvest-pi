@@ -67,6 +67,7 @@
       <button class="tab-btn" data-tab="finance">Finance</button>
       <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
       <button class="tab-btn" data-tab="achievements">Achievements</button>
+      <button class="tab-btn" data-tab="admin-panel">Admin</button>
     </div>
     <div id="wallet">
       <span id="farm-coins">0 Farm Coins</span> |
@@ -143,9 +144,9 @@
     <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
     <hr/>
 
-    <h3>Deposit (Testnet)</h3>
+    <h3>Deposit</h3>
     <input type="number" id="deposit-amount" placeholder="Enter PI Amount" value="1" />
-    <button id="real-deposit-btn">Deposit with Pi Testnet</button>
+    <button id="real-deposit-btn">Deposit PI</button>
     <div id="real-deposit-msg" class="deposit-message"></div>
 
     <h3>Withdraw</h3>
@@ -169,6 +170,17 @@
   <div id="achievements" class="tab-content">
     <div id="achievements-content"></div>
   </div>
+
+  <!-- ADMIN PANEL -->
+<div id="admin-panel" class="tab-content">
+  <h2>Admin Panel</h2>
+  <table id="deposit-list">
+    <thead>
+      <tr><th>User</th><th>Amount</th><th>Memo</th><th>Time</th><th>Status</th><th>Action</th></tr>
+    </thead>
+    <tbody id="deposit-items"></tbody>
+  </table>
+</div>
 </div>
 
 <!-- MODAL REWARD -->
@@ -188,8 +200,7 @@
     <h2 id="settings-title">Settings</h2>
     <button id="fullscreen-toggle">⛶</button>
     <button id="game-lang-toggle">Switch Language (EN/ID)</button>
-    <button id="exit-game-btn">Exit</button>
-    <button id="logout-btn">Logout</button>
+    <button id="exit-game-btn">Logout</button>
     <label id="music-volume-label" for="music-volume">Music Volume:</label>
     <input type="range" id="music-volume" min="0" max="100" step="1" value="100" />
     <label id="voice-volume-label" for="voice-volume">Voice/SFX Volume:</label>
@@ -233,6 +244,21 @@
       loginScreen.style.display = 'flex';
     }
   });
+</script>
+
+  <!-- FCM Service Worker Registration -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then((registration) => {
+        firebase.messaging().useServiceWorker(registration);
+        firebase.messaging().getToken().then((token) => {
+          if (isAdmin) { // Pastikan isAdmin udah didefinisikan di main.js
+            firebase.database().ref('adminTokens/' + firebase.auth().currentUser.uid).set(token);
+          }
+        }).catch((err) => console.log('Error getting token:', err));
+      });
+  }
 </script>
 </body>
 </html>

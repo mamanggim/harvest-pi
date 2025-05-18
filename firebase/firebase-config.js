@@ -1,9 +1,10 @@
-// Import Firebase SDK secara modular
+// firebase-config.js
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { getDatabase, ref } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'; // Tambah ref
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getMessaging } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js';
 
-// Konfigurasi Firebase (ganti dengan config kamu)
+// Konfigurasi Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
   authDomain: "harvest-pi.firebaseapp.com",
@@ -18,9 +19,10 @@ const firebaseConfig = {
 // Inisialisasi Firebase App
 const app = initializeApp(firebaseConfig);
 
-// Inisialisasi Database dan Auth
+// Inisialisasi Database, Auth, dan Messaging
 const database = getDatabase(app);
 const auth = getAuth(app);
+const messaging = getMessaging(app);
 
 // Export modul
-export { database, auth };
+export { database, auth, messaging, ref }; // Tambah ref

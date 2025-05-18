@@ -1269,3 +1269,35 @@ input[type="range"] {
 .tab-content.active {
   display: block;
 }
+
+/* === ADMIN PANELS ===*/
+#admin-panel {
+  background: #333;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  max-width: 600px;
+  margin: 15px auto;
+}
+
+#deposit-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#deposit-list th, #deposit-list td {
+  border: 1px solid #fff;
+  padding: 8px;
+  font-size: 12px;
+}
+
+#deposit-list th {
+  background: #4caf50;
+}
+
+#deposit-list td button {
+  margin: 0 5px;
+  padding: 4px 8px;
+  font-size: 10px;
+}

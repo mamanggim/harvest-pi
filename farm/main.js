@@ -1,6 +1,6 @@
 // Ambil database dan auth dari firebase-config.js
 import { database, auth } from '../firebase/firebase-config.js';
-import { ref, onValue, set, update, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { ref, onValue, set, update, get, push } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { signInWithPopup, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Deklarasi claimModalBtn dan rewardModal sebagai global
@@ -28,7 +28,7 @@ function addSafeClickListener(element, callback) {
 // Global variables
 let isDataLoaded = false;
 let farmCoins = 0;
-let pi = 0;
+let piBalance = 0; // Ganti pi jadi piBalance
 let water = 0;
 let level = 1;
 let xp = 0;
@@ -40,6 +40,7 @@ let farmPlots = [];
 let harvestCount = 0;
 let achievements = { harvest: false, coins: false };
 let userId = null;
+let userEmail = null; // Simpan email user untuk notifikasi
 let lastClaim = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
@@ -56,7 +57,7 @@ function updateWallet() {
     const xpFillElement = document.getElementById('xp-fill');
 
     if (farmCoinsElement) farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
-    if (piCoinsElement) piCoinsElement.textContent = `${pi.toFixed(6)} PI`;
+    if (piCoinsElement) piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`; // Tetap PI di UI
     if (waterElement) waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
     if (levelElement) levelElement.textContent = `Level: ${level} | XP: ${xp}`;
     if (xpFillElement) xpFillElement.style.width = `${(xp / (level * 100)) * 100}%`;
@@ -64,7 +65,7 @@ function updateWallet() {
     const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
     const piCoinBalanceElement = document.getElementById('pi-coin-balance');
     if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins.toLocaleString();
-    if (piCoinBalanceElement) piCoinBalanceElement.textContent = pi.toFixed(6);
+    if (piCoinBalanceElement) piCoinBalanceElement.textContent = piBalance.toFixed(6);
 
     savePlayerData();
 }
@@ -74,12 +75,12 @@ function loadUserBalances() {
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
         const data = snapshot.val() || {};
-        pi = data.piBalance || 0;
+        piBalance = data.piBalance || 0; // Ganti pi jadi piBalance
         farmCoins = data.farmCoins || 0;
 
         const piBalanceElement = document.getElementById('pi-balance');
         const fcBalanceElement = document.getElementById('fc-balance');
-        if (piBalanceElement) piBalanceElement.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+        if (piBalanceElement) piBalanceElement.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
         if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
 
         updateWallet();
@@ -223,9 +224,11 @@ async function loadData() {
 const provider = new GoogleAuthProvider();
 async function loginWithGoogle() {
     try {
+        // Pastikan popup tidak diblokir
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         userId = user.uid;
+        userEmail = user.email; // Simpan email user untuk notifikasi
         localStorage.setItem('userId', userId);
         showNotification(`Logged in as ${user.displayName || user.email}`);
         
@@ -235,10 +238,23 @@ async function loginWithGoogle() {
             loginScreenElement.style.display = 'none';
             startScreenElement.style.display = 'flex';
         }
+
+        // Cek apakah user adalah admin
+        if (user.email === 'admin@example.com') { // Ganti dengan email admin kamu
+            const adminTab = document.querySelector('.tab-btn[data-tab="admin"]');
+            if (adminTab) adminTab.style.display = 'block';
+        }
+
         loadPlayerData();
     } catch (error) {
         console.error('Google login failed:', error.message);
-        showNotification('Google login failed: ' + error.message);
+        if (error.code === 'auth/popup-blocked') {
+            showNotification('Popup blocked. Please allow popups for this site and try again.');
+        } else if (error.code === 'auth/unauthorized-domain') {
+            showNotification('Unauthorized domain. Please add this domain to Firebase Authorized Domains.');
+        } else {
+            showNotification('Google login failed: ' + error.message);
+        }
     }
 }
 
@@ -248,6 +264,7 @@ async function logout() {
         await auth.signOut();
         localStorage.removeItem('userId');
         userId = null;
+        userEmail = null;
         showNotification('Logged out successfully');
         window.location.reload();
     } catch (error) {
@@ -271,7 +288,7 @@ function loadPlayerData() {
             const data = snapshot.val();
             if (data) {
                 farmCoins = data.farmCoins || 0;
-                pi = data.piBalance || 0;
+                piBalance = data.piBalance || 0; // Ganti pi jadi piBalance
                 water = data.water || 0;
                 level = data.level || 1;
                 xp = data.xp || 0;
@@ -324,7 +341,7 @@ async function savePlayerData() {
 
     const dataToSave = {
         farmCoins,
-        piBalance: pi,
+        piBalance, // Ganti pi jadi piBalance
         water,
         level,
         xp,
@@ -342,6 +359,42 @@ async function savePlayerData() {
     } catch (error) {
         console.error('Error saving player data:', error.message);
         showNotification('Error saving data');
+    }
+}
+
+// Fungsi untuk generate unique ID transaksi
+function generateTransactionId() {
+    return 'TX-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+}
+
+// Fungsi untuk simpan transaksi deposit/withdraw ke Firebase
+async function saveTransaction(type, amount, walletAddress = null) {
+    if (!userId || !userEmail) return;
+    
+    const transactionId = generateTransactionId();
+    const transactionsRef = ref(database, 'transactions');
+    const newTransactionRef = push(transactionsRef);
+
+    const transactionData = {
+        transactionId,
+        userId,
+        userEmail,
+        type, // 'deposit' atau 'withdraw'
+        amount,
+        walletAddress: walletAddress || 'N/A',
+        status: 'pending',
+        timestamp: new Date().toISOString()
+    };
+
+    try {
+        await set(newTransactionRef, transactionData);
+        showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} request submitted! Transaction ID: ${transactionId}`);
+        // Untuk notifikasi email, admin harus cek Firebase manual
+        // Alternatif: Gunakan Firebase Functions untuk kirim email (di luar scope)
+        return transactionId;
+    } catch (error) {
+        console.error(`Error saving ${type} transaction:`, error.message);
+        showNotification(`Error submitting ${type} request: ${error.message}`);
     }
 }
 
@@ -460,6 +513,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const exchangeBtnElement = document.getElementById('exchange-btn');
     if (exchangeBtnElement) addSafeClickListener(exchangeBtnElement, handleExchange);
+
+    const notifyDepositBtn = document.getElementById('notify-deposit-btn');
+    if (notifyDepositBtn) {
+        addSafeClickListener(notifyDepositBtn, async () => {
+            const depositAmount = parseFloat(document.getElementById('deposit-amount').value);
+            if (isNaN(depositAmount) || depositAmount <= 0) {
+                showNotification('Please enter a valid deposit amount.');
+                return;
+            }
+            await saveTransaction('deposit', depositAmount);
+        });
+    }
+
+    const notifyWithdrawBtn = document.getElementById('notify-withdraw-btn');
+    if (notifyWithdrawBtn) {
+        addSafeClickListener(notifyWithdrawBtn, async () => {
+            const withdrawAmount = parseFloat(document.getElementById('withdraw-amount').value);
+            const withdrawWallet = document.getElementById('withdraw-wallet').value;
+            if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
+                showNotification('Please enter a valid withdraw amount.');
+                return;
+            }
+            if (!withdrawWallet) {
+                showNotification('Please enter your wallet address.');
+                return;
+            }
+            if (piBalance < withdrawAmount) {
+                showNotification('Insufficient PI balance for withdrawal.');
+                return;
+            }
+            await saveTransaction('withdraw', withdrawAmount, withdrawWallet);
+        });
+    }
 
     const exchangeAmountElement = document.getElementById('exchange-amount');
     if (exchangeAmountElement) exchangeAmountElement.addEventListener('input', updateExchangeResult);
@@ -965,8 +1051,8 @@ async function buyVegetable(id, currency) {
                     showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
                 }
             } else {
-                if (pi >= 0.0001) {
-                    pi -= 0.0001;
+                if (piBalance >= 0.0001) { // Ganti pi jadi piBalance
+                    piBalance -= 0.0001;
                     water += 10;
                     updateWallet();
                     showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
@@ -998,8 +1084,8 @@ async function buyVegetable(id, currency) {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
         } else {
-            if (pi >= veg.piPrice) {
-                pi -= veg.piPrice;
+            if (piBalance >= veg.piPrice) { // Ganti pi jadi piBalance
+                piBalance -= veg.piPrice;
                 canBuy = true;
                 showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
             } else {
@@ -1239,9 +1325,67 @@ function switchTab(tab) {
         renderAchievements();
     } else if (tab === 'exchange') {
         updateExchangeResult();
+    } else if (tab === 'admin') {
+        renderAdminPanel();
     }
 
     playMenuSound();
+}
+
+// Render admin panel
+function renderAdminPanel() {
+    const adminTransactionsElement = document.getElementById('admin-transactions');
+    if (!adminTransactionsElement) return;
+
+    const transactionsRef = ref(database, 'transactions');
+    onValue(transactionsRef, (snapshot) => {
+        const transactions = snapshot.val();
+        if (!transactions) {
+            adminTransactionsElement.innerHTML = '<p>No transactions found.</p>';
+            return;
+        }
+
+        adminTransactionsElement.innerHTML = '';
+        Object.entries(transactions).forEach(([key, transaction]) => {
+            const transactionDiv = document.createElement('div');
+            transactionDiv.classList.add('transaction-item');
+            transactionDiv.innerHTML = `
+                <p><strong>Transaction ID:</strong> ${transaction.transactionId}</p>
+                <p><strong>User ID:</strong> ${transaction.userId}</p>
+                <p><strong>User Email:</strong> ${transaction.userEmail}</p>
+                <p><strong>Type:</strong> ${transaction.type}</p>
+                <p><strong>Amount:</strong> ${transaction.amount} PI</p>
+                <p><strong>Wallet Address:</strong> ${transaction.walletAddress}</p>
+                <p><strong>Status:</strong> ${transaction.status}</p>
+                <p><strong>Timestamp:</strong> ${transaction.timestamp}</p>
+                <button class="approve-btn" data-key="${key}">Approve</button>
+                <button class="reject-btn" data-key="${key}">Reject</button>
+            `;
+            adminTransactionsElement.appendChild(transactionDiv);
+        });
+
+        const approveButtons = document.querySelectorAll('.approve-btn');
+        approveButtons.forEach(btn => {
+            addSafeClickListener(btn, async () => {
+                const key = btn.getAttribute('data-key');
+                const transactionRef = ref(database, `transactions/${key}`);
+                await update(transactionRef, { status: 'approved' });
+                showNotification('Transaction approved!');
+                renderAdminPanel();
+            });
+        });
+
+        const rejectButtons = document.querySelectorAll('.reject-btn');
+        rejectButtons.forEach(btn => {
+            addSafeClickListener(btn, async () => {
+                const key = btn.getAttribute('data-key');
+                const transactionRef = ref(database, `transactions/${key}`);
+                await update(transactionRef, { status: 'rejected' });
+                showNotification('Transaction rejected!');
+                renderAdminPanel();
+            });
+        });
+    });
 }
 
 // Exchange PI to Farm Coins
@@ -1252,7 +1396,7 @@ function loadExchangeRate() {
     onValue(rateRef, (snapshot) => {
         currentExchangeRate = snapshot.val() || currentExchangeRate;
         const rateEl = document.getElementById("live-rate");
-        if (rateEl) rateEl.textContent = `1 Pi = ${currentExchangeRate.toLocaleString()} FC`;
+        if (rateEl) rateEl.textContent = `1 PI = ${currentExchangeRate.toLocaleString()} FC`;
         updateExchangeResult();
     });
 }
@@ -1295,7 +1439,7 @@ async function handleExchange() {
     let resultText = "";
 
     if (direction === "piToFc") {
-        if (pi < amount) return showNotification("Not enough Pi!");
+        if (pi < amount) return showNotification("Not enough PI!");
         const converted = Math.floor(amount * currentExchangeRate);
         pi -= amount;
         fc += converted;
@@ -1308,8 +1452,8 @@ async function handleExchange() {
         resultText = converted.toFixed(6);
     }
 
-    pi = Math.round(pi * 1000000) / 1000000;
-    fc = Math.floor(fc);
+    piBalance = Math.round(pi * 1000000) / 1000000; // Ganti pi jadi piBalance
+    farmCoins = Math.floor(fc);
 
     document.getElementById("exchange-loading").style.display = "block";
 
@@ -1317,14 +1461,14 @@ async function handleExchange() {
         (async () => {
             try {
                 await update(playerRef, {
-                    piBalance: pi,
-                    farmCoins: fc
+                    piBalance: piBalance, // Ganti pi jadi piBalance
+                    farmCoins: farmCoins
                 });
 
                 const piElem = document.getElementById("pi-balance");
                 const fcElem = document.getElementById("fc-balance");
-                if (piElem) piElem.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
-                if (fcElem) fcElem.textContent = fc.toLocaleString();
+                if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+                if (fcElem) fcElem.textContent = farmCoins.toLocaleString();
                 document.getElementById("exchange-amount").value = "";
                 updateExchangeResult(resultText);
                 playCoinSound();
@@ -1347,7 +1491,7 @@ directionSelect.addEventListener("change", () => {
     if (direction === "piToFc") {
         exchangeBtn.textContent = "Exchange to FC";
     } else {
-        exchangeBtn.textContent = "Exchange to Pi";
+        exchangeBtn.textContent = "Exchange to PI";
     }
 });
 
@@ -1463,172 +1607,22 @@ function showNotification(message) {
     }, 3000);
 }
 
-// Show transaction animation
-function showTransactionAnimation(amount, isPositive, buttonElement) {
-    const animation = document.createElement('div');
-    animation.classList.add('transaction-animation');
-    animation.classList.add(isPositive ? 'positive' : 'negative');
-    animation.textContent = amount;
-
-    document.body.appendChild(animation);
-
-    const rect = buttonElement ? buttonElement.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
-    animation.style.left = `${rect.left + rect.width / 2}px`;
-    animation.style.top = `${rect.top - 20}px`;
-
-    setTimeout(() => {
-        if (animation.parentNode) animation.remove();
-    }, 1000);
-}
-
-// Check harvest achievement
-function checkHarvestAchievement() {
-    if (harvestCount >= 10 && !achievements.harvest) {
-        achievements.harvest = true;
-        farmCoins += 500;
-        showNotification(langData[currentLang]?.harvestAchievement || 'Achievement Unlocked: Harvest Master! +500 Coins');
-        updateWallet();
-        renderAchievements();
+// Start game
+function startGame() {
+    const startScreenElement = document.getElementById('start-screen');
+    const gameScreenElement = document.getElementById('game-screen');
+    if (startScreenElement && gameScreenElement) {
+        startScreenElement.style.display = 'none';
+        gameScreenElement.style.display = 'block';
+        playBgMusic();
+        playBgVoice();
     }
 }
 
-// Check coin achievement
-function checkCoinAchievement() {
-    if (farmCoins >= 1000 && !achievements.coins) {
-        achievements.coins = true;
-        water += 100;
-        showNotification(langData[currentLang]?.coinAchievement || 'Achievement Unlocked: Coin Collector! +100 Water');
-        updateWallet();
-        renderAchievements();
-    }
-}
-
-// Render achievements
-function renderAchievements() {
-    const achievementsContentElement = document.getElementById('achievements-content');
-    if (!achievementsContentElement) return;
-
-    achievementsContentElement.innerHTML = '';
-
-    const harvestAchievement = document.createElement('div');
-    harvestAchievement.classList.add('achievement');
-    harvestAchievement.innerHTML = `
-        <h3>${langData[currentLang]?.harvestAchievementTitle || 'Harvest Master'}</h3>
-        <p>${langData[currentLang]?.harvestAchievementDesc || 'Harvest 10 crops'}</p>
-        <p>${langData[currentLang]?.statusLabel || 'Status'}: ${achievements.harvest ? langData[currentLang]?.unlocked || 'Unlocked' : langData[currentLang]?.locked || 'Locked'}</p>
-    `;
-    achievementsContentElement.appendChild(harvestAchievement);
-
-    const coinAchievement = document.createElement('div');
-    coinAchievement.classList.add('achievement');
-    coinAchievement.innerHTML = `
-        <h3>${langData[currentLang]?.coinAchievementTitle || 'Coin Collector'}</h3>
-        <p>${langData[currentLang]?.coinAchievementDesc || 'Collect 1000 Farm Coins'}</p>
-        <p>${langData[currentLang]?.statusLabel || 'Status'}: ${achievements.coins ? langData[currentLang]?.unlocked || 'Unlocked' : langData[currentLang]?.locked || 'Locked'}</p>
-    `;
-    achievementsContentElement.appendChild(coinAchievement);
-
-    savePlayerData();
-}
-
-// Update UI text based on language
-function updateUIText() {
-    if (!langData[currentLang]) return;
-
-    const titleElement = document.getElementById('title');
-    if (titleElement) titleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
-
-    const gameTitleElement = document.getElementById('game-title');
-    if (gameTitleElement) gameTitleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
-
-    const startTextElement = document.getElementById('start-text');
-    if (startTextElement) startTextElement.textContent = langData[currentLang]?.startGame || 'Start Game';
-
-    const farmTabElement = document.querySelector('.tab-btn[data-tab="farm"]');
-    if (farmTabElement) farmTabElement.textContent = langData[currentLang]?.farmTab || 'Farm';
-
-    const shopTabElement = document.querySelector('.tab-btn[data-tab="shop"]');
-    if (shopTabElement) shopTabElement.textContent = langData[currentLang]?.shopTab || 'Shop';
-
-    const upgradesTabElement = document.querySelector('.tab-btn[data-tab="upgrades"]');
-    if (upgradesTabElement) upgradesTabElement.textContent = langData[currentLang]?.upgradesTab || 'Upgrades';
-
-    const inventoryTabElement = document.querySelector('.tab-btn[data-tab="inventory"]');
-    if (inventoryTabElement) inventoryTabElement.textContent = langData[currentLang]?.inventoryTab || 'Inventory';
-
-    const exchangeTabElement = document.querySelector('.tab-btn[data-tab="exchange"]');
-    if (exchangeTabElement) exchangeTabElement.textContent = langData[currentLang]?.exchangeTab || 'Exchange';
-
-    const financeTabElement = document.querySelector('.tab-btn[data-tab="finance"]');
-    if (financeTabElement) financeTabElement.textContent = langData[currentLang]?.financeTab || 'Finance';
-
-    const leaderboardTabElement = document.querySelector('.tab-btn[data-tab="leaderboard"]');
-    if (leaderboardTabElement) leaderboardTabElement.textContent = langData[currentLang]?.leaderboardTab || 'Leaderboard';
-
-    const achievementsTabElement = document.querySelector('.tab-btn[data-tab="achievements"]');
-    if (achievementsTabElement) achievementsTabElement.textContent = langData[currentLang]?.achievementsTab || 'Achievements';
-
-    const langToggleElement = document.getElementById('lang-toggle');
-    if (langToggleElement) langToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
-
-    const gameLangToggleElement = document.getElementById('game-lang-toggle');
-    if (gameLangToggleElement) gameLangToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
-
-    const upgradesTitleElement = document.getElementById('upgrades-title');
-    if (upgradesTitleElement) upgradesTitleElement.textContent = langData[currentLang]?.upgradesTitle || 'Upgrades';
-
-    const upgradesContentElement = document.getElementById('upgrades-content');
-    if (upgradesContentElement) upgradesContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
-
-    const exchangeTitleElement = document.getElementById('exchange-title');
-    if (exchangeTitleElement) exchangeTitleElement.textContent = langData[currentLang]?.exchangeTitle || 'Exchange';
-
-    const exchangeRateElement = document.getElementById('exchange-rate');
-    if (exchangeRateElement) exchangeRateElement.textContent = `${langData[currentLang]?.exchangeRate || '1 PI = 1,000,000 Farm Coins'}`;
-
-    const exchangeAmountElement = document.getElementById('exchange-amount');
-    if (exchangeAmountElement) exchangeAmountElement.placeholder = langData[currentLang]?.enterPiAmount || 'Enter PI amount';
-
-    const exchangeResultLabelElement = document.getElementById('exchange-result-label');
-    if (exchangeResultLabelElement) exchangeResultLabelElement.textContent = `${langData[currentLang]?.farmCoinsLabel || 'Farm Coins'}: `;
-
-    const exchangeBtnElement = document.getElementById('exchange-btn');
-    if (exchangeBtnElement) exchangeBtnElement.textContent = langData[currentLang]?.exchangeButton || 'Exchange to Farm Coins';
-
-    const leaderboardTitleElement = document.getElementById('leaderboard-title');
-    if (leaderboardTitleElement) leaderboardTitleElement.textContent = langData[currentLang]?.leaderboardTitle || 'Leaderboard';
-
-    const leaderboardContentElement = document.getElementById('leaderboard-content');
-    if (leaderboardContentElement) leaderboardContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
-
-    const settingsTitleElement = document.getElementById('settings-title');
-    if (settingsTitleElement) settingsTitleElement.textContent = langData[currentLang]?.settingsTitle || 'Settings';
-
-    const musicVolumeLabelElement = document.getElementById('music-volume-label');
-    if (musicVolumeLabelElement) musicVolumeLabelElement.textContent = langData[currentLang]?.musicVolumeLabel || 'Music Volume:';
-
-    const voiceVolumeLabelElement = document.getElementById('voice-volume-label');
-    if (voiceVolumeLabelElement) voiceVolumeLabelElement.textContent = langData[currentLang]?.voiceVolumeLabel || 'Voice/SFX Volume:';
-
-    const exitGameBtnElement = document.getElementById('exit-game-btn');
-    if (exitGameBtnElement) exitGameBtnElement.textContent = langData[currentLang]?.exitGame || 'Exit';
-
-    const dailyRewardTitleElement = document.getElementById('daily-reward-title');
-    if (dailyRewardTitleElement) dailyRewardTitleElement.textContent = langData[currentLang]?.dailyRewardTitle || 'Daily Reward';
-
-    const claimModalBtnElement = document.getElementById('claim-modal-btn');
-    if (claimModalBtnElement) claimModalBtnElement.textContent = langData[currentLang]?.claimButton || 'Claim';
-
-    const shopBuyTabElement = document.getElementById('shop-buy-tab');
-    if (shopBuyTabElement) shopBuyTabElement.textContent = langData[currentLang]?.buyTab || 'Buy';
-
-    const shopSellTabElement = document.getElementById('shop-sell-tab');
-    if (shopSellTabElement) shopSellTabElement.textContent = langData[currentLang]?.sellTab || 'Sell';
-
-    const sellSectionTitleElement = document.getElementById('sell-section-title');
-    if (sellSectionTitleElement) sellSectionTitleElement.textContent = langData[currentLang]?.sellSectionTitle || 'Sell Items';
-
-    updateWallet();
+// Toggle language
+function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'id' : 'en';
+    updateUIText();
     renderShop();
     renderInventory();
     renderSellSection();
@@ -1636,77 +1630,115 @@ function updateUIText() {
     checkDailyReward();
 }
 
-// Toggle language
-function toggleLanguage() {
-    currentLang = currentLang === 'en' ? 'id' : 'en';
-    localStorage.setItem('language', currentLang);
-    updateUIText();
+// Update UI text
+function updateUIText() {
+    const titleElement = document.getElementById('title');
+    const gameTitleElement = document.getElementById('game-title');
+    const langToggleElement = document.getElementById('lang-toggle');
+    const gameLangToggleElement = document.getElementById('game-lang-toggle');
+    const settingsTitleElement = document.getElementById('settings-title');
+    const musicVolumeLabelElement = document.getElementById('music-volume-label');
+    const voiceVolumeLabelElement = document.getElementById('voice-volume-label');
+    const dailyRewardTitleElement = document.getElementById('daily-reward-title');
+    const upgradesTitleElement = document.getElementById('upgrades-title');
+    const upgradesContentElement = document.getElementById('upgrades-content');
+    const sellSectionTitleElement = document.getElementById('sell-section-title');
+    const leaderboardTitleElement = document.getElementById('leaderboard-title');
+    const leaderboardContentElement = document.getElementById('leaderboard-content');
+    const exchangeTitleElement = document.querySelector('.exchange-title');
+
+    if (titleElement) titleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
+    if (gameTitleElement) gameTitleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
+    if (langToggleElement) langToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
+    if (gameLangToggleElement) gameLangToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
+    if (settingsTitleElement) settingsTitleElement.textContent = langData[currentLang]?.settingsTitle || 'Settings';
+    if (musicVolumeLabelElement) musicVolumeLabelElement.textContent = langData[currentLang]?.musicVolumeLabel || 'Music Volume:';
+    if (voiceVolumeLabelElement) voiceVolumeLabelElement.textContent = langData[currentLang]?.voiceVolumeLabel || 'Voice/SFX Volume:';
+    if (dailyRewardTitleElement) dailyRewardTitleElement.textContent = langData[currentLang]?.dailyRewardTitle || 'Daily Reward';
+    if (upgradesTitleElement) upgradesTitleElement.textContent = langData[currentLang]?.upgradesTitle || 'Upgrades';
+    if (upgradesContentElement) upgradesContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
+    if (sellSectionTitleElement) sellSectionTitleElement.textContent = langData[currentLang]?.sellSectionTitle || 'Sell Items';
+    if (leaderboardTitleElement) leaderboardTitleElement.textContent = langData[currentLang]?.leaderboardTitle || 'Leaderboard';
+    if (leaderboardContentElement) leaderboardContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
+    if (exchangeTitleElement) exchangeTitleElement.textContent = langData[currentLang]?.exchangeTitle || 'Live Exchange';
+
+    updateWallet();
 }
 
-// Start game
-function startGame() {
-    if (!userId) {
-        console.warn('Please login with Google first!');
+// Check harvest achievement
+function checkHarvestAchievement() {
+    if (harvestCount >= 5 && !achievements.harvest) {
+        achievements.harvest = true;
+        showNotification(langData[currentLang]?.harvestAchievement || 'Achievement Unlocked: Harvest Master!');
+        renderAchievements();
+        savePlayerData();
+    }
+}
+
+// Check coin achievement
+function checkCoinAchievement() {
+    if (farmCoins >= 1000 && !achievements.coins) {
+        achievements.coins = true;
+        showNotification(langData[currentLang]?.coinAchievement || 'Achievement Unlocked: Coin Collector!');
+        renderAchievements();
+        savePlayerData();
+    }
+}
+
+// Render achievements
+function renderAchievements() {
+    const achievementsContentElement = document.getElementById('achievements-content');
+    if (!achievementsContentElement) {
+        console.error('achievements-content element not found');
         return;
     }
-    console.log('Starting game...');
-    const startScreenElement = document.getElementById('start-screen');
-    const gameScreenElement = document.getElementById('game-screen');
-    const exitGameBtnElement = document.getElementById('exit-game-btn');
-    if (startScreenElement && gameScreenElement && exitGameBtnElement) {
-        startScreenElement.style.display = 'none';
-        startScreenElement.classList.remove('center-screen');
-        gameScreenElement.style.display = 'flex';
-        gameScreenElement.classList.add('fade-in');
-        exitGameBtnElement.style.display = 'block';
-    }
-    isAudioPlaying = false;
 
-    playBgMusic();
-    playBgVoice();
-    switchTab('farm');
-    enterFullScreen();
+    achievementsContentElement.innerHTML = '';
+
+    const harvestAch = document.createElement('div');
+    harvestAch.classList.add('achievement');
+    harvestAch.innerHTML = `
+        <h3>${langData[currentLang]?.harvestAchievement || 'Harvest Master'}</h3>
+        <p>${langData[currentLang]?.harvestDesc || 'Harvest 5 crops'}</p>
+        <p>${achievements.harvest ? langData[currentLang]?.unlocked || 'Unlocked' : langData[currentLang]?.locked || 'Locked'}</p>
+    `;
+    achievementsContentElement.appendChild(harvestAch);
+
+    const coinAch = document.createElement('div');
+    coinAch.classList.add('achievement');
+    coinAch.innerHTML = `
+        <h3>${langData[currentLang]?.coinAchievement || 'Coin Collector'}</h3>
+        <p>${langData[currentLang]?.coinDesc || 'Collect 1000 Farm Coins'}</p>
+        <p>${achievements.coins ? langData[currentLang]?.unlocked || 'Unlocked' : langData[currentLang]?.locked || 'Locked'}</p>
+    `;
+    achievementsContentElement.appendChild(coinAch);
 }
 
-// Initialize game
-async function initializeGame() {
-    try {
-        await loadData();
-        updateUIText();
+// Show transaction animation
+function showTransactionAnimation(amountText, isPositive, buttonElement) {
+    if (!buttonElement) return;
 
-        setTimeout(() => {
-            const loadingScreenElement = document.getElementById('loading-screen');
-            const loginScreenElement = document.getElementById('login-screen');
-            if (loadingScreenElement && loginScreenElement) {
-                loadingScreenElement.style.display = 'none';
-                loginScreenElement.style.display = 'flex';
-            }
-        }, 1000);
-    } catch (error) {
-        console.error('Error initializing game:', error.message);
-        showNotification('Error initializing game. Please reload.');
-        setTimeout(() => {
-            const loadingScreenElement = document.getElementById('loading-screen');
-            const loginScreenElement = document.getElementById('login-screen');
-            if (loadingScreenElement && loginScreenElement) {
-                loadingScreenElement.style.display = 'none';
-                loginScreenElement.style.display = 'flex';
-            }
-        }, 1000);
-    }
+    const amountElement = document.createElement('div');
+    amountElement.textContent = amountText;
+    amountElement.classList.add('amount-text', isPositive ? 'positive' : 'negative');
+    buttonElement.appendChild(amountElement);
+
+    setTimeout(() => {
+        if (amountElement.parentNode) amountElement.remove();
+    }, 800);
 }
 
-// Fullscreen toggle
+// Fullscreen functions
 function enterFullScreen() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen();
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
+    const docEl = document.documentElement;
+    if (docEl.requestFullscreen) {
+        docEl.requestFullscreen();
+    } else if (docEl.mozRequestFullScreen) {
+        docEl.mozRequestFullScreen();
+    } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+    } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen();
     }
 }
 
@@ -1722,19 +1754,9 @@ function exitFullScreen() {
     }
 }
 
-// Load language preference from localStorage
-const storedLang = localStorage.getItem('language');
-if (storedLang) {
-    currentLang = storedLang;
-}
-
-// Initial UI setup
-updateUIText();
-checkDailyReward();
-renderAchievements();
-
-// Handle tab switching on load if URL has hash
-const hash = window.location.hash.substring(1);
-if (hash && document.getElementById(hash)) {
-    switchTab(hash);
+// Initialize game
+function initializeGame() {
+    loadData();
+    updateUIText();
+    loadUserBalances();
 }

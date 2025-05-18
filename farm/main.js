@@ -1899,12 +1899,18 @@ function exitFullScreen() {
 const realDepositBtn = document.getElementById("real-deposit-btn");
 const realDepositMsg = document.getElementById("real-deposit-msg");
 const depositAmountInput = document.getElementById("deposit-amount");
+const depositPopup = document.getElementById("deposit-popup");
+const popupAmount = document.getElementById("popup-amount");
+const popupMemo = document.getElementById("popup-memo");
+const popupUserId = document.getElementById("popup-userid");
+const confirmDepositBtn = document.getElementById("confirm-deposit");
+const cancelDepositBtn = document.getElementById("cancel-deposit");
 
 // Setup Deposit Request
 realDepositBtn.addEventListener('click', () => {
   const amount = parseFloat(depositAmountInput.value);
-  if (!amount || amount <= 0) {
-    realDepositMsg.textContent = 'Please enter a valid amount.';
+  if (!amount || amount < 1) {
+    realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
     return;
   }
 
@@ -1914,27 +1920,46 @@ realDepositBtn.addEventListener('click', () => {
     return;
   }
 
-  const depositId = `DEPOSIT-${user.uid}-${Date.now()}`;
+  const transactionId = `DEPOSIT-${user.uid}-${Date.now()}`;
   const memo = `DEPOSIT-${user.uid}-${Date.now().toString().slice(-5)}`;
 
-  set(ref(database, `deposits/${depositId}`), { // Ganti ref(...).set dengan set(ref(...), ...)
-    userId: user.uid,
-    amount: amount,
-    memo: memo,
-    status: 'pending',
-    timestamp: Date.now()
-  }).then(() => {
-    realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: YOUR_WALLET_ADDRESS with memo: ${memo}`;
-  }).catch((err) => {
-    realDepositMsg.textContent = 'Error creating deposit request: ' + err.message;
-  });
+  // Isi pop-up
+  popupAmount.textContent = amount;
+  popupMemo.textContent = memo;
+  popupUserId.textContent = user.uid;
+
+  // Tampilkan pop-up
+  depositPopup.style.display = "flex";
+
+  // Konfirmasi deposit
+  confirmDepositBtn.onclick = () => {
+    set(ref(database, `transactions/${transactionId}`), {
+      amount: amount,
+      type: "deposit",
+      status: 'pending',
+      timestamp: Date.now(),
+      userId: user.uid,
+      memo: memo
+    }).then(() => {
+      realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: YOUR_WALLET_ADDRESS with memo: ${memo}`;
+      depositPopup.style.display = "none"; // Tutup pop-up
+    }).catch((err) => {
+      realDepositMsg.textContent = 'Error creating deposit request: ' + err.message;
+    });
+  };
+
+  // Batal deposit
+  cancelDepositBtn.onclick = () => {
+    depositPopup.style.display = "none";
+    realDepositMsg.textContent = 'Deposit cancelled.';
+  };
 });
 
 // Setup FCM
 let isAdmin = false;
 auth.onAuthStateChanged((user) => {
   if (user) {
-    get(ref(database, `players/${user.uid}/role`)).then((snapshot) => { // Ganti ref(...).once('value') dengan get(ref(...))
+    get(ref(database, `players/${user.uid}/role`)).then((snapshot) => {
       isAdmin = snapshot.val() === 'admin';
       if (isAdmin && 'serviceWorker' in navigator) {
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
@@ -1942,7 +1967,7 @@ auth.onAuthStateChanged((user) => {
             messaging.useServiceWorker(registration);
             return messaging.getToken();
           }).then((token) => {
-            set(ref(database, 'adminTokens/' + user.uid), token); // Ganti ref(...).set dengan set(ref(...), ...)
+            set(ref(database, 'adminTokens/' + user.uid), token);
           }).catch((err) => console.log('FCM Error:', err));
       }
     });
@@ -1950,47 +1975,51 @@ auth.onAuthStateChanged((user) => {
 });
 
 // Admin Panel
-onValue(ref(database, 'deposits'), (snapshot) => {
-  const deposits = snapshot.val();
+onValue(ref(database, 'transactions'), (snapshot) => {
+  const transactions = snapshot.val();
   const depositItems = document.getElementById('deposit-items');
   depositItems.innerHTML = '';
-  if (deposits) {
-    for (let id in deposits) {
-      const d = deposits[id];
-      depositItems.innerHTML += `
-        <tr>
-          <td>${d.userId}</td><td>${d.amount} PI</td><td>${d.memo}</td>
-          <td>${new Date(d.timestamp).toLocaleString()}</td>
-          <td>${d.status}</td>
-          <td>
-            <button onclick="approveDeposit('${id}')">Approve</button>
-            <button onclick="rejectDeposit('${id}')">Reject</button>
-          </td>
-        </tr>
-      `;
+  if (transactions) {
+    for (let id in transactions) {
+      const t = transactions[id];
+      if (t.type === "deposit") {
+        depositItems.innerHTML += `
+          <tr>
+            <td>${t.userId}</td><td>${t.amount} PI</td><td>${t.memo || '-'}</td>
+            <td>${new Date(t.timestamp).toLocaleString()}</td>
+            <td>${t.status}</td>
+            <td>
+              <button onclick="approveDeposit('${id}')">Approve</button>
+              <button onclick="rejectDeposit('${id}')">Reject</button>
+            </td>
+          </tr>
+        `;
+      }
     }
   }
 });
 
 window.approveDeposit = function(id) {
-  set(ref(database, `deposits/${id}/status`), 'approved'); // Ganti ref(...).set dengan set(ref(...), ...)
-  get(ref(database, `deposits/${id}`)).then((snap) => { // Ganti ref(...).once('value') dengan get(ref(...))
-    const deposit = snap.val();
-    const userRef = ref(database, `players/${deposit.userId}`);
-    userRef.transaction(player => {
-      if (player) player.piBalance = (player.piBalance || 0) + parseFloat(deposit.amount);
-      return player;
-    });
+  set(ref(database, `transactions/${id}/status`), 'approved');
+  get(ref(database, `transactions/${id}`)).then((snap) => {
+    const transaction = snap.val();
+    if (transaction.type === "deposit") {
+      const userRef = ref(database, `players/${transaction.userId}`);
+      userRef.transaction(player => {
+        if (player) player.piBalance = (player.piBalance || 0) + parseFloat(transaction.amount);
+        return player;
+      });
+    }
   }).then(() => {
-    showUserNotification(`Deposit ${deposit.amount} PI approved!`);
+    showUserNotification(`Deposit ${transaction.amount} PI approved!`);
   });
 };
 
 window.rejectDeposit = function(id) {
-  set(ref(database, `deposits/${id}/status`), 'rejected'); // Ganti ref(...).set dengan set(ref(...), ...)
-  get(ref(database, `deposits/${id}`)).then((snap) => { // Ganti ref(...).once('value') dengan get(ref(...))
-    const deposit = snap.val();
-    showUserNotification(`Deposit ${deposit.amount} PI rejected. Contact support.`);
+  set(ref(database, `transactions/${id}/status`), 'rejected');
+  get(ref(database, `transactions/${id}`)).then((snap) => {
+    const transaction = snap.val();
+    showUserNotification(`Deposit ${transaction.amount} PI rejected. Contact support.`);
   });
 };
 

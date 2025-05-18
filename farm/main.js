@@ -73,7 +73,6 @@ if (registerEmailBtn) {
             registerError.textContent = 'Registration successful! Please verify your email.';
             showNotification('Registration successful! Check your email for verification.');
 
-            // Inisialisasi data player baru
             const playerRef = ref(database, `players/${user.uid}`);
             await set(playerRef, {
                 farmCoins: 0,
@@ -89,7 +88,6 @@ if (registerEmailBtn) {
                 claimedToday: false
             });
 
-            // Reset input
             registerEmailInput.value = '';
             registerPasswordInput.value = '';
         } catch (error) {
@@ -230,6 +228,7 @@ function updateWallet() {
 function loadUserBalances() {
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
+        console.log('Loading user balances:', userId);
         const data = snapshot.val() || {};
         piBalance = data.piBalance || 0;
         farmCoins = data.farmCoins || 0;
@@ -303,11 +302,14 @@ function updateVolumes() {
 // Load data
 async function loadData() {
     try {
+        console.log('Loading data from /data/lang.json and /data/vegetables.json');
         const langRes = await fetch('/data/lang.json');
         langData = await langRes.json();
+        console.log('langData loaded:', Object.keys(langData).length);
         const vegRes = await fetch('/data/vegetables.json');
         const vegJson = await vegRes.json();
         vegetables = vegJson.vegetables;
+        console.log('vegetables loaded:', vegetables.length);
     } catch (error) {
         console.error('Error loading data:', error.message);
         showNotification('Error loading game data.');
@@ -367,6 +369,7 @@ function loadPlayerData() {
     }
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
+        console.log('Loading player data for user:', userId);
         if (isDataLoaded) return;
         const data = snapshot.val() || {};
         farmCoins = data.farmCoins || 0;
@@ -665,7 +668,9 @@ async function handleExchange() {
 
 // Initialize game
 async function initializeGame() {
+    console.log('Initializing game...');
     await loadData();
+    console.log('Game initialized, starting UI setup');
     const savedLang = localStorage.getItem('language') || 'en';
     currentLang = savedLang;
     const langToggleElement = document.getElementById('lang-toggle');
@@ -838,6 +843,7 @@ function exitFullScreen() {
 
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, starting initialization');
     const storedUserId = localStorage.getItem('userId');
     if (storedUserId) {
         userId = storedUserId;

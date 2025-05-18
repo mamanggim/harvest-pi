@@ -2147,10 +2147,6 @@ function showUserNotification(message) {
 }
 
 // Setup Deposit Request
-const depositAmountInput = document.getElementById('deposit-amount');
-const realDepositBtn = document.getElementById('real-deposit-btn');
-const realDepositMsg = document.getElementById('real-deposit-msg');
-
 realDepositBtn.addEventListener('click', () => {
   const amount = parseFloat(depositAmountInput.value);
   if (!amount || amount <= 0) {

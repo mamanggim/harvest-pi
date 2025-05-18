@@ -1895,9 +1895,13 @@ function exitFullScreen() {
     }
 }
 
-  // Tunggu DOM siap
-  document.addEventListener('DOMContentLoaded', () => {
-  
+  // Fungsi encode email
+function encodeEmail(email) {
+  return email.replace('@', '_at_').replace('.', '_dot_');
+}
+
+// Tunggu DOM siap
+document.addEventListener('DOMContentLoaded', () => {
   // Fitur Deposit
   const realDepositBtn = document.getElementById("real-deposit-btn");
   const realDepositMsg = document.getElementById("real-deposit-msg");
@@ -1930,7 +1934,7 @@ function exitFullScreen() {
 
   // Setup Deposit Request
   realDepositBtn.addEventListener('click', () => {
-    console.log('Tombol deposit diklik'); // Debug
+    console.log('Tombol deposit diklik');
 
     const amount = parseFloat(depositAmountInput.value);
     if (!amount || amount < 1) {
@@ -1946,13 +1950,14 @@ function exitFullScreen() {
       return;
     }
 
-    const transactionId = `DEPOSIT-${user.email}-${Date.now()}`; // Ganti UID jadi email
-    const memo = `DEPOSIT-${user.email}-${Date.now().toString().slice(-5)}`;
+    const encodedEmail = encodeEmail(user.email);
+    const transactionId = `DEPOSIT-${encodedEmail}-${Date.now()}`;
+    const memo = `DEPOSIT-${encodedEmail}-${Date.now().toString().slice(-5)}`;
 
     // Isi pop-up
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
-    popupUserId.textContent = user.email; // Ganti UID jadi email
+    popupUserId.textContent = user.email; // Tetap tampilkan email asli di frontend
     console.log('Pop-up diisi:', { amount, memo, email: user.email });
 
     // Tampilkan pop-up
@@ -1967,7 +1972,7 @@ function exitFullScreen() {
         type: "deposit",
         status: 'pending',
         timestamp: Date.now(),
-        email: user.email, // Ganti userId jadi email
+        email: user.email, // Simpan email asli di data
         memo: memo
       }).then(() => {
         realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: YOUR_WALLET_ADDRESS with memo: ${memo}`;
@@ -1991,7 +1996,7 @@ function exitFullScreen() {
   let isAdmin = false;
   auth.onAuthStateChanged((user) => {
     if (user) {
-      get(ref(database, `players/${user.uid}/role`)).then((snapshot) => {
+      get(ref(database, `players/${encodeEmail(user.email)}/role`)).then((snapshot) => {
         isAdmin = snapshot.val() === 'admin';
         if (isAdmin && 'serviceWorker' in navigator) {
           navigator.serviceWorker.register('/firebase-messaging-sw.js')
@@ -1999,7 +2004,7 @@ function exitFullScreen() {
               messaging.useServiceWorker(registration);
               return messaging.getToken();
             }).then((token) => {
-              set(ref(database, `adminTokens/${user.email}`), token); // Ganti UID jadi email
+              set(ref(database, `adminTokens/${encodeEmail(user.email)}`), token);
             }).catch((err) => console.log('FCM Error:', err));
         }
       });
@@ -2038,7 +2043,7 @@ function exitFullScreen() {
     get(ref(database, `transactions/${id}`)).then((snap) => {
       const transaction = snap.val();
       if (transaction.type === "deposit") {
-        const userRef = ref(database, `players/${transaction.email}`); // Ganti UID jadi email
+        const userRef = ref(database, `players/${encodeEmail(transaction.email)}`);
         userRef.transaction(player => {
           if (player) player.piBalance = (player.piBalance || 0) + parseFloat(transaction.amount);
           return player;

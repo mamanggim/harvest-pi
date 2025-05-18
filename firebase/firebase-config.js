@@ -11,7 +11,8 @@ const firebaseConfig = {
   projectId: "harvest-pi",
   storageBucket: "harvest-pi.firebasestorage.app",
   messagingSenderId: "650006770674",
-  appId: "1:650006770674:web:bf6291198fc0a02be7b16b"
+  appId: "1:650006770674:web:bf6291198fc0a02be7b16b",
+  measurementId: "G-HV6J072QQZ"
 };
 
 // Inisialisasi Firebase App

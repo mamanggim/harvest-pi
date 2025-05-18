@@ -6,19 +6,6 @@
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="farm/style.css?v=40" />
-  <style>
-    #start-text {
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      padding: 15px;
-      font-size: 18px;
-      user-select: none;
-    }
-    #start-text:active {
-      transform: scale(0.95);
-    }
-  </style>
 </head>
 <body>
 
@@ -32,7 +19,21 @@
 <div id="login-screen" style="display: flex;">
   <div class="login-container">
     <h1>Harvest Pi</h1>
-    <button id="login-pi-btn">Login with Pi</button>
+    <!-- Form Login dengan Email dan Password -->
+    <div class="login-form">
+      <input type="email" id="email-input" placeholder="Enter email" />
+      <input type="password" id="password-input" placeholder="Enter password" />
+      <button id="login-email-btn">Login</button>
+      <div id="login-error" style="display: none; color: red;"></div>
+      <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
+    </div>
+    <!-- Form Register -->
+    <div class="register-form">
+      <input type="email" id="register-email-input" placeholder="Enter email to register" />
+      <input type="password" id="register-password-input" placeholder="Enter password" />
+      <button id="register-email-btn">Register</button>
+      <div id="register-error" style="display: none; color: red;"></div>
+    </div>
     <div class="policy-links">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
       <a href="/term-of-service.html" target="_blank">Terms of Service</a>
@@ -131,8 +132,8 @@
         </div>
       </div>
     </div>
-    <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
   </div>
+  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
 
   <!-- FINANCE -->
   <div id="finance" class="tab-content">
@@ -149,7 +150,7 @@
 
     <h3>Withdraw</h3>
     <button id="withdraw-btn" disabled>Withdraw PI</button>
-    <div id="real-withdraw-msg" class="deposit-message"></div> <!-- Ditambahkan agar sinkron dengan JS -->
+    <div id="real-withdraw-msg" class="deposit-message"></div>
     <p id="withdraw-note" class="note">
       This feature will unlock when you reach: <br />
       - Level 10<br />

@@ -18,8 +18,8 @@
     #start-text:active {
       transform: scale(0.95);
     }
-    /* Perbesar tombol login */
-    #login-google-btn {
+    /* Perbesar tombol dan input login */
+    #login-email-btn {
       font-family: 'Press Start 2P', cursive;
       font-size: 20px;
       padding: 15px 30px;
@@ -31,11 +31,24 @@
       cursor: pointer;
       transition: transform 0.1s;
     }
-    #login-google-btn:hover {
+    #login-email-btn:hover {
       background-color: #3267d6;
     }
-    #login-google-btn:active {
+    #login-email-btn:active {
       transform: scale(0.95);
+    }
+    #email-input, #password-input {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 16px;
+      padding: 10px;
+      width: 200px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+    #login-error, #verify-email-msg {
+      color: white;
+      margin-top: 10px;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -48,10 +61,14 @@
 </div>
 
 <!-- LOGIN SCREEN -->
-<div id="login-screen" class="center-screen">
+<div id="login-screen" class="center-screen" style="background-image: url('assets/img/background-login.jpg'); background-size: cover; background-position: center;">
   <div class="login-container">
     <h1>Harvest Pi</h1>
-    <button id="login-google-btn">Login with Google</button>
+    <input type="email" id="email-input" placeholder="Email">
+    <input type="password" id="password-input" placeholder="Password">
+    <button id="login-email-btn">Login with Email</button>
+    <div id="login-error" style="display: none;"></div>
+    <div id="verify-email-msg" style="display: none;">Please verify your email to continue.</div>
     <div class="policy-links">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
       <a href="/term-of-service.html" target="_blank">Terms of Service</a>

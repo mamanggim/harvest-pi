@@ -1,7 +1,7 @@
 // Ambil database dan auth dari firebase-config.js
 import { database, auth } from '../firebase/firebase-config.js';
 import { ref, onValue, set, update, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import { signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { signInWithPopup, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Deklarasi claimModalBtn dan rewardModal sebagai global
 const claimModalBtn = document.getElementById('claim-modal-btn');
@@ -27,7 +27,6 @@ function addSafeClickListener(element, callback) {
 
 // Global variables
 let isDataLoaded = false;
-let piInitialized = false;
 let farmCoins = 0;
 let pi = 0;
 let water = 0;
@@ -44,15 +43,37 @@ let userId = null;
 let lastClaim = null;
 const plotCount = 4; // 2x2 grid
 const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
-let claimedToday = false; // Flag sederhana buat status klaim
-let isClaiming = false; // Tambah untuk lock claim
-let isAudioPlaying = false; // Flag to track audio state
+let claimedToday = false;
+let isClaiming = false;
+let isAudioPlaying = false;
 
+// Update wallet UI
+function updateWallet() {
+    const farmCoinsElement = document.getElementById('farm-coins');
+    const piCoinsElement = document.getElementById('pi-coins');
+    const waterElement = document.getElementById('water');
+    const levelElement = document.getElementById('level');
+    const xpFillElement = document.getElementById('xp-fill');
+
+    if (farmCoinsElement) farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
+    if (piCoinsElement) piCoinsElement.textContent = `${pi.toFixed(6)} PI`;
+    if (waterElement) waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
+    if (levelElement) levelElement.textContent = `Level: ${level} | XP: ${xp}`;
+    if (xpFillElement) xpFillElement.style.width = `${(xp / (level * 100)) * 100}%`;
+
+    const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
+    const piCoinBalanceElement = document.getElementById('pi-coin-balance');
+    if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins.toLocaleString();
+    if (piCoinBalanceElement) piCoinBalanceElement.textContent = pi.toFixed(6);
+
+    savePlayerData();
+}
+
+// Load user balances from Firebase
 function loadUserBalances() {
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
         const data = snapshot.val() || {};
-        
         pi = data.piBalance || 0;
         farmCoins = data.farmCoins || 0;
 
@@ -92,8 +113,6 @@ function playBgMusic() {
                     }, 100);
                 });
         }
-    } else {
-        console.log('BG Music already playing or bgMusic not found:', bgMusic, isAudioPlaying);
     }
 }
 
@@ -112,74 +131,39 @@ function playBgVoice() {
                     }, 100);
                 });
         }
-    } else {
-        console.log('BG Voice already playing or bgVoice not found:', bgVoice, isAudioPlaying);
     }
 }
 
 function playHarvestingSound() {
-    if (harvestingSound) {
-        const playPromise = harvestingSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Harvest sound failed:', e.message));
-        }
-    }
+    if (harvestingSound) harvestingSound.play().catch(e => console.log('Harvest sound failed:', e.message));
 }
 
 function playWateringSound() {
-    if (wateringSound) {
-        const playPromise = wateringSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Watering sound failed:', e.message));
-        }
-    }
+    if (wateringSound) wateringSound.play().catch(e => console.log('Watering sound failed:', e.message));
 }
 
 function playPlantingSound() {
-    if (plantingSound) {
-        const playPromise = plantingSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Planting sound failed:', e.message));
-        }
-    }
+    if (plantingSound) plantingSound.play().catch(e => console.log('Planting sound failed:', e.message));
 }
 
 function playMenuSound() {
-    if (menuSound) {
-        const playPromise = menuSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Menu sound failed:', e.message));
-        }
-    }
+    if (menuSound) menuSound.play().catch(e => console.log('Menu sound failed:', e.message));
 }
 
 function playBuyingSound() {
-    if (buyingSound) {
-        const playPromise = buyingSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Buying sound failed:', e.message));
-        }
-    }
+    if (buyingSound) buyingSound.play().catch(e => console.log('Buying sound failed:', e.message));
 }
 
 function playCoinSound() {
-    if (coinSound) {
-        const playPromise = coinSound.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log('Coin sound failed:', e.message));
-        }
-    }
+    if (coinSound) coinSound.play().catch(e => console.log('Coin sound failed:', e.message));
 }
 
 // Set posisi awal slider dari localStorage
 const musicVolumeSlider = document.getElementById('music-volume');
-if (musicVolumeSlider) {
-    musicVolumeSlider.value = localStorage.getItem('musicVolume') ?? 50;
-}
+if (musicVolumeSlider) musicVolumeSlider.value = localStorage.getItem('musicVolume') ?? 50;
+
 const voiceVolumeSlider = document.getElementById('voice-volume');
-if (voiceVolumeSlider) {
-    voiceVolumeSlider.value = localStorage.getItem('voiceVolume') ?? 50;
-}
+if (voiceVolumeSlider) voiceVolumeSlider.value = localStorage.getItem('voiceVolume') ?? 50;
 
 // Listener untuk simpan dan update volume real-time
 if (musicVolumeSlider) {
@@ -218,7 +202,7 @@ function updateVolumes() {
 // Panggil update pertama kali setelah semua siap
 updateVolumes();
 
-// START loadData fix
+// Load data
 async function loadData() {
     try {
         const langRes = await fetch('/data/lang.json');
@@ -234,88 +218,154 @@ async function loadData() {
         showNotification('Error loading game data.');
     }
 }
-// END loadData fix
 
-// Authenticate with Pi Network
-async function initializePiSDK() {
-    if (!window.Pi) {
-        console.error('Pi SDK not loaded');
-        showNotification('Pi Network SDK not available. Please try again later.');
-        return false;
+// Fungsi login dengan Google
+const provider = new GoogleAuthProvider();
+async function loginWithGoogle() {
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        userId = user.uid;
+        localStorage.setItem('userId', userId);
+        showNotification(`Logged in as ${user.displayName || user.email}`);
+        
+        const loginScreenElement = document.getElementById('login-screen');
+        const startScreenElement = document.getElementById('start-screen');
+        if (loginScreenElement && startScreenElement) {
+            loginScreenElement.style.display = 'none';
+            startScreenElement.style.display = 'flex';
+        }
+        loadPlayerData();
+    } catch (error) {
+        console.error('Google login failed:', error.message);
+        showNotification('Google login failed: ' + error.message);
     }
+}
+
+// Fungsi logout
+async function logout() {
+    try {
+        await auth.signOut();
+        localStorage.removeItem('userId');
+        userId = null;
+        showNotification('Logged out successfully');
+        window.location.reload();
+    } catch (error) {
+        console.error('Logout failed:', error.message);
+        showNotification('Logout failed: ' + error.message);
+    }
+}
+
+// Load player data
+function loadPlayerData() {
+    try {
+        if (!userId) {
+            console.warn('No userId, please login first!');
+            return;
+        }
+        const playerRef = ref(database, `players/${userId}`);
+
+        onValue(playerRef, (snapshot) => {
+            if (isDataLoaded) return;
+
+            const data = snapshot.val();
+            if (data) {
+                farmCoins = data.farmCoins || 0;
+                pi = data.piBalance || 0;
+                water = data.water || 0;
+                level = data.level || 1;
+                xp = data.xp || 0;
+                inventory = data.inventory || [];
+                farmPlots = data.farmPlots || [];
+                harvestCount = data.harvestCount || 0;
+                achievements = data.achievements || { harvest: false, coins: false };
+                lastClaim = data.lastClaim || null;
+                claimedToday = data.claimedToday || false;
+            } else {
+                const initialData = {
+                    farmCoins: 0,
+                    piBalance: 0,
+                    water: 0,
+                    level: 1,
+                    xp: 0,
+                    inventory: [],
+                    farmPlots: [],
+                    harvestCount: 0,
+                    achievements: { harvest: false, coins: false },
+                    lastClaim: null,
+                    claimedToday: false
+                };
+                set(playerRef, initialData).catch(err => {
+                    console.error('Initial set failed:', err);
+                    showNotification('Error initializing player data.');
+                });
+            }
+
+            isDataLoaded = true;
+            updateWallet();
+            initializePlots();
+            renderShop();
+            renderInventory();
+            renderSellSection();
+            renderAchievements();
+            checkDailyReward();
+        }, { onlyOnce: false });
+    } catch (error) {
+        console.error('Error loading player data:', error.message);
+        showNotification('Failed to connect to Firebase. Please check your internet connection and reload.');
+        isDataLoaded = false;
+    }
+}
+
+// Save player data to Firebase
+async function savePlayerData() {
+    if (!userId || !isDataLoaded) return;
+    const playerRef = ref(database, `players/${userId}`);
+
+    const dataToSave = {
+        farmCoins,
+        piBalance: pi,
+        water,
+        level,
+        xp,
+        inventory,
+        farmPlots,
+        harvestCount,
+        achievements,
+        lastClaim,
+        claimedToday
+    };
 
     try {
-        await Pi.init({
-            version: "2.0",
-            sandbox: true
-        });
-        piInitialized = true;
-        console.log('Pi SDK initialized successfully');
-        return true;
+        await update(playerRef, dataToSave);
+        console.log('Player data saved');
     } catch (error) {
-        console.error('Pi init failed:', error);
-        showNotification('Failed to initialize Pi SDK: ' + error.message);
-        return false;
+        console.error('Error saving player data:', error.message);
+        showNotification('Error saving data');
     }
-}
-
-// Update fungsi authenticateWithPi
-async function authenticateWithPi() {
-    if (!window.Pi) {
-        console.error('Pi SDK not loaded');
-        showNotification('Pi Network SDK not available. Please try again later.');
-        return;
-    }
-
-    if (!piInitialized) {
-        const initialized = await initializePiSDK();
-        if (!initialized) return;
-    }
-
-    const scopes = ['username', 'payments'];
-    Pi.authenticate(scopes, onIncompletePaymentFound)
-        .then(authResult => {
-            console.log('Pi Auth success:', authResult);
-            const user = authResult.user;
-            userId = user.uid; // Gunain UID, lebih unik
-            const playerRef = ref(database, `players/${userId}`);
-
-            loadUserBalances(); // Tampilkan saldo Pi & FC dari database
-            
-            update(playerRef, {
-                piUser: {
-                    uid: user.uid,
-                    username: user.username
-                },
-                pi: pi || 0
-            }).then(() => {
-                showNotification(`Logged in as ${user.username}`);
-                localStorage.setItem('userId', userId); // Simpan userId
-                const loginScreenElement = document.getElementById('login-screen');
-                const startScreenElement = document.getElementById('start-screen');
-                if (loginScreenElement && startScreenElement) {
-                    loginScreenElement.style.display = 'none';
-                    startScreenElement.style.display = 'flex';
-                }
-                loadPlayerData();
-            }).catch(error => {
-                console.error('Error saving Pi user data:', error);
-                showNotification('Failed to save Pi user data: ' + error.message);
-            });
-        })
-        .catch(error => {
-            console.error('Pi Auth failed:', error);
-            showNotification('Pi Network login failed: ' + error.message);
-        });
-}
-
-function onIncompletePaymentFound(payment) {
-    console.log("onIncompletePaymentFound", payment);
-    // Kalo gak pake backend, biarin kosong kayak gini
 }
 
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
+    // Login dengan Google
+    const loginGoogleBtnElement = document.getElementById('login-google-btn');
+    if (loginGoogleBtnElement) {
+        addSafeClickListener(loginGoogleBtnElement, loginWithGoogle);
+    }
+
+    // Load existing userId from localStorage if available
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) {
+        userId = storedUserId;
+        const loginScreenElement = document.getElementById('login-screen');
+        const startScreenElement = document.getElementById('start-screen');
+        if (loginScreenElement && startScreenElement) {
+            loginScreenElement.style.display = 'none';
+            startScreenElement.style.display = 'flex';
+        }
+        loadPlayerData();
+    }
+
     const startTextElement = document.getElementById('start-text');
     if (startTextElement) addSafeClickListener(startTextElement, startGame);
 
@@ -402,10 +452,15 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
         });
     }
-    
+
+    const logoutBtnElement = document.getElementById('logout-btn');
+    if (logoutBtnElement) {
+        addSafeClickListener(logoutBtnElement, logout);
+    }
+
     const exchangeBtnElement = document.getElementById('exchange-btn');
     if (exchangeBtnElement) addSafeClickListener(exchangeBtnElement, handleExchange);
-    
+
     const exchangeAmountElement = document.getElementById('exchange-amount');
     if (exchangeAmountElement) exchangeAmountElement.addEventListener('input', updateExchangeResult);
 
@@ -421,11 +476,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const directionSelect = document.getElementById("exchange-direction");
     if (directionSelect) {
-      directionSelect.addEventListener("change", updateExchangeResult);
+        directionSelect.addEventListener("change", updateExchangeResult);
     }
 
     if (exchangeAmountElement) {
-      exchangeAmountElement.addEventListener("input", updateExchangeResult);
+        exchangeAmountElement.addEventListener("input", updateExchangeResult);
     }
 
     const buyTabElement = document.getElementById('shop-buy-tab');
@@ -455,290 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const loginPiBtnElement = document.getElementById('login-pi-btn');
-    if (loginPiBtnElement) addSafeClickListener(loginPiBtnElement, authenticateWithPi);
-
-initializePiSDK().catch(error => console.error('Initial Pi SDK init failed:', error));
-
-// Simpan status autentikasi di localStorage
-const checkAuthStatus = () => {
-    return localStorage.getItem("pi_authenticated") === "true" && localStorage.getItem("pi_user_id");
-};
-
-const setAuthStatus = (userId) => {
-    localStorage.setItem("pi_authenticated", "true");
-    localStorage.setItem("pi_user_id", userId);
-};
-
-const clearAuthStatus = () => {
-    localStorage.removeItem("pi_authenticated");
-    localStorage.removeItem("pi_user_id");
-};
-
-// Fungsi logout
-const logout = () => {
-    clearAuthStatus();
-    window.location.href = "https://harvestpi.biz.id"; // Redirect ke login
-};
-
-// Fungsi Deposit Testnet Backend
-const realDepositBtn = document.getElementById("real-deposit-btn");
-const realDepositMsg = document.getElementById("real-deposit-msg");
-const amountInput = document.getElementById("deposit-amount");
-
-if (realDepositBtn && realDepositMsg && amountInput) {
-  addSafeClickListener(realDepositBtn, async () => {
-    realDepositMsg.textContent = '';
-    realDepositBtn.disabled = true;
-    realDepositBtn.textContent = 'Memproses...';
-
-    // Cek SDK
-    if (!window.Pi || typeof Pi.createPayment !== "function") {
-      realDepositMsg.textContent = 'Pi SDK tidak siap. Silakan buka di Pi Browser.';
-      realDepositBtn.disabled = false;
-      realDepositBtn.textContent = 'Deposit with Pi Testnet';
-      return;
-    }
-
-    // Autentikasi jika belum
-    if (!checkAuthStatus()) {
-      try {
-        const scopes = ['payments'];
-        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-        userId = authResult.user.uid;
-        setAuthStatus(userId);
-      } catch (err) {
-        realDepositMsg.textContent = 'Autentikasi gagal. Silakan login ulang.';
-        clearAuthStatus();
-        realDepositBtn.disabled = false;
-        realDepositBtn.textContent = 'Deposit with Pi Testnet';
-        return;
-      }
-    } else {
-      userId = localStorage.getItem("pi_user_id");
-    }
-
-    // Validasi jumlah
-    const amount = parseFloat(amountInput.value);
-    if (isNaN(amount) || amount < 1) {
-      realDepositMsg.textContent = 'Jumlah minimal 1 Pi.';
-      realDepositBtn.disabled = false;
-      realDepositBtn.textContent = 'Deposit with Pi Testnet';
-      return;
-    }
-
-    const memo = "Deposit to Harvest Pi";
-    const metadata = { userId, redirectUrl: "https://harvestpi.biz.id" };
-
-    try {
-      await Pi.createPayment(
-        { amount, memo, metadata },
-        {
-          onReadyForClientReview: () => {
-            realDepositMsg.textContent = "Silakan konfirmasi di wallet Pi...";
-          },
-          onReadyForServerApproval: async (paymentId) => {
-            const res = await fetch("https://harvestpi-backend.glitch.me/approve-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ paymentId })
-            });
-            const result = await res.json();
-            if (!result.success) throw new Error("Gagal approve di server");
-          },
-          onReadyForServerCompletion: async (paymentId, txid) => {
-            const res = await fetch("https://harvestpi-backend.glitch.me/complete-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ paymentId, txid })
-            });
-            const result = await res.json();
-            if (!result.success) throw new Error("Gagal complete di server");
-
-            // Update balance dari Firebase
-            const playerRef = ref(database, `players/${userId}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val() || {};
-            const currentPi = data.piBalance || 0;
-            const currentDeposit = data.totalDeposit || 0;
-
-            const newBalance = currentPi + amount;
-            await update(playerRef, {
-              piBalance: newBalance,
-              totalDeposit: currentDeposit + amount
-            });
-
-            window.piBalance = newBalance;
-            updateWallet();
-            realDepositMsg.textContent = `Deposit berhasil! +${amount} Pi`;
-          },
-          onCancel: () => {
-            realDepositMsg.textContent = 'Deposit dibatalkan.';
-          },
-          onError: (err) => {
-            realDepositMsg.textContent = `Error saat deposit: ${err.message}`;
-          }
-        }
-      );
-    } catch (e) {
-      realDepositMsg.textContent = `Gagal memulai pembayaran: ${e.message}`;
-    } finally {
-      realDepositBtn.disabled = false;
-      realDepositBtn.textContent = 'Deposit with Pi Testnet';
-    }
-  });
-}
-    
-// Tambah listener untuk tombol logout (opsional, tambah di HTML kalau perlu)
-const logoutBtn = document.getElementById("logout-btn");
-if (logoutBtn) {
-    logoutBtn.addEventListener("click", logout);
-}
-
-initializeGame();
+    initializeGame();
 });
-
-// Load player data
-function loadPlayerData() {
-    try {
-        if (!userId) {
-            console.warn('No userId, please login first!');
-            return;
-        }
-        const playerRef = ref(database, `players/${userId}`);
-
-        onValue(playerRef, (snapshot) => {
-            if (isDataLoaded) return;
-
-            const data = snapshot.val();
-            if (data) {
-                farmCoins = data.farmCoins || 0;
-                pi = data.piBalance || 0;
-                water = data.water || 0;
-                level = data.level || 1;
-                xp = data.xp || 0;
-                inventory = data.inventory || [];
-                farmPlots = data.farmPlots || [];
-                harvestCount = data.harvestCount || 0;
-                achievements = data.achievements || { harvest: false, coins: false };
-                lastClaim = data.lastClaim || null;
-                claimedToday = data.claimedToday || false;
-            } else {
-                const initialData = {
-                    farmCoins: 0,
-                    piBalance: 0,
-                    water: 0,
-                    level: 1,
-                    xp: 0,
-                    inventory: [],
-                    farmPlots: [],
-                    harvestCount: 0,
-                    achievements: { harvest: false, coins: false },
-                    lastClaim: null,
-                    claimedToday: false,
-                    piUser: { email: userId }
-                };
-                set(playerRef, initialData).catch(err => {
-                    console.error('Initial set failed:', err);
-                    showNotification('Error initializing player data.');
-                });
-            }
-
-            isDataLoaded = true;
-            updateWallet();
-            initializePlots();
-            renderShop();
-            renderInventory();
-            renderSellSection();
-            renderAchievements();
-            checkDailyReward();
-        }, { onlyOnce: false });
-    } catch (error) {
-        console.error('Error loading player data:', error.message);
-        showNotification('Failed to connect to Firebase. Please check your internet connection and reload.');
-        isDataLoaded = false;
-    }
-}
-
-// Save player data to Firebase
-async function savePlayerData() {
-    if (!userId || !isDataLoaded) return;
-    const playerRef = ref(database, `players/${userId}`);
-
-    const dataToSave = {
-        farmCoins,
-        piBalance: pi,
-        water,
-        level,
-        xp,
-        inventory,
-        farmPlots,
-        harvestCount,
-        achievements,
-        lastClaim,
-        claimedToday
-    };
-
-    try {
-        await update(playerRef, dataToSave);
-        console.log('Player data saved');
-    } catch (error) {
-        console.error('Error saving player data:', error.message);
-        showNotification('Error saving data');
-    }
-}
-
-// Update wallet UI
-function updateWallet() {
-    const farmCoinsElement = document.getElementById('farm-coins');
-    const piCoinsElement = document.getElementById('pi-coins');
-    const waterElement = document.getElementById('water');
-    const levelElement = document.getElementById('level');
-    const xpFillElement = document.getElementById('xp-fill');
-
-    if (farmCoinsElement) {
-        farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
-    } else {
-        console.warn('Element with ID "farm-coins" not found');
-    }
-
-    if (piCoinsElement) {
-        piCoinsElement.textContent = `${pi.toFixed(6)} PI`;
-    } else {
-        console.warn('Element with ID "pi-coins" not found');
-    }
-
-    if (waterElement) {
-        waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
-    } else {
-        console.warn('Element with ID "water" not found');
-    }
-
-    if (levelElement) {
-        levelElement.textContent = `Level: ${level} | XP: ${xp}`;
-    } else {
-        console.warn('Element with ID "level" not found');
-    }
-
-    if (xpFillElement) {
-        const xpPercentage = (xp / (level * 100)) * 100;
-        xpFillElement.style.width = `${xpPercentage}%`;
-    } else {
-        console.warn('Element with ID "xp-fill" not found');
-    }
-
-    // Update elemen di tab depositPi
-    const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
-    const piCoinBalanceElement = document.getElementById('pi-coin-balance');
-    if (farmCoinBalanceElement) {
-        farmCoinBalanceElement.textContent = farmCoins;
-    }
-    if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = pi.toFixed(6);
-    }
-
-    savePlayerData();
-}
 
 // Initialize farm plots
 function initializePlots() {
@@ -1303,7 +1076,7 @@ function renderInventory() {
     inventoryContentElement.appendChild(sellButton);
 }
 
-// START renderSellSection
+// Render sell section
 function renderSellSection() {
     const sellContentElement = document.getElementById('sell-content');
     if (!sellContentElement) {
@@ -1371,9 +1144,8 @@ function renderSellSection() {
         });
     }
 }
-// END renderSellSection
 
-// START sellItem
+// Sell item
 function sellItem(index) {
     const item = inventory[index];
     if (!item || item.type !== 'harvest') return;
@@ -1402,7 +1174,6 @@ function sellItem(index) {
     checkLevelUp();
     checkCoinAchievement();
 }
-// END sellItem
 
 // Fungsi untuk langsung buka tab Sell di dalam Shop
 function openSellTab() {
@@ -1473,7 +1244,7 @@ function switchTab(tab) {
     playMenuSound();
 }
 
-// Exchange PI to Farm Coins to PI
+// Exchange PI to Farm Coins
 let currentExchangeRate = 1000000;
 
 function loadExchangeRate() {
@@ -1503,100 +1274,83 @@ function updateExchangeResult() {
     }`;
 
     const resultDiv = document.getElementById("exchange-result");
-
-    // Bikin versi singkat kalau terlalu panjang
     const shortDisplay = resultText.length > 25 ? resultText.substring(0, 25) + "…" : resultText;
-
     resultDiv.textContent = shortDisplay;
-    resultDiv.title = resultText; // tooltip jika dihover
+    resultDiv.title = resultText;
 }
 
 async function handleExchange() {
-  const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
-  const amount = parseFloat(rawAmount);
-  const direction = document.getElementById("exchange-direction").value;
-  const playerRef = ref(database, `players/${userId}`);
-  const snapshot = await get(playerRef);
-  const data = snapshot.val();
+    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
+    const amount = parseFloat(rawAmount);
+    const direction = document.getElementById("exchange-direction").value;
+    const playerRef = ref(database, `players/${userId}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
 
-  if (!data) return showNotification("Player data not found!");
-  if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
+    if (!data) return showNotification("Player data not found!");
+    if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-  let pi = Number(data.piBalance || 0);
-  let fc = Number(data.farmCoins || 0);
-  let resultText = "";
+    let pi = Number(data.piBalance || 0);
+    let fc = Number(data.farmCoins || 0);
+    let resultText = "";
 
-  if (direction === "piToFc") {
-    if (pi < amount) return showNotification("Not enough Pi!");
-    const converted = Math.floor(amount * currentExchangeRate);
-    pi -= amount;
-    fc += converted;
-    resultText = converted.toLocaleString();
-  } else {
-    if (fc < amount) return showNotification("Not enough FC!");
-    const converted = amount / currentExchangeRate;
-    fc -= amount;
-    pi += converted;
-    resultText = converted.toFixed(6);
-  }
+    if (direction === "piToFc") {
+        if (pi < amount) return showNotification("Not enough Pi!");
+        const converted = Math.floor(amount * currentExchangeRate);
+        pi -= amount;
+        fc += converted;
+        resultText = converted.toLocaleString();
+    } else {
+        if (fc < amount) return showNotification("Not enough FC!");
+        const converted = amount / currentExchangeRate;
+        fc -= amount;
+        pi += converted;
+        resultText = converted.toFixed(6);
+    }
 
-  pi = Math.round(pi * 1000000) / 1000000;
-  fc = Math.floor(fc);
+    pi = Math.round(pi * 1000000) / 1000000;
+    fc = Math.floor(fc);
 
-  // Tampilkan loading
-  document.getElementById("exchange-loading").style.display = "block";
+    document.getElementById("exchange-loading").style.display = "block";
 
-  // Delay 3 detik
-  setTimeout(() => {
-    (async () => {
-      try {
-        await update(playerRef, {
-          piBalance: pi,
-          farmCoins: fc
-        });
+    setTimeout(() => {
+        (async () => {
+            try {
+                await update(playerRef, {
+                    piBalance: pi,
+                    farmCoins: fc
+                });
 
-        const piElem = document.getElementById("pi-balance");
-        const fcElem = document.getElementById("fc-balance");
-
-        if (piElem) piElem.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
-        if (fcElem) fcElem.textContent = fc.toLocaleString();
-        document.getElementById("exchange-amount").value = "";
-
-        updateExchangeResult(resultText);
-       
-        // Mainkan suara
-        try {
-          await coinSound.play();
-        } catch (err) {
-          console.error("Error playing sound:", err);
-        }
-
-        // Tampilkan notifikasi
-        showNotification("Exchange success!");
-      } catch (error) {
-        console.error("Exchange failed:", error.message);
-        showNotification("Exchange failed: " + error.message);
-      } finally {
-        // Sembunyikan loading setelah semua selesai
-        document.getElementById("exchange-loading").style.display = "none";
-      }
-    })();
-  }, 3000);
+                const piElem = document.getElementById("pi-balance");
+                const fcElem = document.getElementById("fc-balance");
+                if (piElem) piElem.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+                if (fcElem) fcElem.textContent = fc.toLocaleString();
+                document.getElementById("exchange-amount").value = "";
+                updateExchangeResult(resultText);
+                playCoinSound();
+                showNotification("Exchange success!");
+            } catch (error) {
+                console.error("Exchange failed:", error.message);
+                showNotification("Exchange failed: " + error.message);
+            } finally {
+                document.getElementById("exchange-loading").style.display = "none";
+            }
+        })();
+    }, 3000);
 }
 
 const exchangeBtn = document.getElementById("exchange-btn");
 const directionSelect = document.getElementById("exchange-direction");
 
 directionSelect.addEventListener("change", () => {
-  const direction = directionSelect.value;
-  if (direction === "piToFc") {
-    exchangeBtn.textContent = "Exchange to FC";
-  } else {
-    exchangeBtn.textContent = "Exchange to Pi";
-  }
+    const direction = directionSelect.value;
+    if (direction === "piToFc") {
+        exchangeBtn.textContent = "Exchange to FC";
+    } else {
+        exchangeBtn.textContent = "Exchange to Pi";
+    }
 });
 
-// Trigger sekali pas awal halaman dimuat
 directionSelect.dispatchEvent(new Event("change"));
 
 // Modal untuk daily reward
@@ -1782,159 +1536,97 @@ function updateUIText() {
     if (!langData[currentLang]) return;
 
     const titleElement = document.getElementById('title');
-    if (titleElement) {
-        titleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
-    }
+    if (titleElement) titleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
 
     const gameTitleElement = document.getElementById('game-title');
-    if (gameTitleElement) {
-        gameTitleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
-    }
+    if (gameTitleElement) gameTitleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
 
     const startTextElement = document.getElementById('start-text');
-    if (startTextElement) {
-        startTextElement.textContent = langData[currentLang]?.startGame || 'Start Game';
-    }
+    if (startTextElement) startTextElement.textContent = langData[currentLang]?.startGame || 'Start Game';
 
     const farmTabElement = document.querySelector('.tab-btn[data-tab="farm"]');
-    if (farmTabElement) {
-        farmTabElement.textContent = langData[currentLang]?.farmTab || 'Farm';
-    }
+    if (farmTabElement) farmTabElement.textContent = langData[currentLang]?.farmTab || 'Farm';
 
     const shopTabElement = document.querySelector('.tab-btn[data-tab="shop"]');
-    if (shopTabElement) {
-        shopTabElement.textContent = langData[currentLang]?.shopTab || 'Shop';
-    }
+    if (shopTabElement) shopTabElement.textContent = langData[currentLang]?.shopTab || 'Shop';
 
     const upgradesTabElement = document.querySelector('.tab-btn[data-tab="upgrades"]');
-    if (upgradesTabElement) {
-        upgradesTabElement.textContent = langData[currentLang]?.upgradesTab || 'Upgrades';
-    }
+    if (upgradesTabElement) upgradesTabElement.textContent = langData[currentLang]?.upgradesTab || 'Upgrades';
 
     const inventoryTabElement = document.querySelector('.tab-btn[data-tab="inventory"]');
-    if (inventoryTabElement) {
-        inventoryTabElement.textContent = langData[currentLang]?.inventoryTab || 'Inventory';
-    }
+    if (inventoryTabElement) inventoryTabElement.textContent = langData[currentLang]?.inventoryTab || 'Inventory';
 
     const exchangeTabElement = document.querySelector('.tab-btn[data-tab="exchange"]');
-    if (exchangeTabElement) {
-        exchangeTabElement.textContent = langData[currentLang]?.exchangeTab || 'Exchange';
-    }
+    if (exchangeTabElement) exchangeTabElement.textContent = langData[currentLang]?.exchangeTab || 'Exchange';
 
     const financeTabElement = document.querySelector('.tab-btn[data-tab="finance"]');
-    if (financeTabElement) {
-        financeTabElement.textContent = langData[currentLang]?.financeTab || 'Finance';
-    }
+    if (financeTabElement) financeTabElement.textContent = langData[currentLang]?.financeTab || 'Finance';
 
     const leaderboardTabElement = document.querySelector('.tab-btn[data-tab="leaderboard"]');
-    if (leaderboardTabElement) {
-        leaderboardTabElement.textContent = langData[currentLang]?.leaderboardTab || 'Leaderboard';
-    }
+    if (leaderboardTabElement) leaderboardTabElement.textContent = langData[currentLang]?.leaderboardTab || 'Leaderboard';
 
     const achievementsTabElement = document.querySelector('.tab-btn[data-tab="achievements"]');
-    if (achievementsTabElement) {
-        achievementsTabElement.textContent = langData[currentLang]?.achievementsTab || 'Achievements';
-    }
+    if (achievementsTabElement) achievementsTabElement.textContent = langData[currentLang]?.achievementsTab || 'Achievements';
 
     const langToggleElement = document.getElementById('lang-toggle');
-    if (langToggleElement) {
-        langToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
-    }
+    if (langToggleElement) langToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
 
     const gameLangToggleElement = document.getElementById('game-lang-toggle');
-    if (gameLangToggleElement) {
-        gameLangToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
-    }
+    if (gameLangToggleElement) gameLangToggleElement.textContent = langData[currentLang]?.switchLang || 'Switch Language (EN/ID)';
 
     const upgradesTitleElement = document.getElementById('upgrades-title');
-    if (upgradesTitleElement) {
-        upgradesTitleElement.textContent = langData[currentLang]?.upgradesTitle || 'Upgrades';
-    }
+    if (upgradesTitleElement) upgradesTitleElement.textContent = langData[currentLang]?.upgradesTitle || 'Upgrades';
 
     const upgradesContentElement = document.getElementById('upgrades-content');
-    if (upgradesContentElement) {
-        upgradesContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
-    }
+    if (upgradesContentElement) upgradesContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
 
     const exchangeTitleElement = document.getElementById('exchange-title');
-    if (exchangeTitleElement) {
-        exchangeTitleElement.textContent = langData[currentLang]?.exchangeTitle || 'Exchange';
-    }
+    if (exchangeTitleElement) exchangeTitleElement.textContent = langData[currentLang]?.exchangeTitle || 'Exchange';
 
     const exchangeRateElement = document.getElementById('exchange-rate');
-    if (exchangeRateElement) {
-        exchangeRateElement.textContent = `${langData[currentLang]?.exchangeRate || '1 PI = 1,000,000 Farm Coins'}`;
-    }
+    if (exchangeRateElement) exchangeRateElement.textContent = `${langData[currentLang]?.exchangeRate || '1 PI = 1,000,000 Farm Coins'}`;
 
     const exchangeAmountElement = document.getElementById('exchange-amount');
-    if (exchangeAmountElement) {
-        exchangeAmountElement.placeholder = langData[currentLang]?.enterPiAmount || 'Enter PI amount';
-    }
+    if (exchangeAmountElement) exchangeAmountElement.placeholder = langData[currentLang]?.enterPiAmount || 'Enter PI amount';
 
     const exchangeResultLabelElement = document.getElementById('exchange-result-label');
-    if (exchangeResultLabelElement) {
-        exchangeResultLabelElement.textContent = `${langData[currentLang]?.farmCoinsLabel || 'Farm Coins'}: `;
-    }
+    if (exchangeResultLabelElement) exchangeResultLabelElement.textContent = `${langData[currentLang]?.farmCoinsLabel || 'Farm Coins'}: `;
 
     const exchangeBtnElement = document.getElementById('exchange-btn');
-    if (exchangeBtnElement) {
-        exchangeBtnElement.textContent = langData[currentLang]?.exchangeButton || 'Exchange to Farm Coins';
-    }
+    if (exchangeBtnElement) exchangeBtnElement.textContent = langData[currentLang]?.exchangeButton || 'Exchange to Farm Coins';
 
     const leaderboardTitleElement = document.getElementById('leaderboard-title');
-    if (leaderboardTitleElement) {
-        leaderboardTitleElement.textContent = langData[currentLang]?.leaderboardTitle || 'Leaderboard';
-    }
+    if (leaderboardTitleElement) leaderboardTitleElement.textContent = langData[currentLang]?.leaderboardTitle || 'Leaderboard';
 
     const leaderboardContentElement = document.getElementById('leaderboard-content');
-    if (leaderboardContentElement) {
-        leaderboardContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
-    }
+    if (leaderboardContentElement) leaderboardContentElement.textContent = langData[currentLang]?.comingSoon || 'Coming soon...';
 
     const settingsTitleElement = document.getElementById('settings-title');
-    if (settingsTitleElement) {
-        settingsTitleElement.textContent = langData[currentLang]?.settingsTitle || 'Settings';
-    }
+    if (settingsTitleElement) settingsTitleElement.textContent = langData[currentLang]?.settingsTitle || 'Settings';
 
     const musicVolumeLabelElement = document.getElementById('music-volume-label');
-    if (musicVolumeLabelElement) {
-        musicVolumeLabelElement.textContent = langData[currentLang]?.musicVolumeLabel || 'Music Volume:';
-    }
+    if (musicVolumeLabelElement) musicVolumeLabelElement.textContent = langData[currentLang]?.musicVolumeLabel || 'Music Volume:';
 
     const voiceVolumeLabelElement = document.getElementById('voice-volume-label');
-    if (voiceVolumeLabelElement) {
-        voiceVolumeLabelElement.textContent = langData[currentLang]?.voiceVolumeLabel || 'Voice/SFX Volume:';
-    }
+    if (voiceVolumeLabelElement) voiceVolumeLabelElement.textContent = langData[currentLang]?.voiceVolumeLabel || 'Voice/SFX Volume:';
 
     const exitGameBtnElement = document.getElementById('exit-game-btn');
-    if (exitGameBtnElement) {
-        exitGameBtnElement.textContent = langData[currentLang]?.exitGame || 'Exit';
-    }
+    if (exitGameBtnElement) exitGameBtnElement.textContent = langData[currentLang]?.exitGame || 'Exit';
 
     const dailyRewardTitleElement = document.getElementById('daily-reward-title');
-    if (dailyRewardTitleElement) {
-        dailyRewardTitleElement.textContent = langData[currentLang]?.dailyRewardTitle || 'Daily Reward';
-    }
+    if (dailyRewardTitleElement) dailyRewardTitleElement.textContent = langData[currentLang]?.dailyRewardTitle || 'Daily Reward';
 
     const claimModalBtnElement = document.getElementById('claim-modal-btn');
-    if (claimModalBtnElement) {
-        claimModalBtnElement.textContent = langData[currentLang]?.claimButton || 'Claim';
-    }
+    if (claimModalBtnElement) claimModalBtnElement.textContent = langData[currentLang]?.claimButton || 'Claim';
 
     const shopBuyTabElement = document.getElementById('shop-buy-tab');
-    if (shopBuyTabElement) {
-        shopBuyTabElement.textContent = langData[currentLang]?.buyTab || 'Buy';
-    }
+    if (shopBuyTabElement) shopBuyTabElement.textContent = langData[currentLang]?.buyTab || 'Buy';
 
     const shopSellTabElement = document.getElementById('shop-sell-tab');
-    if (shopSellTabElement) {
-        shopSellTabElement.textContent = langData[currentLang]?.sellTab || 'Sell';
-    }
+    if (shopSellTabElement) shopSellTabElement.textContent = langData[currentLang]?.sellTab || 'Sell';
 
     const sellSectionTitleElement = document.getElementById('sell-section-title');
-    if (sellSectionTitleElement) {
-        sellSectionTitleElement.textContent = langData[currentLang]?.sellSectionTitle || 'Sell Items';
-    }
+    if (sellSectionTitleElement) sellSectionTitleElement.textContent = langData[currentLang]?.sellSectionTitle || 'Sell Items';
 
     updateWallet();
     renderShop();
@@ -1954,7 +1646,7 @@ function toggleLanguage() {
 // Start game
 function startGame() {
     if (!userId) {
-        console.warn('Please login with Pi Network first!');
+        console.warn('Please login with Google first!');
         return;
     }
     console.log('Starting game...');
@@ -1990,11 +1682,6 @@ async function initializeGame() {
                 loginScreenElement.style.display = 'flex';
             }
         }, 1000);
-
-        const loginPiBtnElement = document.getElementById('login-pi-btn');
-        if (loginPiBtnElement) {
-            addSafeClickListener(loginPiBtnElement, authenticateWithPi);
-        }
     } catch (error) {
         console.error('Error initializing game:', error.message);
         showNotification('Error initializing game. Please reload.');
@@ -2035,112 +1722,19 @@ function exitFullScreen() {
     }
 }
 
-// Fitur Withdraw
-const realWithdrawBtn = document.getElementById("real-withdraw-btn");
-const withdrawMsg = document.getElementById("withdraw-message");
-const withdrawNoteElement = document.getElementById("withdraw-note");
-
-function checkWithdrawEligibility(level, farmCoins, totalDeposit, piBalance) {
-    const eligible = level >= 10 && farmCoins >= 10000000 && totalDeposit >= 10 && piBalance >= 1;
-    if (realWithdrawBtn && withdrawNoteElement) {
-        realWithdrawBtn.disabled = !eligible;
-        withdrawNoteElement.style.display = eligible ? 'none' : 'block';
-    }
+// Load language preference from localStorage
+const storedLang = localStorage.getItem('language');
+if (storedLang) {
+    currentLang = storedLang;
 }
 
-async function updateWithdrawStatus() {
-    if (!userId) return;
+// Initial UI setup
+updateUIText();
+checkDailyReward();
+renderAchievements();
 
-    try {
-        const userRef = ref(database, 'players/' + userId);
-        const snapshot = await get(userRef);
-        const data = snapshot.val() || {};
-
-        const level = data.level || 1;
-        const farmCoins = data.farmCoins || 0;
-        const totalDeposit = data.totalDeposit || 0;
-        const piBalance = data.piBalance || 0;
-
-        checkWithdrawEligibility(level, farmCoins, totalDeposit, piBalance);
-    } catch (error) {
-        console.error('Withdraw check error:', error);
-    }
+// Handle tab switching on load if URL has hash
+const hash = window.location.hash.substring(1);
+if (hash && document.getElementById(hash)) {
+    switchTab(hash);
 }
-updateWithdrawStatus();
-
-// Real withdraw via Pi testnet
-if (realWithdrawBtn) {
-    addSafeClickListener(realWithdrawBtn, async () => {
-        withdrawMsg.textContent = '';
-
-        if (!userId || !window.Pi) {
-            withdrawMsg.textContent = 'User not authenticated or Pi SDK unavailable.';
-            return;
-        }
-
-        const amount = 1; // Nominal withdraw testnet (misal 1 Pi)
-        const memo = "Withdraw from Harvest Pi";
-        const metadata = { userId };
-
-        try {
-            realWithdrawBtn.disabled = true;
-            realWithdrawBtn.textContent = "Processing...";
-
-            const playerRef = ref(database, `players/${userId}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val() || {};
-
-            let currentPi = data.piBalance || 0;
-            if (currentPi < amount) {
-                withdrawMsg.textContent = "Not enough Pi balance.";
-                return;
-            }
-
-            // Buat payment ke user (testnet)
-            const payment = await Pi.createPayment({
-                amount,
-                memo,
-                metadata,
-                to: userId, // pengirimannya ke user sendiri
-                onReadyForServerApproval: async (paymentId) => {
-                    console.log("Ready for approval:", paymentId);
-                    await Pi.approvePayment(paymentId);
-                },
-                onReadyForServerCompletion: async (paymentId, txid) => {
-                    console.log("Completing payment:", paymentId, txid);
-
-                    // Kurangi saldo Pi
-                    await update(playerRef, {
-                        pi: currentPi - amount,
-                        piBalance: currentPi - amount
-                    });
-
-                    window.pi = currentPi - amount;
-                    window.piBalance = currentPi - amount;
-
-                    updateWallet();
-                    await Pi.completePayment(paymentId, txid);
-                    withdrawMsg.textContent = `Withdraw success! -${amount} Pi`;
-                    updateWithdrawStatus(); // Cek ulang kelayakan
-                },
-                onCancel: (paymentId) => {
-                    console.warn("Payment cancelled:", paymentId);
-                    withdrawMsg.textContent = 'Withdraw cancelled.';
-                },
-                onError: (error) => {
-                    console.error("Payment error:", error);
-                    withdrawMsg.textContent = 'Error during withdraw.';
-                }
-            });
-        } catch (error) {
-            console.error("Withdraw failed:", error);
-            withdrawMsg.textContent = 'Failed to process withdraw.';
-        } finally {
-            realWithdrawBtn.disabled = false;
-            realWithdrawBtn.textContent = "Withdraw Real Pi";
-        }
-    });
-}
-
-// Jalankan saat halaman siap
-updateWithdrawStatus();

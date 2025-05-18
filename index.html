@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="farm/style.css?v=40" />
+  <link rel="stylesheet" href="farm/style.css?v=41" />
   <style>
     #start-text {
       cursor: pointer;
@@ -29,10 +29,10 @@
 </div>
 
 <!-- LOGIN SCREEN -->
-<div id="login-screen" style="display: flex;">
+<div id="login-screen" class="center-screen">
   <div class="login-container">
     <h1>Harvest Pi</h1>
-    <button id="login-pi-btn">Login with Pi</button>
+    <button id="login-google-btn">Login with Google</button>
     <div class="policy-links">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
       <a href="/term-of-service.html" target="_blank">Terms of Service</a>
@@ -63,7 +63,6 @@
       <button class="tab-btn" data-tab="upgrades">Upgrades</button>
       <button class="tab-btn" data-tab="inventory">Inventory</button>
       <button class="tab-btn" data-tab="exchange">Exchange</button>
-      <button class="tab-btn" data-tab="finance">Finance</button>
       <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
       <button class="tab-btn" data-tab="achievements">Achievements</button>
     </div>
@@ -107,56 +106,39 @@
   </div>
 
   <!-- EXCHANGE -->
-<div id="exchange" class="tab-content">
-  <div class="exchange-container">
-    <h3 class="exchange-title">Live Exchange</h3>
-    <div class="exchange-rate" id="live-rate">Loading rate...</div>
+  <div id="exchange" class="tab-content">
+    <div class="exchange-container">
+      <h3 class="exchange-title">Live Exchange</h3>
+      <div class="exchange-rate" id="live-rate">Loading rate...</div>
 
-    <div class="exchange-section">
-      <label for="exchange-amount">Amount:</label>
-      <input type="number" id="exchange-amount" placeholder="Enter amount">
+      <div class="exchange-section">
+        <label for="exchange-amount">Amount:</label>
+        <input type="number" id="exchange-amount" placeholder="Enter amount">
 
-      <select id="exchange-direction">
-        <option value="piToFc">Pi → FC</option>
-        <option value="fcToPi">FC → Pi</option>
-      </select>
+        <select id="exchange-direction">
+          <option value="piToFc">Pi → FC</option>
+          <option value="fcToPi">FC → Pi</option>
+        </select>
 
-      <div id="exchange-result" class="exchange-result">You will get: 0</div>
-      <span id="pi-balance" style="display:none;"></span>
-      <span id="fc-balance" style="display:none;"></span>
-      <button id="exchange-btn">Exchange</button>
-      <div id="exchange-loading">
-        <div class="loader"></div>
-        <div>Processing exchange...</div>
+        <div id="exchange-result" class="exchange-result">You will get: 0</div>
+        <span id="pi-balance" style="display:none;"></span>
+        <span id="fc-balance" style="display:none;"></span>
+        <button id="exchange-btn">Exchange</button>
+        <div id="exchange-loading" style="display:none;">
+          <div class="loader"></div>
+          <div>Processing exchange...</div>
+        </div>
+      </div>
+
+      <div id="deposit-manual">
+        <h3>Deposit PI (Manual Transfer)</h3>
+        <p>Send PI to this wallet address:</p>
+        <p><strong>YOUR_WALLET_ADDRESS_HERE</strong></p>
+        <p>After transferring, please contact support with your transaction ID to update your balance.</p>
       </div>
     </div>
   </div>
-</div>
-<audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
-  
-  <!-- FINANCE -->
-<div id="finance" class="tab-content">
-  <h2 id="finance-title">Finance</h2>
 
-  <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
-  <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
-  <hr/>
-
-  <h3>Deposit (Testnet)</h3>
-  <input type="number" id="deposit-amount" placeholder="Enter PI Amount" value="1" />
-  <button id="real-deposit-btn">Deposit with Pi Testnet</button>
-  <div id="real-deposit-msg" class="deposit-message"></div>
-
-  <h3>Withdraw</h3>
-  <button id="withdraw-btn" disabled>Withdraw PI</button>
-  <p id="withdraw-note" class="note">
-    This feature will unlock when you reach: <br />
-    - Level 10<br />
-    - Farm Coin ≥ 10.000.000<br />
-    - Total Deposit ≥ 10 PI
-  </p>
-</div>
-  
   <!-- LEADERBOARD -->
   <div id="leaderboard" class="tab-content">
     <h2 id="leaderboard-title">Leaderboard</h2>
@@ -211,14 +193,8 @@
 <!-- FIREBASE -->
 <script type="module" src="firebase/firebase-config.js"></script>
 
-<!-- PI NETWORK SDK -->
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<script>
-  Pi.init({ version: "2.0" }); // Inisialisasi SDK dengan versi 2.0 (saat ini yang terbaru)
-</script>
-
 <!-- MAIN GAME SCRIPT -->
-<script type="module" src="farm/main.js?v=40"></script>
+<script type="module" src="farm/main.js?v=41"></script>
 
 <!-- FALLBACK ERROR HANDLING -->
 <script>

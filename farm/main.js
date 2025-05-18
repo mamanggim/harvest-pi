@@ -1,6 +1,6 @@
 // Ambil database dan auth dari firebase-config.js
-import { auth, database, messaging } from '/firebase/firebase-config.js';
-import { ref, onValue, set, update, get, push } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { auth, database, messaging, ref } from '/firebase/firebase-config.js';
+import { onValue, set, update, get, push } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Deklarasi claimModalBtn dan rewardModal sebagai global

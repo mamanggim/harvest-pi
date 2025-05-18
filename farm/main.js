@@ -1895,7 +1895,10 @@ function exitFullScreen() {
     }
 }
 
-// Fitur Deposit
+  // Tunggu DOM siap
+  document.addEventListener('DOMContentLoaded', () => {
+  
+  // Fitur Deposit
   const realDepositBtn = document.getElementById("real-deposit-btn");
   const realDepositMsg = document.getElementById("real-deposit-msg");
   const depositAmountInput = document.getElementById("deposit-amount");

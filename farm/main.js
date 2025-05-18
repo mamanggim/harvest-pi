@@ -1,6 +1,5 @@
 // Ambil database dan auth dari firebase-config.js
-import { auth, database, messaging, ref } from '/firebase/firebase-config.js';
-import { onValue, set, update, get, push } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { auth, database, messaging, ref, onValue, set, update, get, push } from '/firebase/firebase-config.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 // Deklarasi claimModalBtn dan rewardModal sebagai global
@@ -1918,7 +1917,7 @@ realDepositBtn.addEventListener('click', () => {
   const depositId = `DEPOSIT-${user.uid}-${Date.now()}`;
   const memo = `DEPOSIT-${user.uid}-${Date.now().toString().slice(-5)}`;
 
-  ref(database, `deposits/${depositId}`).set({
+  set(ref(database, `deposits/${depositId}`), { // Ganti ref(...).set dengan set(ref(...), ...)
     userId: user.uid,
     amount: amount,
     memo: memo,
@@ -1935,7 +1934,7 @@ realDepositBtn.addEventListener('click', () => {
 let isAdmin = false;
 auth.onAuthStateChanged((user) => {
   if (user) {
-    ref(database, `players/${user.uid}/role`).once('value').then((snapshot) => {
+    get(ref(database, `players/${user.uid}/role`)).then((snapshot) => { // Ganti ref(...).once('value') dengan get(ref(...))
       isAdmin = snapshot.val() === 'admin';
       if (isAdmin && 'serviceWorker' in navigator) {
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
@@ -1943,7 +1942,7 @@ auth.onAuthStateChanged((user) => {
             messaging.useServiceWorker(registration);
             return messaging.getToken();
           }).then((token) => {
-            ref(database, 'adminTokens/' + user.uid).set(token);
+            set(ref(database, 'adminTokens/' + user.uid), token); // Ganti ref(...).set dengan set(ref(...), ...)
           }).catch((err) => console.log('FCM Error:', err));
       }
     });
@@ -1951,7 +1950,7 @@ auth.onAuthStateChanged((user) => {
 });
 
 // Admin Panel
-ref(database, 'deposits').on('value', (snapshot) => {
+onValue(ref(database, 'deposits'), (snapshot) => {
   const deposits = snapshot.val();
   const depositItems = document.getElementById('deposit-items');
   depositItems.innerHTML = '';
@@ -1974,8 +1973,8 @@ ref(database, 'deposits').on('value', (snapshot) => {
 });
 
 window.approveDeposit = function(id) {
-  ref(database, `deposits/${id}/status`).set('approved');
-  ref(database, `deposits/${id}`).once('value').then((snap) => {
+  set(ref(database, `deposits/${id}/status`), 'approved'); // Ganti ref(...).set dengan set(ref(...), ...)
+  get(ref(database, `deposits/${id}`)).then((snap) => { // Ganti ref(...).once('value') dengan get(ref(...))
     const deposit = snap.val();
     const userRef = ref(database, `players/${deposit.userId}`);
     userRef.transaction(player => {
@@ -1988,8 +1987,8 @@ window.approveDeposit = function(id) {
 };
 
 window.rejectDeposit = function(id) {
-  ref(database, `deposits/${id}/status`).set('rejected');
-  ref(database, `deposits/${id}`).once('value').then((snap) => {
+  set(ref(database, `deposits/${id}/status`), 'rejected'); // Ganti ref(...).set dengan set(ref(...), ...)
+  get(ref(database, `deposits/${id}`)).then((snap) => { // Ganti ref(...).once('value') dengan get(ref(...))
     const deposit = snap.val();
     showUserNotification(`Deposit ${deposit.amount} PI rejected. Contact support.`);
   });
@@ -2004,13 +2003,13 @@ function showUserNotification(message) {
 
 // Simulasi Deteksi Transaksi (Opsional, hapus kalau udah pakai Pi API)
 setInterval(() => {
-  ref(database, 'deposits').once('value', (snapshot) => {
+  get(ref(database, 'deposits')).then((snapshot) => { // Ganti ref(...).once('value') dengan get(ref(...))
     const deposits = snapshot.val();
     for (let id in deposits) {
       const deposit = deposits[id];
       if (deposit.status === 'pending') {
         setTimeout(() => {
-          ref(database, `deposits/${id}`).update({
+          update(ref(database, `deposits/${id}`), { // Ganti ref(...).update dengan update(ref(...), ...)
             status: 'detected'
           });
         }, 30000); // Simulasi deteksi setelah 30 detik

@@ -1,7 +1,7 @@
 // firebase-config.js
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase, ref } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'; // Tambah ref
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getDatabase, ref, onValue, set, update, get, push } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'; // Tambah semua fungsi
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'; // Tambah fungsi auth
 import { getMessaging } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js';
 
 // Konfigurasi Firebase
@@ -25,4 +25,17 @@ const auth = getAuth(app);
 const messaging = getMessaging(app);
 
 // Export modul
-export { database, auth, messaging, ref }; // Tambah ref
+export { 
+  database, 
+  auth, 
+  messaging, 
+  ref, 
+  onValue, 
+  set, 
+  update, 
+  get, 
+  push, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  sendEmailVerification 
+};

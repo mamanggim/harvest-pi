@@ -29,7 +29,7 @@ function addSafeClickListener(element, callback) {
 let isDataLoaded = false;
 let piInitialized = false;
 let farmCoins = 0;
-let piBalance = 0; // Ganti pi jadi piBalance kecuali tampilan
+let piBalance = 0;
 let water = 0;
 let level = 1;
 let xp = 0;
@@ -42,18 +42,18 @@ let harvestCount = 0;
 let achievements = { harvest: false, coins: false };
 let userId = null;
 let lastClaim = null;
-const plotCount = 4; // 2x2 grid
-const piToFarmRate = 1000000; // 1 PI = 1,000,000 Farm Coins
-let claimedToday = false; // Flag sederhana buat status klaim
-let isClaiming = false; // Tambah untuk lock claim
-let isAudioPlaying = false; // Flag to track audio state
+const plotCount = 4;
+const piToFarmRate = 1000000;
+let claimedToday = false;
+let isClaiming = false;
+let isAudioPlaying = false;
 
 function loadUserBalances() {
     const playerRef = ref(database, `players/${userId}`);
     onValue(playerRef, (snapshot) => {
         const data = snapshot.val() || {};
         
-        piBalance = data.piBalance || 0; // Ganti pi jadi piBalance
+        piBalance = data.piBalance || 0;
         farmCoins = data.farmCoins || 0;
 
         const piBalanceElement = document.getElementById('pi-balance');
@@ -92,8 +92,6 @@ function playBgMusic() {
                     }, 100);
                 });
         }
-    } else {
-        console.log('BG Music already playing or bgMusic not found:', bgMusic, isAudioPlaying);
     }
 }
 
@@ -112,8 +110,6 @@ function playBgVoice() {
                     }, 100);
                 });
         }
-    } else {
-        console.log('BG Voice already playing or bgVoice not found:', bgVoice, isAudioPlaying);
     }
 }
 
@@ -274,7 +270,8 @@ if (registerEmailBtn) {
                 harvestCount: 0,
                 achievements: { harvest: false, coins: false },
                 lastClaim: null,
-                claimedToday: false
+                claimedToday: false,
+                totalDeposit: 0 // Tambah field totalDeposit
             });
 
             registerEmailInput.value = '';
@@ -476,11 +473,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const loginEmailBtnElement = document.getElementById('login-email-btn'); // Ganti login Pi jadi login email
-    if (loginEmailBtnElement) addSafeClickListener(loginEmailBtnElement, () => {}); // Kosongkan, sudah diatur di atas
+    const loginEmailBtnElement = document.getElementById('login-email-btn');
+    if (loginEmailBtnElement) addSafeClickListener(loginEmailBtnElement, () => {});
 
-    const registerEmailBtnElement = document.getElementById('register-email-btn'); // Tambah register
-    if (registerEmailBtnElement) addSafeClickListener(registerEmailBtnElement, () => {}); // Kosongkan, sudah diatur di atas
+    const registerEmailBtnElement = document.getElementById('register-email-btn');
+    if (registerEmailBtnElement) addSafeClickListener(registerEmailBtnElement, () => {});
 
     initializeGame();
 });
@@ -500,7 +497,7 @@ function loadPlayerData() {
             const data = snapshot.val();
             if (data) {
                 farmCoins = data.farmCoins || 0;
-                piBalance = data.piBalance || 0; // Ganti pi jadi piBalance
+                piBalance = data.piBalance || 0;
                 water = data.water || 0;
                 level = data.level || 1;
                 xp = data.xp || 0;
@@ -510,6 +507,8 @@ function loadPlayerData() {
                 achievements = data.achievements || { harvest: false, coins: false };
                 lastClaim = data.lastClaim || null;
                 claimedToday = data.claimedToday || false;
+                // Tambah totalDeposit
+                let totalDeposit = data.totalDeposit || 0;
             } else {
                 const initialData = {
                     farmCoins: 0,
@@ -522,7 +521,8 @@ function loadPlayerData() {
                     harvestCount: 0,
                     achievements: { harvest: false, coins: false },
                     lastClaim: null,
-                    claimedToday: false
+                    claimedToday: false,
+                    totalDeposit: 0 // Tambah field totalDeposit
                 };
                 set(playerRef, initialData).catch(err => {
                     console.error('Initial set failed:', err);
@@ -553,7 +553,7 @@ async function savePlayerData() {
 
     const dataToSave = {
         farmCoins,
-        piBalance: piBalance, // Ganti pi jadi piBalance
+        piBalance,
         water,
         level,
         xp,
@@ -581,46 +581,30 @@ function updateWallet() {
     const waterElement = document.getElementById('water');
     const levelElement = document.getElementById('level');
     const xpFillElement = document.getElementById('xp-fill');
+    const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
+    const piCoinBalanceElement = document.getElementById('pi-coin-balance');
 
     if (farmCoinsElement) {
-        farmCoinsElement.textContent = `${farmCoins} ${langData[currentLang]?.coinLabel || 'Coins'}`;
-    } else {
-        console.warn('Element with ID "farm-coins" not found');
+        farmCoinsElement.textContent = `${farmCoins} Farm Coins`;
     }
-
     if (piCoinsElement) {
-        piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`; // Ganti pi jadi piBalance di tampilan
-    } else {
-        console.warn('Element with ID "pi-coins" not found');
+        piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`;
     }
-
     if (waterElement) {
-        waterElement.textContent = `${water} ${langData[currentLang]?.waterLabel || 'Water'}`;
-    } else {
-        console.warn('Element with ID "water" not found');
+        waterElement.textContent = `${water} Water`;
     }
-
     if (levelElement) {
         levelElement.textContent = `Level: ${level} | XP: ${xp}`;
-    } else {
-        console.warn('Element with ID "level" not found');
     }
-
     if (xpFillElement) {
         const xpPercentage = (xp / (level * 100)) * 100;
         xpFillElement.style.width = `${xpPercentage}%`;
-    } else {
-        console.warn('Element with ID "xp-fill" not found');
     }
-
-    // Update elemen di tab depositPi
-    const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
-    const piCoinBalanceElement = document.getElementById('pi-coin-balance');
     if (farmCoinBalanceElement) {
         farmCoinBalanceElement.textContent = farmCoins;
     }
     if (piCoinBalanceElement) {
-        piCoinBalanceElement.textContent = piBalance.toFixed(6); // Ganti pi jadi piBalance
+        piCoinBalanceElement.textContent = piBalance.toFixed(6);
     }
 
     savePlayerData();
@@ -992,7 +976,7 @@ function renderShop() {
         vegItem.innerHTML = `
             <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
             <h3>${veg.name[currentLang]}</h3>
-            <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${farmPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
+            <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${farmPrice} Farm Coins</p>
             <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${piPrice} PI</p>
             <button class="buy-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
             <button class="buy-pi-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
@@ -1006,7 +990,7 @@ function renderShop() {
     waterItem.innerHTML = `
         <img src="assets/img/ui/water_icon.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
         <h3>${langData[currentLang]?.waterLabel || 'Water'}</h3>
-        <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 ${langData[currentLang]?.coinLabel || 'Coins'}</p>
+        <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 Farm Coins</p>
         <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: 0.0001 PI</p>
         <button class="buy-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
         <button class="buy-pi-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
@@ -1078,8 +1062,8 @@ async function buyVegetable(id, currency) {
                     showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
                 }
             } else {
-                if (piBalance >= 0.0001) { // Ganti pi jadi piBalance
-                    piBalance -= 0.0001; // Ganti pi jadi piBalance
+                if (piBalance >= 0.0001) {
+                    piBalance -= 0.0001;
                     water += 10;
                     updateWallet();
                     showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="water"]`));
@@ -1111,8 +1095,8 @@ async function buyVegetable(id, currency) {
                 showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
             }
         } else {
-            if (piBalance >= veg.piPrice) { // Ganti pi jadi piBalance
-                piBalance -= veg.piPrice; // Ganti pi jadi piBalance
+            if (piBalance >= veg.piPrice) {
+                piBalance -= veg.piPrice;
                 canBuy = true;
                 showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
             } else {
@@ -1235,7 +1219,7 @@ function renderSellSection() {
             <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
             <h3>${item.vegetable.name[currentLang]}</h3>
             <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-            <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${sellPrice} ${langData[currentLang]?.coinLabel || 'Coins'}</p>
+            <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${sellPrice} Farm Coins</p>
             <button class="sell-btn" data-index="${item.index}">${langData[currentLang]?.sellLabel || 'Sell'}</button>
         `;
 
@@ -1341,8 +1325,6 @@ function switchTab(tab) {
     if (tabContentElement && tabBtnElement) {
         tabContentElement.classList.add('active');
         tabBtnElement.classList.add('active');
-    } else {
-        console.warn('Tab or tab button not found:', tab);
     }
 
     if (tab === 'shop') {
@@ -1390,11 +1372,10 @@ function updateExchangeResult() {
 
     const resultDiv = document.getElementById("exchange-result");
 
-    // Bikin versi singkat kalau terlalu panjang
     const shortDisplay = resultText.length > 25 ? resultText.substring(0, 25) + "…" : resultText;
 
     resultDiv.textContent = shortDisplay;
-    resultDiv.title = resultText; // tooltip jika dihover
+    resultDiv.title = resultText;
 }
 
 async function handleExchange() {
@@ -1408,62 +1389,57 @@ async function handleExchange() {
   if (!data) return showNotification("Player data not found!");
   if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-  let piBalance = Number(data.piBalance || 0); // Ganti pi jadi piBalance
+  let piBalance = Number(data.piBalance || 0);
   let fc = Number(data.farmCoins || 0);
   let resultText = "";
 
   if (direction === "piToFc") {
-    if (piBalance < amount) return showNotification("Not enough Pi!"); // Ganti pi jadi piBalance
+    if (piBalance < amount) return showNotification("Not enough Pi!");
     const converted = Math.floor(amount * currentExchangeRate);
-    piBalance -= amount; // Ganti pi jadi piBalance
+    piBalance -= amount;
     fc += converted;
     resultText = converted.toLocaleString();
   } else {
     if (fc < amount) return showNotification("Not enough FC!");
     const converted = amount / currentExchangeRate;
     fc -= amount;
-    piBalance += converted; // Ganti pi jadi piBalance
+    piBalance += converted;
     resultText = converted.toFixed(6);
   }
 
-  piBalance = Math.round(piBalance * 1000000) / 1000000; // Ganti pi jadi piBalance
+  piBalance = Math.round(piBalance * 1000000) / 1000000;
   fc = Math.floor(fc);
 
-  // Tampilkan loading
   document.getElementById("exchange-loading").style.display = "block";
 
-  // Delay 3 detik
   setTimeout(() => {
     (async () => {
       try {
         await update(playerRef, {
-          piBalance: piBalance, // Ganti pi jadi piBalance
+          piBalance: piBalance,
           farmCoins: fc
         });
 
         const piElem = document.getElementById("pi-balance");
         const fcElem = document.getElementById("fc-balance");
 
-        if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 }); // Ganti pi jadi piBalance
+        if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
         if (fcElem) fcElem.textContent = fc.toLocaleString();
         document.getElementById("exchange-amount").value = "";
 
         updateExchangeResult(resultText);
        
-        // Mainkan suara
         try {
           await coinSound.play();
         } catch (err) {
           console.error("Error playing sound:", err);
         }
 
-        // Tampilkan notifikasi
         showNotification("Exchange success!");
       } catch (error) {
         console.error("Exchange failed:", error.message);
         showNotification("Exchange failed: " + error.message);
       } finally {
-        // Sembunyikan loading setelah semua selesai
         document.getElementById("exchange-loading").style.display = "none";
       }
     })();
@@ -1482,7 +1458,6 @@ directionSelect.addEventListener("change", () => {
   }
 });
 
-// Trigger sekali pas awal halaman dimuat
 directionSelect.dispatchEvent(new Event("change"));
 
 // Modal untuk daily reward
@@ -1744,7 +1719,7 @@ function updateUIText() {
 
     const exchangeTitleElement = document.getElementById('exchange-title');
     if (exchangeTitleElement) {
-        exchangeTitleElement.textContent = langData[currentLang]?.exchangeTitle || 'Exchange';
+        exchangeTitleElement.textContent = langData[currentLang]?.exchangeTitle || 'Live Exchange';
     }
 
     const exchangeRateElement = document.getElementById('exchange-rate');
@@ -1822,6 +1797,11 @@ function updateUIText() {
         sellSectionTitleElement.textContent = langData[currentLang]?.sellSectionTitle || 'Sell Items';
     }
 
+    const financeTitleElement = document.getElementById('finance-title');
+    if (financeTitleElement) {
+        financeTitleElement.textContent = langData[currentLang]?.financeTitle || 'Finance';
+    }
+
     updateWallet();
     renderShop();
     renderInventory();
@@ -1876,15 +1856,6 @@ async function initializeGame() {
                 loginScreenElement.style.display = 'flex';
             }
         }, 1000);
-
-        const loginEmailBtnElement = document.getElementById('login-email-btn');
-        if (loginEmailBtnElement) {
-            addSafeClickListener(loginEmailBtnElement, () => {}); // Kosongkan, sudah diatur di atas
-        }
-        const registerEmailBtnElement = document.getElementById('register-email-btn');
-        if (registerEmailBtnElement) {
-            addSafeClickListener(registerEmailBtnElement, () => {}); // Kosongkan, sudah diatur di atas
-        }
     } catch (error) {
         console.error('Error initializing game:', error.message);
         showNotification('Error initializing game. Please reload.');
@@ -2004,19 +1975,19 @@ if (realDepositBtn && depositAmountInput) {
 }
 
 // Fitur Withdraw
-const realWithdrawBtn = document.getElementById("withdraw-btn"); // Hanya deklarasi sekali di sini
-const realWithdrawMsg = document.getElementById("real-withdraw-msg");
+const withdrawBtn = document.getElementById("withdraw-btn"); // Gunakan withdraw-btn sesuai HTML
+const withdrawMsg = document.getElementById("real-withdraw-msg");
 const withdrawNote = document.getElementById("withdraw-note");
 
-if (realWithdrawBtn && depositAmountInput) {
+if (withdrawBtn && depositAmountInput) {
     console.log("Real withdraw button found, attaching click listener...");
 
     // Tambah elemen pesan withdraw kalau belum ada di HTML
-    if (!realWithdrawMsg) {
-        const withdrawMsg = document.createElement('div');
-        withdrawMsg.id = 'real-withdraw-msg';
-        withdrawMsg.className = 'deposit-message';
-        realWithdrawBtn.insertAdjacentElement('afterend', withdrawMsg);
+    if (!withdrawMsg) {
+        const msgElement = document.createElement('div');
+        msgElement.id = 'real-withdraw-msg';
+        msgElement.className = 'deposit-message';
+        withdrawBtn.insertAdjacentElement('afterend', msgElement);
     }
 
     // Cek kondisi untuk unlock withdraw
@@ -2027,15 +1998,15 @@ if (realWithdrawBtn && depositAmountInput) {
         const totalDeposit = data.totalDeposit || 0;
 
         if (level >= 10 && farmCoins >= 10000000 && totalDeposit >= 10) {
-            realWithdrawBtn.disabled = false;
+            withdrawBtn.disabled = false;
             if (withdrawNote) withdrawNote.style.display = 'none';
         } else {
-            realWithdrawBtn.disabled = true;
+            withdrawBtn.disabled = true;
             if (withdrawNote) withdrawNote.style.display = 'block';
         }
     });
 
-    addSafeClickListener(realWithdrawBtn, async () => {
+    addSafeClickListener(withdrawBtn, async () => {
         console.log("Withdraw button clicked!");
         const withdrawMsgElement = document.getElementById("real-withdraw-msg");
         withdrawMsgElement.textContent = '';
@@ -2046,8 +2017,8 @@ if (realWithdrawBtn && depositAmountInput) {
             return;
         }
 
-        realWithdrawBtn.disabled = true;
-        realWithdrawBtn.textContent = "Processing...";
+        withdrawBtn.disabled = true;
+        withdrawBtn.textContent = "Processing...";
 
         try {
             const playerRef = ref(database, `players/${userId}`);
@@ -2100,8 +2071,8 @@ if (realWithdrawBtn && depositAmountInput) {
             withdrawMsgElement.textContent = 'Failed to process withdraw.';
             showNotification('Withdraw failed: ' + error.message);
         } finally {
-            realWithdrawBtn.disabled = false;
-            realWithdrawBtn.textContent = "Withdraw PI";
+            withdrawBtn.disabled = false;
+            withdrawBtn.textContent = "Withdraw PI";
             depositAmountInput.value = '';
         }
     });

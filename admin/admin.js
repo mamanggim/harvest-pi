@@ -6,7 +6,7 @@ import {
   onValue, 
   set, 
   get 
-} from '/firebase/firebase-config.js';
+} from '../firebase/firebase-config.js';
 
 // Fungsi encode email
 function encodeEmail(email) {
@@ -23,13 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
         isAdmin = snapshot.val() === 'admin';
         if (!isAdmin) {
           alert('Access denied. Admins only.');
-          window.location.href = 'index.html'; // Redirect ke halaman utama
+          window.location.href = '..index.html'; // Redirect ke halaman utama
           return;
         }
 
         // Setup FCM untuk notifikasi
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          navigator.serviceWorker.register('../firebase-messaging-sw.js')
             .then((registration) => {
               messaging.useServiceWorker(registration);
               return messaging.getToken();
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } else {
       alert('Please login first.');
-      window.location.href = 'index.html';
+      window.location.href = '..index.html';
     }
   });
 

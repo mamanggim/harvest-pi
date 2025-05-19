@@ -2,9 +2,9 @@ body {
   background: #1a1a2e;
   color: #e0e0e0;
   font-family: 'Press Start 2P', cursive;
-  font-size: 12px; /* Kecilin font default */
+  font-size: 12px;
   margin: 0;
-  padding: 10px; /* Kurangin padding biar lebih compact */
+  padding: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,18 +13,19 @@ body {
 
 #admin-dashboard {
   background: #16213e;
-  padding: 15px; /* Kurangin padding */
+  padding: 15px;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
-  max-width: 600px; /* Kecilin kotak dari 800px jadi 600px */
+  border: 2px solid #39FF14; /* Tambah border solid lime neon, mirip login */
+  box-shadow: 0 0 15px #39FF14, 0 0 30px #39FF14; /* Efek glow lebih kuat */
+  max-width: 600px;
   width: 100%;
   text-align: center;
 }
 
 .neon-title {
-  color: #39FF14; /* Lime neon */
+  color: #39FF14;
   text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14;
-  font-size: 18px; /* Kecilin font dari default h1 */
+  font-size: 18px;
   margin-bottom: 15px;
 }
 
@@ -40,9 +41,9 @@ body {
 
 #deposit-list th, #deposit-list td {
   border: 1px solid #39FF14;
-  padding: 8px; /* Kurangin padding tabel */
+  padding: 8px;
   text-align: left;
-  font-size: 10px; /* Kecilin font di tabel */
+  font-size: 10px;
 }
 
 #deposit-list th {
@@ -57,11 +58,11 @@ body {
   background: #ff007a;
   color: #fff;
   border: none;
-  padding: 8px 16px; /* Kecilin tombol */
+  padding: 8px 16px;
   margin: 5px;
   cursor: pointer;
   font-family: 'Press Start 2P', cursive;
-  font-size: 10px; /* Kecilin font tombol */
+  font-size: 10px;
   border-radius: 5px;
   box-shadow: 0 0 5px #ff007a;
 }
@@ -72,14 +73,14 @@ body {
 }
 
 #logout-btn {
-  background: #39FF14; /* Warna kuning lime */
-  color: #1a1a2e; /* Warna teks gelap biar kontras */
-  box-shadow: 0 0 5px #39FF14;
+  background: #FFFF00; /* Kuning terang pas normal */
+  color: #1a1a2e;
+  box-shadow: 0 0 5px #FFFF00;
 }
 
 #logout-btn:hover {
-  background: #CCFF00; /* Hover pake lime kuning */
-  box-shadow: 0 0 10px #CCFF00;
+  background: #39FF14; /* Hijau lime neon pas hover */
+  box-shadow: 0 0 10px #39FF14;
 }
 
 #notification {
@@ -91,11 +92,11 @@ body {
   padding: 8px 16px;
   border-radius: 5px;
   box-shadow: 0 0 5px #ff007a;
-  font-size: 10px; /* Kecilin font notifikasi */
+  font-size: 10px;
 }
 
 .text-limit {
-  max-width: 120px; /* Kecilin lebar kolom biar muat */
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

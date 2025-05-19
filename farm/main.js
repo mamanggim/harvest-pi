@@ -1902,6 +1902,21 @@ function encodeEmail(email) {
 
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
+  // Tab Switching
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      tabContents.forEach(content => content.classList.remove('active'));
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      const tabId = button.getAttribute('data-tab');
+      document.getElementById(tabId).classList.add('active');
+      button.classList.add('active');
+    });
+  });
+  // Aktifkan tab "Finance" saat load
+  document.querySelector('[data-tab="finance"]').click();
+
   // Fitur Deposit
   const realDepositBtn = document.getElementById("real-deposit-btn");
   const realDepositMsg = document.getElementById("real-deposit-msg");
@@ -1957,8 +1972,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Isi pop-up
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
-    popupUserId.textContent = user.email; // Tetap tampilkan email asli di frontend
-    console.log('Pop-up diisi:', { amount, memo, email: user.email });
+    popupUserId.textContent = user.email;
 
     // Tampilkan pop-up
     depositPopup.style.display = "flex";
@@ -1972,7 +1986,7 @@ document.addEventListener('DOMContentLoaded', () => {
         type: "deposit",
         status: 'pending',
         timestamp: Date.now(),
-        email: user.email, // Simpan email asli di data
+        email: user.email,
         memo: memo
       }).then(() => {
         realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: YOUR_WALLET_ADDRESS with memo: ${memo}`;

@@ -9,17 +9,20 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  box-sizing: border-box; /* Pastikan padding gak nambah lebar */
 }
 
 #admin-dashboard {
   background: #16213e;
-  padding: 15px;
+  padding: 10px; /* Kurangin padding dari 15px jadi 10px */
   border-radius: 10px;
-  border: 2px solid #39FF14; /* Tambah border solid lime neon, mirip login */
-  box-shadow: 0 0 15px #39FF14, 0 0 30px #39FF14; /* Efek glow lebih kuat */
-  max-width: 600px;
-  width: 100%;
+  border: 2px solid #39FF14;
+  box-shadow: 0 0 15px #39FF14, 0 0 30px #39FF14;
+  max-width: 600px; /* Tetep 600px */
+  width: 100%; /* Pastikan 100% dari max-width */
   text-align: center;
+  box-sizing: border-box; /* Termasuk border dan padding di lebar */
+  margin: 0 auto; /* Center dengan margin otomatis */
 }
 
 .neon-title {
@@ -73,13 +76,13 @@ body {
 }
 
 #logout-btn {
-  background: #FFFF00; /* Kuning terang pas normal */
+  background: #FFFF00;
   color: #1a1a2e;
   box-shadow: 0 0 5px #FFFF00;
 }
 
 #logout-btn:hover {
-  background: #39FF14; /* Hijau lime neon pas hover */
+  background: #39FF14;
   box-shadow: 0 0 10px #39FF14;
 }
 

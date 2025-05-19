@@ -1914,7 +1914,6 @@ document.addEventListener('DOMContentLoaded', () => {
       button.classList.add('active');
     });
   });
-  // Aktifkan tab "Finance" saat load
   document.querySelector('[data-tab="finance"]').click();
 
   // Fitur Deposit
@@ -1925,6 +1924,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const popupAmount = document.getElementById("popup-amount");
   const popupMemo = document.getElementById("popup-memo");
   const popupUserId = document.getElementById("popup-userid");
+  const popupTransferAmount = document.getElementById("popup-transfer-amount");
+  const popupTransferMemo = document.getElementById("popup-transfer-memo");
   const confirmDepositBtn = document.getElementById("confirm-deposit");
   const cancelDepositBtn = document.getElementById("cancel-deposit");
 
@@ -1937,12 +1938,14 @@ document.addEventListener('DOMContentLoaded', () => {
     popupAmount,
     popupMemo,
     popupUserId,
+    popupTransferAmount,
+    popupTransferMemo,
     confirmDepositBtn,
     cancelDepositBtn
   });
 
   // Pengecekan elemen
-  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUserId || !confirmDepositBtn || !cancelDepositBtn) {
+  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUserId || !popupTransferAmount || !popupTransferMemo || !confirmDepositBtn || !cancelDepositBtn) {
     console.error('Salah satu elemen tidak ditemukan. Cek ID di HTML.');
     return;
   }
@@ -1973,10 +1976,12 @@ document.addEventListener('DOMContentLoaded', () => {
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
     popupUserId.textContent = user.email;
+    popupTransferAmount.textContent = amount; // Isi juga transfer amount
+    popupTransferMemo.textContent = memo; // Isi juga transfer memo
 
     // Tampilkan pop-up
     depositPopup.style.display = "flex";
-    console.log('Pop-up ditampilkan');
+    console.log('Pop-up ditampilkan:', { amount, memo, email: user.email });
 
     // Konfirmasi deposit
     confirmDepositBtn.onclick = () => {

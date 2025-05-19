@@ -137,41 +137,41 @@
   <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
 
   <!-- FINANCE -->
-  <div id="finance" class="tab-content">
-    <h2 id="finance-title">Finance</h2>
+<div id="finance" class="tab-content">
+  <h2 id="finance-title">Finance</h2>
 
-    <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
-    <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
-    <hr/>
+  <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
+  <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
+  <hr/>
 
-    <h3>Deposit</h3>
-    <input type="number" id="deposit-amount" placeholder="Enter PI Amount" value="" />
-    <button id="real-deposit-btn">Deposit PI</button>
-    <div id="real-deposit-msg" class="deposit-message"></div>
+  <h3>Deposit</h3>
+  <input type="number" id="deposit-amount" placeholder="Enter PI Amount" value="" />
+  <button id="real-deposit-btn">Deposit PI</button>
+  <div id="real-deposit-msg" class="deposit-message"></div>
 
-    <h3>Withdraw</h3>
-    <button id="withdraw-btn" disabled>Withdraw PI</button>
-    <div id="real-withdraw-msg" class="deposit-message"></div>
-    <p id="withdraw-note" class="note">
-      This feature will unlock when you reach: <br />
-      - Level 10<br />
-      - Farm Coin ≥ 10.000.000<br />
-      - Total Deposit ≥ 10 PI
-    </p>
+  <h3>Withdraw</h3>
+  <button id="withdraw-btn" disabled>Withdraw PI</button>
+  <div id="real-withdraw-msg" class="deposit-message"></div>
+  <p id="withdraw-note" class="note">
+    This feature will unlock when you reach: <br />
+    - Level 10<br />
+    - Farm Coin ≥ 10.000.000<br />
+    - Total Deposit ≥ 10 PI
+  </p>
 
-    <!-- Pop-up Container -->
-    <div id="deposit-popup" class="popup" style="display:none;">
-      <div class="popup-content">
-        <h3>Deposit Details</h3>
-        <p><strong>Amount:</strong> <span id="popup-amount"></span> PI</p>
-        <p><strong>Memo:</strong> <span id="popup-memo"></span></p>
-        <p><strong>Email:</strong> <span id="popup-userid"></span></p>
-        <p>Transfer <span id="popup-amount"></span> PI to wallet address: <strong>YOUR_WALLET_ADDRESS</strong> with memo: <span id="popup-memo"></span></p>
-        <button id="confirm-deposit">Confirm</button>
-        <button id="cancel-deposit">Cancel</button>
-      </div>
+  <!-- Pop-up Container -->
+  <div id="deposit-popup" class="popup" style="display:none;">
+    <div class="popup-content">
+      <h3>Deposit Details</h3>
+      <p><strong>Amount:</strong> <span id="popup-amount">0</span> PI</p>
+      <p><strong>Memo:</strong> <span id="popup-memo">-</span></p>
+      <p><strong>Email:</strong> <span id="popup-userid">-</span></p>
+      <p>Transfer <span id="popup-transfer-amount">0</span> PI to wallet address: <strong>YOUR_WALLET_ADDRESS</strong> with memo: <span id="popup-transfer-memo">-</span></p>
+      <button id="confirm-deposit">Confirm</button>
+      <button id="cancel-deposit">Cancel</button>
     </div>
   </div>
+</div>
 
   <!-- LEADERBOARD -->
   <div id="leaderboard" class="tab-content">

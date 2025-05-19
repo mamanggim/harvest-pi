@@ -1302,7 +1302,7 @@ input[type="range"] {
   font-size: 10px;
 }
 
-/* POPUP STYLE */
+/*=== POP UP STYLE ===*/
 .tab-buttons {
   margin: 10px 0;
 }
@@ -1359,18 +1359,18 @@ th {
   width: 90%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   color: #333;
-  font-size: 10px; /* Turunin lagi biar lebih seimbang */
-  line-height: 1.2; /* Sesuaikan line height biar rapi */
+  font-size: 10px;
+  line-height: 1.2;
 }
 
 .popup-content h3 {
   margin-top: 0;
   color: #333;
-  font-size: 12px; /* Judul sedikit lebih besar */
+  font-size: 12px;
 }
 
 .popup-content p {
-  margin: 8px 0; /* Kurangin margin biar hemat ruang */
+  margin: 8px 0;
   font-size: 10px;
 }
 
@@ -1379,29 +1379,41 @@ th {
   font-size: 10px;
 }
 
+/* Neon Effect untuk Judul */
+.neon-title {
+  color: #00ff00; /* Hijau */
+  text-shadow: 
+    0 0 5px #00ff00,
+    0 0 10px #00ff00,
+    0 0 20px #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
 .text-limit {
-  max-width: 100%;
+  max-width: 150px; /* Batasi lebar biar wallet address gak lewat */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: inline-block;
+  vertical-align: middle;
 }
 
 /* Styling tombol sesuai tema game */
 .game-button {
-  background: #00ff00; /* Hijau */
-  border: 2px solid #ffff00; /* Sisi kuning */
+  background: #00ff00;
+  border: 2px solid #ffff00;
   color: #000;
   padding: 5px 10px;
   border-radius: 3px;
   cursor: pointer;
   margin: 5px;
   font-family: 'Press Start 2P', cursive;
-  font-size: 10px; /* Sesuaikan font tombol */
+  font-size: 10px;
 }
 
 .game-button:hover {
-  background: #00cc00; /* Hijau lebih gelap saat hover */
+  background: #00cc00;
 }
 
 /* Styling tombol copy */
@@ -1414,7 +1426,7 @@ th {
   cursor: pointer;
   margin-left: 5px;
   font-family: 'Press Start 2P', cursive;
-  font-size: 8px; /* Tombol copy lebih kecil */
+  font-size: 8px;
 }
 
 .copy-button:hover {

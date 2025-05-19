@@ -6,7 +6,7 @@
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="farm/style.css?v=44" />
+  <link rel="stylesheet" href="farm/style.css?v=45" />
   <style>
     .neon-text {
       color: #39FF14;
@@ -48,20 +48,29 @@
       background: #CCFF00;
       box-shadow: 0 0 10px #CCFF00;
     }
+    /* Link tanpa garis bawah, efek cahaya */
     .link-neon {
-      color: #FFFF00;
-      text-decoration: underline;
-      cursor: pointer;
+      color: #FFFF00; /* Warna dasar kuning */
+      text-decoration: none; /* Hilangin garis bawah */
+      text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14; /* Efek cahaya kecil */
     }
     .link-neon:hover {
-      color: #39FF14;
+      color: #39FF14; /* Agak terang pas hover */
+      text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14; /* Cahaya lebih kuat */
     }
     .policy-links a {
       color: #FFFF00;
-      text-decoration: underline;
+      text-decoration: none;
+      text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14;
     }
     .policy-links a:hover {
       color: #39FF14;
+      text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
+    }
+    /* Teks biasa sebelum link */
+    .link-text {
+      color: #e0e0e0; /* Warna abu-abu terang */
+      font-size: 10px;
     }
     /* Spinner Loading */
     .spinner {
@@ -97,10 +106,6 @@
       display: block;
       opacity: 1;
     }
-    /* Kecilkan font link */
-    .small-link {
-      font-size: 10px; /* Sesuain ukuran */
-    }
   </style>
 </head>
 <body>
@@ -125,7 +130,7 @@
         <div id="login-error" style="display: none; color: red;"></div>
         <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
       </form>
-      <p class="mt-2"><span class="link-neon small-link" onclick="showRegister()">Don't have an account? Register</span></p>
+      <p class="mt-2"><span class="link-text">Don't have an account?</span> <span class="link-neon" onclick="showRegister()">Register</span></p>
     </div>
     <!-- Register Form (Hidden) -->
     <form id="register-form" class="register-form" style="display: none;">
@@ -136,7 +141,7 @@
       <div id="register-error" style="display: none; color: red;"></div>
     </form>
     <p id="register-back" style="display: none; margin-top: 10px;">
-      <span class="link-neon small-link" onclick="showLogin()">Already have an account? Login</span>
+      <span class="link-text">Already have an account?</span> <span class="link-neon" onclick="showLogin()">Login</span>
     </p>
     <div class="policy-links mt-4">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
@@ -345,7 +350,7 @@
   </script>
 
   <!-- MAIN GAME SCRIPT -->
-  <script type="module" src="farm/main.js?v=44"></script>
+  <script type="module" src="farm/main.js?v=45"></script>
 
   <!-- FALLBACK ERROR HANDLING -->
   <script>

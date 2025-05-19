@@ -1320,11 +1320,37 @@ input[type="range"] {
   padding: 20px;
   border-radius: 5px;
   text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #333; /* Warna teks gelap biar kontras */
+}
+
+.popup-content h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.popup-content p {
+  margin: 10px 0;
+}
+
+.popup-content span {
+  color: #000; /* Pastikan span terlihat */
 }
 
 .popup-content button {
   margin: 5px;
   padding: 5px 10px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.popup-content button:hover {
+  background: #0056b3;
 }
 
 /* Tambahan untuk loading screen biar gak konflik */

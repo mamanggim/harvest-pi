@@ -1,0 +1,68 @@
+body {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: 'Press Start 2P', cursive;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+#admin-dashboard {
+  background: #16213e;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  max-width: 800px;
+  width: 100%;
+  text-align: center;
+}
+
+.neon-title {
+  color: #0ff;
+  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+  margin-bottom: 20px;
+}
+
+.table-container {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+#deposit-list {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#deposit-list th, #deposit-list td {
+  border: 1px solid #0ff;
+  padding: 10px;
+  text-align: left;
+}
+
+#deposit-list th {
+  background: #0f3460;
+}
+
+#deposit-list td {
+  background: #1b263b;
+}
+
+.game-button {
+  background: #ff007a;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin: 10px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', cursive;
+  border-radius: 5px;
+  box-shadow: 0 0 5px #ff007a;
+}
+
+.game-button:hover {
+  background: #ff4da6;
+  box-shadow: 0 0 10px #ff4da6;
+}

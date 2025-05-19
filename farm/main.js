@@ -1991,16 +1991,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const memo = `DEPOSIT-${encodedEmail}-${Date.now().toString().slice(-5)}`;
 
     // Isi pop-up
+    const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Variabel terpisah buat wallet
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
     popupUserId.textContent = user.email;
     popupTransferAmount.textContent = amount;
     popupTransferMemo.textContent = memo;
-    popupWalletAddress.textContent = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Isi wallet address
+    popupWalletAddress.textContent = walletAddress; // Isi dengan variabel
 
     // Tampilkan pop-up
     depositPopup.style.display = "flex";
-    console.log('Pop-up ditampilkan:', { amount, memo, email: user.email });
+    console.log('Pop-up ditampilkan:', { amount, memo, email: user.email, walletAddress });
 
     // Tambahin event copy
     copyWalletBtn.onclick = () => copyToClipboard(popupWalletAddress.textContent, copyWalletBtn);
@@ -2017,7 +2018,7 @@ document.addEventListener('DOMContentLoaded', () => {
         email: user.email,
         memo: memo
       }).then(() => {
-        realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN with memo: ${memo}`;
+        realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: ${walletAddress} with memo: ${memo}`;
         depositPopup.style.display = "none";
         console.log('Deposit berhasil disimpan');
       }).catch((err) => {

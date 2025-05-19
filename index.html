@@ -6,7 +6,7 @@
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="farm/style.css?v=43" />
+  <link rel="stylesheet" href="farm/style.css?v=44" />
   <style>
     .neon-text {
       color: #39FF14;
@@ -97,6 +97,10 @@
       display: block;
       opacity: 1;
     }
+    /* Kecilkan font link */
+    .small-link {
+      font-size: 10px; /* Sesuain ukuran */
+    }
   </style>
 </head>
 <body>
@@ -121,7 +125,7 @@
         <div id="login-error" style="display: none; color: red;"></div>
         <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
       </form>
-      <p class="mt-2">Don't have an account? <span class="link-neon" onclick="showRegister()">Register</span></p>
+      <p class="mt-2"><span class="link-neon small-link" onclick="showRegister()">Don't have an account? Register</span></p>
     </div>
     <!-- Register Form (Hidden) -->
     <form id="register-form" class="register-form" style="display: none;">
@@ -132,7 +136,7 @@
       <div id="register-error" style="display: none; color: red;"></div>
     </form>
     <p id="register-back" style="display: none; margin-top: 10px;">
-      Already have an account? <span class="link-neon" onclick="showLogin()">Login</span>
+      <span class="link-neon small-link" onclick="showLogin()">Already have an account? Login</span>
     </p>
     <div class="policy-links mt-4">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
@@ -341,7 +345,7 @@
   </script>
 
   <!-- MAIN GAME SCRIPT -->
-  <script type="module" src="farm/main.js?v=43"></script>
+  <script type="module" src="farm/main.js?v=44"></script>
 
   <!-- FALLBACK ERROR HANDLING -->
   <script>
@@ -377,12 +381,16 @@
       document.getElementById('login-form').style.display = 'none';
       document.getElementById('register-form').style.display = 'block';
       document.getElementById('register-back').style.display = 'block';
+      // Hapus teks login link dari register view
+      document.querySelector('#auth-form p').style.display = 'none';
     }
 
     function showLogin() {
       document.getElementById('register-form').style.display = 'none';
       document.getElementById('login-form').style.display = 'block';
       document.getElementById('register-back').style.display = 'none';
+      // Tampilkan lagi teks login link
+      document.querySelector('#auth-form p').style.display = 'block';
     }
 
     // Loading Delay 3 Detik

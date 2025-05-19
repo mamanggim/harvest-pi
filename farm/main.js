@@ -1996,7 +1996,7 @@ document.addEventListener('DOMContentLoaded', () => {
     popupUserId.textContent = user.email;
     popupTransferAmount.textContent = amount;
     popupTransferMemo.textContent = memo;
-    popupWalletAddress.textContent = 'YOUR_WALLET_ADDRESS'; // Isi wallet address
+    popupWalletAddress.textContent = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Isi wallet address
 
     // Tampilkan pop-up
     depositPopup.style.display = "flex";

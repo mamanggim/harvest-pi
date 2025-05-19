@@ -14,15 +14,18 @@ body {
   background: #16213e;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-  max-width: 600px;
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.5); /* Sesuai warna lime */
+  max-width: 800px;
   width: 100%;
   text-align: center;
 }
 
 .neon-title {
-  color: #0ff;
-  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+  /* Pilih salah satu warna di bawah */
+  color: #39FF14; /* Pilihan 1: Lime Neon Terang */
+  /* color: #CCFF00; */ /* Pilihan 2: Lime Kuning */
+  /* color: #BFFF00; */ /* Pilihan 3: Lime Soft */
+  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14; /* Sesuai warna lime */
   margin-bottom: 20px;
 }
 
@@ -37,7 +40,7 @@ body {
 }
 
 #deposit-list th, #deposit-list td {
-  border: 1px solid #0ff;
+  border: 1px solid #39FF14; /* Sesuai warna lime */
   padding: 10px;
   text-align: left;
 }
@@ -65,4 +68,22 @@ body {
 .game-button:hover {
   background: #ff4da6;
   box-shadow: 0 0 10px #ff4da6;
+}
+
+#notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #ff007a;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px #ff007a;
+}
+
+.text-limit {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

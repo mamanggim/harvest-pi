@@ -231,105 +231,81 @@ async function loadData() {
 }
 // END loadData fix
 
-// Fungsi register dengan Email/Password
-const registerEmailBtn = document.getElementById('register-email-btn');
-const registerEmailInput = document.getElementById('register-email-input');
-const registerPasswordInput = document.getElementById('register-password-input');
-const registerError = document.getElementById('register-error');
-
-if (registerEmailBtn) {
-    addSafeClickListener(registerEmailBtn, async () => {
-        const email = registerEmailInput.value;
-        const password = registerPasswordInput.value;
-
-        if (!email || !password) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Please enter email and password.';
-            return;
-        }
-
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            await sendEmailVerification(user);
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration successful! Please verify your email.';
-            showNotification('Registration successful! Check your email for verification.');
-
-            const playerRef = ref(database, `players/${user.uid}`);
-            await set(playerRef, {
-                farmCoins: 0,
-                piBalance: 0,
-                water: 0,
-                level: 1,
-                xp: 0,
-                inventory: [],
-                farmPlots: [],
-                harvestCount: 0,
-                achievements: { harvest: false, coins: false },
-                lastClaim: null,
-                claimedToday: false,
-                totalDeposit: 0 // Tambah field totalDeposit
-            });
-
-            registerEmailInput.value = '';
-            registerPasswordInput.value = '';
-        } catch (error) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration failed: ' + error.message;
-        }
-    });
+// Fungsi Validasi Email (tambahan)
+function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
 }
 
-// Fungsi login dengan Email/Password
-const loginEmailBtn = document.getElementById('login-email-btn');
-const emailInput = document.getElementById('email-input');
-const passwordInput = document.getElementById('password-input');
-const loginError = document.getElementById('login-error');
-const verifyEmailMsg = document.getElementById('verify-email-msg');
+// Fungsi Register (sesuain sama index.html)
+window.registerWithEmail = async function(email, password, callback) {
+  if (!email || !password) {
+    callback(false, 'Please enter email and password.');
+    return;
+  }
 
-if (loginEmailBtn) {
-    addSafeClickListener(loginEmailBtn, async () => {
-        const email = emailInput.value;
-        const password = passwordInput.value;
+  if (!validateEmail(email)) {
+    callback(false, 'Invalid email format!');
+    return;
+  }
 
-        if (!email || !password) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Please enter email and password.';
-            return;
-        }
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-        try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+    await sendEmailVerification(user);
 
-            if (!user.emailVerified) {
-                await sendEmailVerification(user);
-                verifyEmailMsg.style.display = 'block';
-                loginError.style.display = 'none';
-                return;
-            }
-
-            userId = user.uid;
-            localStorage.setItem('userId', userId);
-            showNotification('Logged in as ' + user.email);
-
-            const loginScreenElement = document.getElementById('login-screen');
-            const startScreenElement = document.getElementById('start-screen');
-            if (loginScreenElement && startScreenElement) {
-                loginScreenElement.style.display = 'none';
-                startScreenElement.style.display = 'flex';
-            }
-
-            loadPlayerData();
-        } catch (error) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Login failed: ' + error.message;
-            verifyEmailMsg.style.display = 'none';
-        }
+    const playerRef = ref(database, `players/${user.uid}`);
+    await set(playerRef, {
+      farmCoins: 0,
+      piBalance: 0,
+      water: 0,
+      level: 1,
+      xp: 0,
+      inventory: [],
+      farmPlots: [],
+      harvestCount: 0,
+      achievements: { harvest: false, coins: false },
+      lastClaim: null,
+      claimedToday: false,
+      totalDeposit: 0
     });
-}
+
+    callback(true, 'Registration successful! Please verify your email.');
+  } catch (error) {
+    callback(false, 'Registration failed: ' + error.message);
+  }
+};
+
+// Fungsi Login (sesuain sama index.html)
+window.loginWithEmail = async function(email, password, callback) {
+  if (!email || !password) {
+    callback(false, 'Please enter email and password.');
+    return;
+  }
+
+  if (!validateEmail(email)) {
+    callback(false, 'Invalid email format!');
+    return;
+  }
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    if (!user.emailVerified) {
+      await sendEmailVerification(user);
+      callback(false, 'Please verify your email before logging in!');
+      return;
+    }
+
+    userId = user.uid; // Pastikan userId didefinisikan sebagai variabel global
+    localStorage.setItem('userId', userId);
+    callback(true, 'Login successful!');
+  } catch (error) {
+    callback(false, 'Login failed: ' + error.message);
+  }
+};
 
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {

@@ -1939,6 +1939,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const popupTransferAmount = document.getElementById("popup-transfer-amount");
   const popupTransferMemo = document.getElementById("popup-transfer-memo");
   const popupWalletAddress = document.getElementById("popup-wallet-address");
+  const countdownTimer = document.getElementById("countdown-timer");
   const copyWalletBtn = document.getElementById("copy-wallet-btn");
   const copyMemoBtn = document.getElementById("copy-memo-btn");
   const confirmDepositBtn = document.getElementById("confirm-deposit");
@@ -1956,6 +1957,7 @@ document.addEventListener('DOMContentLoaded', () => {
     popupTransferAmount,
     popupTransferMemo,
     popupWalletAddress,
+    countdownTimer,
     copyWalletBtn,
     copyMemoBtn,
     confirmDepositBtn,
@@ -1963,21 +1965,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Pengecekan elemen
-  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUserId || !popupTransferAmount || !popupTransferMemo || !popupWalletAddress || !copyWalletBtn || !copyMemoBtn || !confirmDepositBtn || !cancelDepositBtn) {
+  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUserId || !popupTransferAmount || !popupTransferMemo || !popupWalletAddress || !countdownTimer || !copyWalletBtn || !copyMemoBtn || !confirmDepositBtn || !cancelDepositBtn) {
     console.error('Salah satu elemen tidak ditemukan. Cek ID di HTML.');
     return;
   }
 
   // Setup Deposit Request
-  realDepositBtn.addEventListener('click', () => {
-    console.log('Tombol deposit diklik');
+  let countdownInterval = null;
+  const countdownDuration = 30; // 30 detik countdown
 
-    const amount = parseFloat(depositAmountInput.value);
-    if (!amount || amount < 1) {
-      realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
-      console.log('Validasi gagal: Amount < 1');
-      return;
-    }
+  realDepositBtn.addEventListener('click', async () => {
+    console.log('Tombol deposit diklik');
 
     const user = auth.currentUser;
     if (!user) {
@@ -1986,18 +1984,58 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const amount = parseFloat(depositAmountInput.value);
+    if (!amount || amount < 1) {
+      realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
+      console.log('Validasi gagal: Amount < 1');
+      return;
+    }
+
+    // Cek limit deposit harian
     const encodedEmail = encodeEmail(user.email);
+    const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const depositLimitRef = ref(database, `depositLimits/${encodedEmail}/${today}`);
+    const snapshot = await get(depositLimitRef);
+    const depositData = snapshot.val() || { count: 0, timestamp: 0 };
+    const lastRequestTime = depositData.timestamp || 0;
+    const timeSinceLastRequest = Date.now() - lastRequestTime;
+
+    if (depositData.count >= 3) {
+      if (timeSinceLastRequest < 24 * 60 * 60 * 1000) { // Kurang dari 24 jam
+        const remainingTime = Math.ceil((24 * 60 * 60 * 1000 - timeSinceLastRequest) / (60 * 60 * 1000));
+        realDepositMsg.textContent = `You've reached the daily deposit limit (3x). Please wait ${remainingTime} hours to request again.`;
+        return;
+      } else {
+        // Reset count setelah 24 jam
+        await set(depositLimitRef, { count: 0, timestamp: 0 });
+      }
+    }
+
     const transactionId = `DEPOSIT-${encodedEmail}-${Date.now()}`;
     const memo = `DEPOSIT-${encodedEmail}-${Date.now().toString().slice(-5)}`;
+    const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN';
 
     // Isi pop-up
-    const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Variabel terpisah buat wallet
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
     popupUserId.textContent = user.email;
     popupTransferAmount.textContent = amount;
     popupTransferMemo.textContent = memo;
-    popupWalletAddress.textContent = walletAddress; // Isi dengan variabel
+    popupWalletAddress.textContent = walletAddress;
+
+    // Setup countdown
+    let timeLeft = countdownDuration;
+    countdownTimer.textContent = timeLeft;
+    countdownInterval = setInterval(() => {
+      timeLeft--;
+      countdownTimer.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(countdownInterval);
+        depositPopup.style.display = "none";
+        realDepositMsg.textContent = 'Deposit request timed out.';
+        console.log('Countdown habis, deposit dibatalkan');
+      }
+    }, 1000);
 
     // Tampilkan pop-up
     depositPopup.style.display = "flex";
@@ -2008,15 +2046,22 @@ document.addEventListener('DOMContentLoaded', () => {
     copyMemoBtn.onclick = () => copyToClipboard(popupTransferMemo.textContent, copyMemoBtn);
 
     // Konfirmasi deposit
-    confirmDepositBtn.onclick = () => {
+    confirmDepositBtn.onclick = async () => {
+      clearInterval(countdownInterval);
       console.log('Tombol confirm diklik');
+      
+      // Update deposit limit
+      const newCount = (depositData.count || 0) + 1;
+      await set(depositLimitRef, { count: newCount, timestamp: Date.now() });
+
       set(ref(database, `transactions/${transactionId}`), {
         amount: amount,
         type: "deposit",
         status: 'pending',
         timestamp: Date.now(),
         email: user.email,
-        memo: memo
+        memo: memo,
+        expiresAt: Date.now() + countdownDuration * 1000 // Simpan waktu kadaluarsa
       }).then(() => {
         realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: ${walletAddress} with memo: ${memo}`;
         depositPopup.style.display = "none";
@@ -2029,6 +2074,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Batal deposit
     cancelDepositBtn.onclick = () => {
+      clearInterval(countdownInterval);
       console.log('Tombol cancel diklik');
       depositPopup.style.display = "none";
       realDepositMsg.textContent = 'Deposit cancelled.';
@@ -2054,7 +2100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Admin Panel
+  // Admin Panel dengan Countdown
   onValue(ref(database, 'transactions'), (snapshot) => {
     const transactions = snapshot.val();
     const depositItems = document.getElementById('deposit-items');
@@ -2064,17 +2110,40 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let id in transactions) {
           const t = transactions[id];
           if (t.type === "deposit") {
+            // Hitung sisa waktu
+            let timeLeft = t.expiresAt ? Math.max(0, Math.floor((t.expiresAt - Date.now()) / 1000)) : 0;
+            if (timeLeft <= 0 && t.status === 'pending') {
+              set(ref(database, `transactions/${id}/status`), 'cancelled');
+              continue;
+            }
+
             depositItems.innerHTML += `
               <tr>
-                <td>${t.email}</td><td>${t.amount} PI</td><td>${t.memo || '-'}</td>
+                <td>${t.email}</td>
+                <td>${t.amount} PI</td>
+                <td>${t.memo || '-'}</td>
                 <td>${new Date(t.timestamp).toLocaleString()}</td>
                 <td>${t.status}</td>
+                <td id="countdown-${id}">${timeLeft} sec</td>
                 <td>
                   <button onclick="approveDeposit('${id}')">Approve</button>
                   <button onclick="rejectDeposit('${id}')">Reject</button>
                 </td>
               </tr>
             `;
+
+            // Update countdown secara real-time
+            if (t.status === 'pending') {
+              const countdownElement = document.getElementById(`countdown-${id}`);
+              const interval = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = `${timeLeft} sec`;
+                if (timeLeft <= 0) {
+                  clearInterval(interval);
+                  set(ref(database, `transactions/${id}/status`), 'cancelled');
+                }
+              }, 1000);
+            }
           }
         }
       }

@@ -1303,6 +1303,30 @@ input[type="range"] {
 }
 
 /* Tambah di style.css */
+.text-limit {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Tambahin ellipsis kalau teks kepanjangan */
+  display: inline-block;
+}
+
+/* Styling tombol sesuai tema game */
+.game-button {
+  background: #00ff00; /* Hijau */
+  border: 2px solid #ffff00; /* Sisi kuning */
+  color: #000;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 5px;
+  font-family: 'Press Start 2P', cursive; /* Sesuaikan font game */
+}
+
+.game-button:hover {
+  background: #00cc00; /* Hijau lebih gelap saat hover */
+}
+
 .popup {
   position: fixed;
   top: 0;
@@ -1310,9 +1334,10 @@ input[type="range"] {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
+  z-index: 10000;
 }
 
 .popup-content {
@@ -1323,7 +1348,7 @@ input[type="range"] {
   max-width: 400px;
   width: 90%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  color: #333; /* Warna teks gelap biar kontras */
+  color: #333;
 }
 
 .popup-content h3 {
@@ -1336,21 +1361,7 @@ input[type="range"] {
 }
 
 .popup-content span {
-  color: #000; /* Pastikan span terlihat */
-}
-
-.popup-content button {
-  margin: 5px;
-  padding: 5px 10px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.popup-content button:hover {
-  background: #0056b3;
+  color: #000;
 }
 
 /* Tambahan untuk loading screen biar gak konflik */

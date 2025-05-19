@@ -15,10 +15,13 @@ function encodeEmail(email) {
 
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
+  let isLoggingOut = false; // Flag buat tandain logout
+
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
+      isLoggingOut = true; // Set flag
       auth.signOut().then(() => {
         window.location.href = '../index.html';
       }).catch((err) => {
@@ -36,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isAdmin = snapshot.val() === 'admin';
         if (!isAdmin) {
           alert('Access denied. Admins only.');
-          window.location.href = '../index.html'; // Redirect ke halaman utama
+          window.location.href = '../index.html';
           return;
         }
 
@@ -58,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Error checking permissions. Please login again.');
         window.location.href = '../index.html';
       });
-    } else {
+    } else if (!isLoggingOut) { // Hanya alert kalau bukan logout intentional
       alert('Please login first.');
       window.location.href = '../index.html';
     }

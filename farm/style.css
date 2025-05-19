@@ -1302,29 +1302,39 @@ input[type="range"] {
   font-size: 10px;
 }
 
-/* Tambah di style.css */
-.text-limit {
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* Tambahin ellipsis kalau teks kepanjangan */
-  display: inline-block;
+/* style.css */
+.tab-buttons {
+  margin: 10px 0;
 }
 
-/* Styling tombol sesuai tema game */
-.game-button {
-  background: #00ff00; /* Hijau */
-  border: 2px solid #ffff00; /* Sisi kuning */
-  color: #000;
-  padding: 5px 10px;
-  border-radius: 3px;
+.tab-button {
+  padding: 10px 20px;
+  margin-right: 5px;
   cursor: pointer;
-  margin: 5px;
-  font-family: 'Press Start 2P', cursive; /* Sesuaikan font game */
 }
 
-.game-button:hover {
-  background: #00cc00; /* Hijau lebih gelap saat hover */
+.tab-content {
+  display: none;
+  padding: 20px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
 }
 
 .popup {
@@ -1349,19 +1359,48 @@ input[type="range"] {
   width: 90%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   color: #333;
+  font-size: 12px; /* Kurangin ukuran font biar teks muat */
 }
 
 .popup-content h3 {
   margin-top: 0;
   color: #333;
+  font-size: 14px; /* Sesuaikan judul sedikit lebih besar */
 }
 
 .popup-content p {
   margin: 10px 0;
+  font-size: 12px; /* Pastikan teks dalam paragraf kecil */
 }
 
 .popup-content span {
   color: #000;
+  font-size: 12px; /* Pastikan span juga kecil */
+}
+
+.text-limit {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+/* Styling tombol sesuai tema game */
+.game-button {
+  background: #00ff00; /* Hijau */
+  border: 2px solid #ffff00; /* Sisi kuning */
+  color: #000;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 5px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px; /* Sesuaikan font tombol */
+}
+
+.game-button:hover {
+  background: #00cc00; /* Hijau lebih gelap saat hover */
 }
 
 /* Tambahan untuk loading screen biar gak konflik */

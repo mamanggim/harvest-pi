@@ -1895,7 +1895,7 @@ function exitFullScreen() {
     }
 }
 
-  // Fungsi encode email
+// Fungsi encode email
 function encodeEmail(email) {
   return email.replace('@', '_at_').replace('.', '_dot_');
 }
@@ -2088,8 +2088,8 @@ document.addEventListener('DOMContentLoaded', () => {
       get(ref(database, `players/${encodeEmail(user.email)}/role`)).then((snapshot) => {
         isAdmin = snapshot.val() === 'admin';
         if (isAdmin && 'serviceWorker' in navigator) {
-            window.location.href = 'admin/admin.html';
-            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          window.location.href = 'admin/admin.html';
+          navigator.serviceWorker.register('/firebase-messaging-sw.js')
             .then((registration) => {
               messaging.useServiceWorker(registration);
               return messaging.getToken();
@@ -2097,9 +2097,10 @@ document.addEventListener('DOMContentLoaded', () => {
               set(ref(database, `adminTokens/${encodeEmail(user.email)}`), token);
             }).catch((err) => console.log('FCM Error:', err));
         }
-      });
+      }).catch((err) => console.log('Error fetching role:', err));
     }
   });
+});
 
 // Simulasi Deteksi Transaksi (Opsional, hapus kalau udah pakai Pi API)
 setInterval(() => {

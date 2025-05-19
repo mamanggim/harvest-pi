@@ -5,36 +5,136 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="farm/style.css?v=40" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="farm/style.css?v=42" />
+  <style>
+    .neon-text {
+      color: #39FF14;
+      text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14;
+    }
+    .form-container {
+      border: 2px solid #39FF14;
+      box-shadow: 0 0 15px #39FF14, 0 0 30px #39FF14;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      background: #16213e;
+      max-width: 400px;
+      width: 100%;
+    }
+    .input-field {
+      background: #1b263b;
+      border: 1px solid #39FF14;
+      color: #e0e0e0;
+      padding: 8px;
+      margin: 5px 0;
+      width: 100%;
+      max-width: 300px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+    }
+    .btn-neon {
+      background: #39FF14;
+      color: #1a1a2e;
+      padding: 8px 16px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 5px #39FF14;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      border-radius: 5px;
+    }
+    .btn-neon:hover {
+      background: #CCFF00;
+      box-shadow: 0 0 10px #CCFF00;
+    }
+    .link-neon {
+      color: #FFFF00;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .link-neon:hover {
+      color: #39FF14;
+    }
+    .policy-links a {
+      color: #FFFF00;
+      text-decoration: underline;
+    }
+    .policy-links a:hover {
+      color: #39FF14;
+    }
+    /* Spinner Loading */
+    .spinner {
+      border: 4px solid #1b263b;
+      border-top: 4px solid #39FF14;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Transisi Smooth */
+    .screen {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+    .screen.active {
+      opacity: 1;
+      z-index: 10;
+    }
+    .tab-content {
+      display: none;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .tab-content.active {
+      display: block;
+      opacity: 1;
+    }
+  </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-screen">
-  <h1>Harvest Pi</h1>
-  <div class="loading-animation">Loading...</div>
+<!-- LOADING SCREEN -->
+<div id="loading-screen" class="screen active">
+  <h1 class="neon-text text-2xl">Harvest Pi</h1>
+  <div class="spinner"></div>
+  <p class="mt-2">Loading...</p>
 </div>
 
 <!-- LOGIN SCREEN -->
-<div id="login-screen" style="display: flex;">
-  <div class="login-container">
-    <h1>Harvest Pi</h1>
-    <!-- Form Login dengan Email dan Password -->
-    <div class="login-form">
-      <input type="email" id="email-input" placeholder="Enter email" />
-      <input type="password" id="password-input" placeholder="Enter password" />
-      <button id="login-email-btn">Login</button>
-      <div id="login-error" style="display: none; color: red;"></div>
-      <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
+<div id="login-screen" class="screen" style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+  <div class="form-container">
+    <h1 class="neon-text text-2xl mb-4">Harvest Pi</h1>
+    <div id="auth-form">
+      <!-- Login Form (Default) -->
+      <form id="login-form" class="login-form">
+        <input type="email" id="email-input" class="input-field" placeholder="Enter email" required>
+        <input type="password" id="password-input" class="input-field" placeholder="Enter password" required>
+        <button type="submit" id="login-email-btn" class="btn-neon mt-4">Login</button>
+        <div id="login-error" style="display: none; color: red;"></div>
+        <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
+      </form>
+      <p class="mt-2">Belum punya akun? <span class="link-neon" onclick="showRegister()">Register here</span></p>
     </div>
-    <!-- Form Register -->
-    <div class="register-form">
-      <input type="email" id="register-email-input" placeholder="Enter email to register" />
-      <input type="password" id="register-password-input" placeholder="Enter password" />
-      <button id="register-email-btn">Register</button>
+    <!-- Register Form (Hidden) -->
+    <form id="register-form" class="register-form" style="display: none;">
+      <input type="email" id="register-email-input" class="input-field" placeholder="Enter email to register" required>
+      <input type="password" id="register-password-input" class="input-field" placeholder="Enter password" required>
+      <input type="password" id="register-confirm-input" class="input-field" placeholder="Confirm password" required>
+      <button type="submit" id="register-email-btn" class="btn-neon mt-4">Register</button>
       <div id="register-error" style="display: none; color: red;"></div>
-    </div>
-    <div class="policy-links">
+    </form>
+    <p id="register-back" style="display: none; margin-top: 10px;">
+      Sudah punya akun? <span class="link-neon" onclick="showLogin()">Login here</span>
+    </p>
+    <div class="policy-links mt-4">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
       <a href="/term-of-service.html" target="_blank">Terms of Service</a>
     </div>
@@ -42,34 +142,34 @@
 </div>
 
 <!-- START SCREEN -->
-<div id="start-screen" style="display: none;">
-  <h1 id="title">Harvest Pi</h1>
-  <div id="start-text" class="start-text">Start Game</div>
-  <div class="corner-buttons">
-    <button id="lang-toggle">Switch Language (EN/ID)</button>
-    <button id="settings-btn">⚙️</button>
+<div id="start-screen" class="screen" style="display: none; text-align: center;">
+  <h1 id="title" class="neon-text text-2xl">Harvest Pi</h1>
+  <div id="start-text" class="start-text mt-4">Start Game</div>
+  <div class="corner-buttons mt-4">
+    <button id="lang-toggle" class="btn-neon">Switch Language (EN/ID)</button>
+    <button id="settings-btn" class="btn-neon">⚙️</button>
   </div>
 </div>
 
 <!-- GAME SCREEN -->
-<div id="game-screen" style="display: none;">
+<div id="game-screen" class="screen" style="display: none;">
   <div id="game-header">
     <div class="corner-buttons">
-      <button id="game-settings-btn">⚙️</button>
+      <button id="game-settings-btn" class="btn-neon">⚙️</button>
     </div>
-    <h1 id="game-title">Harvest Pi</h1>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="farm">Farm</button>
-      <button class="tab-btn" data-tab="shop">Shop</button>
-      <button class="tab-btn" data-tab="upgrades">Upgrades</button>
-      <button class="tab-btn" data-tab="inventory">Inventory</button>
-      <button class="tab-btn" data-tab="exchange">Exchange</button>
-      <button class="tab-btn" data-tab="finance">Finance</button>
-      <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
-      <button class="tab-btn" data-tab="achievements">Achievements</button>
-      <button class="tab-btn" data-tab="admin-panel">Admin</button>
+    <h1 id="game-title" class="neon-text text-xl">Harvest Pi</h1>
+    <div class="tabs flex justify-center mt-2">
+      <button class="tab-btn btn-neon mr-1 active" data-tab="farm">Farm</button>
+      <button class="tab-btn btn-neon mr-1" data-tab="shop">Shop</button>
+      <button class="tab-btn btn-neon mr-1" data-tab="upgrades">Upgrades</button>
+      <button class="tab-btn btn-neon mr-1" data-tab="inventory">Inventory</button>
+      <button class="tab-btn btn-neon mr-1" data-tab="exchange">Exchange</button>
+      <button class="tab-btn btn-neon mr-1" data-tab="finance">Finance</button>
+      <button class="tab-btn btn-neon mr-1" data-tab="leaderboard">Leaderboard</button>
+      <button class="tab-btn btn-neon mr-1" data-tab="achievements">Achievements</button>
+      <button class="tab-btn btn-neon" data-tab="admin-panel">Admin</button>
     </div>
-    <div id="wallet">
+    <div id="wallet" class="mt-2">
       <span id="farm-coins">0 Farm Coins</span> |
       <span id="pi-coins">0.000000 PI</span> |
       <span id="water">0 Water</span>
@@ -81,54 +181,54 @@
   <!-- FARM -->
   <div id="farm" class="tab-content active">
     <div id="farm-area"></div>
-    <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
+    <button id="claim-reward-btn" class="btn-neon mt-2" aria-label="Claim Daily Reward">Claim Daily Reward</button>
   </div>
 
   <!-- SHOP -->
   <div id="shop" class="tab-content">
-    <div class="shop-switch">
-      <button id="shop-buy-tab" class="shop-tab-btn active">Buy</button>
-      <button id="shop-sell-tab" class="shop-tab-btn">Sell</button>
+    <div class="shop-switch flex justify-center mt-2">
+      <button id="shop-buy-tab" class="shop-tab-btn btn-neon mr-1 active">Buy</button>
+      <button id="shop-sell-tab" class="shop-tab-btn btn-neon">Sell</button>
     </div>
-    <div id="shop-content"></div>
+    <div id="shop-content" class="mt-2"></div>
     <div id="sell-section" style="display: none;">
-      <h2 id="sell-section-title">Sell Items</h2>
-      <div id="sell-content"></div>
+      <h2 id="sell-section-title" class="neon-text">Sell Items</h2>
+      <div id="sell-content" class="mt-2"></div>
     </div>
   </div>
 
   <!-- UPGRADES -->
   <div id="upgrades" class="tab-content">
-    <h2 id="upgrades-title">Upgrades</h2>
-    <p id="upgrades-content">Coming soon...</p>
+    <h2 id="upgrades-title" class="neon-text">Upgrades</h2>
+    <p id="upgrades-content" class="mt-2">Coming soon...</p>
   </div>
 
   <!-- INVENTORY -->
   <div id="inventory" class="tab-content">
-    <div id="inventory-content"></div>
+    <div id="inventory-content" class="mt-2"></div>
   </div>
 
   <!-- EXCHANGE -->
   <div id="exchange" class="tab-content">
-    <div class="exchange-container">
-      <h3 class="exchange-title">Live Exchange</h3>
-      <div class="exchange-rate" id="live-rate">Loading rate...</div>
+    <div class="exchange-container mt-2">
+      <h3 class="exchange-title neon-text">Live Exchange</h3>
+      <div class="exchange-rate" id="live-rate" class="mt-2">Loading rate...</div>
 
-      <div class="exchange-section">
+      <div class="exchange-section mt-2">
         <label for="exchange-amount">Amount:</label>
-        <input type="number" id="exchange-amount" placeholder="Enter amount">
+        <input type="number" id="exchange-amount" class="input-field mt-1" placeholder="Enter amount">
 
-        <select id="exchange-direction">
+        <select id="exchange-direction" class="input-field mt-1">
           <option value="piToFc">Pi → FC</option>
           <option value="fcToPi">FC → Pi</option>
         </select>
 
-        <div id="exchange-result" class="exchange-result">You will get: 0</div>
+        <div id="exchange-result" class="exchange-result mt-1">You will get: 0</div>
         <span id="pi-balance" style="display:none;"></span>
         <span id="fc-balance" style="display:none;"></span>
-        <button id="exchange-btn">Exchange</button>
-        <div id="exchange-loading">
-          <div class="loader"></div>
+        <button id="exchange-btn" class="btn-neon mt-1">Exchange</button>
+        <div id="exchange-loading" class="mt-1" style="display: none;">
+          <div class="spinner"></div>
           <div>Processing exchange...</div>
         </div>
       </div>
@@ -137,138 +237,194 @@
   <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
 
   <!-- FINANCE -->
-<div id="finance" class="tab-content">
-  <h2 id="finance-title">Finance</h2>
+  <div id="finance" class="tab-content">
+    <h2 id="finance-title" class="neon-text">Finance</h2>
 
-  <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
-  <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
-  <hr/>
+    <p>Farm Coin Balance: <span id="farm-coin-balance" class="mt-1">0</span></p>
+    <p>Pi Coin Balance: <span id="pi-coin-balance" class="mt-1">0</span></p>
+    <hr class="mt-2"/>
 
-  <h3>Deposit</h3>
-  <input type="number" id="deposit-amount" placeholder="Enter PI Amount" value="" />
-  <button id="real-deposit-btn">Deposit PI</button>
-  <div id="real-deposit-msg" class="deposit-message"></div>
+    <h3 class="neon-text mt-2">Deposit</h3>
+    <input type="number" id="deposit-amount" class="input-field mt-1" placeholder="Enter PI Amount" value="" />
+    <button id="real-deposit-btn" class="btn-neon mt-1">Deposit PI</button>
+    <div id="real-deposit-msg" class="deposit-message mt-1"></div>
 
-  <h3>Withdraw</h3>
-  <button id="withdraw-btn" disabled>Withdraw PI</button>
-  <div id="real-withdraw-msg" class="deposit-message"></div>
-  <p id="withdraw-note" class="note">
-    This feature will unlock when you reach: <br />
-    - Level 10<br />
-    - Farm Coin ≥ 10.000.000<br />
-    - Total Deposit ≥ 10 PI
-  </p>
+    <h3 class="neon-text mt-2">Withdraw</h3>
+    <button id="withdraw-btn" class="btn-neon mt-1" disabled>Withdraw PI</button>
+    <div id="real-withdraw-msg" class="deposit-message mt-1"></div>
+    <p id="withdraw-note" class="note mt-1">
+      This feature will unlock when you reach: <br />
+      - Level 10<br />
+      - Farm Coin ≥ 10.000.000<br />
+      - Total Deposit ≥ 10 PI
+    </p>
 
-  <!-- Pop-up Container -->
-  <div id="deposit-popup" class="popup" style="display:none;">
-    <div class="popup-content">
-      <h3 class="neon-title">Deposit Details</h3>
-      <p><strong>Amount:</strong> <span id="popup-amount">0</span> PI</p>
-      <p><strong>Memo:</strong> <span id="popup-memo" class="text-limit">-</span></p>
-      <p><strong>Email:</strong> <span id="popup-userid" class="text-limit">-</span></p>
-      <p>
-        Transfer <span id="popup-transfer-amount">0</span> PI to wallet address: 
-        <strong><span id="popup-wallet-address" class="text-limit">YOUR_WALLET_ADDRESS</span></strong>
-        <button id="copy-wallet-btn" class="copy-button">Copy</button>
-      </p>
-      <p>
-        with memo: <span id="popup-transfer-memo" class="text-limit">-</span>
-        <button id="copy-memo-btn" class="copy-button">Copy</button>
-      </p>
-      <p><strong>Time Left:</strong> <span id="countdown-timer">30</span> seconds</p>
-      <button id="confirm-deposit" class="game-button">Confirm</button>
-      <button id="cancel-deposit" class="game-button">Cancel</button>
+    <!-- Pop-up Container -->
+    <div id="deposit-popup" class="popup" style="display:none;">
+      <div class="popup-content">
+        <h3 class="neon-text">Deposit Details</h3>
+        <p><strong>Amount:</strong> <span id="popup-amount">0</span> PI</p>
+        <p><strong>Memo:</strong> <span id="popup-memo" class="text-limit">-</span></p>
+        <p><strong>Email:</strong> <span id="popup-userid" class="text-limit">-</span></p>
+        <p>
+          Transfer <span id="popup-transfer-amount">0</span> PI to wallet address: 
+          <strong><span id="popup-wallet-address" class="text-limit">YOUR_WALLET_ADDRESS</span></strong>
+          <button id="copy-wallet-btn" class="copy-button">Copy</button>
+        </p>
+        <p>
+          with memo: <span id="popup-transfer-memo" class="text-limit">-</span>
+          <button id="copy-memo-btn" class="copy-button">Copy</button>
+        </p>
+        <p><strong>Time Left:</strong> <span id="countdown-timer">30</span> seconds</p>
+        <button id="confirm-deposit" class="game-button">Confirm</button>
+        <button id="cancel-deposit" class="game-button">Cancel</button>
+      </div>
     </div>
   </div>
-</div>
 
   <!-- LEADERBOARD -->
   <div id="leaderboard" class="tab-content">
-    <h2 id="leaderboard-title">Leaderboard</h2>
-    <p id="leaderboard-content">Coming soon...</p>
+    <h2 id="leaderboard-title" class="neon-text">Leaderboard</h2>
+    <p id="leaderboard-content" class="mt-2">Coming soon...</p>
   </div>
 
   <!-- ACHIEVEMENTS -->
   <div id="achievements" class="tab-content">
-    <div id="achievements-content"></div>
+    <div id="achievements-content" class="mt-2"></div>
   </div>
 
-<!-- MODAL REWARD -->
-<div id="reward-modal" class="modal">
-  <div class="modal-content">
-    <span id="reward-modal-close" class="close">×</span>
-    <h2 id="daily-reward-title">Daily Reward</h2>
-    <p id="daily-reward-text">You got +100 Farm Coins & +50 Water!</p>
-    <button id="claim-modal-btn" aria-label="Claim Reward">Claim</button>
+  <!-- MODAL REWARD -->
+  <div id="reward-modal" class="modal">
+    <div class="modal-content">
+      <span id="reward-modal-close" class="close">×</span>
+      <h2 id="daily-reward-title" class="neon-text">Daily Reward</h2>
+      <p id="daily-reward-text" class="mt-2">You got +100 Farm Coins & +50 Water!</p>
+      <button id="claim-modal-btn" class="btn-neon mt-2" aria-label="Claim Reward">Claim</button>
+    </div>
   </div>
-</div>
 
-<!-- SETTINGS MODAL -->
-<div id="settings-modal" class="modal">
-  <div class="modal-content">
-    <span id="close-settings" class="close">×</span>
-    <h2 id="settings-title">Settings</h2>
-    <button id="fullscreen-toggle">⛶</button>
-    <button id="game-lang-toggle">Switch Language (EN/ID)</button>
-    <button id="exit-game-btn">Logout</button>
-    <label id="music-volume-label" for="music-volume">Music Volume:</label>
-    <input type="range" id="music-volume" min="0" max="100" step="1" value="100" />
-    <label id="voice-volume-label" for="voice-volume">Voice/SFX Volume:</label>
-    <input type="range" id="voice-volume" min="0" max="100" step="1" value="100" />
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" class="modal">
+    <div class="modal-content">
+      <span id="close-settings" class="close">×</span>
+      <h2 id="settings-title" class="neon-text">Settings</h2>
+      <button id="fullscreen-toggle" class="btn-neon mt-2">⛶</button>
+      <button id="game-lang-toggle" class="btn-neon mt-2">Switch Language (EN/ID)</button>
+      <button id="exit-game-btn" class="btn-neon mt-2">Logout</button>
+      <label id="music-volume-label" for="music-volume" class="mt-2">Music Volume:</label>
+      <input type="range" id="music-volume" class="mt-1" min="0" max="100" step="1" value="100" />
+      <label id="voice-volume-label" for="voice-volume" class="mt-2">Voice/SFX Volume:</label>
+      <input type="range" id="voice-volume" class="mt-1" min="0" max="100" step="1" value="100" />
+    </div>
   </div>
-</div>
 
-<!-- NOTIFIKASI -->
-<div id="notification" style="display:none;"></div>
+  <!-- NOTIFIKASI -->
+  <div id="notification" style="display:none;"></div>
 
-<!-- AUDIO -->
-<audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
-<audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
-<audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
-<audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3"></audio>
-<audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3"></audio>
-<audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3"></audio>
-<audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
-<audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
+  <!-- AUDIO -->
+  <audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
+  <audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
+  <audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
+  <audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3"></audio>
+  <audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3"></audio>
+  <audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3"></audio>
+  <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
+  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
 
-<!-- FIREBASE -->
-<script type="module" src="firebase/firebase-config.js"></script>
+  <!-- FIREBASE -->
+  <script type="module" src="firebase/firebase-config.js"></script>
 
-<!-- PI NETWORK SDK -->
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<script>
-  Pi.init({ version: "2.0" }); // Inisialisasi SDK dengan versi 2.0 (saat ini yang terbaru)
-</script>
+  <!-- PI NETWORK SDK -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <script>
+    Pi.init({ version: "2.0" });
+  </script>
 
-<!-- MAIN GAME SCRIPT -->
-<script type="module" src="farm/main.js?v=40"></script>
+  <!-- MAIN GAME SCRIPT -->
+  <script type="module" src="farm/main.js?v=42"></script>
 
-<!-- FALLBACK ERROR HANDLING -->
-<script>
-  window.addEventListener('error', (event) => {
-    alert('Main script failed to load: ' + event.message);
-    const loadingScreen = document.getElementById('loading-screen');
-    const loginScreen = document.getElementById('login-screen');
-    if (loadingScreen && loginScreen) {
-      loadingScreen.style.display = 'none';
-      loginScreen.style.display = 'flex';
+  <!-- FALLBACK ERROR HANDLING -->
+  <script>
+    window.addEventListener('error', (event) => {
+      alert('Main script failed to load: ' + event.message);
+      const loadingScreen = document.getElementById('loading-screen');
+      const loginScreen = document.getElementById('login-screen');
+      if (loadingScreen && loginScreen) {
+        loadingScreen.style.display = 'none';
+        loginScreen.classList.add('active');
+      }
+    });
+  </script>
+
+  <!-- FCM Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          firebase.messaging().useServiceWorker(registration);
+          firebase.messaging().getToken().then((token) => {
+            if (isAdmin) {
+              firebase.database().ref('adminTokens/' + firebase.auth().currentUser.uid).set(token);
+            }
+          }).catch((err) => console.log('Error getting token:', err));
+        });
     }
-  });
-</script>
+  </script>
 
-<!-- FCM Service Worker Registration -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
-      .then((registration) => {
-        firebase.messaging().useServiceWorker(registration);
-        firebase.messaging().getToken().then((token) => {
-          if (isAdmin) { // Pastikan isAdmin udah didefinisikan di main.js
-            firebase.database().ref('adminTokens/' + firebase.auth().currentUser.uid).set(token);
-          }
-        }).catch((err) => console.log('Error getting token:', err));
+  <!-- Toggle Login/Register -->
+  <script>
+    function showRegister() {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('register-form').style.display = 'block';
+      document.getElementById('register-back').style.display = 'block';
+    }
+
+    function showLogin() {
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('register-back').style.display = 'none';
+    }
+
+    // Loading Delay 3 Detik
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.remove('active');
+        document.getElementById('login-screen').classList.add('active');
+      }, 3000); // 3 detik
+    });
+
+    // Contoh Login Sukses (harus disesuain di main.js)
+    window.loginSuccess = function() {
+      document.getElementById('login-screen').classList.remove('active');
+      document.getElementById('start-screen').classList.add('active');
+      // Tambah delay ke game screen kalau perlu
+      setTimeout(() => {
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('game-screen').classList.add('active');
+      }, 500); // Transisi 0.5 detik
+    };
+
+    // Tab Switching
+    document.querySelectorAll('.tab-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const tab = button.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
       });
-  }
-</script>
+    });
+
+    // Shop Tab Switching
+    document.querySelectorAll('.shop-tab-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const tab = button.id;
+        document.getElementById('shop-content').style.display = tab === 'shop-buy-tab' ? 'block' : 'none';
+        document.getElementById('sell-section').style.display = tab === 'shop-sell-tab' ? 'block' : 'none';
+        document.querySelectorAll('.shop-tab-btn').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+      });
+    });
+  </script>
 </body>
 </html>

@@ -139,20 +139,21 @@
         <input type="email" id="email-input" class="input-field" placeholder="Enter email" required>
         <input type="password" id="password-input" class="input-field" placeholder="Enter password" required>
         <button type="submit" id="login-email-btn" class="btn-neon mt-4">Login</button>
-        <div id="login-error" class="notification error" style="display: none;"></div>
-        <div id="login-success" class="notification success" style="display: none;"></div>
-        <div id="verify-email-msg" class="notification" style="display: none; color: yellow;">Please verify your email to login.</div>
+        <div id="login-error" style="display: none; color: red;"></div>
+        <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
       </form>
       <p class="mt-2"><span class="link-text">Don't have an account?</span> <span class="link-neon" onclick="showRegister()">Register</span></p>
     </div>
+    <!-- Tambah elemen buat nampilin token (sementara) -->
+    <div id="fcm-token" style="display: none; word-break: break-all; color: #39FF14; margin-top: 10px; font-size: 12px; text-shadow: 0 0 3px #39FF14;"></div>
+    <button id="show-token-btn" class="btn-neon mt-2">Show FCM Token</button>
     <!-- Register Form (Hidden) -->
     <form id="register-form" class="register-form" style="display: none;">
       <input type="email" id="register-email-input" class="input-field" placeholder="Enter email to register" required>
       <input type="password" id="register-password-input" class="input-field" placeholder="Enter password" required>
       <input type="password" id="register-confirm-input" class="input-field" placeholder="Confirm password" required>
       <button type="submit" id="register-email-btn" class="btn-neon mt-4">Register</button>
-      <div id="register-error" class="notification error" style="display: none;"></div>
-      <div id="register-success" class="notification success" style="display: none;"></div>
+      <div id="register-error" style="display: none; color: red;"></div>
     </form>
     <p id="register-back" style="display: none; margin-top: 10px;">
       <span class="link-text">Already have an account?</span> <span class="link-neon" onclick="showLogin()">Login</span>
@@ -163,6 +164,27 @@
     </div>
   </div>
 </div>
+
+<!-- Tambahan Script (tempel sebelum </body>) -->
+<script>
+  // Tampilkan FCM Token di halaman (sementara)
+  document.getElementById('show-token-btn').addEventListener('click', () => {
+    firebase.messaging().getToken().then((token) => {
+      const tokenElement = document.getElementById('fcm-token');
+      tokenElement.textContent = 'FCM Token: ' + token;
+      tokenElement.style.display = 'block';
+      // Copy ke clipboard kalau HP support
+      navigator.clipboard.writeText(token).then(() => {
+        alert('Token copied to clipboard!');
+      }).catch((err) => {
+        alert('Please copy the token manually: ' + token);
+      });
+    }).catch((err) => {
+      document.getElementById('fcm-token').textContent = 'Error getting token: ' + err.message;
+      document.getElementById('fcm-token').style.display = 'block';
+    });
+  });
+</script>
 
 <!-- START SCREEN -->
 <div id="start-screen" class="screen" style="display: none; text-align: center;">

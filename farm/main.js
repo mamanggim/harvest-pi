@@ -1900,6 +1900,18 @@ function encodeEmail(email) {
   return email.replace('@', '_at_').replace('.', '_dot_');
 }
 
+// Fungsi copy ke clipboard
+function copyToClipboard(text, button) {
+  navigator.clipboard.writeText(text).then(() => {
+    button.textContent = 'Copied!';
+    setTimeout(() => {
+      button.textContent = 'Copy';
+    }, 2000);
+  }).catch(err => {
+    console.error('Gagal copy: ', err);
+  });
+}
+
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
   // Tab Switching
@@ -1926,6 +1938,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const popupUserId = document.getElementById("popup-userid");
   const popupTransferAmount = document.getElementById("popup-transfer-amount");
   const popupTransferMemo = document.getElementById("popup-transfer-memo");
+  const popupWalletAddress = document.getElementById("popup-wallet-address");
+  const copyWalletBtn = document.getElementById("copy-wallet-btn");
+  const copyMemoBtn = document.getElementById("copy-memo-btn");
   const confirmDepositBtn = document.getElementById("confirm-deposit");
   const cancelDepositBtn = document.getElementById("cancel-deposit");
 
@@ -1940,12 +1955,15 @@ document.addEventListener('DOMContentLoaded', () => {
     popupUserId,
     popupTransferAmount,
     popupTransferMemo,
+    popupWalletAddress,
+    copyWalletBtn,
+    copyMemoBtn,
     confirmDepositBtn,
     cancelDepositBtn
   });
 
   // Pengecekan elemen
-  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUserId || !popupTransferAmount || !popupTransferMemo || !confirmDepositBtn || !cancelDepositBtn) {
+  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUserId || !popupTransferAmount || !popupTransferMemo || !popupWalletAddress || !copyWalletBtn || !copyMemoBtn || !confirmDepositBtn || !cancelDepositBtn) {
     console.error('Salah satu elemen tidak ditemukan. Cek ID di HTML.');
     return;
   }
@@ -1976,12 +1994,17 @@ document.addEventListener('DOMContentLoaded', () => {
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
     popupUserId.textContent = user.email;
-    popupTransferAmount.textContent = amount; // Isi juga transfer amount
-    popupTransferMemo.textContent = memo; // Isi juga transfer memo
+    popupTransferAmount.textContent = amount;
+    popupTransferMemo.textContent = memo;
+    popupWalletAddress.textContent = 'YOUR_WALLET_ADDRESS'; // Isi wallet address
 
     // Tampilkan pop-up
     depositPopup.style.display = "flex";
     console.log('Pop-up ditampilkan:', { amount, memo, email: user.email });
+
+    // Tambahin event copy
+    copyWalletBtn.onclick = () => copyToClipboard(popupWalletAddress.textContent, copyWalletBtn);
+    copyMemoBtn.onclick = () => copyToClipboard(popupTransferMemo.textContent, copyMemoBtn);
 
     // Konfirmasi deposit
     confirmDepositBtn.onclick = () => {

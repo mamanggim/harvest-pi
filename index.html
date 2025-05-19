@@ -162,19 +162,20 @@
   <!-- Pop-up Container -->
   <div id="deposit-popup" class="popup" style="display:none;">
     <div class="popup-content">
-      <h3>Deposit Details</h3>
+      <h3 class="neon-title">Deposit Details</h3>
       <p><strong>Amount:</strong> <span id="popup-amount">0</span> PI</p>
       <p><strong>Memo:</strong> <span id="popup-memo" class="text-limit">-</span></p>
       <p><strong>Email:</strong> <span id="popup-userid" class="text-limit">-</span></p>
       <p>
         Transfer <span id="popup-transfer-amount">0</span> PI to wallet address: 
-        <strong><span id="popup-wallet-address">GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN</span></strong>
+        <strong><span id="popup-wallet-address" class="text-limit">YOUR_WALLET_ADDRESS</span></strong>
         <button id="copy-wallet-btn" class="copy-button">Copy</button>
       </p>
       <p>
         with memo: <span id="popup-transfer-memo" class="text-limit">-</span>
         <button id="copy-memo-btn" class="copy-button">Copy</button>
       </p>
+      <p><strong>Time Left:</strong> <span id="countdown-timer">30</span> seconds</p>
       <button id="confirm-deposit" class="game-button">Confirm</button>
       <button id="cancel-deposit" class="game-button">Cancel</button>
     </div>
@@ -193,15 +194,14 @@
   </div>
 
   <!-- ADMIN PANEL -->
-  <div id="admin-panel" class="tab-content">
-    <h2>Admin Panel</h2>
-    <table id="deposit-list">
-      <thead>
-        <tr><th>Email</th><th>Amount</th><th>Memo</th><th>Time</th><th>Status</th><th>Action</th></tr>
-      </thead>
-      <tbody id="deposit-items"></tbody>
-    </table>
-  </div>
+<div id="admin-panel" class="tab-content">
+  <h2>Admin Panel</h2>
+  <table id="deposit-list">
+    <thead>
+      <tr><th>Email</th><th>Amount</th><th>Memo</th><th>Time</th><th>Status</th><th>Time Left</th><th>Action</th></tr>
+    </thead>
+    <tbody id="deposit-items"></tbody>
+  </table>
 </div>
 
 <!-- MODAL REWARD -->

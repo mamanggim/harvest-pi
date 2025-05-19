@@ -1359,7 +1359,7 @@ th {
   width: 90%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   color: #333;
-  font-size: 12px; /* Kurangin ukuran font biar teks muat */
+  font-size: 10px; /* Kurangin ukuran font biar teks muat */
 }
 
 .popup-content h3 {
@@ -1370,12 +1370,12 @@ th {
 
 .popup-content p {
   margin: 10px 0;
-  font-size: 12px; /* Pastikan teks dalam paragraf kecil */
+  font-size: 10px; /* Pastikan teks dalam paragraf kecil */
 }
 
 .popup-content span {
   color: #000;
-  font-size: 12px; /* Pastikan span juga kecil */
+  font-size: 10px; /* Pastikan span juga kecil */
 }
 
 .text-limit {

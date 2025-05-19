@@ -1359,23 +1359,24 @@ th {
   width: 90%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   color: #333;
-  font-size: 10px; /* Kurangin ukuran font biar teks muat */
+  font-size: 6px; /* Kurangin ukuran font biar teks muat */
 }
 
 .popup-content h3 {
   margin-top: 0;
   color: #333;
+  border: 2px solid #00ff00;
   font-size: 14px; /* Sesuaikan judul sedikit lebih besar */
 }
 
 .popup-content p {
   margin: 10px 0;
-  font-size: 10px; /* Pastikan teks dalam paragraf kecil */
+  font-size: 6px; /* Pastikan teks dalam paragraf kecil */
 }
 
 .popup-content span {
   color: #000;
-  font-size: 10px; /* Pastikan span juga kecil */
+  font-size: 6px; /* Pastikan span juga kecil */
 }
 
 .text-limit {
@@ -1396,7 +1397,7 @@ th {
   cursor: pointer;
   margin: 5px;
   font-family: 'Press Start 2P', cursive;
-  font-size: 12px; /* Sesuaikan font tombol */
+  font-size: 10px; /* Sesuaikan font tombol */
 }
 
 .game-button:hover {

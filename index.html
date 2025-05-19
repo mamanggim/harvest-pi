@@ -6,7 +6,7 @@
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="farm/style.css?v=42" />
+  <link rel="stylesheet" href="farm/style.css?v=43" />
   <style>
     .neon-text {
       color: #39FF14;
@@ -121,7 +121,7 @@
         <div id="login-error" style="display: none; color: red;"></div>
         <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
       </form>
-      <p class="mt-2">Belum punya akun? <span class="link-neon" onclick="showRegister()">Register here</span></p>
+      <p class="mt-2">Don't have an account? <span class="link-neon" onclick="showRegister()">Register</span></p>
     </div>
     <!-- Register Form (Hidden) -->
     <form id="register-form" class="register-form" style="display: none;">
@@ -132,7 +132,7 @@
       <div id="register-error" style="display: none; color: red;"></div>
     </form>
     <p id="register-back" style="display: none; margin-top: 10px;">
-      Sudah punya akun? <span class="link-neon" onclick="showLogin()">Login here</span>
+      Already have an account? <span class="link-neon" onclick="showLogin()">Login</span>
     </p>
     <div class="policy-links mt-4">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
@@ -341,7 +341,7 @@
   </script>
 
   <!-- MAIN GAME SCRIPT -->
-  <script type="module" src="farm/main.js?v=42"></script>
+  <script type="module" src="farm/main.js?v=43"></script>
 
   <!-- FALLBACK ERROR HANDLING -->
   <script>
@@ -397,7 +397,6 @@
     window.loginSuccess = function() {
       document.getElementById('login-screen').classList.remove('active');
       document.getElementById('start-screen').classList.add('active');
-      // Tambah delay ke game screen kalau perlu
       setTimeout(() => {
         document.getElementById('start-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');

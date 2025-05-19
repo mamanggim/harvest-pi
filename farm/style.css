@@ -1302,7 +1302,7 @@ input[type="range"] {
   font-size: 10px;
 }
 
-/* style.css */
+/* POPUP STYLE */
 .tab-buttons {
   margin: 10px 0;
 }
@@ -1359,23 +1359,24 @@ th {
   width: 90%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   color: #333;
-  font-size: 8px; /* Kurangin ukuran font biar teks muat */
+  font-size: 10px; /* Turunin lagi biar lebih seimbang */
+  line-height: 1.2; /* Sesuaikan line height biar rapi */
 }
 
 .popup-content h3 {
   margin-top: 0;
   color: #333;
-  font-size: 14px; /* Sesuaikan judul sedikit lebih besar */
+  font-size: 12px; /* Judul sedikit lebih besar */
 }
 
 .popup-content p {
-  margin: 10px 0;
-  font-size: 8px; /* Pastikan teks dalam paragraf kecil */
+  margin: 8px 0; /* Kurangin margin biar hemat ruang */
+  font-size: 10px;
 }
 
 .popup-content span {
   color: #000;
-  font-size: 8px; /* Pastikan span juga kecil */
+  font-size: 10px;
 }
 
 .text-limit {
@@ -1401,6 +1402,23 @@ th {
 
 .game-button:hover {
   background: #00cc00; /* Hijau lebih gelap saat hover */
+}
+
+/* Styling tombol copy */
+.copy-button {
+  background: #00ff00;
+  border: 2px solid #ffff00;
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 5px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px; /* Tombol copy lebih kecil */
+}
+
+.copy-button:hover {
+  background: #00cc00;
 }
 
 /* Tambahan untuk loading screen biar gak konflik */

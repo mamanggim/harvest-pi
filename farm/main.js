@@ -2119,10 +2119,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             depositItems.innerHTML += `
               <tr>
-                <td>${t.email}</td>
+                <td class="text-limit">${t.email}</td>
                 <td>${t.amount} PI</td>
-                <td>${t.memo || '-'}</td>
-                <td>${new Date(t.timestamp).toLocaleString()}</td>
+                <td class="text-limit">${t.memo || '-'}</td>
+                <td class="text-limit">${new Date(t.timestamp).toLocaleString()}</td>
                 <td>${t.status}</td>
                 <td id="countdown-${id}">${timeLeft} sec</td>
                 <td>

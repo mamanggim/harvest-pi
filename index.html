@@ -6,7 +6,7 @@
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="farm/style.css?v=45" />
+  <link rel="stylesheet" href="farm/style.css?v=46" />
   <style>
     .neon-text {
       color: #39FF14;
@@ -48,15 +48,14 @@
       background: #CCFF00;
       box-shadow: 0 0 10px #CCFF00;
     }
-    /* Link tanpa garis bawah, efek cahaya */
     .link-neon {
-      color: #FFFF00; /* Warna dasar kuning */
-      text-decoration: none; /* Hilangin garis bawah */
-      text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14; /* Efek cahaya kecil */
+      color: #FFFF00;
+      text-decoration: none;
+      text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14;
     }
     .link-neon:hover {
-      color: #39FF14; /* Agak terang pas hover */
-      text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14; /* Cahaya lebih kuat */
+      color: #39FF14;
+      text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
     }
     .policy-links a {
       color: #FFFF00;
@@ -67,10 +66,23 @@
       color: #39FF14;
       text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
     }
-    /* Teks biasa sebelum link */
     .link-text {
-      color: #e0e0e0; /* Warna abu-abu terang */
+      color: #e0e0e0;
       font-size: 10px;
+    }
+    .notification {
+      color: #39FF14;
+      margin-top: 10px;
+      font-size: 12px;
+      text-shadow: 0 0 3px #39FF14;
+    }
+    .error {
+      color: red;
+      text-shadow: 0 0 3px red;
+    }
+    .success {
+      color: #00FF00;
+      text-shadow: 0 0 3px #00FF00;
     }
     /* Spinner Loading */
     .spinner {
@@ -127,8 +139,9 @@
         <input type="email" id="email-input" class="input-field" placeholder="Enter email" required>
         <input type="password" id="password-input" class="input-field" placeholder="Enter password" required>
         <button type="submit" id="login-email-btn" class="btn-neon mt-4">Login</button>
-        <div id="login-error" style="display: none; color: red;"></div>
-        <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
+        <div id="login-error" class="notification error" style="display: none;"></div>
+        <div id="login-success" class="notification success" style="display: none;"></div>
+        <div id="verify-email-msg" class="notification" style="display: none; color: yellow;">Please verify your email to login.</div>
       </form>
       <p class="mt-2"><span class="link-text">Don't have an account?</span> <span class="link-neon" onclick="showRegister()">Register</span></p>
     </div>
@@ -138,7 +151,8 @@
       <input type="password" id="register-password-input" class="input-field" placeholder="Enter password" required>
       <input type="password" id="register-confirm-input" class="input-field" placeholder="Confirm password" required>
       <button type="submit" id="register-email-btn" class="btn-neon mt-4">Register</button>
-      <div id="register-error" style="display: none; color: red;"></div>
+      <div id="register-error" class="notification error" style="display: none;"></div>
+      <div id="register-success" class="notification success" style="display: none;"></div>
     </form>
     <p id="register-back" style="display: none; margin-top: 10px;">
       <span class="link-text">Already have an account?</span> <span class="link-neon" onclick="showLogin()">Login</span>
@@ -350,7 +364,7 @@
   </script>
 
   <!-- MAIN GAME SCRIPT -->
-  <script type="module" src="farm/main.js?v=45"></script>
+  <script type="module" src="farm/main.js?v=46"></script>
 
   <!-- FALLBACK ERROR HANDLING -->
   <script>
@@ -380,23 +394,99 @@
     }
   </script>
 
-  <!-- Toggle Login/Register -->
+  <!-- Toggle Login/Register & Validasi -->
   <script>
     function showRegister() {
       document.getElementById('login-form').style.display = 'none';
       document.getElementById('register-form').style.display = 'block';
       document.getElementById('register-back').style.display = 'block';
-      // Hapus teks login link dari register view
       document.querySelector('#auth-form p').style.display = 'none';
+      // Reset notifikasi
+      document.getElementById('register-error').style.display = 'none';
+      document.getElementById('register-success').style.display = 'none';
     }
 
     function showLogin() {
       document.getElementById('register-form').style.display = 'none';
       document.getElementById('login-form').style.display = 'block';
       document.getElementById('register-back').style.display = 'none';
-      // Tampilkan lagi teks login link
       document.querySelector('#auth-form p').style.display = 'block';
+      // Reset notifikasi
+      document.getElementById('login-error').style.display = 'none';
+      document.getElementById('login-success').style.display = 'none';
     }
+
+    // Validasi Email
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    // Event Listener Login
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email-input').value;
+      const password = document.getElementById('password-input').value;
+
+      if (!validateEmail(email)) {
+        document.getElementById('login-error').textContent = 'Invalid email format!';
+        document.getElementById('login-error').style.display = 'block';
+        return;
+      }
+
+      // Panggil fungsi login di main.js (asumsi ada)
+      if (window.loginWithEmail) {
+        window.loginWithEmail(email, password, (success, message) => {
+          if (success) {
+            document.getElementById('login-success').textContent = 'Login successful!';
+            document.getElementById('login-success').style.display = 'block';
+            setTimeout(() => window.loginSuccess(), 1000); // Delay 1 detik sebelum transisi
+          } else {
+            document.getElementById('login-error').textContent = message || 'Login failed!';
+            document.getElementById('login-error').style.display = 'block';
+          }
+        });
+      } else {
+        document.getElementById('login-error').textContent = 'Login function not found!';
+        document.getElementById('login-error').style.display = 'block';
+      }
+    });
+
+    // Event Listener Register
+    document.getElementById('register-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('register-email-input').value;
+      const password = document.getElementById('register-password-input').value;
+      const confirmPassword = document.getElementById('register-confirm-input').value;
+
+      if (!validateEmail(email)) {
+        document.getElementById('register-error').textContent = 'Invalid email format!';
+        document.getElementById('register-error').style.display = 'block';
+        return;
+      }
+      if (password !== confirmPassword) {
+        document.getElementById('register-error').textContent = 'Passwords do not match!';
+        document.getElementById('register-error').style.display = 'block';
+        return;
+      }
+
+      // Panggil fungsi register di main.js (asumsi ada)
+      if (window.registerWithEmail) {
+        window.registerWithEmail(email, password, (success, message) => {
+          if (success) {
+            document.getElementById('register-success').textContent = 'Registration successful!';
+            document.getElementById('register-success').style.display = 'block';
+            setTimeout(() => window.loginSuccess(), 1000); // Delay 1 detik sebelum transisi
+          } else {
+            document.getElementById('register-error').textContent = message || 'Registration failed!';
+            document.getElementById('register-error').style.display = 'block';
+          }
+        });
+      } else {
+        document.getElementById('register-error').textContent = 'Register function not found!';
+        document.getElementById('register-error').style.display = 'block';
+      }
+    });
 
     // Loading Delay 3 Detik
     window.addEventListener('load', () => {

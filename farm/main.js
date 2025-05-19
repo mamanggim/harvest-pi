@@ -2017,7 +2017,7 @@ document.addEventListener('DOMContentLoaded', () => {
         email: user.email,
         memo: memo
       }).then(() => {
-        realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: YOUR_WALLET_ADDRESS with memo: ${memo}`;
+        realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN with memo: ${memo}`;
         depositPopup.style.display = "none";
         console.log('Deposit berhasil disimpan');
       }).catch((err) => {

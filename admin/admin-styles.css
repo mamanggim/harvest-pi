@@ -1,0 +1,97 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #222;
+  font-family: 'Press Start 2P', cursive;
+  color: #fff;
+}
+
+#admin-dashboard {
+  padding: 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.neon-title {
+  color: #00ff00;
+  text-shadow: 
+    0 0 5px #00ff00,
+    0 0 10px #00ff00,
+    0 0 20px #00ff00;
+  font-size: 16px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#summary {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#summary p {
+  font-size: 10px;
+  margin: 5px 0;
+}
+
+#summary span {
+  color: #00ff00;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+#deposit-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#deposit-list th, #deposit-list td {
+  border: 1px solid #fff;
+  padding: 8px;
+  font-size: 10px;
+  color: #fff;
+  text-align: center;
+}
+
+#deposit-list th {
+  background: #4caf50;
+  color: #000;
+}
+
+#deposit-list td button {
+  margin: 0 2px;
+  padding: 4px 8px;
+  font-size: 8px;
+  background: #00ff00;
+  border: 2px solid #ffff00;
+  color: #000;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', cursive;
+}
+
+#deposit-list td button:hover {
+  background: #00cc00;
+}
+
+.text-limit {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #00ff00;
+  color: #000;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 10px;
+}

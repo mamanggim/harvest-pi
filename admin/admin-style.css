@@ -2,8 +2,9 @@ body {
   background: #1a1a2e;
   color: #e0e0e0;
   font-family: 'Press Start 2P', cursive;
+  font-size: 12px; /* Kecilin font default */
   margin: 0;
-  padding: 20px;
+  padding: 10px; /* Kurangin padding biar lebih compact */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,25 +13,23 @@ body {
 
 #admin-dashboard {
   background: #16213e;
-  padding: 20px;
+  padding: 15px; /* Kurangin padding */
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.5); /* Sesuai warna lime */
-  max-width: 800px;
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+  max-width: 600px; /* Kecilin kotak dari 800px jadi 600px */
   width: 100%;
   text-align: center;
 }
 
 .neon-title {
-  /* Pilih salah satu warna di bawah */
-  color: #39FF14; /* Pilihan 1: Lime Neon Terang */
-  /* color: #CCFF00; */ /* Pilihan 2: Lime Kuning */
-  /* color: #BFFF00; */ /* Pilihan 3: Lime Soft */
-  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14; /* Sesuai warna lime */
-  margin-bottom: 20px;
+  color: #39FF14; /* Lime neon */
+  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14;
+  font-size: 18px; /* Kecilin font dari default h1 */
+  margin-bottom: 15px;
 }
 
 .table-container {
-  margin-top: 20px;
+  margin-top: 15px;
   overflow-x: auto;
 }
 
@@ -40,9 +39,10 @@ body {
 }
 
 #deposit-list th, #deposit-list td {
-  border: 1px solid #39FF14; /* Sesuai warna lime */
-  padding: 10px;
+  border: 1px solid #39FF14;
+  padding: 8px; /* Kurangin padding tabel */
   text-align: left;
+  font-size: 10px; /* Kecilin font di tabel */
 }
 
 #deposit-list th {
@@ -57,10 +57,11 @@ body {
   background: #ff007a;
   color: #fff;
   border: none;
-  padding: 10px 20px;
-  margin: 10px;
+  padding: 8px 16px; /* Kecilin tombol */
+  margin: 5px;
   cursor: pointer;
   font-family: 'Press Start 2P', cursive;
+  font-size: 10px; /* Kecilin font tombol */
   border-radius: 5px;
   box-shadow: 0 0 5px #ff007a;
 }
@@ -70,19 +71,31 @@ body {
   box-shadow: 0 0 10px #ff4da6;
 }
 
+#logout-btn {
+  background: #39FF14; /* Warna kuning lime */
+  color: #1a1a2e; /* Warna teks gelap biar kontras */
+  box-shadow: 0 0 5px #39FF14;
+}
+
+#logout-btn:hover {
+  background: #CCFF00; /* Hover pake lime kuning */
+  box-shadow: 0 0 10px #CCFF00;
+}
+
 #notification {
   position: fixed;
   top: 20px;
   right: 20px;
   background: #ff007a;
   color: #fff;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 5px;
   box-shadow: 0 0 5px #ff007a;
+  font-size: 10px; /* Kecilin font notifikasi */
 }
 
 .text-limit {
-  max-width: 150px;
+  max-width: 120px; /* Kecilin lebar kolom biar muat */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

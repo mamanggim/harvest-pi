@@ -15,6 +15,19 @@ function encodeEmail(email) {
 
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
+  // Logout
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut().then(() => {
+        window.location.href = '../index.html';
+      }).catch((err) => {
+        console.error('Error logging out:', err);
+        showUserNotification('Error logging out. Try again.');
+      });
+    });
+  }
+
   // Cek apakah user adalah admin
   let isAdmin = false;
   auth.onAuthStateChanged((user) => {
@@ -23,24 +36,31 @@ document.addEventListener('DOMContentLoaded', () => {
         isAdmin = snapshot.val() === 'admin';
         if (!isAdmin) {
           alert('Access denied. Admins only.');
-          window.location.href = '..index.html'; // Redirect ke halaman utama
+          window.location.href = '../index.html'; // Redirect ke halaman utama
           return;
         }
 
         // Setup FCM untuk notifikasi
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('../firebase-messaging-sw.js')
+          navigator.serviceWorker.register('/firebase-messaging-sw.js')
             .then((registration) => {
               messaging.useServiceWorker(registration);
               return messaging.getToken();
             }).then((token) => {
-              set(ref(database, `adminTokens/${encodeEmail(user.email)}`), token);
-            }).catch((err) => console.log('FCM Error:', err));
+              set(ref(database, `adminTokens/${user.uid}`), token);
+            }).catch((err) => {
+              console.error('FCM Error:', err);
+              showUserNotification('Failed to setup notifications.');
+            });
         }
+      }).catch((err) => {
+        console.error('Error checking role:', err);
+        alert('Error checking permissions. Please login again.');
+        window.location.href = '../index.html';
       });
     } else {
       alert('Please login first.');
-      window.location.href = '..index.html';
+      window.location.href = '../index.html';
     }
   });
 
@@ -83,8 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${t.status}</td>
                 <td id="countdown-${id}">${timeLeft} sec</td>
                 <td>
-                  <button onclick="approveDeposit('${id}')">Approve</button>
-                  <button onclick="rejectDeposit('${id}')">Reject</button>
+                  <button class="game-button" onclick="approveDeposit('${id}')">Approve</button>
+                  <button class="game-button" onclick="rejectDeposit('${id}')">Reject</button>
                 </td>
               </tr>
             `;
@@ -112,26 +132,43 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.approveDeposit = function(id) {
-    set(ref(database, `transactions/${id}/status`), 'approved');
-    get(ref(database, `transactions/${id}`)).then((snap) => {
-      const transaction = snap.val();
-      if (transaction.type === "deposit") {
-        const userRef = ref(database, `players/${encodeEmail(transaction.email)}`);
-        userRef.transaction(player => {
-          if (player) player.piBalance = (player.piBalance || 0) + parseFloat(transaction.amount);
-          return player;
+    set(ref(database, `transactions/${id}/status`), 'approved')
+      .then(() => {
+        get(ref(database, `transactions/${id}`)).then((snap) => {
+          const transaction = snap.val();
+          if (transaction.type === "deposit") {
+            const userRef = ref(database, `players/${encodeEmail(transaction.email)}`);
+            get(userRef).then((playerSnap) => {
+              const player = playerSnap.val();
+              if (player) {
+                set(userRef, {
+                  ...player,
+                  piBalance: (player.piBalance || 0) + parseFloat(transaction.amount)
+                });
+              }
+            });
+          }
+          showUserNotification(`Deposit ${transaction.amount} PI approved!`);
         });
-      }
-      showUserNotification(`Deposit ${transaction.amount} PI approved!`);
-    });
+      })
+      .catch((err) => {
+        console.error('Error approving deposit:', err);
+        showUserNotification('Error approving deposit.');
+      });
   };
 
   window.rejectDeposit = function(id) {
-    set(ref(database, `transactions/${id}/status`), 'rejected');
-    get(ref(database, `transactions/${id}`)).then((snap) => {
-      const transaction = snap.val();
-      showUserNotification(`Deposit ${transaction.amount} PI rejected. Contact support.`);
-    });
+    set(ref(database, `transactions/${id}/status`), 'rejected')
+      .then(() => {
+        get(ref(database, `transactions/${id}`)).then((snap) => {
+          const transaction = snap.val();
+          showUserNotification(`Deposit ${transaction.amount} PI rejected. Contact support.`);
+        });
+      })
+      .catch((err) => {
+        console.error('Error rejecting deposit:', err);
+        showUserNotification('Error rejecting deposit.');
+      });
   };
 
   function showUserNotification(message) {

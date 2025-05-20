@@ -78,7 +78,8 @@
       <button class="tab-btn btn-neon mr-1" data-tab="finance">Finance</button>
       <button class="tab-btn btn-neon mr-1" data-tab="leaderboard">Leaderboard</button>
       <button class="tab-btn btn-neon mr-1" data-tab="achievements">Achievements</button>
-      <button class="tab-btn btn-neon" data-tab="admin-panel">Admin</button>
+      <!-- Tambah admin panel cuma buat admin -->
+      <button id="admin-panel-btn" class="tab-btn btn-neon" data-tab="admin-panel" style="display: none;">Admin</button>
     </div>
     <div id="wallet" class="mt-2">
       <span id="farm-coins">0 Farm Coins</span> |
@@ -122,21 +123,16 @@
   <!-- EXCHANGE -->
   <div id="exchange" class="tab-content">
     <div class="exchange-container mt-2">
-      <h3 class="exchange-title neon-text">Live Exchange</h3>
-      <div class="exchange-rate" id="live-rate" class="mt-2">Loading rate...</div>
-
+      <h3 id="exchange-title" class="exchange-title neon-text">Live Exchange</h3>
+      <div id="live-rate" class="exchange-rate mt-2">Loading rate...</div>
       <div class="exchange-section mt-2">
         <label for="exchange-amount">Amount:</label>
-        <input type="number" id="exchange-amount" class="input-field mt-1" placeholder="Enter amount">
-
+        <input type="number" id="exchange-amount" class="input-field mt-1" placeholder="Enter amount" step="0.000001">
         <select id="exchange-direction" class="input-field mt-1">
           <option value="piToFc">Pi → FC</option>
           <option value="fcToPi">FC → Pi</option>
         </select>
-
         <div id="exchange-result" class="exchange-result mt-1">You will get: 0</div>
-        <span id="pi-balance" style="display:none;"></span>
-        <span id="fc-balance" style="display:none;"></span>
         <button id="exchange-btn" class="btn-neon mt-1">Exchange</button>
         <div id="exchange-loading" class="mt-1" style="display: none;">
           <div class="spinner"></div>
@@ -145,21 +141,17 @@
       </div>
     </div>
   </div>
-  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
 
   <!-- FINANCE -->
   <div id="finance" class="tab-content">
     <h2 id="finance-title" class="neon-text">Finance</h2>
-
-    <p>Farm Coin Balance: <span id="farm-coin-balance" class="mt-1">0</span></p>
-    <p>Pi Coin Balance: <span id="pi-coin-balance" class="mt-1">0</span></p>
+    <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
+    <p>Pi Coin Balance: <span id="pi-coin-balance">0.000000</span></p>
     <hr class="mt-2"/>
-
     <h3 class="neon-text mt-2">Deposit</h3>
-    <input type="number" id="deposit-amount" class="input-field mt-1" placeholder="Enter PI Amount" value="" />
+    <input type="number" id="deposit-amount" class="input-field mt-1" placeholder="Enter PI Amount" step="0.000001" />
     <button id="real-deposit-btn" class="btn-neon mt-1">Deposit PI</button>
     <div id="real-deposit-msg" class="deposit-message mt-1"></div>
-
     <h3 class="neon-text mt-2">Withdraw</h3>
     <button id="withdraw-btn" class="btn-neon mt-1" disabled>Withdraw PI</button>
     <div id="real-withdraw-msg" class="deposit-message mt-1"></div>
@@ -169,7 +161,6 @@
       - Farm Coin ≥ 10.000.000<br />
       - Total Deposit ≥ 10 PI
     </p>
-
     <!-- Pop-up Container -->
     <div id="deposit-popup" class="popup" style="display:none;">
       <div class="popup-content">
@@ -179,7 +170,7 @@
         <p><strong>Email:</strong> <span id="popup-userid" class="text-limit">-</span></p>
         <p>
           Transfer <span id="popup-transfer-amount">0</span> PI to wallet address: 
-          <strong><span id="popup-wallet-address" class="text-limit">YOUR_WALLET_ADDRESS</span></strong>
+          <strong><span id="popup-wallet-address" class="text-limit">GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN</span></strong>
           <button id="copy-wallet-btn" class="copy-button">Copy</button>
         </p>
         <p>
@@ -204,6 +195,12 @@
     <div id="achievements-content" class="mt-2"></div>
   </div>
 
+  <!-- ADMIN PANEL (Hidden by default) -->
+  <div id="admin-panel" class="tab-content" style="display: none;">
+    <h2 class="neon-text">Admin Panel</h2>
+    <p>Admin features coming soon...</p>
+  </div>
+
   <!-- MODAL REWARD -->
   <div id="reward-modal" class="modal">
     <div class="modal-content">
@@ -223,24 +220,24 @@
       <button id="game-lang-toggle" class="btn-neon mt-2">Switch Language (EN/ID)</button>
       <button id="exit-game-btn" class="btn-neon mt-2">Logout</button>
       <label id="music-volume-label" for="music-volume" class="mt-2">Music Volume:</label>
-      <input type="range" id="music-volume" class="mt-1" min="0" max="100" step="1" value="100" />
+      <input type="range" id="music-volume" class="mt-1" min="0" max="100" step="1" value="50" />
       <label id="voice-volume-label" for="voice-volume" class="mt-2">Voice/SFX Volume:</label>
-      <input type="range" id="voice-volume" class="mt-1" min="0" max="100" step="1" value="100" />
+      <input type="range" id="voice-volume" class="mt-1" min="0" max="100" step="1" value="50" />
     </div>
   </div>
 
-  <!-- NOTIFIKASI -->
-  <div id="notification" style="display:none;"></div>
+  <!-- NOTIFICATION -->
+  <div id="notification" class="notification" style="display:none;"></div>
 
   <!-- AUDIO -->
-  <audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop></audio>
-  <audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop></audio>
-  <audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3"></audio>
-  <audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3"></audio>
-  <audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3"></audio>
-  <audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3"></audio>
-  <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
-  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
+  <audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop preload="auto"></audio>
+  <audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop preload="auto"></audio>
+  <audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3" preload="auto"></audio>
+  <audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3" preload="auto"></audio>
+  <audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3" preload="auto"></audio>
+  <audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3" preload="auto"></audio>
+  <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3" preload="auto"></audio>
+  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
 
   <!-- LOAD FIREBASE SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
@@ -316,13 +313,12 @@
         return;
       }
 
-      // Panggil fungsi login di main.js (asumsi ada)
       if (window.loginWithEmail) {
         window.loginWithEmail(email, password, (success, message) => {
           if (success) {
-            document.getElementById('login-success').textContent = 'Login successful!';
+            document.getElementById('login-success').textContent = message || 'Login successful!';
             document.getElementById('login-success').style.display = 'block';
-            setTimeout(() => window.loginSuccess(), 1000); // Delay 1 detik sebelum transisi
+            setTimeout(() => window.startGame(), 1000); // Delay 1 detik sebelum transisi
           } else {
             document.getElementById('login-error').textContent = message || 'Login failed!';
             document.getElementById('login-error').style.display = 'block';
@@ -352,13 +348,12 @@
         return;
       }
 
-      // Panggil fungsi register di main.js (asumsi ada)
       if (window.registerWithEmail) {
         window.registerWithEmail(email, password, (success, message) => {
           if (success) {
-            document.getElementById('register-success').textContent = 'Registration successful!';
+            document.getElementById('register-success').textContent = message || 'Registration successful!';
             document.getElementById('register-success').style.display = 'block';
-            setTimeout(() => window.loginSuccess(), 1000); // Delay 1 detik sebelum transisi
+            setTimeout(() => window.startGame(), 1000); // Delay 1 detik sebelum transisi
           } else {
             document.getElementById('register-error').textContent = message || 'Registration failed!';
             document.getElementById('register-error').style.display = 'block';
@@ -378,8 +373,8 @@
       }, 3000); // 3 detik
     });
 
-    // Contoh Login Sukses (harus disesuain di main.js)
-    window.loginSuccess = function() {
+    // Fungsi Start Game (Sesuai main.js)
+    window.startGame = function() {
       document.getElementById('login-screen').classList.remove('active');
       document.getElementById('start-screen').classList.add('active');
       setTimeout(() => {
@@ -388,7 +383,7 @@
       }, 500); // Transisi 0.5 detik
     };
 
-    // Tab Switching
+    // Tab Switching (Sinkronin sama main.js)
     document.querySelectorAll('.tab-btn').forEach(button => {
       button.addEventListener('click', () => {
         const tab = button.getAttribute('data-tab');
@@ -396,10 +391,11 @@
         document.getElementById(tab).classList.add('active');
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
+        if (window.switchTab) window.switchTab(tab); // Panggil fungsi dari main.js
       });
     });
 
-    // Shop Tab Switching
+    // Shop Tab Switching (Sinkronin sama main.js)
     document.querySelectorAll('.shop-tab-btn').forEach(button => {
       button.addEventListener('click', () => {
         const tab = button.id;
@@ -407,6 +403,7 @@
         document.getElementById('sell-section').style.display = tab === 'shop-sell-tab' ? 'block' : 'none';
         document.querySelectorAll('.shop-tab-btn').forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
+        if (window.switchTab) window.switchTab('shop'); // Pastiin render ulang
       });
     });
   </script>

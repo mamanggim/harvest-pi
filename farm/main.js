@@ -236,11 +236,13 @@ const registerEmailBtn = document.getElementById('register-email-btn');
 const registerEmailInput = document.getElementById('register-email-input');
 const registerPasswordInput = document.getElementById('register-password-input');
 const registerError = document.getElementById('register-error');
+const registerUsernameInput = document.getElementById('register-username-input'); // Sesuai style.css
 
 if (registerEmailBtn) {
     addSafeClickListener(registerEmailBtn, async () => {
         const email = registerEmailInput.value;
         const password = registerPasswordInput.value;
+        const username = registerUsernameInput ? registerUsernameInput.value : ''; // Tambah username
 
         if (!email || !password) {
             registerError.style.display = 'block';
@@ -270,11 +272,13 @@ if (registerEmailBtn) {
                 achievements: { harvest: false, coins: false },
                 lastClaim: null,
                 claimedToday: false,
-                totalDeposit: 0 // Tambah field totalDeposit
+                totalDeposit: 0,
+                username: username // Tambah field username
             });
 
             registerEmailInput.value = '';
             registerPasswordInput.value = '';
+            if (registerUsernameInput) registerUsernameInput.value = ''; // Reset username
         } catch (error) {
             registerError.style.display = 'block';
             registerError.textContent = 'Registration failed: ' + error.message;
@@ -287,7 +291,7 @@ const loginEmailBtn = document.getElementById('login-email-btn');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
 const loginError = document.getElementById('login-error');
-const verifyEmailMsg = document.getElementById('verify-email-msg');
+const verifyEmailMsg = document.getElementById('verify-status'); // Sesuai style.css
 
 if (loginEmailBtn) {
     addSafeClickListener(loginEmailBtn, async () => {
@@ -1996,125 +2000,249 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
     const depositLimitRef = ref(database, `depositLimits/${encodedEmail}/${today}`);
     const snapshot = await get(depositLimitRef);
-    const depositData = snapshot.val() || { count: 0, timestamp: 0 };
-    const lastRequestTime = depositData.timestamp || 0;
-    const timeSinceLastRequest = Date.now() - lastRequestTime;
+      const depositData = snapshot.val();
+    let dailyTotal = depositData ? depositData.total : 0;
 
-    if (depositData.count >= 3) {
-      if (timeSinceLastRequest < 24 * 60 * 60 * 1000) { // Kurang dari 24 jam
-        const remainingTime = Math.ceil((24 * 60 * 60 * 1000 - timeSinceLastRequest) / (60 * 60 * 1000));
-        realDepositMsg.textContent = `You've reached the daily deposit limit (3x). Please wait ${remainingTime} hours to request again.`;
-        return;
-      } else {
-        // Reset count setelah 24 jam
-        await set(depositLimitRef, { count: 0, timestamp: 0 });
-      }
+    if (dailyTotal + amount > 1000) {
+      realDepositMsg.textContent = 'Daily deposit limit exceeded (1000 PI).';
+      console.log('Validasi gagal: Melebihi limit harian');
+      return;
     }
 
-    const transactionId = `DEPOSIT-${encodedEmail}-${Date.now()}`;
-    const memo = `DEPOSIT-${encodedEmail}-${Date.now().toString().slice(-5)}`;
-    const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN';
+    realDepositMsg.textContent = '';
+    realDepositBtn.disabled = true;
+    depositAmountInput.disabled = true;
 
-    // Isi pop-up
+    const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Ganti dengan wallet address asli
+    const memo = `deposit_${user.uid}_${Date.now()}`;
+
+    // Tampilkan popup
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
-    popupUserId.textContent = user.email;
+    popupUserId.textContent = user.uid;
     popupTransferAmount.textContent = amount;
     popupTransferMemo.textContent = memo;
     popupWalletAddress.textContent = walletAddress;
+    depositPopup.style.display = 'block';
 
-    // Setup countdown
+    // Mulai countdown
     let timeLeft = countdownDuration;
-    countdownTimer.textContent = timeLeft;
+    countdownTimer.textContent = `Time left: ${timeLeft}s`;
     countdownInterval = setInterval(() => {
       timeLeft--;
-      countdownTimer.textContent = timeLeft;
+      countdownTimer.textContent = `Time left: ${timeLeft}s`;
       if (timeLeft <= 0) {
         clearInterval(countdownInterval);
-        depositPopup.style.display = "none";
+        depositPopup.style.display = 'none';
+        realDepositBtn.disabled = false;
+        depositAmountInput.disabled = false;
         realDepositMsg.textContent = 'Deposit request timed out.';
-        console.log('Countdown habis, deposit dibatalkan');
       }
     }, 1000);
 
-    // Tampilkan pop-up
-    depositPopup.style.display = "flex";
-    console.log('Pop-up ditampilkan:', { amount, memo, email: user.email, walletAddress });
+    // Copy Wallet Address
+    copyWalletBtn.addEventListener('click', () => {
+      copyToClipboard(walletAddress, copyWalletBtn);
+    });
 
-    // Tambahin event copy
-    copyWalletBtn.onclick = () => copyToClipboard(popupWalletAddress.textContent, copyWalletBtn);
-    copyMemoBtn.onclick = () => copyToClipboard(popupTransferMemo.textContent, copyMemoBtn);
+    // Copy Memo
+    copyMemoBtn.addEventListener('click', () => {
+      copyToClipboard(memo, copyMemoBtn);
+    });
 
-    // Konfirmasi deposit
-    confirmDepositBtn.onclick = async () => {
+    // Confirm Deposit
+    confirmDepositBtn.addEventListener('click', async () => {
       clearInterval(countdownInterval);
-      console.log('Tombol confirm diklik');
-      
-      // Update deposit limit
-      const newCount = (depositData.count || 0) + 1;
-      await set(depositLimitRef, { count: newCount, timestamp: Date.now() });
+      depositPopup.style.display = 'none';
 
-      set(ref(database, `transactions/${transactionId}`), {
-        amount: amount,
-        type: "deposit",
-        status: 'pending',
-        timestamp: Date.now(),
-        email: user.email,
-        memo: memo,
-        expiresAt: Date.now() + countdownDuration * 1000 // Simpan waktu kadaluarsa
-      }).then(() => {
-        realDepositMsg.textContent = `Deposit request created! Transfer ${amount} PI to wallet address: ${walletAddress} with memo: ${memo}`;
-        depositPopup.style.display = "none";
-        console.log('Deposit berhasil disimpan');
-      }).catch((err) => {
-        realDepositMsg.textContent = 'Error creating deposit request: ' + err.message;
-        console.error('Error saat simpan deposit:', err);
-      });
-    };
+      try {
+        const playerRef = ref(database, `players/${user.uid}`);
+        const snapshot = await get(playerRef);
+        const playerData = snapshot.val();
+        let totalDeposit = playerData.totalDeposit || 0;
 
-    // Batal deposit
-    cancelDepositBtn.onclick = () => {
+        totalDeposit += amount;
+        dailyTotal += amount;
+
+        await update(playerRef, { totalDeposit });
+        await set(depositLimitRef, { total: dailyTotal });
+
+        const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}`);
+        await push(depositHistoryRef, {
+          amount,
+          timestamp: Date.now(),
+          memo,
+          status: 'pending'
+        });
+
+        realDepositMsg.textContent = 'Deposit request submitted. Awaiting confirmation...';
+        console.log('Deposit request submitted:', { amount, memo });
+      } catch (error) {
+        console.error('Error submitting deposit:', error.message);
+        realDepositMsg.textContent = 'Error submitting deposit: ' + error.message;
+      } finally {
+        realDepositBtn.disabled = false;
+        depositAmountInput.disabled = false;
+        depositAmountInput.value = '';
+      }
+    });
+
+    // Cancel Deposit
+    cancelDepositBtn.addEventListener('click', () => {
       clearInterval(countdownInterval);
-      console.log('Tombol cancel diklik');
-      depositPopup.style.display = "none";
-      realDepositMsg.textContent = 'Deposit cancelled.';
-    };
+      depositPopup.style.display = 'none';
+      realDepositBtn.disabled = false;
+      depositAmountInput.disabled = false;
+      realDepositMsg.textContent = 'Deposit request cancelled.';
+    });
   });
 
-  // Setup FCM
-  let isAdmin = false;
-  auth.onAuthStateChanged((user) => {
+  // Fitur Withdraw
+  const withdrawBtn = document.getElementById("withdraw-btn");
+  const withdrawAmountInput = document.getElementById("withdraw-amount");
+  const withdrawMsg = document.getElementById("withdraw-msg");
+  const withdrawPopup = document.getElementById("withdraw-popup");
+  const withdrawPopupAmount = document.getElementById("withdraw-popup-amount");
+  const withdrawPopupUserId = document.getElementById("withdraw-popup-userid");
+  const withdrawPopupWallet = document.getElementById("withdraw-popup-wallet");
+  const withdrawWalletInput = document.getElementById("withdraw-wallet-input");
+  const withdrawCountdownTimer = document.getElementById("withdraw-countdown-timer");
+  const confirmWithdrawBtn = document.getElementById("confirm-withdraw");
+  const cancelWithdrawBtn = document.getElementById("cancel-withdraw");
+
+  console.log('Elemen withdraw:', {
+    withdrawBtn,
+    withdrawAmountInput,
+    withdrawMsg,
+    withdrawPopup,
+    withdrawPopupAmount,
+    withdrawPopupUserId,
+    withdrawPopupWallet,
+    withdrawWalletInput,
+    withdrawCountdownTimer,
+    confirmWithdrawBtn,
+    cancelWithdrawBtn
+  });
+
+  if (!withdrawBtn || !withdrawAmountInput || !withdrawMsg || !withdrawPopup || !withdrawPopupAmount || !withdrawPopupUserId || !withdrawPopupWallet || !withdrawWalletInput || !withdrawCountdownTimer || !confirmWithdrawBtn || !cancelWithdrawBtn) {
+    console.error('Salah satu elemen withdraw tidak ditemukan. Cek ID di HTML.');
+    return;
+  }
+
+  let withdrawCountdownInterval = null;
+  const withdrawCountdownDuration = 30; // 30 detik countdown
+
+  withdrawBtn.addEventListener('click', async () => {
+    console.log('Tombol withdraw diklik');
+
+    const user = auth.currentUser;
+    if (!user) {
+      withdrawMsg.textContent = 'Please login first.';
+      console.log('Validasi gagal: User belum login');
+      return;
+    }
+
+    const amount = parseFloat(withdrawAmountInput.value);
+    if (!amount || amount < 1) {
+      withdrawMsg.textContent = 'Minimum withdraw is 1 PI.';
+      console.log('Validasi gagal: Amount < 1');
+      return;
+    }
+
+    const playerRef = ref(database, `players/${user.uid}`);
+    const snapshot = await get(playerRef);
+    const playerData = snapshot.val();
+    const piBalance = playerData.piBalance || 0;
+
+    if (amount > piBalance) {
+      withdrawMsg.textContent = 'Insufficient PI balance.';
+      console.log('Validasi gagal: Saldo tidak cukup');
+      return;
+    }
+
+    const walletAddress = withdrawWalletInput.value.trim();
+    if (!walletAddress) {
+      withdrawMsg.textContent = 'Please enter a valid wallet address.';
+      console.log('Validasi gagal: Wallet address kosong');
+      return;
+    }
+
+    withdrawMsg.textContent = '';
+    withdrawBtn.disabled = true;
+    withdrawAmountInput.disabled = true;
+    withdrawWalletInput.disabled = true;
+
+    // Tampilkan popup
+    withdrawPopupAmount.textContent = amount;
+    withdrawPopupUserId.textContent = user.uid;
+    withdrawPopupWallet.textContent = walletAddress;
+    withdrawPopup.style.display = 'block';
+
+    // Mulai countdown
+    let timeLeft = withdrawCountdownDuration;
+    withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
+    withdrawCountdownInterval = setInterval(() => {
+      timeLeft--;
+      withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
+      if (timeLeft <= 0) {
+        clearInterval(withdrawCountdownInterval);
+        withdrawPopup.style.display = 'none';
+        withdrawBtn.disabled = false;
+        withdrawAmountInput.disabled = false;
+        withdrawWalletInput.disabled = false;
+        withdrawMsg.textContent = 'Withdraw request timed out.';
+      }
+    }, 1000);
+
+    // Confirm Withdraw
+    confirmWithdrawBtn.addEventListener('click', async () => {
+      clearInterval(withdrawCountdownInterval);
+      withdrawPopup.style.display = 'none';
+
+      try {
+        const updatedPiBalance = piBalance - amount;
+        await update(playerRef, { piBalance: updatedPiBalance });
+
+        const encodedEmail = encodeEmail(user.email);
+        const withdrawHistoryRef = ref(database, `withdrawHistory/${encodedEmail}`);
+        await push(withdrawHistoryRef, {
+          amount,
+          walletAddress,
+          timestamp: Date.now(),
+          status: 'pending'
+        });
+
+        withdrawMsg.textContent = 'Withdraw request submitted. Awaiting confirmation...';
+        console.log('Withdraw request submitted:', { amount, walletAddress });
+      } catch (error) {
+        console.error('Error submitting withdraw:', error.message);
+        withdrawMsg.textContent = 'Error submitting withdraw: ' + error.message;
+      } finally {
+        withdrawBtn.disabled = false;
+        withdrawAmountInput.disabled = false;
+        withdrawWalletInput.disabled = false;
+        withdrawAmountInput.value = '';
+        withdrawWalletInput.value = '';
+      }
+    });
+
+    // Cancel Withdraw
+    cancelWithdrawBtn.addEventListener('click', () => {
+      clearInterval(withdrawCountdownInterval);
+      withdrawPopup.style.display = 'none';
+      withdrawBtn.disabled = false;
+      withdrawAmountInput.disabled = false;
+      withdrawWalletInput.disabled = false;
+      withdrawMsg.textContent = 'Withdraw request cancelled.';
+    });
+  });
+
+  // Load user balances
+  auth.onAuthStateChanged(user => {
     if (user) {
-      get(ref(database, `players/${encodeEmail(user.email)}/role`)).then((snapshot) => {
-        isAdmin = snapshot.val() === 'admin';
-        if (isAdmin && 'serviceWorker' in navigator) {
-          window.location.href = 'admin/admin.html';
-          navigator.serviceWorker.register('/firebase-messaging-sw.js')
-            .then((registration) => {
-              messaging.useServiceWorker(registration);
-              return messaging.getToken();
-            }).then((token) => {
-              set(ref(database, `adminTokens/${encodeEmail(user.email)}`), token);
-            }).catch((err) => console.log('FCM Error:', err));
-        }
-      }).catch((err) => console.log('Error fetching role:', err));
+      userId = user.uid;
+      localStorage.setItem('userId', userId);
+      loadUserBalances();
     }
   });
 });
-
-// Simulasi Deteksi Transaksi (Opsional, hapus kalau udah pakai Pi API)
-setInterval(() => {
-  get(ref(database, 'deposits')).then((snapshot) => { // Ganti ref(...).once('value') dengan get(ref(...))
-    const deposits = snapshot.val();
-    for (let id in deposits) {
-      const deposit = deposits[id];
-      if (deposit.status === 'pending') {
-        setTimeout(() => {
-          update(ref(database, `deposits/${id}`), { // Ganti ref(...).update dengan update(ref(...), ...)
-            status: 'detected'
-          });
-        }, 30000); // Simulasi deteksi setelah 30 detik
-      }
-    }
-  });
-}, 10000); // Cek setiap 10 detik

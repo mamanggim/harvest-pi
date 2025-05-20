@@ -11,11 +11,35 @@
 <body>
 
 <!-- LOADING SCREEN -->
-<div id="loading-screen" class="screen active">
-  <h1 class="neon-text text-2xl">Harvest Pi</h1>
-  <div class="spinner"></div>
-  <p class="mt-2">Loading...</p>
-</div>
+<body>
+  <div id="loading-screen" class="active">
+    <h1>Harvest Pi</h1>
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+  <div id="login-screen">
+    <!-- Login form -->
+  </div>
+  <!-- Sisanya -->
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading-screen').classList.remove('active');
+        document.getElementById('login-screen').classList.add('active');
+      }, 3000);
+    });
+
+    // Fallback kalo load gagal
+    setTimeout(() => {
+      const loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen.classList.contains('active')) {
+        loadingScreen.classList.remove('active');
+        document.getElementById('login-screen').classList.add('active');
+        console.log('Loading timeout, forcing transition');
+      }
+    }, 5000); // 5 detik fallback
+  </script>
+</body>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen" class="screen" style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">

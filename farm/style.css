@@ -8,7 +8,7 @@
 body {
   background: url('../assets/img/ui/farm_bg.png') no-repeat center center fixed;
   background-size: cover;
-  font-family: 'Press Start 2P', cursive;
+  font-family: 'Press Start 2P', cursive, sans-serif;
   color: #fff;
   text-align: center;
   min-height: 100vh;
@@ -28,12 +28,13 @@ button {
   cursor: pointer;
   font-size: 12px;
   border-radius: 8px;
-  font-family: 'Press Start 2P', cursive;
+  font-family: 'Press Start 2P', cursive, sans-serif;
   transition: all 0.3s;
 }
 
-button:hover {
+button:hover, .btn-neon:hover {
   background: #66bb6a;
+  box-shadow: 0 0 10px #39FF14;
 }
 
 button:disabled {
@@ -51,7 +52,7 @@ select {
   font-size: 12px;
   background: #444;
   color: #fff;
-  font-family: 'Press Start 2P', cursive;
+  font-family: 'Press Start 2P', cursive, sans-serif;
 }
 
 /* Neon theme */
@@ -67,14 +68,9 @@ select {
   border: none;
   cursor: pointer;
   box-shadow: 0 0 5px #39FF14;
-  font-family: 'Press Start 2P', cursive;
+  font-family: 'Press Start 2P', cursive, sans-serif;
   font-size: 12px;
   border-radius: 5px;
-}
-
-.btn-neon:hover {
-  background: #CCFF00;
-  box-shadow: 0 0 10px #CCFF00;
 }
 
 /* ========== LOADING & LOGIN SCREEN ========== */
@@ -90,6 +86,17 @@ select {
   justify-content: center;
   align-items: center;
   z-index: 5000;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
+
+#loading-screen.active {
+  opacity: 1;
+}
+
+#loading-screen:not(.active) {
+  opacity: 0;
+  pointer-events: none;
 }
 
 #loading-screen h1 {
@@ -97,6 +104,7 @@ select {
   color: #ffeb3b;
   text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
   margin-bottom: 20px;
+  transition: font-size 0.3s;
 }
 
 .spinner {
@@ -124,7 +132,18 @@ select {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2001;
+  z-index: 5001;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+#login-screen.active {
+  opacity: 1;
+}
+
+#login-screen:not(.active) {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .form-container {
@@ -136,6 +155,13 @@ select {
   background: #16213e;
   max-width: 400px;
   width: 100%;
+}
+
+@media (max-width: 360px) {
+  .form-container {
+    max-width: 90%;
+    padding: 15px;
+  }
 }
 
 .input-field {

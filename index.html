@@ -30,11 +30,8 @@
         <div id="login-error" style="display: none; color: red;"></div>
         <div id="verify-email-msg" style="display: none; color: yellow;">Please verify your email to login.</div>
       </form>
-      <p class="mt-2"><span class="link-text">Don't have an account?</span> <span class="link-neon" onclick="showRegister()">Register</span></p>
+      <p class="mt-2"><span class="link-neon small-link" onclick="showRegister()">Don't have an account? Register</span></p>
     </div>
-    <!-- Tambah elemen buat nampilin token (sementara) -->
-    <div id="fcm-token" style="display: none; word-break: break-all; color: #39FF14; margin-top: 10px; font-size: 12px; text-shadow: 0 0 3px #39FF14;"></div>
-    <button id="show-token-btn" class="btn-neon mt-2">Show FCM Token</button>
     <!-- Register Form (Hidden) -->
     <form id="register-form" class="register-form" style="display: none;">
       <input type="email" id="register-email-input" class="input-field" placeholder="Enter email to register" required>
@@ -44,7 +41,7 @@
       <div id="register-error" style="display: none; color: red;"></div>
     </form>
     <p id="register-back" style="display: none; margin-top: 10px;">
-      <span class="link-text">Already have an account?</span> <span class="link-neon" onclick="showLogin()">Login</span>
+      <span class="link-neon small-link" onclick="showLogin()">Already have an account? Login</span>
     </p>
     <div class="policy-links mt-4">
       <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |

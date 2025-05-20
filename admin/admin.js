@@ -1,33 +1,45 @@
 import { auth, database, messaging, ref, onValue, set, get } from '../firebase/firebase-config.js';
 
-// Pastikan user udah login sebelum setup FCM
-firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
-        .then((registration) => {
-          messaging.useServiceWorker(registration);
-          return messaging.getToken();
-        }).then((token) => {
-          set(ref(database, `adminTokens/${user.uid}`), token);
-        }).catch((err) => {
-          console.error('FCM Error:', err);
-          showUserNotification('Failed to setup notifications.');
-        });
-    }
-  } else {
-    console.log('No user logged in');
-  }
-});
-
-// Fungsi encode email
-function encodeEmail(email) {
-  return email.replace('@', '_at_').replace('.', '_dot_');
-}
-
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false; // Flag buat tandain logout
+
+  // Cek apakah user adalah admin
+  let isAdmin = false;
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      // Setup FCM untuk notifikasi (cuma sekali di sini)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
+          .then((registration) => {
+            messaging.useServiceWorker(registration);
+            return messaging.getToken();
+          }).then((token) => {
+            set(ref(database, `adminTokens/${user.uid}`), token);
+          }).catch((err) => {
+            console.error('FCM Error:', err);
+            showUserNotification('Failed to setup notifications.');
+          });
+      }
+
+      // Cek role admin
+      get(ref(database, `players/${encodeEmail(user.email)}/role`)).then((snapshot) => {
+        isAdmin = snapshot.val() === 'admin';
+        if (!isAdmin) {
+          alert('Access denied. Admins only.');
+          window.location.href = '../index.html';
+          return;
+        }
+      }).catch((err) => {
+        console.error('Error checking role:', err);
+        alert('Error checking permissions. Please login again.');
+        window.location.href = '../index.html';
+      });
+    } else if (!isLoggingOut) { // Hanya alert kalau bukan logout intentional
+      alert('Please login first.');
+      window.location.href = '../index.html';
+    }
+  });
 
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
@@ -42,42 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-
-  // Cek apakah user adalah admin
-  let isAdmin = false;
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      get(ref(database, `players/${encodeEmail(user.email)}/role`)).then((snapshot) => {
-        isAdmin = snapshot.val() === 'admin';
-        if (!isAdmin) {
-          alert('Access denied. Admins only.');
-          window.location.href = '../index.html';
-          return;
-        }
-
-    // Setup FCM untuk notifikasi
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
-        .then((registration) => {
-          messaging.useServiceWorker(registration);
-          return messaging.getToken();
-        }).then((token) => {
-          set(ref(database, `adminTokens/${auth.currentUser.uid}`), token); // Pastikan auth.currentUser ada
-        }).catch((err) => {
-          console.error('FCM Error:', err);
-          showUserNotification('Failed to setup notifications.');
-        });
-    }
-      }).catch((err) => {
-        console.error('Error checking role:', err);
-        alert('Error checking permissions. Please login again.');
-        window.location.href = '../index.html';
-      });
-    } else if (!isLoggingOut) { // Hanya alert kalau bukan logout intentional
-      alert('Please login first.');
-      window.location.href = '../index.html';
-    }
-  });
 
   // Admin Dashboard
   onValue(ref(database, 'transactions'), (snapshot) => {
@@ -193,5 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
       notification.style.display = 'block';
       setTimeout(() => notification.style.display = 'none', 5000);
     }
+  }
+
+  // Fungsi encode email
+  function encodeEmail(email) {
+    return email.replace('@', '_at_').replace('.', '_dot_');
   }
 });

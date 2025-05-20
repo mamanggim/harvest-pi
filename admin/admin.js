@@ -189,24 +189,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Show FCM Token (khusus admin)
-  document.getElementById('show-token-btn').addEventListener('click', () => {
-    if (auth.currentUser) {
-      messaging.getToken().then((token) => {
-        const tokenElement = document.getElementById('fcm-token');
-        tokenElement.textContent = 'FCM Token: ' + token;
-        tokenElement.style.display = 'block';
-        navigator.clipboard.writeText(token).then(() => {
-          showUserNotification('Token copied to clipboard!');
-        }).catch((err) => {
-          showUserNotification('Please copy the token manually: ' + token);
-        });
+document.getElementById('show-token-btn').addEventListener('click', () => {
+  alert('Tombol Show FCM Token diklik!'); // Log pas tombol diklik
+  if (auth.currentUser) {
+    alert('User logged in as admin'); // Log kalo user udah login
+    messaging.getToken().then((token) => {
+      alert('FCM Token: ' + token); // Log token kalo berhasil didapet
+      const tokenElement = document.getElementById('fcm-token');
+      tokenElement.textContent = 'FCM Token: ' + token;
+      tokenElement.style.display = 'block';
+      navigator.clipboard.writeText(token).then(() => {
+        alert('Token berhasil dicopy ke clipboard!'); // Log kalo copy sukses
+        showUserNotification('Token copied to clipboard!');
       }).catch((err) => {
-        const tokenElement = document.getElementById('fcm-token');
-        tokenElement.textContent = 'Error getting token: ' + err.message;
-        tokenElement.style.display = 'block';
+        alert('Gagal copy token: ' + err.message); // Log kalo copy gagal
+        showUserNotification('Please copy the token manually: ' + token);
       });
-    } else {
-      showUserNotification('Please login as admin first!');
-    }
-  });
+    }).catch((err) => {
+      alert('Error ambil token: ' + err.message); // Log kalo gagal ambil token
+      const tokenElement = document.getElementById('fcm-token');
+      tokenElement.textContent = 'Error getting token: ' + err.message;
+      tokenElement.style.display = 'block';
+    });
+  } else {
+    alert('Belum login sebagai admin!'); // Log kalo belum login
+    showUserNotification('Please login as admin first!');
+  }
 });

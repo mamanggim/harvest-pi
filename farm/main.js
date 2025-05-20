@@ -123,6 +123,9 @@ async function loadData() {
   } catch (error) {
     console.error('Error loading data:', error.message);
     showNotification('Error loading game data.');
+    // Fallback data
+    langData = { en: { noItems: 'No items available.' }, id: { noItems: 'Tidak ada item tersedia.' } };
+    vegetables = [];
   }
 }
 
@@ -160,7 +163,7 @@ function loadPlayerData() {
     claimedToday = data.claimedToday || false;
     if (!data.farmPlots || data.farmPlots.length === 0) {
       farmPlots = Array(plotCount).fill().map(() => ({
-        planted: false, vegetable: null, progress: 0, watered: false, currentFrame: 1, countdown: 0, totalCountdown: 0
+        planted: false, vegetable: null,脩progress: 0, watered: false, currentFrame: 1, countdown: 0, totalCountdown: 0
       }));
     }
     isDataLoaded = true;
@@ -882,14 +885,7 @@ async function initializeGame() {
   try {
     await loadData();
     updateUIText();
-    setTimeout(() => {
-      const loadingScreen = document.getElementById('loading-screen');
-      const loginScreen = document.getElementById('login-screen');
-      if (loadingScreen && loginScreen) {
-        loadingScreen.style.display = 'none';
-        loginScreen.style.display = 'flex';
-      }
-    }, 1000);
+    console.log("Game initialized successfully");
   } catch (error) {
     console.error('Error initializing game:', error.message);
     showNotification('Error initializing game. Please reload.');

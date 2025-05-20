@@ -3,6 +3,7 @@ import { auth, database, ref, onValue, set, get } from '../firebase/firebase-con
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false; // Flag buat tandain logout
+  let lastNotificationTime = 0; // Buat batasin notif berulang
 
   // Cek kalau udah pernah redirect biar ga loop
   const redirectFlag = sessionStorage.getItem('adminRedirect');
@@ -20,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const role = snapshot.val();
           if (role === 'admin') {
             // Lanjut ke dashboard
-            // Setup FCM untuk notifikasi (komentar dulu, panggil kalo butuh)
+            // Setup FCM (komentar dulu, panggil kalo butuh)
             /*
             if ('serviceWorker' in navigator) {
               navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
@@ -84,12 +85,21 @@ document.addEventListener('DOMContentLoaded', () => {
       let pending = 0;
       let approvedTodayCount = 0;
       const today = new Date().toISOString().split('T')[0];
+      let newDepositFound = false;
 
       if (transactions) {
         for (let id in transactions) {
           const t = transactions[id];
           if (t.type === 'deposit') {
-            if (t.status === 'pending') pending++;
+            if (t.status === 'pending') {
+              pending++;
+              // Cek apakah ini deposit baru (contoh: berdasarkan timestamp)
+              if (!newDepositFound && (!t.lastNotified || Date.now() - t.lastNotified > 60000)) { // 1 menit cooldown
+                newDepositFound = true;
+                showUserNotification(`New deposit request from ${t.email} for ${t.amount} PI`);
+                set(ref(database, `transactions/${id}/lastNotified`), Date.now()); // Tandai udah dinotif
+              }
+            }
             if (t.status === 'approved' && new Date(t.timestamp).toISOString().split('T')[0] === today) {
               approvedTodayCount++;
             }
@@ -140,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => {
         get(ref(database, `transactions/${id}`)).then((snap) => {
           const transaction = snap.val();
-          if (transaction.type === 'deposit') {
+          if (transaction && transaction.type === 'deposit') {
             const userRef = ref(database, `players/${encodeEmail(transaction.email)}`);
             get(userRef).then((playerSnap) => {
               const player = playerSnap.val();
@@ -149,10 +159,14 @@ document.addEventListener('DOMContentLoaded', () => {
                   ...player,
                   piBalance: (player.piBalance || 0) + parseFloat(transaction.amount)
                 });
+                showUserNotification(`Deposit ${transaction.amount} PI approved!`);
+              } else {
+                showUserNotification('User not found. Deposit approved but balance not updated.');
               }
             });
+          } else {
+            showUserNotification('Invalid transaction data.');
           }
-          showUserNotification(`Deposit ${transaction.amount} PI approved!`);
         });
       })
       .catch((err) => {

@@ -376,8 +376,13 @@
   <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3"></audio>
   <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3"></audio>
 
-  <!-- FIREBASE -->
-  <script type="module" src="firebase/firebase-config.js"></script>
+  <!-- LOAD FIREBASE SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js"></script>
+  <!-- Load konfigurasi custom -->
+  <script type="module" src="/firebase/firebase-config.js"></script>
+  <!-- Load admin.js (harus setelah config) -->
+  <script type="module" src="/admin/admin.js"></script>
 
   <!-- PI NETWORK SDK -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>

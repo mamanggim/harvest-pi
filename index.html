@@ -1,413 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Harvest Pi</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="farm/style.css?v=46" />
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<!-- LOADING SCREEN -->
-<body>
+  <!-- Loading Screen -->
   <div id="loading-screen" class="active">
     <h1>Harvest Pi</h1>
     <div class="spinner"></div>
     <p>Loading...</p>
   </div>
+
+  <!-- Login Screen -->
   <div id="login-screen">
-    <!-- Login form -->
-  </div>
-  <!-- Sisanya -->
-  <script>
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('loading-screen').classList.remove('active');
-        document.getElementById('login-screen').classList.add('active');
-      }, 3000);
-    });
-
-    // Fallback kalo load gagal
-    setTimeout(() => {
-      const loadingScreen = document.getElementById('loading-screen');
-      if (loadingScreen.classList.contains('active')) {
-        loadingScreen.classList.remove('active');
-        document.getElementById('login-screen').classList.add('active');
-        console.log('Loading timeout, forcing transition');
-      }
-    }, 5000); // 5 detik fallback
-  </script>
-</body>
-
-<!-- LOGIN SCREEN -->
-<div id="login-screen" class="screen" style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-  <div class="form-container">
-    <h1 class="neon-text text-2xl mb-4">Harvest Pi</h1>
-    <div id="auth-form">
-      <!-- Login Form (Default) -->
+    <div class="form-container">
+      <h2 id="login-title">Login</h2>
       <form id="login-form" class="login-form">
-        <input type="email" id="email-input" class="input-field" placeholder="Enter email" required>
-        <input type="password" id="password-input" class="input-field" placeholder="Enter password" required>
-        <button type="submit" id="login-email-btn" class="btn-neon mt-4">Login</button>
-        <div id="login-error" class="notification error" style="display: none;"></div>
-        <div id="login-success" class="notification success" style="display: none;"></div>
-        <div id="verify-email-msg" class="notification" style="display: none; color: yellow;">Please verify your email to login.</div>
+        <input type="email" id="login-email" class="input-field" placeholder="Email">
+        <input type="password" id="login-password" class="input-field" placeholder="Password">
+        <button type="button" id="login-btn" class="btn-neon">Login</button>
+        <p class="notification" id="login-message"></p>
+        <p class="link-text">
+          <a href="#" id="go-to-register" class="link-neon">Register</a> | 
+          <a href="#" class="policy-links">Privacy Policy</a> | 
+          <a href="#" class="policy-links">Terms of Service</a>
+        </p>
       </form>
-      <p class="mt-2"><span class="link-text">Don't have an account?</span> <span class="link-neon" onclick="showRegister()">Register</span></p>
-    </div>
-    <!-- Register Form (Hidden) -->
-    <form id="register-form" class="register-form" style="display: none;">
-      <input type="email" id="register-email-input" class="input-field" placeholder="Enter email to register" required>
-      <input type="password" id="register-password-input" class="input-field" placeholder="Enter password" required>
-      <input type="password" id="register-confirm-input" class="input-field" placeholder="Confirm password" required>
-      <button type="submit" id="register-email-btn" class="btn-neon mt-4">Register</button>
-      <div id="register-error" class="notification error" style="display: none;"></div>
-      <div id="register-success" class="notification success" style="display: none;"></div>
-    </form>
-    <p id="register-back" style="display: none; margin-top: 10px;">
-      <span class="link-text">Already have an account?</span> <span class="link-neon" onclick="showLogin()">Login</span>
-    </p>
-    <div class="policy-links mt-4">
-      <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
-      <a href="/term-of-service.html" target="_blank">Terms of Service</a>
+      <form id="register-form" class="register-form" style="display: none;">
+        <input type="email" id="register-email" class="input-field" placeholder="Email">
+        <input type="password" id="register-password" class="input-field" placeholder="Password">
+        <button type="button" id="register-btn" class="btn-neon">Register</button>
+        <p class="notification" id="register-message"></p>
+        <p class="link-text">
+          <a href="#" id="go-to-login" class="link-neon">Login</a> | 
+          <a href="#" class="policy-links">Privacy Policy</a> | 
+          <a href="#" class="policy-links">Terms of Service</a>
+        </p>
+      </form>
     </div>
   </div>
-</div>
 
-<!-- START SCREEN -->
-<div id="start-screen" class="screen" style="display: none; text-align: center;">
-  <h1 id="title" class="neon-text text-2xl">Harvest Pi</h1>
-  <div id="start-text" class="start-text mt-4">Start Game</div>
-  <div class="corner-buttons mt-4">
-    <button id="lang-toggle" class="btn-neon">Switch Language (EN/ID)</button>
-    <button id="settings-btn" class="btn-neon">⚙️</button>
+  <!-- Start Screen -->
+  <div id="start-screen">
+    <h1 id="title">Harvest Pi</h1>
+    <p id="start-text" class="start-text">Click to Start</p>
   </div>
-</div>
 
-<!-- GAME SCREEN -->
-<div id="game-screen" class="screen" style="display: none;">
-  <div id="game-header">
+  <!-- Game Screen -->
+  <div id="game-screen" style="display: none;">
+    <div id="game-header">
+      <h1 id="game-title">Harvest Pi</h1>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="farm">Farm</button>
+        <button class="tab-btn" data-tab="shop">Shop</button>
+        <button class="tab-btn" data-tab="inventory">Inventory</button>
+        <button class="tab-btn" data-tab="exchange">Exchange</button>
+        <button class="tab-btn" data-tab="finance">Finance</button>
+        <button class="tab-btn" data-tab="achievements">Achievements</button>
+      </div>
+      <div id="wallet">
+        <div id="farm-coins">0 Farm Coins</div>
+        <div id="pi-coins">0 PI</div>
+        <div id="water">0 Water</div>
+        <div id="level">Level: 1 | XP: 0</div>
+        <div id="xp-bar"><div id="xp-fill"></div></div>
+      </div>
+    </div>
+
     <div class="corner-buttons">
-      <button id="game-settings-btn" class="btn-neon">⚙️</button>
+      <button id="exit-game-btn" style="display: none;">Exit Game</button>
     </div>
-    <h1 id="game-title" class="neon-text text-xl">Harvest Pi</h1>
-    <div class="tabs flex justify-center mt-2">
-      <button class="tab-btn btn-neon mr-1 active" data-tab="farm">Farm</button>
-      <button class="tab-btn btn-neon mr-1" data-tab="shop">Shop</button>
-      <button class="tab-btn btn-neon mr-1" data-tab="upgrades">Upgrades</button>
-      <button class="tab-btn btn-neon mr-1" data-tab="inventory">Inventory</button>
-      <button class="tab-btn btn-neon mr-1" data-tab="exchange">Exchange</button>
-      <button class="tab-btn btn-neon mr-1" data-tab="finance">Finance</button>
-      <button class="tab-btn btn-neon mr-1" data-tab="leaderboard">Leaderboard</button>
-      <button class="tab-btn btn-neon mr-1" data-tab="achievements">Achievements</button>
+
+    <!-- Farm Tab -->
+    <div id="farm" class="tab-content active">
+      <div id="farm-area"></div>
+      <button id="claim-reward-btn">Claim Daily Reward</button>
     </div>
-    <div id="wallet" class="mt-2">
-      <span id="farm-coins">0 Farm Coins</span> |
-      <span id="pi-coins">0.000000 PI</span> |
-      <span id="water">0 Water</span>
-      <div id="level">Level: 1 | XP: 0</div>
-      <div id="xp-bar"><div id="xp-fill"></div></div>
+
+    <!-- Shop Tab -->
+    <div id="shop" class="tab-content">
+      <div class="shop-switch">
+        <button id="shop-buy-tab" class="shop-tab-btn active">Buy</button>
+        <button id="shop-sell-tab" class="shop-tab-btn">Sell</button>
+      </div>
+      <div id="shop-content"></div>
+      <div id="sell-section" style="display: none;">
+        <h3 id="sell-section-title">Sell to Shop</h3>
+        <div id="sell-content"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- FARM -->
-  <div id="farm" class="tab-content active">
-    <div id="farm-area"></div>
-    <button id="claim-reward-btn" class="btn-neon mt-2" aria-label="Claim Daily Reward">Claim Daily Reward</button>
-  </div>
-
-  <!-- SHOP -->
-  <div id="shop" class="tab-content">
-    <div class="shop-switch flex justify-center mt-2">
-      <button id="shop-buy-tab" class="shop-tab-btn btn-neon mr-1 active">Buy</button>
-      <button id="shop-sell-tab" class="shop-tab-btn btn-neon">Sell</button>
+    <!-- Inventory Tab -->
+    <div id="inventory" class="tab-content">
+      <div id="inventory-content"></div>
     </div>
-    <div id="shop-content" class="mt-2"></div>
-    <div id="sell-section" style="display: none;">
-      <h2 id="sell-section-title" class="neon-text">Sell Items</h2>
-      <div id="sell-content" class="mt-2"></div>
-    </div>
-  </div>
 
-  <!-- UPGRADES -->
-  <div id="upgrades" class="tab-content">
-    <h2 id="upgrades-title" class="neon-text">Upgrades</h2>
-    <p id="upgrades-content" class="mt-2">Coming soon...</p>
-  </div>
-
-  <!-- INVENTORY -->
-  <div id="inventory" class="tab-content">
-    <div id="inventory-content" class="mt-2"></div>
-  </div>
-
-  <!-- EXCHANGE -->
-  <div id="exchange" class="tab-content">
-    <div class="exchange-container mt-2">
-      <h3 id="exchange-title" class="exchange-title neon-text">Live Exchange</h3>
-      <div id="live-rate" class="exchange-rate mt-2">Loading rate...</div>
-      <div class="exchange-section mt-2">
-        <label for="exchange-amount">Amount:</label>
-        <input type="number" id="exchange-amount" class="input-field mt-1" placeholder="Enter amount" step="0.000001">
-        <select id="exchange-direction" class="input-field mt-1">
-          <option value="piToFc">Pi → FC</option>
-          <option value="fcToPi">FC → Pi</option>
-        </select>
-        <div id="exchange-result" class="exchange-result mt-1">You will get: 0</div>
-        <button id="exchange-btn" class="btn-neon mt-1">Exchange</button>
-        <div id="exchange-loading" class="mt-1" style="display: none;">
-          <div class="spinner"></div>
-          <div>Processing exchange...</div>
+    <!-- Exchange Tab -->
+    <div id="exchange" class="tab-content">
+      <div class="exchange-container">
+        <h2 id="exchange-title">Exchange</h2>
+        <p id="exchange-rate" class="exchange-rate">1 PI = 1,000,000 Farm Coins</p>
+        <div class="exchange-section">
+          <input type="text" id="exchange-amount" placeholder="Amount">
+          <select id="exchange-direction">
+            <option value="piToFc">PI to Farm Coins</option>
+            <option value="fcToPi">Farm Coins to PI</option>
+          </select>
+          <p id="exchange-result-label">Result: <span id="exchange-result" class="exchange-result">0</span></p>
+          <button id="exchange-btn">Exchange</button>
+          <p id="exchange-loading" style="display: none;">Processing...</p>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- FINANCE -->
-  <div id="finance" class="tab-content">
-    <h2 id="finance-title" class="neon-text">Finance</h2>
-    <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
-    <p>Pi Coin Balance: <span id="pi-coin-balance">0.000000</span></p>
-    <hr class="mt-2"/>
-    <h3 class="neon-text mt-2">Deposit</h3>
-    <input type="number" id="deposit-amount" class="input-field mt-1" placeholder="Enter PI Amount" step="0.000001" />
-    <button id="real-deposit-btn" class="btn-neon mt-1">Deposit PI</button>
-    <div id="real-deposit-msg" class="deposit-message mt-1"></div>
-    <h3 class="neon-text mt-2">Withdraw</h3>
-    <button id="withdraw-btn" class="btn-neon mt-1" disabled>Withdraw PI</button>
-    <div id="real-withdraw-msg" class="deposit-message mt-1"></div>
-    <p id="withdraw-note" class="note mt-1">
-      This feature will unlock when you reach: <br />
-      - Level 10<br />
-      - Farm Coin ≥ 10.000.000<br />
-      - Total Deposit ≥ 10 PI
-    </p>
-    <!-- Pop-up Container -->
-    <div id="deposit-popup" class="popup" style="display:none;">
+    <!-- Finance Tab -->
+    <div id="finance" class="tab-content">
+      <h2 id="finance-title">Finance</h2>
+      <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
+      <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
+      <hr>
+      <h3>Deposit PI</h3>
+      <input type="number" id="deposit-amount" placeholder="Amount in PI">
+      <button id="real-deposit-btn">Deposit</button>
+      <p class="deposit-message" id="real-deposit-msg"></p>
+      <hr>
+      <h3>Withdraw PI</h3>
+      <button id="withdraw-btn">Withdraw</button>
+      <p id="withdraw-note">Note: Withdrawal fees may apply.</p>
+    </div>
+
+    <!-- Achievements Tab -->
+    <div id="achievements" class="tab-content">
+      <div id="achievements-content"></div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification"></div>
+
+    <!-- Reward Modal -->
+    <div id="reward-modal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="daily-reward-title">Daily Reward</h2>
+        <p>You've earned: 100 Farm Coins, 50 Water, 20 XP</p>
+        <button id="claim-modal-btn">Claim</button>
+      </div>
+    </div>
+
+    <!-- Deposit Popup -->
+    <div id="deposit-popup" class="popup">
       <div class="popup-content">
-        <h3 class="neon-text">Deposit Details</h3>
-        <p><strong>Amount:</strong> <span id="popup-amount">0</span> PI</p>
-        <p><strong>Memo:</strong> <span id="popup-memo" class="text-limit">-</span></p>
-        <p><strong>Email:</strong> <span id="popup-userid" class="text-limit">-</span></p>
-        <p>
-          Transfer <span id="popup-transfer-amount">0</span> PI to wallet address: 
-          <strong><span id="popup-wallet-address" class="text-limit">GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN</span></strong>
-          <button id="copy-wallet-btn" class="copy-button">Copy</button>
-        </p>
-        <p>
-          with memo: <span id="popup-transfer-memo" class="text-limit">-</span>
-          <button id="copy-memo-btn" class="copy-button">Copy</button>
-        </p>
-        <p><strong>Time Left:</strong> <span id="countdown-timer">30</span> seconds</p>
+        <h3>Confirm Deposit</h3>
+        <p>Amount: <span id="popup-amount"></span> PI</p>
+        <p>User Email: <span id="popup-userid"></span></p>
+        <p>Transfer <span id="popup-transfer-amount"></span> PI to:</p>
+        <p class="text-limit">Wallet Address: <span id="popup-wallet-address"></span> <button id="copy-wallet-btn" class="copy-button">Copy</button></p>
+        <p>Memo: <span id="popup-memo"></span> <button id="copy-memo-btn" class="copy-button">Copy</button></p>
+        <p>Time Left: <span id="countdown-timer"></span>s</p>
         <button id="confirm-deposit" class="game-button">Confirm</button>
         <button id="cancel-deposit" class="game-button">Cancel</button>
       </div>
     </div>
   </div>
 
-  <!-- LEADERBOARD -->
-  <div id="leaderboard" class="tab-content">
-    <h2 id="leaderboard-title" class="neon-text">Leaderboard</h2>
-    <p id="leaderboard-content" class="mt-2">Coming soon...</p>
-  </div>
+  <!-- Audio -->
+  <audio id="bg-music" src="assets/audio/background_music.mp3" loop></audio>
+  <audio id="bg-voice" src="assets/audio/background_voice.mp3" loop></audio>
+  <audio id="harvesting-sound" src="assets/audio/harvesting.mp3"></audio>
+  <audio id="watering-sound" src="assets/audio/watering.mp3"></audio>
+  <audio id="planting-sound" src="assets/audio/planting.mp3"></audio>
+  <audio id="menu-sound" src="assets/audio/menu.mp3"></audio>
+  <audio id="buying-sound" src="assets/audio/buying.mp3"></audio>
+  <audio id="coin-sound" src="assets/audio/coin.mp3"></audio>
 
-  <!-- ACHIEVEMENTS -->
-  <div id="achievements" class="tab-content">
-    <div id="achievements-content" class="mt-2"></div>
-  </div>
-
-  <!-- MODAL REWARD -->
-  <div id="reward-modal" class="modal">
-    <div class="modal-content">
-      <span id="reward-modal-close" class="close">×</span>
-      <h2 id="daily-reward-title" class="neon-text">Daily Reward</h2>
-      <p id="daily-reward-text" class="mt-2">You got +100 Farm Coins & +50 Water!</p>
-      <button id="claim-modal-btn" class="btn-neon mt-2" aria-label="Claim Reward">Claim</button>
-    </div>
-  </div>
-
-  <!-- SETTINGS MODAL -->
-  <div id="settings-modal" class="modal">
-    <div class="modal-content">
-      <span id="close-settings" class="close">×</span>
-      <h2 id="settings-title" class="neon-text">Settings</h2>
-      <button id="fullscreen-toggle" class="btn-neon mt-2">⛶</button>
-      <button id="game-lang-toggle" class="btn-neon mt-2">Switch Language (EN/ID)</button>
-      <button id="exit-game-btn" class="btn-neon mt-2">Logout</button>
-      <label id="music-volume-label" for="music-volume" class="mt-2">Music Volume:</label>
-      <input type="range" id="music-volume" class="mt-1" min="0" max="100" step="1" value="50" />
-      <label id="voice-volume-label" for="voice-volume" class="mt-2">Voice/SFX Volume:</label>
-      <input type="range" id="voice-volume" class="mt-1" min="0" max="100" step="1" value="50" />
-    </div>
-  </div>
-
-  <!-- NOTIFICATION -->
-  <div id="notification" class="notification" style="display:none;"></div>
-
-  <!-- AUDIO -->
-  <audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop preload="auto"></audio>
-  <audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop preload="auto"></audio>
-  <audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3" preload="auto"></audio>
-  <audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3" preload="auto"></audio>
-  <audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3" preload="auto"></audio>
-  <audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3" preload="auto"></audio>
-  <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3" preload="auto"></audio>
-  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
-
-  <!-- LOAD FIREBASE SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-
-  <!-- Load konfigurasi custom -->
-  <script type="module" src="/firebase/firebase-config.js"></script>
-
-  <!-- PI NETWORK SDK -->
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-  <script>
-    if (typeof Pi !== 'undefined') {
-      console.log("Pi SDK loaded, initializing...");
-      Pi.init({ version: "2.0" });
-    } else {
-      console.warn("Pi SDK not available, skipping initialization.");
-    }
-  </script>
-
-  <!-- MAIN GAME SCRIPT -->
-  <script type="module" src="farm/main.js?v=46"></script>
-
-  <!-- FALLBACK ERROR HANDLING -->
-  <script>
-    window.addEventListener('error', (event) => {
-      console.error('Error occurred: ' + event.message, event);
-      const loadingScreen = document.getElementById('loading-screen');
-      const loginScreen = document.getElementById('login-screen');
-      if (loadingScreen && loginScreen) {
-        loadingScreen.classList.remove('active');
-        loginScreen.classList.add('active');
-      }
-    });
-  </script>
-
-  <!-- Toggle Login/Register & Validasi -->
-  <script>
-    function showRegister() {
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('register-form').style.display = 'block';
-      document.getElementById('register-back').style.display = 'block';
-      document.querySelector('#auth-form p').style.display = 'none';
-      document.getElementById('register-error').style.display = 'none';
-      document.getElementById('register-success').style.display = 'none';
-    }
-
-    function showLogin() {
-      document.getElementById('register-form').style.display = 'none';
-      document.getElementById('login-form').style.display = 'block';
-      document.getElementById('register-back').style.display = 'none';
-      document.querySelector('#auth-form p').style.display = 'block';
-      document.getElementById('login-error').style.display = 'none';
-      document.getElementById('login-success').style.display = 'none';
-    }
-
-    function validateEmail(email) {
-      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return re.test(email);
-    }
-
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email-input').value;
-      const password = document.getElementById('password-input').value;
-
-      if (!validateEmail(email)) {
-        document.getElementById('login-error').textContent = 'Invalid email format!';
-        document.getElementById('login-error').style.display = 'block';
-        return;
-      }
-
-      if (window.loginWithEmail) {
-        window.loginWithEmail(email, password, (success, message) => {
-          if (success) {
-            document.getElementById('login-success').textContent = message || 'Login successful!';
-            document.getElementById('login-success').style.display = 'block';
-            setTimeout(() => window.startGame(), 1000);
-          } else {
-            document.getElementById('login-error').textContent = message || 'Login failed!';
-            document.getElementById('login-error').style.display = 'block';
-          }
-        });
-      } else {
-        document.getElementById('login-error').textContent = 'Login function not found!';
-        document.getElementById('login-error').style.display = 'block';
-      }
-    });
-
-    document.getElementById('register-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('register-email-input').value;
-      const password = document.getElementById('register-password-input').value;
-      const confirmPassword = document.getElementById('register-confirm-input').value;
-
-      if (!validateEmail(email)) {
-        document.getElementById('register-error').textContent = 'Invalid email format!';
-        document.getElementById('register-error').style.display = 'block';
-        return;
-      }
-      if (password !== confirmPassword) {
-        document.getElementById('register-error').textContent = 'Passwords do not match!';
-        document.getElementById('register-error').style.display = 'block';
-        return;
-      }
-
-      if (window.registerWithEmail) {
-        window.registerWithEmail(email, password, (success, message) => {
-          if (success) {
-            document.getElementById('register-success').textContent = message || 'Registration successful!';
-            document.getElementById('register-success').style.display = 'block';
-            setTimeout(() => window.startGame(), 1000);
-          } else {
-            document.getElementById('register-error').textContent = message || 'Registration failed!';
-            document.getElementById('register-error').style.display = 'block';
-          }
-        });
-      } else {
-        document.getElementById('register-error').textContent = 'Register function not found!';
-        document.getElementById('register-error').style.display = 'block';
-      }
-    });
-
-    window.startGame = function() {
-      document.getElementById('login-screen').classList.remove('active');
-      document.getElementById('start-screen').classList.add('active');
-      setTimeout(() => {
-        document.getElementById('start-screen').classList.remove('active');
-        document.getElementById('game-screen').classList.add('active');
-      }, 500);
-    };
-
-    document.querySelectorAll('.tab-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        const tab = button.getAttribute('data-tab');
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        document.getElementById(tab).classList.add('active');
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        if (window.switchTab) window.switchTab(tab);
-      });
-    });
-
-    document.querySelectorAll('.shop-tab-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        const tab = button.id;
-        document.getElementById('shop-content').style.display = tab === 'shop-buy-tab' ? 'block' : 'none';
-        document.getElementById('sell-section').style.display = tab === 'shop-sell-tab' ? 'block' : 'none';
-        document.querySelectorAll('.shop-tab-btn').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        if (window.switchTab) window.switchTab('shop');
-      });
-    });
-  </script>
+  <script type="module" src="main.js"></script>
 </body>
 </html>

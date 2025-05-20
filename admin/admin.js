@@ -19,18 +19,25 @@ document.addEventListener('DOMContentLoaded', () => {
         .then((snapshot) => {
           const role = snapshot.val();
           if (role === 'admin') {
+            alert('User logged in as admin: ' + user.email); // Log user login
             // Setup FCM untuk notifikasi
             if ('serviceWorker' in navigator) {
               navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
                 .then((registration) => {
+                  alert('Service Worker registered successfully'); // Log success
                   messaging.useServiceWorker(registration);
                   return messaging.getToken();
-                }).then((token) => {
+                })
+                .then((token) => {
+                  alert('FCM Token: ' + token); // Log token
                   set(ref(database, `adminTokens/${user.uid}`), token);
-                }).catch((err) => {
-                  console.error('FCM Error:', err);
+                })
+                .catch((err) => {
+                  alert('FCM Error: ' + err.message); // Log error detail
                   showUserNotification('Failed to setup notifications.');
                 });
+            } else {
+              alert('Service Worker not supported in this browser'); // Log kalo gak support
             }
             // Lanjut ke dashboard
             console.log('Admin access granted');

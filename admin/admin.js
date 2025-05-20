@@ -43,19 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Setup FCM untuk notifikasi
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('firebase/firebase-messaging-sw.js')
-            .then((registration) => {
-              messaging.useServiceWorker(registration);
-              return messaging.getToken();
-            }).then((token) => {
-              set(ref(database, `adminTokens/${user.uid}`), token);
-            }).catch((err) => {
-              console.error('FCM Error:', err);
-              showUserNotification('Failed to setup notifications.');
-            });
-        }
+    // Setup FCM untuk notifikasi
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
+        .then((registration) => {
+          messaging.useServiceWorker(registration);
+          return messaging.getToken();
+        }).then((token) => {
+          set(ref(database, `adminTokens/${auth.currentUser.uid}`), token); // Pastikan auth.currentUser ada
+        }).catch((err) => {
+          console.error('FCM Error:', err);
+          showUserNotification('Failed to setup notifications.');
+        });
+    }
       }).catch((err) => {
         console.error('Error checking role:', err);
         alert('Error checking permissions. Please login again.');

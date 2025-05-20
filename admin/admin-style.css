@@ -9,20 +9,19 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  box-sizing: border-box; /* Pastikan padding gak nambah lebar */
+  box-sizing: border-box;
 }
 
 #admin-dashboard {
   background: #16213e;
-  padding: 10px; /* Kurangin padding dari 15px jadi 10px */
+  padding: 10px;
   border-radius: 10px;
   border: 2px solid #39FF14;
   box-shadow: 0 0 15px #39FF14, 0 0 30px #39FF14;
-  max-width: 600px; /* Tetep 600px */
-  width: 100%; /* Pastikan 100% dari max-width */
+  max-width: 600px;
+  width: 100%;
   text-align: center;
-  box-sizing: border-box; /* Termasuk border dan padding di lebar */
-  margin: 0 auto; /* Center dengan margin otomatis */
+  box-sizing: border-box;
 }
 
 .neon-title {
@@ -30,6 +29,15 @@ body {
   text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14;
   font-size: 18px;
   margin-bottom: 15px;
+}
+
+#summary {
+  margin-bottom: 15px;
+}
+
+#summary p {
+  margin: 5px 0;
+  font-size: 10px;
 }
 
 .table-container {
@@ -42,7 +50,8 @@ body {
   border-collapse: collapse;
 }
 
-#deposit-list th, #deposit-list td {
+#deposit-list th,
+#deposit-list td {
   border: 1px solid #39FF14;
   padding: 8px;
   text-align: left;
@@ -68,6 +77,7 @@ body {
   font-size: 10px;
   border-radius: 5px;
   box-shadow: 0 0 5px #ff007a;
+  transition: background 0.3s, box-shadow 0.3s;
 }
 
 .game-button:hover {
@@ -76,14 +86,14 @@ body {
 }
 
 #logout-btn {
-  background: #FFFF00;
+  background: #ffff00;
   color: #1a1a2e;
-  box-shadow: 0 0 5px #FFFF00;
+  box-shadow: 0 0 5px #ffff00;
 }
 
 #logout-btn:hover {
-  background: #39FF14;
-  box-shadow: 0 0 10px #39FF14;
+  background: #39ff14;
+  box-shadow: 0 0 10px #39ff14;
 }
 
 #notification {
@@ -92,10 +102,11 @@ body {
   right: 20px;
   background: #ff007a;
   color: #fff;
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: 5px;
   box-shadow: 0 0 5px #ff007a;
   font-size: 10px;
+  z-index: 1000;
 }
 
 .text-limit {

@@ -115,17 +115,18 @@ function copyToClipboard(text, button) {
 // Load data dari JSON
 async function loadData() {
   try {
+    console.log('Fetching data...');
     const [langRes, vegRes] = await Promise.all([fetch('/data/lang.json'), fetch('/data/vegetables.json')]);
     langData = await langRes.json();
     const vegJson = await vegRes.json();
     vegetables = vegJson.vegetables || [];
-    console.log('Data loaded:', { langData, vegetables });
+    console.log('Data loaded successfully:', { langData, vegetables });
   } catch (error) {
     console.error('Error loading data:', error.message);
     showNotification('Error loading game data.');
-    // Fallback data
     langData = { en: { noItems: 'No items available.' }, id: { noItems: 'Tidak ada item tersedia.' } };
     vegetables = [];
+    console.log('Using fallback data:', { langData, vegetables });
   }
 }
 
@@ -163,7 +164,7 @@ function loadPlayerData() {
     claimedToday = data.claimedToday || false;
     if (!data.farmPlots || data.farmPlots.length === 0) {
       farmPlots = Array(plotCount).fill().map(() => ({
-        planted: false, vegetable: null,脩progress: 0, watered: false, currentFrame: 1, countdown: 0, totalCountdown: 0
+        planted: false, vegetable: null, progress: 0, watered: false, currentFrame: 1, countdown: 0, totalCountdown: 0
       }));
     }
     isDataLoaded = true;
@@ -193,7 +194,7 @@ async function savePlayerData() {
       console.error('Error saving player data:', error.message);
       showNotification('Error saving data');
     }
-  }, 500); // Debounce 500ms
+  }, 500);
 }
 
 // Update wallet UI
@@ -871,6 +872,7 @@ function startGame() {
   if (startScreen && gameScreen && exitGameBtn) {
     startScreen.style.display = 'none';
     gameScreen.style.display = 'flex';
+    gameScreen.classList.add('fade-in');
     exitGameBtn.style.display = 'block';
   }
   isAudioPlaying = false;
@@ -883,9 +885,11 @@ function startGame() {
 // Initialize game
 async function initializeGame() {
   try {
+    console.log('Starting initializeGame');
     await loadData();
+    console.log('Data loaded successfully');
     updateUIText();
-    console.log("Game initialized successfully");
+    console.log('UI text updated');
   } catch (error) {
     console.error('Error initializing game:', error.message);
     showNotification('Error initializing game. Please reload.');
@@ -939,6 +943,14 @@ window.loginWithEmail = async (email, password, callback) => {
     loadPlayerData();
     loadUserBalances();
     callback(true, 'Login successful!');
+    // Transisi ke start screen setelah login berhasil
+    const loginScreen = document.getElementById('login-screen');
+    const startScreen = document.getElementById('start-screen');
+    if (loginScreen && startScreen) {
+      loginScreen.classList.remove('active');
+      startScreen.style.display = 'flex';
+      startScreen.classList.add('fade-in');
+    }
   } catch (error) {
     callback(false, 'Login failed: ' + error.message);
   }
@@ -1046,6 +1058,124 @@ document.addEventListener('DOMContentLoaded', () => {
       }).catch(err => console.log('Error fetching role:', err));
     }
   });
+
+  // Transisi loading ke login screen
+  console.log('DOM loaded, starting game initialization');
+  initializeGame().then(() => {
+    console.log('Initialization complete, showing login screen');
+    const loadingScreen = document.getElementById('loading-screen');
+    const loginScreen = document.getElementById('login-screen');
+    if (loadingScreen && loginScreen) {
+      setTimeout(() => {
+        loadingScreen.classList.remove('active');
+        loginScreen.classList.add('active');
+      }, 3000);
+    } else {
+      console.error('Element missing:', { loadingScreen, loginScreen });
+    }
+  }).catch(error => {
+    console.error('Initialization error:', error.message);
+    showNotification('Error initializing game. Please reload.');
+  });
+
+  // Setup login/register handlers
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const loginBtn = document.getElementById('login-btn');
+  const registerBtn = document.getElementById('register-btn');
+  const goToRegister = document.getElementById('go-to-register');
+  const goToLogin = document.getElementById('go-to-login');
+  const loginMessage = document.getElementById('login-message');
+  const registerMessage = document.getElementById('register-message');
+
+  if (goToRegister) {
+    goToRegister.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'block';
+    });
+  }
+
+  if (goToLogin) {
+    goToLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      registerForm.style.display = 'none';
+      loginForm.style.display = 'block';
+    });
+  }
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      loginWithEmail(email, password, (success, message) => {
+        loginMessage.textContent = message;
+        loginMessage.className = 'notification ' + (success ? 'success' : 'error');
+      });
+    });
+  }
+
+  if (registerBtn) {
+    registerBtn.addEventListener('click', () => {
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+      registerWithEmail(email, password, (success, message) => {
+        registerMessage.textContent = message;
+        registerMessage.className = 'notification ' + (success ? 'success' : 'error');
+      });
+    });
+  }
+
+  // Setup start game handler
+  const startText = document.getElementById('start-text');
+  if (startText) {
+    startText.addEventListener('click', startGame);
+  }
+
+  // Setup tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  // Setup shop tab switch
+  const buyTab = document.getElementById('shop-buy-tab');
+  const sellTab = document.getElementById('shop-sell-tab');
+  if (buyTab && sellTab) {
+    buyTab.addEventListener('click', () => {
+      buyTab.classList.add('active');
+      sellTab.classList.remove('active');
+      document.getElementById('shop-content').style.display = 'grid';
+      document.getElementById('sell-section').style.display = 'none';
+      renderShop();
+    });
+    sellTab.addEventListener('click', () => {
+      sellTab.classList.add('active');
+      buyTab.classList.remove('active');
+      document.getElementById('shop-content').style.display = 'none';
+      document.getElementById('sell-section').style.display = 'block';
+      renderSellSection();
+    });
+  }
+
+  // Setup exchange handler
+  const exchangeBtn = document.getElementById('exchange-btn');
+  if (exchangeBtn) {
+    exchangeBtn.addEventListener('click', handleExchange);
+  }
+
+  // Setup daily reward handler
+  const claimRewardBtn = document.getElementById('claim-reward-btn');
+  if (claimRewardBtn) {
+    claimRewardBtn.addEventListener('click', claimDailyReward);
+  }
+
+  // Setup modal close
+  const modalClose = document.querySelector('.modal .close');
+  if (modalClose) {
+    modalClose.addEventListener('click', () => {
+      rewardModal.style.display = 'none';
+    });
+  }
 });
 
 // Simulasi deteksi transaksi (opsional, hapus kalau pake Pi API)

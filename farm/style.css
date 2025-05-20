@@ -126,7 +126,7 @@ input[type="number"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 220px; /* cukup tinggi biar gak ketiban header */
+  padding-top: 220px;
   min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -437,7 +437,7 @@ input[type="range"] {
   justify-content: center;
   align-content: space-around;
   background: #8b4513;
-  padding: 100px 30px 30px 30px; /* Geser ke kanan dengan padding-left: 70px */
+  padding: 100px 30px 30px 30px;
   border-radius: 10px;
   width: 100%;
   max-width: 410px;
@@ -738,11 +738,35 @@ input[type="range"] {
   transition: opacity 0.5s ease-out;
 }
 
+#loading-screen.active {
+  opacity: 1;
+}
+
+#loading-screen:not(.active) {
+  opacity: 0;
+  pointer-events: none;
+}
+
 #loading-screen h1 {
   font-size: 36px;
   color: #ffeb3b;
   text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
   margin-bottom: 20px;
+}
+
+.spinner {
+  border: 4px solid #333;
+  border-top: 4px solid #66ff00;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .loading-animation {
@@ -770,6 +794,12 @@ input[type="range"] {
   justify-content: center;
   align-items: center;
   z-index: 2001;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+#login-screen.active {
+  opacity: 1;
 }
 
 .login-container {
@@ -806,11 +836,24 @@ input[type="range"] {
   font-size: 12px;
 }
 
+#register-username-input {
+  display: block;
+  width: 200px;
+  margin: 10px auto;
+  padding: 8px;
+  background: #444;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
 .login-form button, .register-form button {
   margin-top: 10px;
 }
 
-.login-form #login-error, .login-form #verify-email-msg,
+.login-form #login-error, .login-form #verify-status,
 .register-form #register-error {
   font-size: 10px;
   margin-top: 8px;
@@ -908,7 +951,7 @@ input[type="range"] {
     column-gap: 40px;
     justify-content: center !important;
     align-content: space-around;
-    padding: 80px 20px 20px 80px; /* Sesuaikan padding-left jadi 60px */
+    padding: 80px 20px 20px 80px;
     width: 100%;
     max-width: 450px;
     height: 450px;
@@ -966,7 +1009,7 @@ input[type="range"] {
     column-gap: 30px;
     justify-content: center !important;
     align-content: space-around;
-    padding: 70px 15px 15px 70px; /* Sesuaikan padding-left jadi 50px */
+    padding: 70px 15px 15px 70px;
     width: 100%;
     max-width: 330px;
     height: 330px;
@@ -1016,7 +1059,7 @@ input[type="range"] {
   }
 }
 
-/* === START SCREEN ===*/
+/* ========== PART 13: START SCREEN ========== */
 .start-text {
   font-size: 20px;
   color: #ffeb3b;
@@ -1067,7 +1110,7 @@ input[type="range"] {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* === FINANCE ===*/
+/* ========== PART 14: FINANCE ========== */
 #finance {
   background: #333;
   border-radius: 10px;
@@ -1090,9 +1133,16 @@ input[type="range"] {
 }
 
 #finance p span#farm-coin-balance,
-#finance p span#pi-coin-balance {
+#finance p span#pi-coin-balance,
+#finance p span#referral-earnings {
   color: #66ff00;
   font-weight: bold;
+}
+
+#finance p span#referral-link {
+  color: #ffeb3b;
+  font-weight: bold;
+  word-break: break-all;
 }
 
 #finance h3 {
@@ -1173,7 +1223,7 @@ input[type="range"] {
   line-height: 1.4;
 }
 
-/* === EXCHANGE CENTER ===*/
+/* ========== PART 15: EXCHANGE CENTER ========== */
 .exchange-container {
   background: #333;
   border-radius: 10px;
@@ -1199,7 +1249,7 @@ input[type="range"] {
 
 .exchange-output {
   width: 100%;
-  max-width: 300px; /* batas aman biar ga ngedorong */
+  max-width: 300px;
   margin: 0 auto;
   overflow: hidden;
   text-align: center;
@@ -1262,6 +1312,7 @@ input[type="range"] {
   to { transform: rotate(360deg); }
 }
 
+/* ========== PART 16: GENERAL STYLES ========== */
 .tab-content {
   display: none;
 }
@@ -1270,7 +1321,6 @@ input[type="range"] {
   display: block;
 }
 
-/* === GENERAL STYLES === */
 .tab-buttons {
   margin: 10px 0;
 }
@@ -1305,61 +1355,7 @@ th {
   background-color: #f2f2f2;
 }
 
-/* === ADMIN PANELS === */
-#admin-panel {
-  background: #333;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  max-width: 600px;
-  margin: 15px auto;
-  color: #fff; /* Teks putih biar kontras */
-}
-
-#deposit-list {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-#deposit-list th, #deposit-list td {
-  border: 1px solid #fff; /* Border putih */
-  padding: 8px;
-  font-size: 12px;
-  color: #fff; /* Teks putih */
-}
-
-#deposit-list th {
-  background: #4caf50; /* Hijau muda */
-  color: #000; /* Teks hitam di header */
-}
-
-#deposit-list td button {
-  margin: 0 5px;
-  padding: 4px 8px;
-  font-size: 10px;
-  background: #00ff00;
-  border: 2px solid #ffff00;
-  color: #000;
-  border-radius: 3px;
-  cursor: pointer;
-  font-family: 'Press Start 2P', cursive;
-}
-
-#deposit-list td button:hover {
-  background: #00cc00;
-}
-
-/* Atur lebar kolom biar seimbang */
-#deposit-list th:nth-child(1), #deposit-list td:nth-child(1) { width: 20%; } /* Email */
-#deposit-list th:nth-child(2), #deposit-list td:nth-child(2) { width: 10%; } /* Amount */
-#deposit-list th:nth-child(3), #deposit-list td:nth-child(3) { width: 15%; } /* Memo */
-#deposit-list th:nth-child(4), #deposit-list td:nth-child(4) { width: 20%; } /* Time */
-#deposit-list th:nth-child(5), #deposit-list td:nth-child(5) { width: 10%; } /* Status */
-#deposit-list th:nth-child(6), #deposit-list td:nth-child(6) { width: 10%; } /* Time Left */
-#deposit-list th:nth-child(7), #deposit-list td:nth-child(7) { width: 15%; } /* Action */
-
-/* === POP UP STYLE === */
+/* ========== PART 17: POP UP STYLE ========== */
 .popup {
   position: fixed;
   top: 0;
@@ -1469,5 +1465,5 @@ th {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 5000; /* Di bawah pop-up */
+  z-index: 5000;
 }

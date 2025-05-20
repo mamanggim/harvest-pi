@@ -1,12 +1,24 @@
-import { 
-  auth, 
-  database, 
-  messaging, 
-  ref, 
-  onValue, 
-  set, 
-  get 
-} from '../firebase/firebase-config.js';
+import { auth, database, messaging, ref, onValue, set, get } from '../firebase/firebase-config.js';
+
+// Pastikan user udah login sebelum setup FCM
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
+        .then((registration) => {
+          messaging.useServiceWorker(registration);
+          return messaging.getToken();
+        }).then((token) => {
+          set(ref(database, `adminTokens/${user.uid}`), token);
+        }).catch((err) => {
+          console.error('FCM Error:', err);
+          showUserNotification('Failed to setup notifications.');
+        });
+    }
+  } else {
+    console.log('No user logged in');
+  }
+});
 
 // Fungsi encode email
 function encodeEmail(email) {

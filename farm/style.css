@@ -1,5 +1,4 @@
-/* ========== PART 1: RESET & GLOBAL STYLES ========== */
-
+/* ========== RESET & GLOBAL STYLES ========== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -20,6 +19,7 @@ body {
   overflow-x: hidden;
 }
 
+/* Tombol umum */
 button {
   background: #4caf50;
   color: #fff;
@@ -28,6 +28,7 @@ button {
   cursor: pointer;
   font-size: 12px;
   border-radius: 8px;
+  font-family: 'Press Start 2P', cursive;
   transition: all 0.3s;
 }
 
@@ -35,16 +36,214 @@ button:hover {
   background: #66bb6a;
 }
 
+button:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+/* Input umum */
 input[type="range"],
-input[type="number"] {
+input[type="number"],
+select {
   border-radius: 6px;
   border: 2px solid #fff;
   padding: 6px;
   font-size: 12px;
+  background: #444;
+  color: #fff;
+  font-family: 'Press Start 2P', cursive;
 }
 
-/* ========== PART 2: GAME HEADER: JUDUL, TAB, WALLET ========== */
+/* Neon theme */
+.neon-text {
+  color: #39FF14;
+  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14;
+}
 
+.btn-neon {
+  background: #39FF14;
+  color: #1a1a2e;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 5px #39FF14;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  border-radius: 5px;
+}
+
+.btn-neon:hover {
+  background: #CCFF00;
+  box-shadow: 0 0 10px #CCFF00;
+}
+
+/* ========== LOADING & LOGIN SCREEN ========== */
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+}
+
+#loading-screen h1 {
+  font-size: 36px;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
+  margin-bottom: 20px;
+}
+
+.spinner {
+  border: 4px solid #1b263b;
+  border-top: 4px solid #39FF14;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#login-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2001;
+}
+
+.form-container {
+  border: 2px solid #39FF14;
+  box-shadow: 0 0 15px #39FF14, 0 0 30px #39FF14;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  background: #16213e;
+  max-width: 400px;
+  width: 100%;
+}
+
+.input-field {
+  background: #1b263b;
+  border: 1px solid #39FF14;
+  color: #e0e0e0;
+  padding: 8px;
+  margin: 5px 0;
+  width: 100%;
+  max-width: 300px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+.login-form, .register-form {
+  margin: 15px 0;
+}
+
+.login-form input, .register-form input {
+  display: block;
+  width: 200px;
+  margin: 10px auto;
+}
+
+.notification {
+  color: #39FF14;
+  margin-top: 10px;
+  font-size: 12px;
+  text-shadow: 0 0 3px #39FF14;
+}
+
+.notification.error {
+  color: red;
+  text-shadow: 0 0 3px red;
+}
+
+.notification.success {
+  color: #00FF00;
+  text-shadow: 0 0 3px #00FF00;
+}
+
+.link-text {
+  color: #e0e0e0;
+  font-size: 10px;
+}
+
+.link-neon, .policy-links a {
+  color: #FFFF00;
+  text-decoration: none;
+  text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14;
+}
+
+.link-neon:hover, .policy-links a:hover {
+  color: #39FF14;
+  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
+}
+
+/* ========== START SCREEN ========== */
+#start-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.0);
+}
+
+#start-screen h1#title {
+  font-size: 38px;
+  color: #66ff00;
+  text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
+  animation: pulse 2s infinite ease-in-out;
+  margin: 0 0 20px;
+}
+
+.start-text {
+  font-size: 20px;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
+  animation: blink 1s infinite;
+  cursor: pointer;
+  margin-top: 15px;
+  padding: 15px;
+  user-select: none;
+}
+
+.start-text:hover {
+  background: #66bb6a;
+  transform: scale(1.05);
+}
+
+.start-text:active {
+  transform: scale(0.95);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ========== GAME HEADER: JUDUL, TAB, WALLET ========== */
 #game-header {
   position: fixed;
   top: 0;
@@ -54,16 +253,15 @@ input[type="number"] {
   backdrop-filter: blur(6px);
   z-index: 1000;
   padding: 10px 0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 #game-title {
   font-size: 24px;
   color: #66ff00;
-  margin-bottom: 0px;
   text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
   animation: pulse 2s infinite ease-in-out;
-  margin: 0 0 20px;
+  margin-bottom: 10px;
 }
 
 .tabs {
@@ -72,7 +270,6 @@ input[type="number"] {
   justify-content: center;
   gap: 8px;
   padding: 10px;
-  margin-bottom: 8px;
 }
 
 .tab-btn {
@@ -90,12 +287,13 @@ input[type="number"] {
 }
 
 #wallet {
-  margin: 5px auto 0;
+  margin: 5px auto;
   font-size: 13px;
   background: rgba(0, 0, 0, 0.4);
   padding: 8px 12px;
   border-radius: 8px;
   width: fit-content;
+  max-width: 90%;
 }
 
 #level {
@@ -120,13 +318,12 @@ input[type="number"] {
   transition: width 0.3s;
 }
 
-/* ========== PART 3: GAME SCREEN & TAB KONTEN ========== */
-
+/* ========== GAME SCREEN & TAB CONTENT ========== */
 #game-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 220px; /* cukup tinggi biar gak ketiban header */
+  padding-top: 220px;
   min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -134,11 +331,6 @@ input[type="number"] {
 
 #game-screen.fade-in {
   animation: fadeIn 0.6s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .tab-content {
@@ -152,10 +344,16 @@ input[type="number"] {
 
 .tab-content.active {
   display: block;
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
 }
 
-/* ========== PART 4: TOMBOL, MODAL & NOTIFIKASI ========== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
+/* ========== TOMBOL & MODAL ========== */
 .corner-buttons {
   position: fixed;
   top: 10px;
@@ -170,48 +368,14 @@ input[type="number"] {
   color: #fff;
   border: 2px solid #fff;
   padding: 8px 12px;
-  cursor: pointer;
   font-size: 14px;
   border-radius: 8px;
-  transition: all 0.3s;
 }
 
 #lang-toggle:hover, #settings-btn:hover, #game-lang-toggle:hover,
 #game-settings-btn:hover, #exit-game-btn:hover {
   background: #555;
   border-color: #ffeb3b;
-}
-
-button {
-  background: #4caf50;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 12px;
-  border-radius: 8px;
-  transition: all 0.3s;
-}
-
-button:hover {
-  background: #66bb6a;
-}
-
-#notification {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: #fff;
-  padding: 10px 20px;
-  border: 2px solid #fff;
-  border-radius: 8px;
-  display: none;
-  font-size: 14px;
-  min-width: 200px;
-  text-align: center;
-  z-index: 1000;
 }
 
 .modal {
@@ -262,54 +426,9 @@ input[type="range"] {
   width: 100%;
 }
 
-/* ========== PART 5: WALLET, XP BAR & DAILY REWARD ========== */
-
-#wallet {
-  margin: 10px auto;
-  font-size: 14px;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 10px;
-  border-radius: 8px;
-  width: fit-content;
-  max-width: 90%;
-}
-
-#level {
-  margin-top: 5px;
-  font-size: 12px;
-}
-
-#xp-bar {
-  width: 150px;
-  height: 8px;
-  background: #333;
-  border: 2px solid #fff;
-  border-radius: 5px;
-  margin: 5px auto;
-  overflow: hidden;
-}
-
-#xp-fill {
-  width: 0%;
-  height: 100%;
-  background: #4caf50;
-  transition: width 0.3s;
-}
-
+/* ========== DAILY REWARD BUTTON ========== */
 #claim-reward-btn {
-  background: #4caf50;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 8px;
   margin-top: 20px;
-}
-
-#claim-reward-btn:disabled {
-  background: #666;
-  cursor: not-allowed;
 }
 
 #claim-reward-btn.claimed {
@@ -317,9 +436,29 @@ input[type="range"] {
   opacity: 0.6;
 }
 
-/* ========== PART 6: SHOP, INVENTORY, SELL SECTION ========== */
+/* ========== SHOP, INVENTORY, SELL SECTION ========== */
+.shop-switch {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
 
-#shop-content {
+.shop-tab-btn {
+  padding: 8px 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  background-color: #ccc;
+  cursor: pointer;
+}
+
+.shop-tab-btn.active {
+  background-color: #4CAF50;
+  color: #fff;
+}
+
+#shop-content, #inventory-content, #sell-content {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -328,7 +467,6 @@ input[type="range"] {
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
-  box-sizing: border-box;
 }
 
 .shop-item, .inventory-item, .sell-item {
@@ -358,42 +496,18 @@ input[type="range"] {
   margin: 5px 0;
 }
 
-.shop-switch {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.shop-tab-btn {
-  padding: 8px 16px;
-  font-weight: bold;
-  border: none;
-  border-radius: 6px;
-  background-color: #ccc;
-  cursor: pointer;
-}
-
-.shop-tab-btn.active {
-  background-color: #4CAF50;
-  color: #fff;
-}
-
 .sell-to-shop-btn {
   margin-top: 16px;
   padding: 10px 20px;
-  font-weight: bold;
   background-color: #4CAF50;
   color: #fff;
   border: none;
   border-radius: 8px;
-  cursor: pointer;
   width: 100%;
   max-width: 300px;
   margin-left: auto;
   margin-right: auto;
   display: block;
-  transition: background 0.3s;
 }
 
 .sell-to-shop-btn:hover {
@@ -407,27 +521,7 @@ input[type="range"] {
   border-radius: 10px;
 }
 
-#inventory-content, #sell-content {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  padding: 0 15px 15px 15px;
-  width: 100%;
-  max-width: 700px;
-  margin: 0px auto;
-  box-sizing: border-box;
-}
-
-/* Responsif untuk layar kecil */
-@media (max-width: 480px) {
-  .shop-item, .inventory-item, .sell-item {
-    width: calc(50% - 15px);
-  }
-}
-
-/* ========== PART 7: FARM AREA & PLOT STYLE ========== */
-
+/* ========== FARM AREA & PLOT STYLE ========== */
 #farm-area {
   display: grid;
   grid-template-columns: repeat(2, 160px);
@@ -437,7 +531,7 @@ input[type="range"] {
   justify-content: center;
   align-content: space-around;
   background: #8b4513;
-  padding: 100px 30px 30px 30px; /* Geser ke kanan dengan padding-left: 70px */
+  padding: 100px 30px 30px 30px;
   border-radius: 10px;
   width: 100%;
   max-width: 410px;
@@ -454,7 +548,6 @@ input[type="range"] {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: transform 0.1s;
   position: relative;
   width: 160px;
   height: 16px;
@@ -516,79 +609,7 @@ input[type="range"] {
   width: 100%;
 }
 
-/* ========== PART 8: REWARD BUTTON, MODAL, DAN SETTING VOLUME ========== */
-
-#claim-reward-btn {
-  background: #4caf50;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 8px;
-  margin-top: 20px;
-}
-
-#claim-reward-btn:disabled {
-  background: #666;
-  cursor: not-allowed;
-}
-
-#claim-reward-btn.claimed {
-  background: #888;
-  opacity: 0.6;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 9999;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-  background: #333;
-  margin: 20% auto;
-  padding: 20px;
-  border: 2px solid #fff;
-  border-radius: 10px;
-  width: 300px;
-  color: #fff;
-}
-
-.close {
-  color: #fff;
-  float: right;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-.close:hover {
-  color: #ffeb3b;
-}
-
-label {
-  display: block;
-  margin: 10px 0 5px;
-  font-size: 14px;
-}
-
-input[type="range"] {
-  width: 100%;
-}
-
-#settings-modal button {
-  margin-top: 10px;
-  display: block;
-  width: 100%;
-}
-
-/* ========== PART 9: NOTIFIKASI & TRANSAKSI ========== */
-
+/* ========== NOTIFIKASI & TRANSAKSI ========== */
 #notification {
   position: fixed;
   bottom: 20px;
@@ -626,8 +647,7 @@ input[type="range"] {
   100% { opacity: 0; transform: translateY(-50px); }
 }
 
-/* ========== PART 10: ANIMASI FLY (PANEN & AIR) ========== */
-
+/* ========== ANIMASI FLY (PANEN & AIR) ========== */
 .plant-fly {
   position: absolute;
   animation: fly-up 0.8s ease-out forwards;
@@ -666,408 +686,16 @@ input[type="range"] {
 }
 
 @keyframes fly-up {
-  0% {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) translateY(-50px);
-    opacity: 0;
-  }
+  0% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-50px); opacity: 0; }
 }
 
 @keyframes fly-down {
-  0% {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) translateY(50px);
-    opacity: 0;
-  }
+  0% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(50px); opacity: 0; }
 }
 
-/* ========== PART 11: MODAL & LOADING ========== */
-
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 9999;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-  background: #333;
-  margin: 20% auto;
-  padding: 20px;
-  border: 2px solid #fff;
-  border-radius: 10px;
-  width: 300px;
-  color: #fff;
-}
-
-.close {
-  color: #fff;
-  float: right;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-.close:hover {
-  color: #ffeb3b;
-}
-
-/* Loading Screen */
-#loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-  opacity: 1;
-  transition: opacity 0.5s ease-out;
-}
-
-#loading-screen h1 {
-  font-size: 36px;
-  color: #ffeb3b;
-  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
-  margin-bottom: 20px;
-}
-
-.loading-animation {
-  font-size: 24px;
-  color: #fff;
-  animation: dots 1.5s infinite;
-}
-
-@keyframes dots {
-  0% { content: 'Loading'; }
-  33% { content: 'Loading.'; }
-  66% { content: 'Loading..'; }
-  100% { content: 'Loading...'; }
-}
-
-/* Login Screen */
-#login-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2001;
-}
-
-.login-container {
-  background: #333;
-  padding: 20px;
-  border: 2px solid #fff;
-  border-radius: 10px;
-  text-align: center;
-  color: #fff;
-}
-
-.login-container h1 {
-  font-size: 32px;
-  margin-bottom: 20px;
-  color: #66ff00;
-  text-shadow: 0 0 10px #66ff00;
-}
-
-/* Styling untuk form login dan register */
-.login-form, .register-form {
-  margin: 15px 0;
-}
-
-.login-form input, .register-form input {
-  display: block;
-  width: 200px;
-  margin: 10px auto;
-  padding: 8px;
-  background: #444;
-  color: #fff;
-  border: 2px solid #fff;
-  border-radius: 6px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
-}
-
-.login-form button, .register-form button {
-  margin-top: 10px;
-}
-
-.login-form #login-error, .login-form #verify-email-msg,
-.register-form #register-error {
-  font-size: 10px;
-  margin-top: 8px;
-}
-
-.policy-links {
-  margin-top: 15px;
-  font-size: 12px;
-}
-
-.policy-links a {
-  color: #ffeb3b;
-  text-decoration: none;
-}
-
-.policy-links a:hover {
-  text-decoration: underline;
-}
-
-/* ========== PART 12: RESPONSIVE (MAX WIDTH 600px) ========== */
-@media (max-width: 600px) {
-  h1 {
-    font-size: 24px;
-  }
-
-  .start-text {
-    font-size: 20px;
-  }
-
-  #wallet {
-    font-size: 12px;
-    padding: 8px;
-  }
-
-  #level {
-    font-size: 10px;
-  }
-
-  #xp-bar {
-    width: 120px;
-    height: 6px;
-  }
-
-  .tabs {
-    gap: 5px;
-  }
-
-  .tab-btn {
-    padding: 6px 12px;
-    font-size: 10px;
-  }
-
-  .shop-item, .inventory-item, .sell-item {
-    width: 100px;
-    padding: 8px;
-  }
-
-  .shop-item-img {
-    width: 50px;
-    height: 50px;
-  }
-
-  .shop-item h3, .inventory-item h3, .sell-item h3 {
-    font-size: 10px;
-  }
-
-  .shop-item p, .inventory-item p, .sell-item p {
-    font-size: 9px;
-  }
-
-  button {
-    padding: 6px 10px;
-    font-size: 10px;
-  }
-
-  #exchange-amount {
-    width: 120px;
-  }
-
-  .achievement {
-    width: 200px;
-  }
-
-  #notification {
-    font-size: 12px;
-    min-width: 150px;
-  }
-}
-
-@media (max-width: 480px) {
-  #farm-area {
-    grid-template-columns: repeat(2, 170px);
-    grid-template-rows: repeat(2, 17px);
-    row-gap: 40px;
-    column-gap: 40px;
-    justify-content: center !important;
-    align-content: space-around;
-    padding: 80px 20px 20px 80px; /* Sesuaikan padding-left jadi 60px */
-    width: 100%;
-    max-width: 450px;
-    height: 450px;
-    margin: 0 auto;
-  }
-
-  .plot {
-    width: 100px;
-    height: 10px;
-  }
-
-  .plot-content {
-    height: 30px;
-    top: -26px;
-  }
-
-  .plant-img {
-    width: 100px;
-    max-height: 100px;
-  }
-
-  .countdown-bar {
-    top: 8px;
-    width: 60px;
-    height: 5px;
-  }
-
-  .plot-status {
-    font-size: 6px;
-    top: 16px;
-  }
-
-  #claim-reward-btn {
-    margin-top: 10px;
-  }
-
-  .modal-content {
-    margin: 30% auto;
-  }
-
-  #loading-screen h1 {
-    font-size: 20px;
-  }
-
-  .loading-animation {
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 360px) {
-  #farm-area {
-    grid-template-columns: repeat(2, 130px);
-    grid-template-rows: repeat(2, 13px);
-    row-gap: 30px;
-    column-gap: 30px;
-    justify-content: center !important;
-    align-content: space-around;
-    padding: 70px 15px 15px 70px; /* Sesuaikan padding-left jadi 50px */
-    width: 100%;
-    max-width: 330px;
-    height: 330px;
-    margin: 0 auto;
-  }
-
-  .plot {
-    width: 80px;
-    height: 8px;
-  }
-
-  .plot-content {
-    height: 30px;
-    top: -26px;
-  }
-
-  .plant-img {
-    width: 80px;
-    max-height: 80px;
-  }
-
-  .countdown-bar {
-    top: 8px;
-    width: 50px;
-    height: 5px;
-  }
-
-  .plot-status {
-    font-size: 6px;
-    top: 16px;
-  }
-
-  #claim-reward-btn {
-    margin-top: 10px;
-  }
-
-  .modal-content {
-    margin: 35% auto;
-  }
-
-  #loading-screen h1 {
-    font-size: 18px;
-  }
-
-  .loading-animation {
-    font-size: 14px;
-  }
-}
-
-/* === START SCREEN ===*/
-.start-text {
-  font-size: 20px;
-  color: #ffeb3b;
-  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
-  animation: blink 1s infinite;
-  cursor: pointer;
-  margin-top: 15px;
-  padding: 15px;
-  user-select: none;
-}
-
-.start-text:hover {
-  background: #66bb6a;
-  transform: scale(1.05);
-}
-
-.start-text:active {
-  transform: scale(0.95);
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-#start-screen {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  background: rgba(0,0,0,0.0);
-  text-align: center;
-}
-
-#start-screen h1#title {
-  font-size: 38px;
-  color: #66ff00;
-  text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
-  animation: pulse 2s infinite ease-in-out;
-  margin: 0 0 20px;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.85; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* === FINANCE ===*/
+/* ========== FINANCE TAB ========== */
 #finance {
   background: #333;
   border-radius: 10px;
@@ -1109,55 +737,19 @@ input[type="range"] {
 #finance input[type="number"]#deposit-amount {
   width: 150px;
   margin: 10px 0;
-  padding: 8px;
-  background: #444;
-  color: #fff;
-  border: 2px solid #fff;
-  border-radius: 6px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
 }
 
 #finance button#real-deposit-btn {
-  background: #4caf50;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 16px;
-  font-size: 12px;
-  border-radius: 8px;
-  cursor: pointer;
   margin-top: 10px;
-  transition: all 0.3s;
-}
-
-#finance button#real-deposit-btn:hover {
-  background: #66bb6a;
-}
-
-#finance button#real-deposit-btn:disabled {
-  background: #666;
-  cursor: not-allowed;
 }
 
 #finance button#withdraw-btn {
   background: #f44336;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 16px;
-  font-size: 12px;
-  border-radius: 8px;
-  cursor: pointer;
   margin-top: 10px;
-  transition: all 0.3s;
 }
 
 #finance button#withdraw-btn:hover {
   background: #ef5350;
-}
-
-#finance button#withdraw-btn:disabled {
-  background: #666;
-  cursor: not-allowed;
 }
 
 #finance .deposit-message {
@@ -1173,7 +765,7 @@ input[type="range"] {
   line-height: 1.4;
 }
 
-/* === EXCHANGE CENTER ===*/
+/* ========== EXCHANGE TAB ========== */
 .exchange-container {
   background: #333;
   border-radius: 10px;
@@ -1197,14 +789,6 @@ input[type="range"] {
   margin-bottom: 10px;
 }
 
-.exchange-output {
-  width: 100%;
-  max-width: 300px; /* batas aman biar ga ngedorong */
-  margin: 0 auto;
-  overflow: hidden;
-  text-align: center;
-}
-
 .exchange-result {
   display: inline-block;
   max-width: 100%;
@@ -1219,25 +803,10 @@ input[type="range"] {
 .exchange-section input, .exchange-section select {
   width: 150px;
   margin: 10px 0;
-  padding: 8px;
-  background: #444;
-  color: #fff;
-  border: 2px solid #fff;
-  border-radius: 6px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
 }
 
 #exchange-btn {
-  background: #4caf50;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 16px;
-  font-size: 12px;
-  border-radius: 8px;
-  cursor: pointer;
   margin-top: 10px;
-  transition: all 0.3s;
 }
 
 #exchange-loading {
@@ -1248,64 +817,7 @@ input[type="range"] {
   color: #555;
 }
 
-.loader {
-  margin: 10px auto;
-  width: 40px;
-  height: 40px;
-  border: 5px solid #ccc;
-  border-top: 5px solid #2ecc71;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-/* === GENERAL STYLES === */
-.tab-buttons {
-  margin: 10px 0;
-}
-
-.tab-button {
-  padding: 10px 20px;
-  margin-right: 5px;
-  cursor: pointer;
-}
-
-.tab-content {
-  display: none;
-  padding: 20px;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-th {
-  background-color: #f2f2f2;
-}
-
-/* === ADMIN PANELS === */
+/* ========== ADMIN PANEL ========== */
 #admin-panel {
   background: #333;
   border-radius: 10px;
@@ -1313,7 +825,7 @@ th {
   text-align: center;
   max-width: 600px;
   margin: 15px auto;
-  color: #fff; /* Teks putih biar kontras */
+  color: #fff;
 }
 
 #deposit-list {
@@ -1323,15 +835,15 @@ th {
 }
 
 #deposit-list th, #deposit-list td {
-  border: 1px solid #fff; /* Border putih */
+  border: 1px solid #fff;
   padding: 8px;
   font-size: 12px;
-  color: #fff; /* Teks putih */
+  color: #fff;
 }
 
 #deposit-list th {
-  background: #4caf50; /* Hijau muda */
-  color: #000; /* Teks hitam di header */
+  background: #4caf50;
+  color: #000;
 }
 
 #deposit-list td button {
@@ -1342,24 +854,21 @@ th {
   border: 2px solid #ffff00;
   color: #000;
   border-radius: 3px;
-  cursor: pointer;
-  font-family: 'Press Start 2P', cursive;
 }
 
 #deposit-list td button:hover {
   background: #00cc00;
 }
 
-/* Atur lebar kolom biar seimbang */
-#deposit-list th:nth-child(1), #deposit-list td:nth-child(1) { width: 20%; } /* Email */
-#deposit-list th:nth-child(2), #deposit-list td:nth-child(2) { width: 10%; } /* Amount */
-#deposit-list th:nth-child(3), #deposit-list td:nth-child(3) { width: 15%; } /* Memo */
-#deposit-list th:nth-child(4), #deposit-list td:nth-child(4) { width: 20%; } /* Time */
-#deposit-list th:nth-child(5), #deposit-list td:nth-child(5) { width: 10%; } /* Status */
-#deposit-list th:nth-child(6), #deposit-list td:nth-child(6) { width: 10%; } /* Time Left */
-#deposit-list th:nth-child(7), #deposit-list td:nth-child(7) { width: 15%; } /* Action */
+#deposit-list th:nth-child(1), #deposit-list td:nth-child(1) { width: 20%; }
+#deposit-list th:nth-child(2), #deposit-list td:nth-child(2) { width: 10%; }
+#deposit-list th:nth-child(3), #deposit-list td:nth-child(3) { width: 15%; }
+#deposit-list th:nth-child(4), #deposit-list td:nth-child(4) { width: 20%; }
+#deposit-list th:nth-child(5), #deposit-list td:nth-child(5) { width: 10%; }
+#deposit-list th:nth-child(6), #deposit-list td:nth-child(6) { width: 10%; }
+#deposit-list th:nth-child(7), #deposit-list td:nth-child(7) { width: 15%; }
 
-/* === POP UP STYLE === */
+/* ========== POP-UP STYLE ========== */
 .popup {
   position: fixed;
   top: 0;
@@ -1402,17 +911,6 @@ th {
   font-size: 10px;
 }
 
-/* Neon Effect untuk Judul */
-.neon-title {
-  color: #00ff00;
-  text-shadow: 
-    0 0 5px #00ff00,
-    0 0 10px #00ff00,
-    0 0 20px #00ff00;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
-}
-
 .text-limit {
   max-width: 150px;
   white-space: nowrap;
@@ -1422,16 +920,13 @@ th {
   vertical-align: middle;
 }
 
-/* Styling tombol sesuai tema game */
 .game-button {
   background: #00ff00;
   border: 2px solid #ffff00;
   color: #000;
   padding: 5px 10px;
   border-radius: 3px;
-  cursor: pointer;
   margin: 5px;
-  font-family: 'Press Start 2P', cursive;
   font-size: 10px;
 }
 
@@ -1439,16 +934,13 @@ th {
   background: #00cc00;
 }
 
-/* Styling tombol copy */
 .copy-button {
   background: #00ff00;
   border: 2px solid #ffff00;
   color: #000;
   padding: 2px 6px;
   border-radius: 3px;
-  cursor: pointer;
   margin-left: 5px;
-  font-family: 'Press Start 2P', cursive;
   font-size: 8px;
 }
 
@@ -1456,148 +948,89 @@ th {
   background: #00cc00;
 }
 
-/* Tambahan untuk loading screen biar gak konflik */
-#loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 5000; /* Di bawah pop-up */
+/* ========== RESPONSIVE STYLES ========== */
+@media (max-width: 600px) {
+  h1 { font-size: 24px; }
+
+  .start-text { font-size: 20px; }
+
+  #wallet { font-size: 12px; padding: 8px; }
+
+  #level { font-size: 10px; }
+
+  #xp-bar { width: 120px; height: 6px; }
+
+  .tabs { gap: 5px; }
+
+  .tab-btn { padding: 6px 12px; font-size: 10px; }
+
+  .shop-item, .inventory-item, .sell-item { width: calc(50% - 15px); padding: 8px; }
+
+  .shop-item-img { width: 50px; height: 50px; }
+
+  .shop-item h3, .inventory-item h3, .sell-item h3 { font-size: 10px; }
+
+  .shop-item p, .inventory-item p, .sell-item p { font-size: 9px; }
+
+  button { padding: 6px 10px; font-size: 10px; }
+
+  #exchange-amount { width: 120px; }
+
+  #notification { font-size: 12px; min-width: 150px; }
 }
 
-/* Neon Theme */
-.neon-text {
-  color: #39FF14;
-  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14;
+@media (max-width: 480px) {
+  #farm-area {
+    grid-template-columns: repeat(2, 100px);
+    grid-template-rows: repeat(2, 10px);
+    row-gap: 40px;
+    column-gap: 40px;
+    padding: 80px 20px 20px 80px;
+    max-width: 350px;
+    height: 350px;
+  }
+
+  .plot { width: 100px; height: 10px; }
+
+  .plot-content { height: 30px; top: -26px; }
+
+  .plant-img { width: 100px; max-height: 100px; }
+
+  .countdown-bar { top: 8px; width: 60px; height: 5px; }
+
+  .plot-status { font-size: 6px; top: 16px; }
+
+  #claim-reward-btn { margin-top: 10px; }
+
+  .modal-content { margin: 30% auto; }
+
+  #loading-screen h1 { font-size: 20px; }
+
+  .spinner { width: 30px; height: 30px; }
 }
 
-.form-container {
-  border: 2px solid #39FF14;
-  box-shadow: 0 0 15px #39FF14, 0 0 30px #39FF14;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  background: #16213e;
-  max-width: 400px;
-  width: 100%;
-}
+@media (max-width: 360px) {
+  #farm-area {
+    grid-template-columns: repeat(2, 80px);
+    grid-template-rows: repeat(2, 8px);
+    row-gap: 30px;
+    column-gap: 30px;
+    padding: 70px 15px 15px 70px;
+    max-width: 270px;
+    height: 270px;
+  }
 
-.input-field {
-  background: #1b263b;
-  border: 1px solid #39FF14;
-  color: #e0e0e0;
-  padding: 8px;
-  margin: 5px 0;
-  width: 100%;
-  max-width: 300px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
-}
+  .plot { width: 80px; height: 8px; }
 
-.btn-neon {
-  background: #39FF14;
-  color: #1a1a2e;
-  padding: 8px 16px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 0 5px #39FF14;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
-  border-radius: 5px;
-}
+  .plot-content { height: 30px; top: -26px; }
 
-.btn-neon:hover {
-  background: #CCFF00;
-  box-shadow: 0 0 10px #CCFF00;
-}
+  .plant-img { width: 80px; max-height: 80px; }
 
-.link-neon {
-  color: #FFFF00;
-  text-decoration: none;
-  text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14;
-}
+  .countdown-bar { top: 8px; width: 50px; height: 5px; }
 
-.link-neon:hover {
-  color: #39FF14;
-  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
-}
+  .plot-status { font-size: 6px; top: 16px; }
 
-.policy-links a {
-  color: #FFFF00;
-  text-decoration: none;
-  text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14;
-}
+  .modal-content { margin: 35% auto; }
 
-.policy-links a:hover {
-  color: #39FF14;
-  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
-}
-
-.link-text {
-  color: #e0e0e0;
-  font-size: 10px;
-}
-
-.notification {
-  color: #39FF14;
-  margin-top: 10px;
-  font-size: 12px;
-  text-shadow: 0 0 3px #39FF14;
-}
-
-.error {
-  color: red;
-  text-shadow: 0 0 3px red;
-}
-
-.success {
-  color: #00FF00;
-  text-shadow: 0 0 3px #00FF00;
-}
-
-/* Spinner Loading */
-.spinner {
-  border: 4px solid #1b263b;
-  border-top: 4px solid #39FF14;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 20px auto;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Transisi Smooth */
-.screen {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.screen.active {
-  opacity: 1;
-  z-index: 10;
-}
-
-.tab-content {
-  display: none;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.tab-content.active {
-  display: block;
-  opacity: 1;
+  #loading-screen h1 { font-size: 18px; }
 }

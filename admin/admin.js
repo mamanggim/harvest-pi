@@ -3,12 +3,12 @@ import { auth, database, messaging, ref, onValue, set, get } from '../firebase/f
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false; // Flag buat tandain logout
-
-  // Cek apakah user adalah admin
   let isAdmin = false;
+
+  // Cek auth sekali aja
   auth.onAuthStateChanged((user) => {
     if (user) {
-      // Setup FCM untuk notifikasi (cuma sekali di sini)
+      // Setup FCM untuk notifikasi
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
           .then((registration) => {
@@ -23,20 +23,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Cek role admin
-      get(ref(database, `players/${encodeEmail(user.email)}/role`)).then((snapshot) => {
-        isAdmin = snapshot.val() === 'admin';
-        if (!isAdmin) {
-          alert('Access denied. Admins only.');
-          window.location.href = '../index.html';
-          return;
-        }
-      }).catch((err) => {
-        console.error('Error checking role:', err);
-        alert('Error checking permissions. Please login again.');
-        window.location.href = '../index.html';
-      });
-    } else if (!isLoggingOut) { // Hanya alert kalau bukan logout intentional
-      alert('Please login first.');
+      get(ref(database, `players/${encodeEmail(user.email)}/role`))
+        .then((snapshot) => {
+          isAdmin = snapshot.val() === 'admin';
+          if (!isAdmin) {
+            showUserNotification('Access denied. Admins only.');
+            auth.signOut().then(() => {
+              window.location.href = '../index.html';
+            });
+            return;
+          }
+          // Kalau admin, lanjutkan ke dashboard
+          console.log('Admin access granted');
+        })
+        .catch((err) => {
+          console.error('Error checking role:', err);
+          showUserNotification('Error checking permissions. Please login again.');
+          auth.signOut().then(() => {
+            window.location.href = '../index.html';
+          });
+        });
+    } else if (!isLoggingOut) {
+      showUserNotification('Please login first.');
       window.location.href = '../index.html';
     }
   });
@@ -45,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      isLoggingOut = true; // Set flag
+      isLoggingOut = true;
       auth.signOut().then(() => {
         window.location.href = '../index.html';
       }).catch((err) => {
@@ -72,13 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let id in transactions) {
           const t = transactions[id];
           if (t.type === "deposit") {
-            // Hitung summary
             if (t.status === 'pending') pending++;
             if (t.status === 'approved' && new Date(t.timestamp).toISOString().split('T')[0] === today) {
               approvedTodayCount++;
             }
 
-            // Hitung sisa waktu
             let timeLeft = t.expiresAt ? Math.max(0, Math.floor((t.expiresAt - Date.now()) / 1000)) : 0;
             if (timeLeft <= 0 && t.status === 'pending') {
               set(ref(database, `transactions/${id}/status`), 'cancelled');
@@ -100,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
               </tr>
             `;
 
-            // Update countdown secara real-time
             if (t.status === 'pending') {
               const countdownElement = document.getElementById(`countdown-${id}`);
               const interval = setInterval(() => {
@@ -116,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Update summary
       pendingCount.textContent = pending;
       approvedToday.textContent = approvedTodayCount;
     }
@@ -171,8 +175,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Fungsi encode email
   function encodeEmail(email) {
     return email.replace('@', '_at_').replace('.', '_dot_');
   }
+
+  // Show FCM Token (khusus admin)
+  document.getElementById('show-token-btn').addEventListener('click', () => {
+    if (auth.currentUser) {
+      messaging.getToken().then((token) => {
+        const tokenElement = document.getElementById('fcm-token');
+        tokenElement.textContent = 'FCM Token: ' + token;
+        tokenElement.style.display = 'block';
+        navigator.clipboard.writeText(token).then(() => {
+          showUserNotification('Token copied to clipboard!');
+        }).catch((err) => {
+          showUserNotification('Please copy the token manually: ' + token);
+        });
+      }).catch((err) => {
+        const tokenElement = document.getElementById('fcm-token');
+        tokenElement.textContent = 'Error getting token: ' + err.message;
+        tokenElement.style.display = 'block';
+      });
+    } else {
+      showUserNotification('Please login as admin first!');
+    }
+  });
 });

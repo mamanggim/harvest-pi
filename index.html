@@ -78,8 +78,6 @@
       <button class="tab-btn btn-neon mr-1" data-tab="finance">Finance</button>
       <button class="tab-btn btn-neon mr-1" data-tab="leaderboard">Leaderboard</button>
       <button class="tab-btn btn-neon mr-1" data-tab="achievements">Achievements</button>
-      <!-- Tambah admin panel cuma buat admin -->
-      <button id="admin-panel-btn" class="tab-btn btn-neon" data-tab="admin-panel" style="display: none;">Admin</button>
     </div>
     <div id="wallet" class="mt-2">
       <span id="farm-coins">0 Farm Coins</span> |
@@ -195,12 +193,6 @@
     <div id="achievements-content" class="mt-2"></div>
   </div>
 
-  <!-- ADMIN PANEL (Hidden by default) -->
-  <div id="admin-panel" class="tab-content" style="display: none;">
-    <h2 class="neon-text">Admin Panel</h2>
-    <p>Admin features coming soon...</p>
-  </div>
-
   <!-- MODAL REWARD -->
   <div id="reward-modal" class="modal">
     <div class="modal-content">
@@ -248,13 +240,15 @@
   <!-- Load konfigurasi custom -->
   <script type="module" src="/firebase/firebase-config.js"></script>
 
-  <!-- Load admin.js -->
-  <script type="module" src="/admin/admin.js"></script>
-
   <!-- PI NETWORK SDK -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script>
-    Pi.init({ version: "2.0" });
+    if (typeof Pi !== 'undefined') {
+      console.log("Pi SDK loaded, initializing...");
+      Pi.init({ version: "2.0" });
+    } else {
+      console.warn("Pi SDK not available, skipping initialization.");
+    }
   </script>
 
   <!-- MAIN GAME SCRIPT -->
@@ -263,11 +257,11 @@
   <!-- FALLBACK ERROR HANDLING -->
   <script>
     window.addEventListener('error', (event) => {
-      alert('Main script failed to load: ' + event.message);
+      console.error('Error occurred: ' + event.message, event);
       const loadingScreen = document.getElementById('loading-screen');
       const loginScreen = document.getElementById('login-screen');
       if (loadingScreen && loginScreen) {
-        loadingScreen.style.display = 'none';
+        loadingScreen.classList.remove('active');
         loginScreen.classList.add('active');
       }
     });
@@ -280,7 +274,6 @@
       document.getElementById('register-form').style.display = 'block';
       document.getElementById('register-back').style.display = 'block';
       document.querySelector('#auth-form p').style.display = 'none';
-      // Reset notifikasi
       document.getElementById('register-error').style.display = 'none';
       document.getElementById('register-success').style.display = 'none';
     }
@@ -290,18 +283,15 @@
       document.getElementById('login-form').style.display = 'block';
       document.getElementById('register-back').style.display = 'none';
       document.querySelector('#auth-form p').style.display = 'block';
-      // Reset notifikasi
       document.getElementById('login-error').style.display = 'none';
       document.getElementById('login-success').style.display = 'none';
     }
 
-    // Validasi Email
     function validateEmail(email) {
       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return re.test(email);
     }
 
-    // Event Listener Login
     document.getElementById('login-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('email-input').value;
@@ -318,7 +308,7 @@
           if (success) {
             document.getElementById('login-success').textContent = message || 'Login successful!';
             document.getElementById('login-success').style.display = 'block';
-            setTimeout(() => window.startGame(), 1000); // Delay 1 detik sebelum transisi
+            setTimeout(() => window.startGame(), 1000);
           } else {
             document.getElementById('login-error').textContent = message || 'Login failed!';
             document.getElementById('login-error').style.display = 'block';
@@ -330,7 +320,6 @@
       }
     });
 
-    // Event Listener Register
     document.getElementById('register-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('register-email-input').value;
@@ -353,7 +342,7 @@
           if (success) {
             document.getElementById('register-success').textContent = message || 'Registration successful!';
             document.getElementById('register-success').style.display = 'block';
-            setTimeout(() => window.startGame(), 1000); // Delay 1 detik sebelum transisi
+            setTimeout(() => window.startGame(), 1000);
           } else {
             document.getElementById('register-error').textContent = message || 'Registration failed!';
             document.getElementById('register-error').style.display = 'block';
@@ -365,25 +354,15 @@
       }
     });
 
-    // Loading Delay 3 Detik
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('loading-screen').classList.remove('active');
-        document.getElementById('login-screen').classList.add('active');
-      }, 3000); // 3 detik
-    });
-
-    // Fungsi Start Game (Sesuai main.js)
     window.startGame = function() {
       document.getElementById('login-screen').classList.remove('active');
       document.getElementById('start-screen').classList.add('active');
       setTimeout(() => {
         document.getElementById('start-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
-      }, 500); // Transisi 0.5 detik
+      }, 500);
     };
 
-    // Tab Switching (Sinkronin sama main.js)
     document.querySelectorAll('.tab-btn').forEach(button => {
       button.addEventListener('click', () => {
         const tab = button.getAttribute('data-tab');
@@ -391,11 +370,10 @@
         document.getElementById(tab).classList.add('active');
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
-        if (window.switchTab) window.switchTab(tab); // Panggil fungsi dari main.js
+        if (window.switchTab) window.switchTab(tab);
       });
     });
 
-    // Shop Tab Switching (Sinkronin sama main.js)
     document.querySelectorAll('.shop-tab-btn').forEach(button => {
       button.addEventListener('click', () => {
         const tab = button.id;
@@ -403,7 +381,7 @@
         document.getElementById('sell-section').style.display = tab === 'shop-sell-tab' ? 'block' : 'none';
         document.querySelectorAll('.shop-tab-btn').forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
-        if (window.switchTab) window.switchTab('shop'); // Pastiin render ulang
+        if (window.switchTab) window.switchTab('shop');
       });
     });
   </script>

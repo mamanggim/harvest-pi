@@ -12,8 +12,6 @@
     <h1 class="neon-title">Admin Dashboard</h1>
     <button id="logout-btn" class="game-button">Logout</button>
     <div id="summary">
-      <button id="show-token-btn" class="game-button">Show FCM Token</button>
-      <div id="fcm-token" style="display: none; color: #39FF14; margin-top: 10px; font-size: 12px;"></div>
       <p>Total Pending: <span id="pending-count">0</span></p>
       <p>Total Approved Today: <span id="approved-today">0</span></p>
     </div>
@@ -40,8 +38,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js"></script>
-  
+
   <!-- Load admin.js sebagai module -->
   <script type="module" src="/admin/admin.js"></script>
 </body>

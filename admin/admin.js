@@ -1,4 +1,4 @@
-import { auth, database, messaging, ref, onValue, set, get } from '../firebase/firebase-config.js';
+import { auth, database, ref, onValue, set, get } from '../firebase/firebase-config.js';
 
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,28 +19,23 @@ document.addEventListener('DOMContentLoaded', () => {
         .then((snapshot) => {
           const role = snapshot.val();
           if (role === 'admin') {
-            alert('User logged in as admin: ' + user.email); // Log user login
-            // Setup FCM untuk notifikasi
+            // Lanjut ke dashboard
+            // Setup FCM untuk notifikasi (komentar dulu, panggil kalo butuh)
+            /*
             if ('serviceWorker' in navigator) {
               navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
                 .then((registration) => {
-                  alert('Service Worker registered successfully'); // Log success
                   messaging.useServiceWorker(registration);
                   return messaging.getToken();
                 })
                 .then((token) => {
-                  alert('FCM Token: ' + token); // Log token
                   set(ref(database, `adminTokens/${user.uid}`), token);
                 })
                 .catch((err) => {
-                  alert('FCM Error: ' + err.message); // Log error detail
                   showUserNotification('Failed to setup notifications.');
                 });
-            } else {
-              alert('Service Worker not supported in this browser'); // Log kalo gak support
             }
-            // Lanjut ke dashboard
-            console.log('Admin access granted');
+            */
           } else {
             showUserNotification('Access denied. Admins only.');
             auth.signOut().then(() => {
@@ -50,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })
         .catch((err) => {
-          console.error('Error checking role:', err);
           showUserNotification('Error checking permissions. Please login again.');
           auth.signOut().then(() => {
             sessionStorage.setItem('adminRedirect', 'true');
@@ -67,21 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
-    alert('Tombol Logout ditemukan!'); // Log buat cek tombol ada
     logoutBtn.addEventListener('click', () => {
-      alert('Tombol Logout diklik!'); // Log pas tombol diklik
       isLoggingOut = true;
       auth.signOut().then(() => {
-        alert('Logout berhasil!'); // Log logout sukses
         sessionStorage.setItem('adminRedirect', 'true');
         window.location.href = '/index.html';
       }).catch((err) => {
-        alert('Error logout: ' + err.message); // Log error logout
         showUserNotification('Error logging out. Try again.');
       });
     });
-  } else {
-    alert('Tombol Logout gak ditemukan di halaman!'); // Log kalo tombol gak ada
   }
 
   // Admin Dashboard
@@ -100,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (transactions) {
         for (let id in transactions) {
           const t = transactions[id];
-          if (t.type === "deposit") {
+          if (t.type === 'deposit') {
             if (t.status === 'pending') pending++;
             if (t.status === 'approved' && new Date(t.timestamp).toISOString().split('T')[0] === today) {
               approvedTodayCount++;
@@ -152,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => {
         get(ref(database, `transactions/${id}`)).then((snap) => {
           const transaction = snap.val();
-          if (transaction.type === "deposit") {
+          if (transaction.type === 'deposit') {
             const userRef = ref(database, `players/${encodeEmail(transaction.email)}`);
             get(userRef).then((playerSnap) => {
               const player = playerSnap.val();
@@ -168,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       })
       .catch((err) => {
-        console.error('Error approving deposit:', err);
         showUserNotification('Error approving deposit.');
       });
   };
@@ -182,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       })
       .catch((err) => {
-        console.error('Error rejecting deposit:', err);
         showUserNotification('Error rejecting deposit.');
       });
   };
@@ -198,48 +184,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function encodeEmail(email) {
     return email.replace('@', '_at_').replace('.', '_dot_');
-  }
-
-  // Show FCM Token (khusus admin)
-  const showTokenBtn = document.getElementById('show-token-btn');
-  if (showTokenBtn) {
-    alert('Tombol Show FCM Token ditemukan!'); // Log buat cek tombol ada
-    showTokenBtn.addEventListener('click', () => {
-      alert('Tombol Show FCM Token diklik!'); // Log pas tombol diklik
-      if (auth.currentUser) {
-        alert('User logged in as admin: ' + auth.currentUser.email); // Log user
-        messaging.getToken().then((token) => {
-          alert('FCM Token: ' + token); // Log token kalo berhasil
-          const tokenElement = document.getElementById('fcm-token');
-          if (tokenElement) {
-            tokenElement.textContent = 'FCM Token: ' + token;
-            tokenElement.style.display = 'block';
-            navigator.clipboard.writeText(token).then(() => {
-              alert('Token berhasil dicopy ke clipboard!'); // Log copy sukses
-              showUserNotification('Token copied to clipboard!');
-            }).catch((err) => {
-              alert('Gagal copy token: ' + err.message); // Log copy gagal
-              showUserNotification('Please copy the token manually: ' + token);
-            });
-          } else {
-            alert('Elemen fcm-token gak ditemukan di halaman!'); // Log kalo elemen gak ada
-          }
-        }).catch((err) => {
-          alert('Error ambil token: ' + err.message); // Log error token
-          const tokenElement = document.getElementById('fcm-token');
-          if (tokenElement) {
-            tokenElement.textContent = 'Error getting token: ' + err.message;
-            tokenElement.style.display = 'block';
-          } else {
-            alert('Elemen fcm-token gak ditemukan di halaman!'); // Log kalo elemen gak ada
-          }
-        });
-      } else {
-        alert('Belum login sebagai admin!'); // Log kalo belum login
-        showUserNotification('Please login as admin first!');
-      }
-    });
-  } else {
-    alert('Tombol Show FCM Token gak ditemukan di halaman!'); // Log kalo tombol gak ada
   }
 });

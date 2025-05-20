@@ -60,16 +60,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
+    alert('Tombol Logout ditemukan!'); // Log buat cek tombol ada
     logoutBtn.addEventListener('click', () => {
+      alert('Tombol Logout diklik!'); // Log pas tombol diklik
       isLoggingOut = true;
       auth.signOut().then(() => {
+        alert('Logout berhasil!'); // Log logout sukses
         sessionStorage.setItem('adminRedirect', 'true');
         window.location.href = '/index.html';
       }).catch((err) => {
-        console.error('Error logging out:', err);
+        alert('Error logout: ' + err.message); // Log error logout
         showUserNotification('Error logging out. Try again.');
       });
     });
+  } else {
+    alert('Tombol Logout gak ditemukan di halaman!'); // Log kalo tombol gak ada
   }
 
   // Admin Dashboard
@@ -189,30 +194,45 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Show FCM Token (khusus admin)
-document.getElementById('show-token-btn').addEventListener('click', () => {
-  alert('Tombol Show FCM Token diklik!'); // Log pas tombol diklik
-  if (auth.currentUser) {
-    alert('User logged in as admin'); // Log kalo user udah login
-    messaging.getToken().then((token) => {
-      alert('FCM Token: ' + token); // Log token kalo berhasil didapet
-      const tokenElement = document.getElementById('fcm-token');
-      tokenElement.textContent = 'FCM Token: ' + token;
-      tokenElement.style.display = 'block';
-      navigator.clipboard.writeText(token).then(() => {
-        alert('Token berhasil dicopy ke clipboard!'); // Log kalo copy sukses
-        showUserNotification('Token copied to clipboard!');
-      }).catch((err) => {
-        alert('Gagal copy token: ' + err.message); // Log kalo copy gagal
-        showUserNotification('Please copy the token manually: ' + token);
-      });
-    }).catch((err) => {
-      alert('Error ambil token: ' + err.message); // Log kalo gagal ambil token
-      const tokenElement = document.getElementById('fcm-token');
-      tokenElement.textContent = 'Error getting token: ' + err.message;
-      tokenElement.style.display = 'block';
+  const showTokenBtn = document.getElementById('show-token-btn');
+  if (showTokenBtn) {
+    alert('Tombol Show FCM Token ditemukan!'); // Log buat cek tombol ada
+    showTokenBtn.addEventListener('click', () => {
+      alert('Tombol Show FCM Token diklik!'); // Log pas tombol diklik
+      if (auth.currentUser) {
+        alert('User logged in as admin: ' + auth.currentUser.email); // Log user
+        messaging.getToken().then((token) => {
+          alert('FCM Token: ' + token); // Log token kalo berhasil
+          const tokenElement = document.getElementById('fcm-token');
+          if (tokenElement) {
+            tokenElement.textContent = 'FCM Token: ' + token;
+            tokenElement.style.display = 'block';
+            navigator.clipboard.writeText(token).then(() => {
+              alert('Token berhasil dicopy ke clipboard!'); // Log copy sukses
+              showUserNotification('Token copied to clipboard!');
+            }).catch((err) => {
+              alert('Gagal copy token: ' + err.message); // Log copy gagal
+              showUserNotification('Please copy the token manually: ' + token);
+            });
+          } else {
+            alert('Elemen fcm-token gak ditemukan di halaman!'); // Log kalo elemen gak ada
+          }
+        }).catch((err) => {
+          alert('Error ambil token: ' + err.message); // Log error token
+          const tokenElement = document.getElementById('fcm-token');
+          if (tokenElement) {
+            tokenElement.textContent = 'Error getting token: ' + err.message;
+            tokenElement.style.display = 'block';
+          } else {
+            alert('Elemen fcm-token gak ditemukan di halaman!'); // Log kalo elemen gak ada
+          }
+        });
+      } else {
+        alert('Belum login sebagai admin!'); // Log kalo belum login
+        showUserNotification('Please login as admin first!');
+      }
     });
   } else {
-    alert('Belum login sebagai admin!'); // Log kalo belum login
-    showUserNotification('Please login as admin first!');
+    alert('Tombol Show FCM Token gak ditemukan di halaman!'); // Log kalo tombol gak ada
   }
 });

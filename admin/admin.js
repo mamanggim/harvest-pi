@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Setup FCM untuk notifikasi
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          navigator.serviceWorker.register('firebase/firebase-messaging-sw.js')
             .then((registration) => {
               messaging.useServiceWorker(registration);
               return messaging.getToken();

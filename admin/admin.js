@@ -3,49 +3,57 @@ import { auth, database, messaging, ref, onValue, set, get } from '../firebase/f
 // Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false; // Flag buat tandain logout
-  let isAdmin = false;
+
+  // Cek kalau udah pernah redirect biar ga loop
+  const redirectFlag = sessionStorage.getItem('adminRedirect');
+  if (redirectFlag) {
+    sessionStorage.removeItem('adminRedirect');
+    return;
+  }
 
   // Cek auth sekali aja
   auth.onAuthStateChanged((user) => {
     if (user) {
-      // Setup FCM untuk notifikasi
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
-          .then((registration) => {
-            messaging.useServiceWorker(registration);
-            return messaging.getToken();
-          }).then((token) => {
-            set(ref(database, `adminTokens/${user.uid}`), token);
-          }).catch((err) => {
-            console.error('FCM Error:', err);
-            showUserNotification('Failed to setup notifications.');
-          });
-      }
-
       // Cek role admin
       get(ref(database, `players/${encodeEmail(user.email)}/role`))
         .then((snapshot) => {
-          isAdmin = snapshot.val() === 'admin';
-          if (!isAdmin) {
+          const role = snapshot.val();
+          if (role === 'admin') {
+            // Setup FCM untuk notifikasi
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
+                .then((registration) => {
+                  messaging.useServiceWorker(registration);
+                  return messaging.getToken();
+                }).then((token) => {
+                  set(ref(database, `adminTokens/${user.uid}`), token);
+                }).catch((err) => {
+                  console.error('FCM Error:', err);
+                  showUserNotification('Failed to setup notifications.');
+                });
+            }
+            // Lanjut ke dashboard
+            console.log('Admin access granted');
+          } else {
             showUserNotification('Access denied. Admins only.');
             auth.signOut().then(() => {
-              window.location.href = '../index.html';
+              sessionStorage.setItem('adminRedirect', 'true');
+              window.location.href = '/index.html';
             });
-            return;
           }
-          // Kalau admin, lanjutkan ke dashboard
-          console.log('Admin access granted');
         })
         .catch((err) => {
           console.error('Error checking role:', err);
           showUserNotification('Error checking permissions. Please login again.');
           auth.signOut().then(() => {
-            window.location.href = '../index.html';
+            sessionStorage.setItem('adminRedirect', 'true');
+            window.location.href = '/index.html';
           });
         });
     } else if (!isLoggingOut) {
       showUserNotification('Please login first.');
-      window.location.href = '../index.html';
+      sessionStorage.setItem('adminRedirect', 'true');
+      window.location.href = '/index.html';
     }
   });
 
@@ -55,7 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', () => {
       isLoggingOut = true;
       auth.signOut().then(() => {
-        window.location.href = '../index.html';
+        sessionStorage.setItem('adminRedirect', 'true');
+        window.location.href = '/index.html';
       }).catch((err) => {
         console.error('Error logging out:', err);
         showUserNotification('Error logging out. Try again.');

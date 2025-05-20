@@ -1471,3 +1471,133 @@ th {
   align-items: center;
   z-index: 5000; /* Di bawah pop-up */
 }
+
+/* Neon Theme */
+.neon-text {
+  color: #39FF14;
+  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14, 0 0 20px #39FF14;
+}
+
+.form-container {
+  border: 2px solid #39FF14;
+  box-shadow: 0 0 15px #39FF14, 0 0 30px #39FF14;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  background: #16213e;
+  max-width: 400px;
+  width: 100%;
+}
+
+.input-field {
+  background: #1b263b;
+  border: 1px solid #39FF14;
+  color: #e0e0e0;
+  padding: 8px;
+  margin: 5px 0;
+  width: 100%;
+  max-width: 300px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+.btn-neon {
+  background: #39FF14;
+  color: #1a1a2e;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 5px #39FF14;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  border-radius: 5px;
+}
+
+.btn-neon:hover {
+  background: #CCFF00;
+  box-shadow: 0 0 10px #CCFF00;
+}
+
+.link-neon {
+  color: #FFFF00;
+  text-decoration: none;
+  text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14;
+}
+
+.link-neon:hover {
+  color: #39FF14;
+  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
+}
+
+.policy-links a {
+  color: #FFFF00;
+  text-decoration: none;
+  text-shadow: 0 0 3px #FFFF00, 0 0 6px #39FF14;
+}
+
+.policy-links a:hover {
+  color: #39FF14;
+  text-shadow: 0 0 5px #39FF14, 0 0 10px #39FF14;
+}
+
+.link-text {
+  color: #e0e0e0;
+  font-size: 10px;
+}
+
+.notification {
+  color: #39FF14;
+  margin-top: 10px;
+  font-size: 12px;
+  text-shadow: 0 0 3px #39FF14;
+}
+
+.error {
+  color: red;
+  text-shadow: 0 0 3px red;
+}
+
+.success {
+  color: #00FF00;
+  text-shadow: 0 0 3px #00FF00;
+}
+
+/* Spinner Loading */
+.spinner {
+  border: 4px solid #1b263b;
+  border-top: 4px solid #39FF14;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Transisi Smooth */
+.screen {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.screen.active {
+  opacity: 1;
+  z-index: 10;
+}
+
+.tab-content {
+  display: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.tab-content.active {
+  display: block;
+  opacity: 1;
+}

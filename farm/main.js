@@ -757,6 +757,18 @@ if (registerEmailBtn) {
     });
 }
 
+async function trackReferral(referrerId, referredId) {
+    const referralRef = ref(database, `referrals/${referredId}`);
+    await set(referralRef, { referrerId, timestamp: Date.now(), earned: false });
+
+    const referrerRef = ref(database, `players/${referrerId}`);
+    onValue(referrerRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        const piBalance = (data.piBalance || 0) + 0.0001; // Contoh bonus 0.0001 PI
+        update(referrerRef, { piBalance });
+    });
+}
+
 // Event listener buat deposit
 const depositBtn = document.getElementById('deposit-btn');
 if (depositBtn) {
@@ -2475,24 +2487,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-
-function generateReferralLink(userId) {
-    return `https://www.harvestpi.biz.id/referral/${userId}`;
-}
-// Panggil di loadPlayerData() atau saat tab Finance aktif
-const referralLinkElement = document.getElementById('referral-link');
-if (referralLinkElement && userId) {
-    referralLinkElement.textContent = generateReferralLink(userId);
-}
-
-async function trackReferral(referrerId, referredId) {
-    const referralRef = ref(database, `referrals/${referredId}`);
-    await set(referralRef, { referrerId, timestamp: Date.now(), earned: false });
-
-    const referrerRef = ref(database, `players/${referrerId}`);
-    onValue(referrerRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        const piBalance = (data.piBalance || 0) + 0.0001; // Contoh bonus 0.0001 PI
-        update(referrerRef, { piBalance });
-    });
-}

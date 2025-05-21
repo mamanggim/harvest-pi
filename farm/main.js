@@ -337,19 +337,13 @@ if (loginEmailBtn) {
 
 // Fungsi untuk switch antara login dan register screen
 function switchToLogin() {
-function switchToLogin() {
     const loginScreenElement = document.getElementById('login-screen');
     const registerScreenElement = document.getElementById('register-screen');
     if (loginScreenElement && registerScreenElement) {
-        console.log('Switching to login screen');
         loginScreenElement.style.display = 'flex';
         loginScreenElement.classList.add('active');
         registerScreenElement.style.display = 'none';
         registerScreenElement.classList.remove('active');
-        console.log('Login screen display:', loginScreenElement.style.display);
-        console.log('Login screen classList:', loginScreenElement.classList);
-    } else {
-        console.error('Login or Register screen element not found:', { loginScreenElement, registerScreenElement });
     }
 }
 
@@ -357,15 +351,10 @@ function switchToRegister() {
     const loginScreenElement = document.getElementById('login-screen');
     const registerScreenElement = document.getElementById('register-screen');
     if (loginScreenElement && registerScreenElement) {
-        console.log('Switching to register screen');
         loginScreenElement.style.display = 'none';
         loginScreenElement.classList.remove('active');
         registerScreenElement.style.display = 'flex';
         registerScreenElement.classList.add('active');
-        console.log('Register screen display:', registerScreenElement.style.display);
-        console.log('Register screen classList:', registerScreenElement.classList);
-    } else {
-        console.error('Login or Register screen element not found:', { loginScreenElement, registerScreenElement });
     }
 }
 
@@ -1905,9 +1894,11 @@ async function initializeGame() {
             if (loadingScreenElement && loginScreenElement) {
                 console.log('Hiding loading screen, showing login screen');
                 loadingScreenElement.style.display = 'none';
-                switchToLogin();
+                switchToLogin(); // Ganti pake fungsi switch
                 console.log('Login screen display:', loginScreenElement.style.display);
                 console.log('Login screen opacity:', loginScreenElement.style.opacity);
+            } else {
+                console.error('Loading or Login screen element not found:', { loadingScreenElement, loginScreenElement });
             }
         }, 1000);
     } catch (error) {

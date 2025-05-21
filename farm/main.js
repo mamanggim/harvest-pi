@@ -2314,7 +2314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function generateReferralLink(userId) {
-    return `https://yourgame.com/referral/${userId}`;
+    return `https://harvestpi.biz.id/referral/${userId}`;
 }
 // Panggil di loadPlayerData() atau saat tab Finance aktif
 const referralLinkElement = document.getElementById('referral-link');

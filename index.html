@@ -16,31 +16,37 @@
   </div>
 
   <!-- LOGIN SCREEN -->
-  <div id="login-screen" style="display: none;">
+  <div id="login-screen" class="center-screen" style="display: none;">
     <div class="login-container">
-      <h1>Harvest Pi</h1>
-      <!-- Form Login -->
-      <div class="login-form">
-        <input type="email" id="email-input" placeholder="Enter email" />
-        <input type="password" id="password-input" placeholder="Enter password" />
-        <button id="login-email-btn">Login</button>
-        <div id="login-error" style="display: none; color: red;"></div>
-        <div id="verify-status" style="display: none; color: yellow;"></div>
-      </div>
-      <!-- Form Register -->
-      <div class="register-form">
-        <input type="email" id="register-email-input" placeholder="Enter email to register" />
-        <input type="text" id="register-username-input" placeholder="Enter username (for referral)" />
-        <input type="password" id="register-password-input" placeholder="Enter password" />
-        <button id="register-email-btn">Register</button>
-        <div id="register-error" style="display: none; color: red;"></div>
-      </div>
-      <div class="policy-links">
-        <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
-        <a href="/term-of-service.html" target="_blank">Terms of Service</a>
-      </div>
+        <h1>Harvest Pi</h1>
+        <form class="login-form">
+            <input id="email-input" type="email" placeholder="Email">
+            <input id="password-input" type="password" placeholder="Password">
+            <button id="login-email-btn">Login</button>
+            <div id="login-error" style="display: none;"></div>
+            <div id="verify-status" style="display: none;"></div>
+        </form>
+        <div class="policy-links">
+            <a href="#" id="register-link">Don't have an account? Register</a>
+        </div>
     </div>
-  </div>
+</div>
+
+<div id="register-screen" class="center-screen" style="display: none;">
+    <div class="login-container">
+        <h1>Harvest Pi</h1>
+        <form class="register-form">
+            <input id="register-email-input" type="email" placeholder="Register Email">
+            <input id="register-password-input" type="password" placeholder="Register Password">
+            <input id="register-username-input" type="text" placeholder="Username">
+            <button id="register-email-btn">Register</button>
+            <div id="register-error" style="display: none;"></div>
+        </form>
+        <div class="policy-links">
+            <a href="#" id="login-link">Already have an account? Login</a>
+        </div>
+    </div>
+</div>
 
   <!-- START SCREEN -->
   <div id="start-screen" style="display: none;">

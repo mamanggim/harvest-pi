@@ -794,7 +794,7 @@ input[type="range"] {
   justify-content: center;
   align-items: center;
   z-index: 2001;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.5s ease-in-out;
 }
 
@@ -840,29 +840,12 @@ input[type="range"] {
 
 /* Link Styling (No Underline) */
 .policy-links a {
-    color: #ffeb3b; /* Default warna (kalo ga spesifik) */
+    color: #ffeb3b;
     text-decoration: none; /* Hapus garis bawah */
 }
 
 .policy-links a:hover {
-    text-decoration: underline; /* Underline saat hover */
-}
-
-/* Warna spesifik buat Register dan Login */
-#register-link {
-    color: #66ff00; /* Hijau terang buat Register */
-}
-
-#login-link {
-    color: #00ccff; /* Biru terang buat Login */
-}
-
-#register-link:hover {
-    color: #55cc00; /* Hijau lebih gelap saat hover */
-}
-
-#login-link:hover {
-    color: #00b3cc; /* Biru lebih gelap saat hover */
+    text-decoration: underline; /* Tambah underline saat hover aja */
 }
 
 /* Styling untuk form login dan register */
@@ -923,49 +906,18 @@ input[type="range"] {
   opacity: 1 !important; /* Pastiin ga ikut opacity parent */
 }
 
-/* Policy Links */
-.policy-links a.policy-link {
-    color: #ffeb3b;
-    text-decoration: none;
-    font-size: 10px; /* Font kecil */
+.policy-links {
+  margin-top: 15px;
+  font-size: 12px;
 }
 
-.policy-links a.policy-link:hover {
-    text-decoration: underline;
+.policy-links a {
+  color: #ffeb3b;
+  text-decoration: none;
 }
 
-/* Checkbox Styling (tetep sama) */
-.checkbox-label {
-    display: block;
-    margin-top: 10px;
-    font-size: 12px;
-    color: #fff;
-    font-family: 'Press Start 2P', cursive;
-    text-align: left;
-    width: 200px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.checkbox-label input[type="checkbox"] {
-    margin-right: 8px;
-    vertical-align: middle;
-    accent-color: #66ff00;
-}
-
-.checkbox-label a.policy-link {
-    color: #ffeb3b;
-    text-decoration: none;
-    font-size: 12px; /* Di checkbox tetep 12px biar gampang dibaca */
-}
-
-.checkbox-label a.policy-link:hover {
-    text-decoration: underline;
-}
-
-#login-screen, #register-screen {
-    opacity: 1 !important;
-    transition: none !important;
+.policy-links a:hover {
+  text-decoration: underline;
 }
 
 /* ========== PART 12: RESPONSIVE (MAX WIDTH 600px) ========== */

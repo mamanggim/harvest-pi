@@ -1894,11 +1894,9 @@ async function initializeGame() {
             if (loadingScreenElement && loginScreenElement) {
                 console.log('Hiding loading screen, showing login screen');
                 loadingScreenElement.style.display = 'none';
-                switchToLogin(); // Ganti pake fungsi switch
+                switchToLogin();
                 console.log('Login screen display:', loginScreenElement.style.display);
                 console.log('Login screen opacity:', loginScreenElement.style.opacity);
-            } else {
-                console.error('Loading or Login screen element not found:', { loadingScreenElement, loginScreenElement });
             }
         }, 1000);
     } catch (error) {

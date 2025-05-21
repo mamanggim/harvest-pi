@@ -344,9 +344,10 @@ const passwordInput = document.getElementById('password-input');
 const loginError = document.getElementById('login-error');
 const verifyEmailMsg = document.getElementById('verify-status');
 
+// Pastikan username di-set pas login
 if (loginEmailBtn) {
     addSafeClickListener(loginEmailBtn, async (e) => {
-        e.preventDefault(); // Jaga-jaga
+        e.preventDefault();
         console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
         const email = emailInput.value;
         const password = passwordInput.value;
@@ -371,10 +372,22 @@ if (loginEmailBtn) {
                 return;
             }
 
-            userId = user.uid;
-            localStorage.setItem('userId', userId);
+            const uidToUsernameRef = ref(database, `uidToUsername/${user.uid}`);
+            console.log('Fetching username for UID:', user.uid);
+            const snapshot = await get(uidToUsernameRef);
+            username = snapshot.val();
+            console.log('Username fetched:', username);
+
+            if (!username) {
+                loginError.style.display = 'block';
+                loginError.textContent = 'Username not found. Please register again.';
+                console.error('Username not found for UID:', user.uid);
+                return;
+            }
+
+            localStorage.setItem('username', username);
             showNotification('Logged in as ' + user.email);
-            console.log('Login successful, userId:', userId);
+            console.log('Login successful, username:', username);
 
             const loginScreenElement = document.getElementById('login-screen');
             const startScreenElement = document.getElementById('start-screen');
@@ -386,7 +399,7 @@ if (loginEmailBtn) {
                 console.error('Login or Start screen element not found');
             }
 
-            loadPlayerData(); // Pastikan fungsi ini ada di kode utama kamu
+            loadPlayerData();
         } catch (error) {
             loginError.style.display = 'block';
             loginError.textContent = 'Login failed: ' + error.message;
@@ -575,13 +588,15 @@ async function checkAndSaveUsername(username, userId) {
     return normalizedUsername;
 }
 
-// Merge loadPlayerData
+// Update loadPlayerData dengan logging lebih detil
 function loadPlayerData() {
     try {
         if (!username) {
             console.warn('No username, please login first!');
+            showNotification('Please login first.');
             return;
         }
+        console.log('Loading data for username:', username);
         const playerRef = ref(database, `players/${username}`);
         console.log('Attempting to load from:', playerRef.toString());
 
@@ -605,6 +620,7 @@ function loadPlayerData() {
                 referralEarnings = data.referralEarnings || 0;
                 console.log('Player data loaded:', data);
             } else {
+                console.log('No data found, initializing new data...');
                 const initialData = {
                     farmCoins: 0,
                     piBalance: 0,
@@ -646,12 +662,14 @@ function loadPlayerData() {
             renderSellSection();
             renderAchievements();
             checkDailyReward();
+            console.log('Data loading completed');
         }, (error) => {
             console.error('OnValue error:', error.message);
+            showNotification('Failed to load data: ' + error.message);
         }, { onlyOnce: false });
     } catch (error) {
         console.error('Error in loadPlayerData:', error.message);
-        showNotification('Failed to connect to Firebase. Please check your internet connection and reload.');
+        showNotification('Failed to connect to Firebase: ' + error.message);
         isDataLoaded = false;
     }
 }

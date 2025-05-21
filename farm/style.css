@@ -840,12 +840,29 @@ input[type="range"] {
 
 /* Link Styling (No Underline) */
 .policy-links a {
-    color: #ffeb3b;
+    color: #ffeb3b; /* Default warna (kalo ga spesifik) */
     text-decoration: none; /* Hapus garis bawah */
 }
 
 .policy-links a:hover {
-    text-decoration: underline; /* Tambah underline saat hover aja */
+    text-decoration: underline; /* Underline saat hover */
+}
+
+/* Warna spesifik buat Register dan Login */
+#register-link {
+    color: #66ff00; /* Hijau terang buat Register */
+}
+
+#login-link {
+    color: #00ccff; /* Biru terang buat Login */
+}
+
+#register-link:hover {
+    color: #55cc00; /* Hijau lebih gelap saat hover */
+}
+
+#login-link:hover {
+    color: #00b3cc; /* Biru lebih gelap saat hover */
 }
 
 /* Styling untuk form login dan register */

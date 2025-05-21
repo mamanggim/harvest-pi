@@ -231,110 +231,6 @@ async function loadData() {
 }
 // END loadData fix
 
-// Fungsi register dengan Email/Password
-const registerEmailBtn = document.getElementById('register-email-btn');
-const registerEmailInput = document.getElementById('register-email-input');
-const registerPasswordInput = document.getElementById('register-password-input');
-const registerError = document.getElementById('register-error');
-const registerUsernameInput = document.getElementById('register-username-input'); // Sesuai style.css
-
-if (registerEmailBtn) {
-    addSafeClickListener(registerEmailBtn, async () => {
-        const email = registerEmailInput.value;
-        const password = registerPasswordInput.value;
-        const username = registerUsernameInput ? registerUsernameInput.value : ''; // Tambah username
-
-        if (!email || !password) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Please enter email and password.';
-            return;
-        }
-
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            await sendEmailVerification(user);
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration successful! Please verify your email.';
-            showNotification('Registration successful! Check your email for verification.');
-
-            const playerRef = ref(database, `players/${user.uid}`);
-            await set(playerRef, {
-                farmCoins: 0,
-                piBalance: 0,
-                water: 0,
-                level: 1,
-                xp: 0,
-                inventory: [],
-                farmPlots: [],
-                harvestCount: 0,
-                achievements: { harvest: false, coins: false },
-                lastClaim: null,
-                claimedToday: false,
-                totalDeposit: 0,
-                username: username // Tambah field username
-            });
-
-            registerEmailInput.value = '';
-            registerPasswordInput.value = '';
-            if (registerUsernameInput) registerUsernameInput.value = ''; // Reset username
-        } catch (error) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration failed: ' + error.message;
-        }
-    });
-}
-
-// Fungsi login dengan Email/Password
-const loginEmailBtn = document.getElementById('login-email-btn');
-const emailInput = document.getElementById('email-input');
-const passwordInput = document.getElementById('password-input');
-const loginError = document.getElementById('login-error');
-const verifyEmailMsg = document.getElementById('verify-status'); // Sesuai style.css
-
-if (loginEmailBtn) {
-    addSafeClickListener(loginEmailBtn, async () => {
-        const email = emailInput.value;
-        const password = passwordInput.value;
-
-        if (!email || !password) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Please enter email and password.';
-            return;
-        }
-
-        try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            if (!user.emailVerified) {
-                await sendEmailVerification(user);
-                verifyEmailMsg.style.display = 'block';
-                loginError.style.display = 'none';
-                return;
-            }
-
-            userId = user.uid;
-            localStorage.setItem('userId', userId);
-            showNotification('Logged in as ' + user.email);
-
-            const loginScreenElement = document.getElementById('login-screen');
-            const startScreenElement = document.getElementById('start-screen');
-            if (loginScreenElement && startScreenElement) {
-                loginScreenElement.style.display = 'none';
-                startScreenElement.style.display = 'flex';
-            }
-
-            loadPlayerData();
-        } catch (error) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Login failed: ' + error.message;
-            verifyEmailMsg.style.display = 'none';
-        }
-    });
-}
-
 // Fungsi untuk switch antara login dan register screen
 function switchToLogin() {
     const loginScreenElement = document.getElementById('login-screen');
@@ -344,6 +240,9 @@ function switchToLogin() {
         loginScreenElement.classList.add('active');
         registerScreenElement.style.display = 'none';
         registerScreenElement.classList.remove('active');
+        console.log('switchToLogin called, login screen displayed');
+    } else {
+        console.error('Login or Register screen element not found');
     }
 }
 
@@ -355,6 +254,9 @@ function switchToRegister() {
         loginScreenElement.classList.remove('active');
         registerScreenElement.style.display = 'flex';
         registerScreenElement.classList.add('active');
+        console.log('switchToRegister called, register screen displayed');
+    } else {
+        console.error('Login or Register screen element not found');
     }
 }
 
@@ -371,6 +273,128 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pastiin login screen aktif default saat loading selesai
     switchToLogin();
 });
+
+// Fungsi register dengan Email/Password
+const registerEmailBtn = document.getElementById('register-email-btn');
+const registerEmailInput = document.getElementById('register-email-input');
+const registerPasswordInput = document.getElementById('register-password-input');
+const registerError = document.getElementById('register-error');
+const registerUsernameInput = document.getElementById('register-username-input');
+
+if (registerEmailBtn) {
+    addSafeClickListener(registerEmailBtn, async (e) => {
+        e.preventDefault(); // Jaga-jaga
+        console.log('Register button clicked, email:', registerEmailInput.value, 'password:', registerPasswordInput.value, 'username:', registerUsernameInput.value);
+        const email = registerEmailInput.value;
+        const password = registerPasswordInput.value;
+        const username = registerUsernameInput ? registerUsernameInput.value : '';
+
+        if (!email || !password) {
+            registerError.style.display = 'block';
+            registerError.textContent = 'Please enter email and password.';
+            console.log('Validation failed: Empty email or password');
+            return;
+        }
+
+        try {
+            console.log('Attempting registration...');
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            await sendEmailVerification(user);
+            registerError.style.display = 'block';
+            registerError.textContent = 'Registration successful! Please verify your email.';
+            showNotification('Registration successful! Check your email for verification.');
+            console.log('Registration successful, user:', user.uid);
+
+            const playerRef = ref(database, `players/${user.uid}`);
+            await set(playerRef, {
+                farmCoins: 0,
+                piBalance: 0,
+                water: 0,
+                level: 1,
+                xp: 0,
+                inventory: [],
+                farmPlots: [],
+                harvestCount: 0,
+                achievements: { harvest: false, coins: false },
+                lastClaim: null,
+                claimedToday: false,
+                totalDeposit: 0,
+                username: username
+            });
+
+            registerEmailInput.value = '';
+            registerPasswordInput.value = '';
+            if (registerUsernameInput) registerUsernameInput.value = '';
+            console.log('User data initialized, switching to login screen');
+            switchToLogin();
+        } catch (error) {
+            registerError.style.display = 'block';
+            registerError.textContent = 'Registration failed: ' + error.message;
+            console.error('Registration error:', error.message);
+        }
+    });
+}
+
+// Fungsi login dengan Email/Password
+const loginEmailBtn = document.getElementById('login-email-btn');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const loginError = document.getElementById('login-error');
+const verifyEmailMsg = document.getElementById('verify-status');
+
+if (loginEmailBtn) {
+    addSafeClickListener(loginEmailBtn, async (e) => {
+        e.preventDefault(); // Jaga-jaga
+        console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
+        const email = emailInput.value;
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+            loginError.style.display = 'block';
+            loginError.textContent = 'Please enter email and password.';
+            console.log('Validation failed: Empty fields');
+            return;
+        }
+
+        try {
+            console.log('Attempting login...');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            if (!user.emailVerified) {
+                await sendEmailVerification(user);
+                verifyEmailMsg.style.display = 'block';
+                loginError.style.display = 'none';
+                console.log('Email not verified');
+                return;
+            }
+
+            userId = user.uid;
+            localStorage.setItem('userId', userId);
+            showNotification('Logged in as ' + user.email);
+            console.log('Login successful, userId:', userId);
+
+            const loginScreenElement = document.getElementById('login-screen');
+            const startScreenElement = document.getElementById('start-screen');
+            if (loginScreenElement && startScreenElement) {
+                loginScreenElement.style.display = 'none';
+                startScreenElement.style.display = 'flex';
+                console.log('Start screen displayed');
+            } else {
+                console.error('Login or Start screen element not found');
+            }
+
+            loadPlayerData(); // Pastikan fungsi ini ada di kode utama kamu
+        } catch (error) {
+            loginError.style.display = 'block';
+            loginError.textContent = 'Login failed: ' + error.message;
+            verifyEmailMsg.style.display = 'none';
+            console.error('Login error:', error.message);
+        }
+    });
+}
 
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {

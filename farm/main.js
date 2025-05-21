@@ -569,7 +569,7 @@ async function checkAndSaveUsername(username) {
     return normalizedUsername;
 }
 
-// Merge loadPlayerData
+// LOAD PLAYER DATA 
 function loadPlayerData() {
     try {
         if (!username) {
@@ -577,6 +577,7 @@ function loadPlayerData() {
             return;
         }
         const playerRef = ref(database, `players/${username}`);
+        console.log('Trying to connect to:', playerRef.toString());
 
         onValue(playerRef, (snapshot) => {
             if (isDataLoaded) return;
@@ -594,7 +595,7 @@ function loadPlayerData() {
                 achievements = data.achievements || { harvest: false, coins: false };
                 lastClaim = data.lastClaim || null;
                 claimedToday = data.claimedToday || false;
-                referralEarnings = data.referralEarnings || 0; // Tambah buat referral
+                referralEarnings = data.referralEarnings || 0;
                 console.log('Player data loaded:', data);
             } else {
                 const initialData = {
@@ -610,7 +611,7 @@ function loadPlayerData() {
                     lastClaim: null,
                     claimedToday: false,
                     totalDeposit: 0,
-                    referralEarnings: 0 // Tambah buat referral
+                    referralEarnings: 0
                 };
                 set(playerRef, initialData).catch(err => {
                     console.error('Initial set failed:', err);
@@ -640,6 +641,8 @@ function loadPlayerData() {
             renderSellSection();
             renderAchievements();
             checkDailyReward();
+        }, (error) => {
+            console.error('OnValue error:', error.message);
         }, { onlyOnce: false });
     } catch (error) {
         console.error('Error loading player data:', error.message);
@@ -650,7 +653,7 @@ function loadPlayerData() {
 
 // Fungsi generate referral link
 function generateReferralLink(username) {
-    return `https://yourgame.com/referral/${username}`;
+    return `https://www.harvestpi.biz.id/referral/${username}`;
 }
 
 // Fungsi update referral earnings (10% dari deposit referral)

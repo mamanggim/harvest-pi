@@ -548,9 +548,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global variable tambahan buat referral
 let referralEarnings = 0;
+let username = null; // Ganti dari userId ke username
 
 // Fungsi cek dan simpan username unik
-async function checkAndSaveUsername(username) {
+async function checkAndSaveUsername(username, userId) {
     if (!username) {
         throw new Error('Username is required');
     }
@@ -566,10 +567,15 @@ async function checkAndSaveUsername(username) {
 
     usernames[normalizedUsername] = normalizedUsername;
     await set(usernamesRef, usernames);
+
+    // Simpan mapping uid ke username
+    const uidToUsernameRef = ref(database, `uidToUsername/${userId}`);
+    await set(uidToUsernameRef, normalizedUsername);
+
     return normalizedUsername;
 }
 
-// LOAD PLAYER DATA 
+// Merge loadPlayerData
 function loadPlayerData() {
     try {
         if (!username) {
@@ -723,9 +729,9 @@ if (registerEmailBtn) {
         console.log('Register button clicked, email:', registerEmailInput.value, 'password:', registerPasswordInput.value, 'username:', registerUsernameInput.value);
         const email = registerEmailInput.value;
         const password = registerPasswordInput.value;
-        const username = registerUsernameInput ? registerUsernameInput.value : '';
+        const inputUsername = registerUsernameInput ? registerUsernameInput.value : '';
 
-        if (!email || !password || !username) {
+        if (!email || !password || !inputUsername) {
             registerError.style.display = 'block';
             registerError.textContent = 'Please enter email, password, and username.';
             console.log('Validation failed: Empty fields');
@@ -738,7 +744,7 @@ if (registerEmailBtn) {
             const user = userCredential.user;
 
             // Cek dan simpan username unik
-            const normalizedUsername = await checkAndSaveUsername(username);
+            const normalizedUsername = await checkAndSaveUsername(inputUsername, user.uid);
 
             await sendEmailVerification(user);
             registerError.style.display = 'block';
@@ -784,6 +790,65 @@ if (registerEmailBtn) {
     });
 }
 
+// Update login buat set username
+if (loginEmailBtn) {
+    addSafeClickListener(loginEmailBtn, async (e) => {
+        e.preventDefault();
+        console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
+        const email = emailInput.value;
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+            loginError.style.display = 'block';
+            loginError.textContent = 'Please enter email and password.';
+            console.log('Validation failed: Empty fields');
+            return;
+        }
+
+        try {
+            console.log('Attempting login...');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            if (!user.emailVerified) {
+                await sendEmailVerification(user);
+                verifyEmailMsg.style.display = 'block';
+                loginError.style.display = 'none';
+                console.log('Email not verified');
+                return;
+            }
+
+            // Ambil username dari mapping
+            const uidToUsernameRef = ref(database, `uidToUsername/${user.uid}`);
+            const snapshot = await get(uidToUsernameRef);
+            username = snapshot.val();
+            if (!username) {
+                throw new Error('Username not found for this user');
+            }
+            localStorage.setItem('username', username);
+            showNotification('Logged in as ' + user.email);
+            console.log('Login successful, username:', username);
+
+            const loginScreenElement = document.getElementById('login-screen');
+            const startScreenElement = document.getElementById('start-screen');
+            if (loginScreenElement && startScreenElement) {
+                loginScreenElement.style.display = 'none';
+                startScreenElement.style.display = 'flex';
+                console.log('Start screen displayed');
+            } else {
+                console.error('Login or Start screen element not found');
+            }
+
+            loadPlayerData();
+        } catch (error) {
+            loginError.style.display = 'block';
+            loginError.textContent = 'Login failed: ' + error.message;
+            verifyEmailMsg.style.display = 'none';
+            console.error('Login error:', error.message);
+        }
+    });
+}
+
 // Event listener buat deposit
 const depositBtn = document.getElementById('deposit-btn');
 if (depositBtn) {
@@ -797,6 +862,19 @@ if (depositBtn) {
         }
         await handleDeposit(username, amount);
         amountInput.value = '';
+    });
+}
+
+// Tombol copy link referral
+const copyLinkBtn = document.getElementById('copy-link-btn');
+if (copyLinkBtn) {
+    addSafeClickListener(copyLinkBtn, () => {
+        const referralLinkElement = document.getElementById('referral-link');
+        if (referralLinkElement) {
+            copyToClipboard(referralLinkElement.textContent);
+        } else {
+            console.error('Referral link element not found');
+        }
     });
 }
 

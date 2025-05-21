@@ -1892,8 +1892,13 @@ async function initializeGame() {
             const loadingScreenElement = document.getElementById('loading-screen');
             const loginScreenElement = document.getElementById('login-screen');
             if (loadingScreenElement && loginScreenElement) {
+                console.log('Hiding loading screen, showing login screen');
                 loadingScreenElement.style.display = 'none';
-                loginScreenElement.style.display = 'flex';
+                switchToLogin(); // Ganti pake fungsi switch
+                console.log('Login screen display:', loginScreenElement.style.display);
+                console.log('Login screen opacity:', loginScreenElement.style.opacity);
+            } else {
+                console.error('Loading or Login screen element not found:', { loadingScreenElement, loginScreenElement });
             }
         }, 1000);
     } catch (error) {
@@ -1904,7 +1909,7 @@ async function initializeGame() {
             const loginScreenElement = document.getElementById('login-screen');
             if (loadingScreenElement && loginScreenElement) {
                 loadingScreenElement.style.display = 'none';
-                loginScreenElement.style.display = 'flex';
+                switchToLogin();
             }
         }, 1000);
     }

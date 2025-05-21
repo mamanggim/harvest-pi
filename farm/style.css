@@ -963,6 +963,11 @@ input[type="range"] {
     text-decoration: underline;
 }
 
+#login-screen, #register-screen {
+    opacity: 1 !important;
+    transition: none !important;
+}
+
 /* ========== PART 12: RESPONSIVE (MAX WIDTH 600px) ========== */
 @media (max-width: 600px) {
   h1 {

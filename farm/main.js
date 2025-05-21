@@ -549,14 +549,34 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global variable tambahan buat referral
 let referralEarnings = 0;
 
+// Fungsi cek dan simpan username unik
+async function checkAndSaveUsername(username) {
+    if (!username) {
+        throw new Error('Username is required');
+    }
+
+    const usernamesRef = ref(database, 'usernames');
+    const snapshot = await get(usernamesRef);
+    const usernames = snapshot.val() || {};
+
+    const normalizedUsername = username.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (usernames[normalizedUsername]) {
+        throw new Error('Username already taken');
+    }
+
+    usernames[normalizedUsername] = normalizedUsername;
+    await set(usernamesRef, usernames);
+    return normalizedUsername;
+}
+
 // Merge loadPlayerData
 function loadPlayerData() {
     try {
-        if (!userId) {
-            console.warn('No userId, please login first!');
+        if (!username) {
+            console.warn('No username, please login first!');
             return;
         }
-        const playerRef = ref(database, `players/${userId}`);
+        const playerRef = ref(database, `players/${username}`);
 
         onValue(playerRef, (snapshot) => {
             if (isDataLoaded) return;
@@ -601,8 +621,9 @@ function loadPlayerData() {
             // Tampilkan referral link
             const referralLinkElement = document.getElementById('referral-link');
             if (referralLinkElement) {
-                referralLinkElement.textContent = generateReferralLink(userId);
-                referralLinkElement.onclick = () => navigator.clipboard.writeText(generateReferralLink(userId));
+                const link = generateReferralLink(username);
+                referralLinkElement.textContent = link;
+                referralLinkElement.setAttribute('data-clipboard-text', link);
             }
 
             // Tampilkan referral earnings
@@ -628,16 +649,16 @@ function loadPlayerData() {
 }
 
 // Fungsi generate referral link
-function generateReferralLink(userId) {
-    return `https://yourgame.com/referral/${userId}`;
+function generateReferralLink(username) {
+    return `https://yourgame.com/referral/${username}`;
 }
 
 // Fungsi update referral earnings (10% dari deposit referral)
-async function updateReferralEarnings(referrerId, depositAmount) {
-    if (!referrerId || depositAmount <= 0) return;
+async function updateReferralEarnings(referrerUsername, depositAmount) {
+    if (!referrerUsername || depositAmount <= 0) return;
 
-    const referrerRef = ref(database, `players/${referrerId}`);
-    const referralEarningsRef = ref(database, `players/${referrerId}/referralEarnings`);
+    const referrerRef = ref(database, `players/${referrerUsername}`);
+    const referralEarningsRef = ref(database, `players/${referrerUsername}/referralEarnings`);
 
     try {
         const snapshot = await get(referrerRef);
@@ -652,33 +673,33 @@ async function updateReferralEarnings(referrerId, depositAmount) {
         if (referralEarningsElement) {
             referralEarningsElement.textContent = `${referralEarnings} PI`;
         }
-        console.log(`Referral bonus added: ${bonus} PI to ${referrerId}, total: ${newEarnings} PI`);
+        console.log(`Referral bonus added: ${bonus} PI to ${referrerUsername}, total: ${newEarnings} PI`);
     } catch (error) {
         console.error('Error updating referral earnings:', error.message);
     }
 }
 
 // Fungsi cek dan proses referral saat user baru register
-async function processReferral(referredUserId, referrerId) {
-    if (!referredUserId || !referrerId || referredUserId === referrerId) return;
+async function processReferral(referredUsername, referrerUsername) {
+    if (!referredUsername || !referrerUsername || referredUsername === referrerUsername) return;
 
-    const referralRef = ref(database, `referrals/${referredUserId}`);
-    await set(referralRef, { referrerId, timestamp: Date.now(), processed: false });
-    console.log(`Referral tracked: ${referredUserId} referred by ${referrerId}`);
+    const referralRef = ref(database, `referrals/${referredUsername}`);
+    await set(referralRef, { referrerUsername, timestamp: Date.now(), processed: false });
+    console.log(`Referral tracked: ${referredUsername} referred by ${referrerUsername}`);
 }
 
 // Fungsi update piBalance saat deposit
-async function handleDeposit(userId, amount) {
-    if (!userId || amount <= 0) return;
+async function handleDeposit(username, amount) {
+    if (!username || amount <= 0) return;
 
-    const playerRef = ref(database, `players/${userId}`);
-    const referralRef = ref(database, `referrals/${userId}`);
+    const playerRef = ref(database, `players/${username}`);
+    const referralRef = ref(database, `referrals/${username}`);
 
     try {
         const snapshot = await get(referralRef);
         const referralData = snapshot.val();
         if (referralData && !referralData.processed) {
-            await updateReferralEarnings(referralData.referrerId, amount);
+            await updateReferralEarnings(referralData.referrerUsername, amount);
             await update(referralRef, { processed: true });
         }
 
@@ -686,7 +707,7 @@ async function handleDeposit(userId, amount) {
         const playerData = playerSnapshot.val() || {};
         const newBalance = (playerData.piBalance || 0) + amount;
         await update(playerRef, { piBalance: newBalance });
-        console.log(`Deposit successful: ${amount} PI added to ${userId}, new balance: ${newBalance} PI`);
+        console.log(`Deposit successful: ${amount} PI added to ${username}, new balance: ${newBalance} PI`);
     } catch (error) {
         console.error('Error handling deposit:', error.message);
     }
@@ -701,10 +722,10 @@ if (registerEmailBtn) {
         const password = registerPasswordInput.value;
         const username = registerUsernameInput ? registerUsernameInput.value : '';
 
-        if (!email || !password) {
+        if (!email || !password || !username) {
             registerError.style.display = 'block';
-            registerError.textContent = 'Please enter email and password.';
-            console.log('Validation failed: Empty email or password');
+            registerError.textContent = 'Please enter email, password, and username.';
+            console.log('Validation failed: Empty fields');
             return;
         }
 
@@ -713,20 +734,23 @@ if (registerEmailBtn) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
+            // Cek dan simpan username unik
+            const normalizedUsername = await checkAndSaveUsername(username);
+
             await sendEmailVerification(user);
             registerError.style.display = 'block';
             registerError.textContent = 'Registration successful! Please verify your email.';
             showNotification('Registration successful! Check your email for verification.');
-            console.log('Registration successful, user:', user.uid);
+            console.log('Registration successful, user username:', normalizedUsername);
 
             // Proses referral kalo ada referrer dari link
             const urlParams = new URLSearchParams(window.location.search);
-            const referrerId = urlParams.get('ref');
-            if (referrerId) {
-                await processReferral(user.uid, referrerId);
+            const referrerUsername = urlParams.get('ref');
+            if (referrerUsername) {
+                await processReferral(normalizedUsername, referrerUsername);
             }
 
-            const playerRef = ref(database, `players/${user.uid}`);
+            const playerRef = ref(database, `players/${normalizedUsername}`);
             await set(playerRef, {
                 farmCoins: 0,
                 piBalance: 0,
@@ -740,7 +764,7 @@ if (registerEmailBtn) {
                 lastClaim: null,
                 claimedToday: false,
                 totalDeposit: 0,
-                username: username,
+                username: normalizedUsername,
                 referralEarnings: 0
             });
 
@@ -757,18 +781,6 @@ if (registerEmailBtn) {
     });
 }
 
-async function trackReferral(referrerId, referredId) {
-    const referralRef = ref(database, `referrals/${referredId}`);
-    await set(referralRef, { referrerId, timestamp: Date.now(), earned: false });
-
-    const referrerRef = ref(database, `players/${referrerId}`);
-    onValue(referrerRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        const piBalance = (data.piBalance || 0) + 0.0001; // Contoh bonus 0.0001 PI
-        update(referrerRef, { piBalance });
-    });
-}
-
 // Event listener buat deposit
 const depositBtn = document.getElementById('deposit-btn');
 if (depositBtn) {
@@ -780,7 +792,7 @@ if (depositBtn) {
             alert('Please enter a valid amount!');
             return;
         }
-        await handleDeposit(userId, amount);
+        await handleDeposit(username, amount);
         amountInput.value = '';
     });
 }

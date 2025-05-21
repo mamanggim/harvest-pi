@@ -583,9 +583,10 @@ function loadPlayerData() {
             return;
         }
         const playerRef = ref(database, `players/${username}`);
-        console.log('Trying to connect to:', playerRef.toString());
+        console.log('Attempting to load from:', playerRef.toString());
 
         onValue(playerRef, (snapshot) => {
+            console.log('Snapshot received:', snapshot.val());
             if (isDataLoaded) return;
 
             const data = snapshot.val();
@@ -625,7 +626,6 @@ function loadPlayerData() {
                 });
             }
 
-            // Tampilkan referral link
             const referralLinkElement = document.getElementById('referral-link');
             if (referralLinkElement) {
                 const link = generateReferralLink(username);
@@ -633,7 +633,6 @@ function loadPlayerData() {
                 referralLinkElement.setAttribute('data-clipboard-text', link);
             }
 
-            // Tampilkan referral earnings
             const referralEarningsElement = document.getElementById('referral-earnings');
             if (referralEarningsElement) {
                 referralEarningsElement.textContent = `${referralEarnings} PI`;
@@ -651,7 +650,7 @@ function loadPlayerData() {
             console.error('OnValue error:', error.message);
         }, { onlyOnce: false });
     } catch (error) {
-        console.error('Error loading player data:', error.message);
+        console.error('Error in loadPlayerData:', error.message);
         showNotification('Failed to connect to Firebase. Please check your internet connection and reload.');
         isDataLoaded = false;
     }
@@ -818,7 +817,6 @@ if (loginEmailBtn) {
                 return;
             }
 
-            // Ambil username dari mapping
             const uidToUsernameRef = ref(database, `uidToUsername/${user.uid}`);
             const snapshot = await get(uidToUsernameRef);
             username = snapshot.val();

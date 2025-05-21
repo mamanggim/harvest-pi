@@ -687,7 +687,7 @@ input[type="range"] {
   }
 }
 
-/* ========== PART 11: MODAL & LOADING ========== */
+/* ========== PART 11: MODAL, LOADING & LOGIN SCREEN ========== */
 
 .modal {
   display: none;
@@ -794,7 +794,7 @@ input[type="range"] {
   justify-content: center;
   align-items: center;
   z-index: 2001;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.5s ease-in-out;
 }
 
@@ -834,6 +834,7 @@ input[type="range"] {
   border-radius: 6px;
   font-family: 'Press Start 2P', cursive;
   font-size: 12px;
+  opacity: 1 !important; /* Pastiin ga ikut opacity parent */
 }
 
 #register-username-input {
@@ -847,16 +848,32 @@ input[type="range"] {
   border-radius: 6px;
   font-family: 'Press Start 2P', cursive;
   font-size: 12px;
+  opacity: 1 !important; /* Pastiin ga ikut opacity parent */
 }
 
 .login-form button, .register-form button {
-  margin-top: 10px;
+    margin-top: 10px;
+    background: #66ff00; /* Warna hijau terang biar kontras */
+    color: #000; /* Teks hitam biar jelas */
+    padding: 8px 16px;
+    border: 2px solid #fff;
+    border-radius: 6px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 1 !important; /* Pastiin ga ikut opacity parent */
+    transition: background 0.3s ease;
+}
+
+.login-form button:hover, .register-form button:hover {
+    background: #55cc00; /* Warna lebih gelap saat hover */
 }
 
 .login-form #login-error, .login-form #verify-status,
 .register-form #register-error {
   font-size: 10px;
   margin-top: 8px;
+  opacity: 1 !important; /* Pastiin ga ikut opacity parent */
 }
 
 .policy-links {

@@ -335,6 +335,43 @@ if (loginEmailBtn) {
     });
 }
 
+// Fungsi untuk switch antara login dan register screen
+function switchToLogin() {
+    const loginScreenElement = document.getElementById('login-screen');
+    const registerScreenElement = document.getElementById('register-screen');
+    if (loginScreenElement && registerScreenElement) {
+        loginScreenElement.style.display = 'flex';
+        loginScreenElement.classList.add('active');
+        registerScreenElement.style.display = 'none';
+        registerScreenElement.classList.remove('active');
+    }
+}
+
+function switchToRegister() {
+    const loginScreenElement = document.getElementById('login-screen');
+    const registerScreenElement = document.getElementById('register-screen');
+    if (loginScreenElement && registerScreenElement) {
+        loginScreenElement.style.display = 'none';
+        loginScreenElement.classList.remove('active');
+        registerScreenElement.style.display = 'flex';
+        registerScreenElement.classList.add('active');
+    }
+}
+
+// Event listener untuk link switch
+document.addEventListener('DOMContentLoaded', () => {
+    const registerLink = document.getElementById('register-link');
+    const loginLink = document.getElementById('login-link');
+    if (registerLink) {
+        addSafeClickListener(registerLink, switchToRegister);
+    }
+    if (loginLink) {
+        addSafeClickListener(loginLink, switchToLogin);
+    }
+    // Pastiin login screen aktif default saat loading selesai
+    switchToLogin();
+});
+
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
     const startTextElement = document.getElementById('start-text');

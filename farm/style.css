@@ -923,18 +923,44 @@ input[type="range"] {
   opacity: 1 !important; /* Pastiin ga ikut opacity parent */
 }
 
-.policy-links {
-  margin-top: 15px;
-  font-size: 12px;
+/* Policy Links */
+.policy-links a.policy-link {
+    color: #ffeb3b;
+    text-decoration: none;
+    font-size: 10px; /* Font kecil */
 }
 
-.policy-links a {
-  color: #ffeb3b;
-  text-decoration: none;
+.policy-links a.policy-link:hover {
+    text-decoration: underline;
 }
 
-.policy-links a:hover {
-  text-decoration: underline;
+/* Checkbox Styling (tetep sama) */
+.checkbox-label {
+    display: block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    text-align: left;
+    width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 8px;
+    vertical-align: middle;
+    accent-color: #66ff00;
+}
+
+.checkbox-label a.policy-link {
+    color: #ffeb3b;
+    text-decoration: none;
+    font-size: 12px; /* Di checkbox tetep 12px biar gampang dibaca */
+}
+
+.checkbox-label a.policy-link:hover {
+    text-decoration: underline;
 }
 
 /* ========== PART 12: RESPONSIVE (MAX WIDTH 600px) ========== */

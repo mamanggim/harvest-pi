@@ -1991,7 +1991,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const directionSelect = document.getElementById("exchange-direction");
     if (directionSelect) {
-      directionSelect.addEventListener("change", updateExchangeResult);
+        directionSelect.addEventListener("change", updateExchangeResult);
     }
 
     const shopBuyTabElement = document.getElementById('shop-buy-tab');
@@ -2023,32 +2023,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-// Deklarasi lastSave di scope global (hapus dari dalam fungsi)
-let lastSave = 0;
-const saveCooldown = 2000;
-
 // START deposit handler
-const depositBtn = document.getElementById('deposit-btn');
+const depositBtn = document.getElementById('real-deposit-btn'); // Sesuaikan dengan HTML
 const depositAmountInput = document.getElementById('deposit-amount');
-const depositResult = document.getElementById('deposit-result');
-const depositLoading = document.getElementById('deposit-loading');
+const depositResult = document.getElementById('real-deposit-msg'); // Sesuaikan dengan HTML
+const depositLoading = document.getElementById('real-deposit-msg'); // Sesuaikan dengan HTML
 
-// Tambah elemen pop-up konfirmasi (pastikan ada di HTML atau dibuat dinamis)
-let confirmPopup = document.getElementById('confirm-deposit-popup');
-if (!confirmPopup) {
-    confirmPopup = document.createElement('div');
-    confirmPopup.id = 'confirm-deposit-popup';
-    confirmPopup.style.cssText = 'display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border:2px solid #000; z-index:1000;';
-    confirmPopup.innerHTML = `
-        <p id="confirm-deposit-text"></p>
-        <button id="confirm-yes">Yes</button>
-        <button id="confirm-no">No</button>
-    `;
-    document.body.appendChild(confirmPopup);
-}
-const confirmText = document.getElementById('confirm-deposit-text');
-const confirmYes = document.getElementById('confirm-yes');
-const confirmNo = document.getElementById('confirm-no');
+// Tambah elemen pop-up konfirmasi (pakai deposit-popup dari HTML)
+let confirmPopup = document.getElementById('deposit-popup'); // Pakai yang ada di HTML
+const confirmText = document.getElementById('popup-amount'); // Sesuaikan dengan HTML
+const confirmYes = document.getElementById('confirm-deposit');
+const confirmNo = document.getElementById('cancel-deposit');
 
 if (depositAmountInput) {
     depositAmountInput.addEventListener('input', () => {
@@ -2079,7 +2064,7 @@ if (depositBtn) {
 
         const converted = Math.floor(amount * currentExchangeRate);
         if (confirmText && confirmPopup && confirmYes && confirmNo) {
-            confirmText.textContent = `Confirm deposit ${amount.toFixed(6)} PI to get ${converted} Farm Coins?`;
+            confirmText.textContent = amount.toFixed(6); // Tampilkan jumlah PI di popup
             confirmPopup.style.display = 'block';
 
             confirmYes.onclick = async () => {
@@ -2089,7 +2074,7 @@ if (depositBtn) {
                 piBalance = Math.round(piBalance * 1000000) / 1000000;
                 farmCoins = Math.floor(farmCoins);
 
-                if (depositLoading) depositLoading.style.display = 'block';
+                if (depositLoading) depositLoading.textContent = 'Processing deposit...';
 
                 setTimeout(async () => {
                     try {
@@ -2102,7 +2087,7 @@ if (depositBtn) {
                         else console.warn('fc-balance element not found');
                         if (depositAmountInput) depositAmountInput.value = '';
                         if (depositResult) {
-                            depositResult.textContent = 'You will get: 0 Farm Coins';
+                            depositResult.textContent = 'Deposit successful!';
                             depositResult.title = '';
                         }
                         playCoinSound();
@@ -2110,8 +2095,9 @@ if (depositBtn) {
                     } catch (error) {
                         console.error('Deposit failed:', error.message);
                         showNotification('Deposit failed: ' + error.message);
+                        if (depositResult) depositResult.textContent = 'Deposit failed!';
                     } finally {
-                        if (depositLoading) depositLoading.style.display = 'none';
+                        if (depositLoading) depositLoading.textContent = '';
                         confirmPopup.style.display = 'none';
                     }
                 }, 3000);
@@ -2167,6 +2153,10 @@ async function initializeGame() {
         }, 1000);
     }
 }
+
+// Deklarasi lastSave di scope global
+let lastSave = 0;
+const saveCooldown = 2000;
 
 // Save player data with throttling
 async function savePlayerData() {
@@ -2240,6 +2230,5 @@ document.addEventListener('DOMContentLoaded', () => {
         updateReferralLink();
         handleReferral();
     }
-
     initializeGame();
 });

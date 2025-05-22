@@ -2234,12 +2234,12 @@ document.addEventListener('DOMContentLoaded', () => {
     depositAmountInput.disabled = true;
 
     const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Ganti dengan wallet address asli
-    const memo = `deposit_${user.username}_${Date.now()}`;
+    const memo = `deposit_${username}_${Date.now()}`;
 
     // Tampilkan popup
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
-    popupUsername.textContent = user.username;
+    popupUsername.textContent = username;
     popupTransferAmount.textContent = amount;
     popupTransferMemo.textContent = memo;
     popupWalletAddress.textContent = walletAddress;
@@ -2369,7 +2369,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const playerRef = ref(database, `players/${user.username}`);
+    const playerRef = ref(database, `players/${username}`);
     const snapshot = await get(playerRef);
     const playerData = snapshot.val();
     const piBalance = playerData.piBalance || 0;
@@ -2394,7 +2394,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tampilkan popup
     withdrawPopupAmount.textContent = amount;
-    withdrawPopupUsername.textContent = user.username;
+    withdrawPopupUsername.textContent = username;
     withdrawPopupWallet.textContent = walletAddress;
     withdrawPopup.style.display = 'block';
 

@@ -743,8 +743,8 @@ async function handleDeposit(username, amount) {
 
 // Save player data to Firebase
 async function savePlayerData() {
-    if (!userId || !isDataLoaded) return;
-    const playerRef = ref(database, `players/${userId}`);
+    if (!username || !isDataLoaded) return;
+    const playerRef = ref(database, `players/${username}`);
 
     const dataToSave = {
         farmCoins,

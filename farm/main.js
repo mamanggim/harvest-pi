@@ -27,6 +27,7 @@ function addSafeClickListener(element, callback) {
 // Global variables
 let isDataLoaded = false;
 let piInitialized = false;
+let referralEarnings = 0;
 let farmCoins = 0;
 let piBalance = 0;
 let water = 0;
@@ -39,6 +40,7 @@ let currentLang = 'en';
 let farmPlots = [];
 let harvestCount = 0;
 let achievements = { harvest: false, coins: false };
+let username = null;
 let userId = null;
 let lastClaim = null;
 const plotCount = 4;
@@ -381,11 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeGame();
 });
 
-// Global variable
-let referralEarnings = 0;
-let username = null;
-let isDataLoaded = false; // Pastiin diinisialisasi
-
 // Deklarasi variabel (jangan hapus)
 const registerEmailBtn = document.getElementById('register-email-btn');
 const registerEmailInput = document.getElementById('register-email-input');
@@ -592,7 +589,7 @@ function loadPlayerData() {
 
 // Fungsi generate referral link
 function generateReferralLink(username) {
-    return `https://yourgame.com/referral/${username}`;
+    return `https://www.harvestpi.biz.id/referral/${username}`;
 }
 
 // Register dengan username dan email

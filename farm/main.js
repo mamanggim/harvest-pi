@@ -395,17 +395,6 @@ const passwordInput = document.getElementById('password-input');
 const loginError = document.getElementById('login-error');
 const verifyEmailMsg = document.getElementById('verify-status');
 
-// Asumsi addSafeClickListener ada (kalo ga, definisikan)
-function addSafeClickListener(element, callback) {
-    if (element) {
-        element.addEventListener('click', (e) => {
-            callback(e);
-        });
-    } else {
-        console.error('Element not found for addSafeClickListener');
-    }
-}
-
 // Fungsi untuk switch antara login dan register screen
 function switchToLogin() {
     const loginScreenElement = document.getElementById('login-screen');
@@ -614,7 +603,7 @@ function loadPlayerData() {
 
 // Fungsi generate referral link
 function generateReferralLink(username) {
-    return `https://yourgame.com/referral/${username}`;
+    return `https://www.harvestpi.biz.id/referral/${username}`;
 }
 
 // Register dengan username dan email

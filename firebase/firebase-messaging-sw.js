@@ -16,7 +16,7 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   const notificationTitle = 'New Deposit Request';
   const notificationOptions = {
-    body: `User: ${payload.data.userId}, Amount: ${payload.data.amount} PI`,
+    body: `User: ${payload.data.username}, Amount: ${payload.data.amount} PI`,
     icon: '/assets/img/ui/water_icon.png', // Icon notifikasi
     click_action: '/admin-panel'
   };

@@ -2023,7 +2023,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Deklarasi lastSave di scope global (hapus dari dalam fungsi)
+// Deklarasi lastSave di scope global (hapus dari dalam fungsi)
 let lastSave = 0;
 const saveCooldown = 2000;
 

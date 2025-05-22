@@ -238,27 +238,25 @@
   <script type="module" src="farm/main.js?v=41"></script>
   <!-- LINK REFERRAL -->
   <script>
-      window.onload = () => {
-          const urlParams = new URLSearchParams(window.location.search);
-          const ref = urlParams.get('ref');
-          if (ref) {
-              console.log(`Referred by ${ref}`);
-              localStorage.setItem('referral', ref);
-              switchToRegister();
-          }
-      };
-  </script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) {
+        console.log(`Referred by ${ref}`);
+        localStorage.setItem('referral', ref); // Simpen referral
+        switchToRegister(); // Switch ke tampilan register
+    }
+</script>
   <!-- FALLBACK ERROR HANDLING -->
   <script>
-      window.addEventListener('error', (event) => {
-          alert('Main script failed to load: ' + event.message);
-          const loadingScreen = document.getElementById('loading-screen');
-          const loginScreen = document.getElementById('login-screen');
-          if (loadingScreen && loginScreen) {
-              loadingScreen.classList.remove('active');
-              loginScreen.classList.add('active');
-          }
-      });
+    window.addEventListener('error', (event) => {
+      alert('Main script failed to load: ' + event.message);
+      const loadingScreen = document.getElementById('loading-screen');
+      const loginScreen = document.getElementById('login-screen');
+      if (loadingScreen && loginScreen) {
+        loadingScreen.classList.remove('active');
+        loginScreen.classList.add('active');
+      }
+    });
   </script>
 </body>
 </html>

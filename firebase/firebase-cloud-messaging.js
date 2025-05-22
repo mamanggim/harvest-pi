@@ -11,7 +11,7 @@ export function setupFCM(user) {
       })
       .then((token) => {
         alert('FCM Token: ' + token); // Log token
-        set(ref(database, `adminTokens/${user.uid}`), token);
+        set(ref(database, `adminTokens/${user.username}`), token);
       })
       .catch((err) => {
         alert('FCM Error: ' + err.message + ' (Code: ' + err.code + ')'); // Log error detail

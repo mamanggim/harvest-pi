@@ -281,133 +281,12 @@ const registerPasswordInput = document.getElementById('register-password-input')
 const registerError = document.getElementById('register-error');
 const registerUsernameInput = document.getElementById('register-username-input');
 
-if (registerEmailBtn) {
-    addSafeClickListener(registerEmailBtn, async (e) => {
-        e.preventDefault(); // Jaga-jaga
-        console.log('Register button clicked, email:', registerEmailInput.value, 'password:', registerPasswordInput.value, 'username:', registerUsernameInput.value);
-        const email = registerEmailInput.value;
-        const password = registerPasswordInput.value;
-        const username = registerUsernameInput ? registerUsernameInput.value : '';
-
-        if (!email || !password) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Please enter email and password.';
-            console.log('Validation failed: Empty email or password');
-            return;
-        }
-
-        try {
-            console.log('Attempting registration...');
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            await sendEmailVerification(user);
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration successful! Please verify your email.';
-            showNotification('Registration successful! Check your email for verification.');
-            console.log('Registration successful, user:', user.uid);
-
-            const playerRef = ref(database, `players/${user.uid}`);
-            await set(playerRef, {
-                farmCoins: 0,
-                piBalance: 0,
-                water: 0,
-                level: 1,
-                xp: 0,
-                inventory: [],
-                farmPlots: [],
-                harvestCount: 0,
-                achievements: { harvest: false, coins: false },
-                lastClaim: null,
-                claimedToday: false,
-                totalDeposit: 0,
-                username: username
-            });
-
-            registerEmailInput.value = '';
-            registerPasswordInput.value = '';
-            if (registerUsernameInput) registerUsernameInput.value = '';
-            console.log('User data initialized, switching to login screen');
-            switchToLogin();
-        } catch (error) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration failed: ' + error.message;
-            console.error('Registration error:', error.message);
-        }
-    });
-}
-
 // Fungsi login dengan Email/Password
 const loginEmailBtn = document.getElementById('login-email-btn');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
 const loginError = document.getElementById('login-error');
 const verifyEmailMsg = document.getElementById('verify-status');
-
-// Pastikan username di-set pas login
-if (loginEmailBtn) {
-    addSafeClickListener(loginEmailBtn, async (e) => {
-        e.preventDefault();
-        console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
-        const email = emailInput.value;
-        const password = passwordInput.value;
-
-        if (!email || !password) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Please enter email and password.';
-            console.log('Validation failed: Empty fields');
-            return;
-        }
-
-        try {
-            console.log('Attempting login...');
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            if (!user.emailVerified) {
-                await sendEmailVerification(user);
-                verifyEmailMsg.style.display = 'block';
-                loginError.style.display = 'none';
-                console.log('Email not verified');
-                return;
-            }
-
-            const uidToUsernameRef = ref(database, `uidToUsername/${user.uid}`);
-            console.log('Fetching username for UID:', user.uid);
-            const snapshot = await get(uidToUsernameRef);
-            username = snapshot.val();
-            console.log('Username fetched:', username);
-
-            if (!username) {
-                loginError.style.display = 'block';
-                loginError.textContent = 'Username not found. Please register again.';
-                console.error('Username not found for UID:', user.uid);
-                return;
-            }
-
-            localStorage.setItem('username', username);
-            showNotification('Logged in as ' + user.email);
-            console.log('Login successful, username:', username);
-
-            const loginScreenElement = document.getElementById('login-screen');
-            const startScreenElement = document.getElementById('start-screen');
-            if (loginScreenElement && startScreenElement) {
-                loginScreenElement.style.display = 'none';
-                startScreenElement.style.display = 'flex';
-                console.log('Start screen displayed');
-            } else {
-                console.error('Login or Start screen element not found');
-            }
-
-            loadPlayerData();
-        } catch (error) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Login failed: ' + error.message;
-            verifyEmailMsg.style.display = 'none';
-            console.error('Login error:', error.message);
-        }
-    });
-}
 
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
@@ -559,36 +438,84 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeGame();
 });
 
-// Global variable tambahan buat referral
+// Global variable
 let referralEarnings = 0;
-let username = null; // Ganti dari userId ke username
+let username = null;
 
-// Fungsi cek dan simpan username unik
-async function checkAndSaveUsername(username, userId) {
-    if (!username) {
-        throw new Error('Username is required');
-    }
+// Login dengan cek username berdasarkan email
+if (loginEmailBtn) {
+    addSafeClickListener(loginEmailBtn, async (e) => {
+        e.preventDefault();
+        console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
+        const email = emailInput.value;
+        const password = passwordInput.value;
 
-    const usernamesRef = ref(database, 'usernames');
-    const snapshot = await get(usernamesRef);
-    const usernames = snapshot.val() || {};
+        if (!email || !password) {
+            loginError.style.display = 'block';
+            loginError.textContent = 'Please enter email and password.';
+            console.log('Validation failed: Empty fields');
+            return;
+        }
 
-    const normalizedUsername = username.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (usernames[normalizedUsername]) {
-        throw new Error('Username already taken');
-    }
+        try {
+            console.log('Attempting login...');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-    usernames[normalizedUsername] = normalizedUsername;
-    await set(usernamesRef, usernames);
+            if (!user.emailVerified) {
+                await sendEmailVerification(user);
+                verifyEmailMsg.style.display = 'block';
+                loginError.style.display = 'none';
+                console.log('Email not verified');
+                return;
+            }
 
-    // Simpan mapping uid ke username
-    const uidToUsernameRef = ref(database, `uidToUsername/${userId}`);
-    await set(uidToUsernameRef, normalizedUsername);
+            // Cari username berdasarkan email di semua players
+            const playersRef = ref(database, 'players');
+            const snapshot = await get(playersRef);
+            const playersData = snapshot.val() || {};
+            let foundUsername = null;
 
-    return normalizedUsername;
+            for (const playerUsername in playersData) {
+                if (playersData[playerUsername].email === email) {
+                    foundUsername = playerUsername;
+                    break;
+                }
+            }
+
+            if (!foundUsername) {
+                loginError.style.display = 'block';
+                loginError.textContent = 'Username not found for this email. Please register first.';
+                console.error('No player data found for email:', email);
+                return;
+            }
+
+            username = foundUsername;
+            localStorage.setItem('username', username);
+            showNotification('Logged in as ' + user.email);
+            console.log('Login successful, username:', username);
+
+            const loginScreenElement = document.getElementById('login-screen');
+            const startScreenElement = document.getElementById('start-screen');
+            if (loginScreenElement && startScreenElement) {
+                loginScreenElement.style.display = 'none';
+                startScreenElement.style.display = 'flex';
+                console.log('Start screen displayed');
+            } else {
+                console.error('Login or Start screen element not found');
+            }
+
+            loadPlayerData();
+        } catch (error) {
+            loginError.style.display = 'block';
+            loginError.textContent = 'Login failed: ' + error.message;
+            verifyEmailMsg.style.display = 'none';
+            console.error('Login error:', error.message);
+        }
+    });
 }
 
-// Update loadPlayerData dengan logging lebih detil
+// Load player data langsung dari username
 function loadPlayerData() {
     try {
         if (!username) {
@@ -634,7 +561,9 @@ function loadPlayerData() {
                     lastClaim: null,
                     claimedToday: false,
                     totalDeposit: 0,
-                    referralEarnings: 0
+                    referralEarnings: 0,
+                    username: username,
+                    email: emailInput.value // Tambah email dari input login
                 };
                 set(playerRef, initialData).catch(err => {
                     console.error('Initial set failed:', err);
@@ -679,67 +608,7 @@ function generateReferralLink(username) {
     return `https://www.harvestpi.biz.id/referral/${username}`;
 }
 
-// Fungsi update referral earnings (10% dari deposit referral)
-async function updateReferralEarnings(referrerUsername, depositAmount) {
-    if (!referrerUsername || depositAmount <= 0) return;
-
-    const referrerRef = ref(database, `players/${referrerUsername}`);
-    const referralEarningsRef = ref(database, `players/${referrerUsername}/referralEarnings`);
-
-    try {
-        const snapshot = await get(referrerRef);
-        const referrerData = snapshot.val() || {};
-        const currentEarnings = referrerData.referralEarnings || 0;
-        const bonus = depositAmount * 0.1; // 10% dari deposit
-        const newEarnings = currentEarnings + bonus;
-
-        await update(referrerRef, { referralEarnings: newEarnings });
-        referralEarnings = newEarnings; // Update global variable
-        const referralEarningsElement = document.getElementById('referral-earnings');
-        if (referralEarningsElement) {
-            referralEarningsElement.textContent = `${referralEarnings} PI`;
-        }
-        console.log(`Referral bonus added: ${bonus} PI to ${referrerUsername}, total: ${newEarnings} PI`);
-    } catch (error) {
-        console.error('Error updating referral earnings:', error.message);
-    }
-}
-
-// Fungsi cek dan proses referral saat user baru register
-async function processReferral(referredUsername, referrerUsername) {
-    if (!referredUsername || !referrerUsername || referredUsername === referrerUsername) return;
-
-    const referralRef = ref(database, `referrals/${referredUsername}`);
-    await set(referralRef, { referrerUsername, timestamp: Date.now(), processed: false });
-    console.log(`Referral tracked: ${referredUsername} referred by ${referrerUsername}`);
-}
-
-// Fungsi update piBalance saat deposit
-async function handleDeposit(username, amount) {
-    if (!username || amount <= 0) return;
-
-    const playerRef = ref(database, `players/${username}`);
-    const referralRef = ref(database, `referrals/${username}`);
-
-    try {
-        const snapshot = await get(referralRef);
-        const referralData = snapshot.val();
-        if (referralData && !referralData.processed) {
-            await updateReferralEarnings(referralData.referrerUsername, amount);
-            await update(referralRef, { processed: true });
-        }
-
-        const playerSnapshot = await get(playerRef);
-        const playerData = playerSnapshot.val() || {};
-        const newBalance = (playerData.piBalance || 0) + amount;
-        await update(playerRef, { piBalance: newBalance });
-        console.log(`Deposit successful: ${amount} PI added to ${username}, new balance: ${newBalance} PI`);
-    } catch (error) {
-        console.error('Error handling deposit:', error.message);
-    }
-}
-
-// Update register buat proses referral
+// Register dengan username dan email
 if (registerEmailBtn) {
     addSafeClickListener(registerEmailBtn, async (e) => {
         e.preventDefault();
@@ -760,23 +629,21 @@ if (registerEmailBtn) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Cek dan simpan username unik
-            const normalizedUsername = await checkAndSaveUsername(inputUsername, user.uid);
+            const normalizedUsername = inputUsername.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const playerRef = ref(database, `players/${normalizedUsername}`);
+            
+            // Cek apakah username sudah ada
+            const snapshot = await get(playerRef);
+            if (snapshot.exists()) {
+                throw new Error('Username already taken.');
+            }
 
             await sendEmailVerification(user);
             registerError.style.display = 'block';
             registerError.textContent = 'Registration successful! Please verify your email.';
             showNotification('Registration successful! Check your email for verification.');
-            console.log('Registration successful, user username:', normalizedUsername);
+            console.log('Registration successful, user email:', email);
 
-            // Proses referral kalo ada referrer dari link
-            const urlParams = new URLSearchParams(window.location.search);
-            const referrerUsername = urlParams.get('ref');
-            if (referrerUsername) {
-                await processReferral(normalizedUsername, referrerUsername);
-            }
-
-            const playerRef = ref(database, `players/${normalizedUsername}`);
             await set(playerRef, {
                 farmCoins: 0,
                 piBalance: 0,
@@ -790,8 +657,9 @@ if (registerEmailBtn) {
                 lastClaim: null,
                 claimedToday: false,
                 totalDeposit: 0,
+                referralEarnings: 0,
                 username: normalizedUsername,
-                referralEarnings: 0
+                email: email // Tambah email ke data
             });
 
             registerEmailInput.value = '';
@@ -807,65 +675,7 @@ if (registerEmailBtn) {
     });
 }
 
-// Update login buat set username
-if (loginEmailBtn) {
-    addSafeClickListener(loginEmailBtn, async (e) => {
-        e.preventDefault();
-        console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
-        const email = emailInput.value;
-        const password = passwordInput.value;
-
-        if (!email || !password) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Please enter email and password.';
-            console.log('Validation failed: Empty fields');
-            return;
-        }
-
-        try {
-            console.log('Attempting login...');
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            if (!user.emailVerified) {
-                await sendEmailVerification(user);
-                verifyEmailMsg.style.display = 'block';
-                loginError.style.display = 'none';
-                console.log('Email not verified');
-                return;
-            }
-
-            const uidToUsernameRef = ref(database, `uidToUsername/${user.uid}`);
-            const snapshot = await get(uidToUsernameRef);
-            username = snapshot.val();
-            if (!username) {
-                throw new Error('Username not found for this user');
-            }
-            localStorage.setItem('username', username);
-            showNotification('Logged in as ' + user.email);
-            console.log('Login successful, username:', username);
-
-            const loginScreenElement = document.getElementById('login-screen');
-            const startScreenElement = document.getElementById('start-screen');
-            if (loginScreenElement && startScreenElement) {
-                loginScreenElement.style.display = 'none';
-                startScreenElement.style.display = 'flex';
-                console.log('Start screen displayed');
-            } else {
-                console.error('Login or Start screen element not found');
-            }
-
-            loadPlayerData();
-        } catch (error) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Login failed: ' + error.message;
-            verifyEmailMsg.style.display = 'none';
-            console.error('Login error:', error.message);
-        }
-    });
-}
-
-// Event listener buat deposit
+// Fungsi pendukung lainnya (simplified)
 const depositBtn = document.getElementById('deposit-btn');
 if (depositBtn) {
     addSafeClickListener(depositBtn, async (e) => {
@@ -881,7 +691,6 @@ if (depositBtn) {
     });
 }
 
-// Tombol copy link referral
 const copyLinkBtn = document.getElementById('copy-link-btn');
 if (copyLinkBtn) {
     addSafeClickListener(copyLinkBtn, () => {
@@ -892,6 +701,21 @@ if (copyLinkBtn) {
             console.error('Referral link element not found');
         }
     });
+}
+
+// Fungsi dummy buat handleDeposit (sesuai kebutuhan)
+async function handleDeposit(username, amount) {
+    if (!username || amount <= 0) return;
+    const playerRef = ref(database, `players/${username}`);
+    try {
+        const snapshot = await get(playerRef);
+        const playerData = snapshot.val() || {};
+        const newBalance = (playerData.piBalance || 0) + amount;
+        await update(playerRef, { piBalance: newBalance });
+        console.log(`Deposit successful: ${amount} PI added to ${username}, new balance: ${newBalance} PI`);
+    } catch (error) {
+        console.error('Error handling deposit:', error.message);
+    }
 }
 
 // Save player data to Firebase

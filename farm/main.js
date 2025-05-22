@@ -2023,7 +2023,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // START deposit handler
+    // Deklarasi lastSave di scope global (hapus dari dalam fungsi)
+let lastSave = 0;
+const saveCooldown = 2000;
+
+// START deposit handler
 const depositBtn = document.getElementById('deposit-btn');
 const depositAmountInput = document.getElementById('deposit-amount');
 const depositResult = document.getElementById('deposit-result');
@@ -2165,9 +2169,6 @@ async function initializeGame() {
 }
 
 // Save player data with throttling
-let lastSave = 0;
-const saveCooldown = 2000;
-
 async function savePlayerData() {
     if (!username) return;
 
@@ -2241,81 +2242,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initializeGame();
-});
-
-// Save player data with throttling
-let lastSave = 0;
-const saveCooldown = 2000;
-
-async function savePlayerData() {
-    if (!username) return;
-
-    const now = Date.now();
-    if (now - lastSave < saveCooldown) return;
-
-    lastSave = now;
-    isSaving = true;
-
-    const playerRef = ref(database, `players/${username}`);
-    const playerData = {
-        farmCoins: farmCoins,
-        piBalance: piBalance,
-        water: water,
-        level: level,
-        xp: xp,
-        inventory: inventory,
-        farmPlots: farmPlots,
-        harvestCount: harvestCount,
-        achievements: achievements,
-        lastClaim: lastClaim,
-        claimedToday: claimedToday,
-        referralEarnings: referralEarnings,
-        username: username
-    };
-
-    try {
-        await update(playerRef, playerData);
-        console.log('Player data saved:', playerData);
-    } catch (error) {
-        console.error('Error saving player data:', error.message);
-        showNotification('Error saving data: ' + error.message);
-    } finally {
-        isSaving = false;
-    }
-}
-
-// Handle referral link from URL
-function handleReferral() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const referralUsername = urlParams.get('referral');
-    if (referralUsername && username && referralUsername !== username) {
-        const referrerRef = ref(database, `players/${referralUsername}`);
-        get(referrerRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const referrerData = snapshot.val();
-                const newReferralEarnings = (referrerData.referralEarnings || 0) + 100;
-                update(referrerRef, { referralEarnings: newReferralEarnings })
-                    .then(() => {
-                        console.log(`Referral bonus given to ${referralUsername}`);
-                        showNotification('Referral bonus given to referrer!');
-                    })
-                    .catch(err => {
-                        console.error('Error updating referral earnings:', err);
-                    });
-            }
-        }).catch(err => {
-            console.error('Error fetching referrer data:', err);
-        });
-    }
-}
-
-// Check referral on load
-document.addEventListener('DOMContentLoaded', () => {
-    const storedUsername = localStorage.getItem('username');
-    if (storedUsername) {
-        username = storedUsername;
-        loadPlayerData();
-        updateReferralLink();
-        handleReferral();
-    }
 });

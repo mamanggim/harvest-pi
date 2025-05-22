@@ -50,7 +50,7 @@ let isClaiming = false;
 let isAudioPlaying = false;
 
 function loadUserBalances() {
-    const playerRef = ref(database, `players/${userId}`);
+    const playerRef = ref(database, `players/${username}`);
     onValue(playerRef, (snapshot) => {
         const data = snapshot.val() || {};
         
@@ -1659,7 +1659,7 @@ directionSelect.dispatchEvent(new Event("change"));
 // Modal untuk daily reward
 if (claimModalBtn) {
     addSafeClickListener(document.getElementById('claim-reward-btn'), async () => {
-        const playerRef = ref(database, `players/${userId}/lastClaim`);
+        const playerRef = ref(database, `players/${username}/lastClaim`);
         try {
             const snapshot = await get(playerRef);
             lastClaim = snapshot.val();
@@ -1697,17 +1697,17 @@ if (claimModalBtn) {
 // Claim daily reward
 if (claimModalBtn) {
     addSafeClickListener(claimModalBtn, async () => {
-        if (!userId) return;
+        if (!username) return;
 
         farmCoins += 100;
         water += 50;
-        xp += 20;
+        xp += 10;
 
         const today = new Date().toISOString();
         lastClaim = today;
         claimedToday = true;
 
-        const playerRef = ref(database, `players/${userId}`);
+        const playerRef = ref(database, `players/${username}`);
         try {
             await update(playerRef, { farmCoins, water, xp, lastClaim, claimedToday });
             updateWallet();
@@ -1732,7 +1732,7 @@ if (claimModalBtn) {
 
 // Check daily reward
 function checkDailyReward() {
-    if (!userId) return;
+    if (!username) return;
 
     const today = new Date().toISOString().split('T')[0];
     const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().split('T')[0] : null;
@@ -1786,7 +1786,7 @@ function showTransactionAnimation(amount, isPositive, buttonElement) {
 
 // Check harvest achievement
 function checkHarvestAchievement() {
-    if (harvestCount >= 10 && !achievements.harvest) {
+    if (harvestCount >= 100 && !achievements.harvest) {
         achievements.harvest = true;
         farmCoins += 500;
         showNotification(langData[currentLang]?.harvestAchievement || 'Achievement Unlocked: Harvest Master! +500 Coins');
@@ -1797,7 +1797,7 @@ function checkHarvestAchievement() {
 
 // Check coin achievement
 function checkCoinAchievement() {
-    if (farmCoins >= 1000 && !achievements.coins) {
+    if (farmCoins >= 10000 && !achievements.coins) {
         achievements.coins = true;
         water += 100;
         showNotification(langData[currentLang]?.coinAchievement || 'Achievement Unlocked: Coin Collector! +100 Water');
@@ -2015,7 +2015,7 @@ function toggleLanguage() {
 
 // Start game
 function startGame() {
-    if (!userId) {
+    if (!username) {
         console.warn('Please login with Email first!');
         return;
     }
@@ -2137,7 +2137,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const depositPopup = document.getElementById("deposit-popup");
   const popupAmount = document.getElementById("popup-amount");
   const popupMemo = document.getElementById("popup-memo");
-  const popupUserId = document.getElementById("popup-userid");
+  const popupUsername = document.getElementById("popup-username");
   const popupTransferAmount = document.getElementById("popup-transfer-amount");
   const popupTransferMemo = document.getElementById("popup-transfer-memo");
   const popupWalletAddress = document.getElementById("popup-wallet-address");
@@ -2155,7 +2155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     depositPopup,
     popupAmount,
     popupMemo,
-    popupUserId,
+    popupUsername,
     popupTransferAmount,
     popupTransferMemo,
     popupWalletAddress,
@@ -2167,7 +2167,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Pengecekan elemen
-  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUserId || !popupTransferAmount || !popupTransferMemo || !popupWalletAddress || !countdownTimer || !copyWalletBtn || !copyMemoBtn || !confirmDepositBtn || !cancelDepositBtn) {
+  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUsername || !popupTransferAmount || !popupTransferMemo || !popupWalletAddress || !countdownTimer || !copyWalletBtn || !copyMemoBtn || !confirmDepositBtn || !cancelDepositBtn) {
     console.error('Salah satu elemen tidak ditemukan. Cek ID di HTML.');
     return;
   }
@@ -2212,12 +2212,12 @@ document.addEventListener('DOMContentLoaded', () => {
     depositAmountInput.disabled = true;
 
     const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Ganti dengan wallet address asli
-    const memo = `deposit_${user.uid}_${Date.now()}`;
+    const memo = `deposit_${user.username}_${Date.now()}`;
 
     // Tampilkan popup
     popupAmount.textContent = amount;
     popupMemo.textContent = memo;
-    popupUserId.textContent = user.uid;
+    popupUsername.textContent = user.username;
     popupTransferAmount.textContent = amount;
     popupTransferMemo.textContent = memo;
     popupWalletAddress.textContent = walletAddress;
@@ -2254,7 +2254,7 @@ document.addEventListener('DOMContentLoaded', () => {
       depositPopup.style.display = 'none';
 
       try {
-        const playerRef = ref(database, `players/${user.uid}`);
+        const playerRef = ref(database, `players/${user.username}`);
         const snapshot = await get(playerRef);
         const playerData = snapshot.val();
         let totalDeposit = playerData.totalDeposit || 0;
@@ -2322,7 +2322,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelWithdrawBtn
   });
 
-  if (!withdrawBtn || !withdrawAmountInput || !withdrawMsg || !withdrawPopup || !withdrawPopupAmount || !withdrawPopupUserId || !withdrawPopupWallet || !withdrawWalletInput || !withdrawCountdownTimer || !confirmWithdrawBtn || !cancelWithdrawBtn) {
+  if (!withdrawBtn || !withdrawAmountInput || !withdrawMsg || !withdrawPopup || !withdrawPopupAmount || !withdrawPopupUsername || !withdrawPopupWallet || !withdrawWalletInput || !withdrawCountdownTimer || !confirmWithdrawBtn || !cancelWithdrawBtn) {
     console.error('Salah satu elemen withdraw tidak ditemukan. Cek ID di HTML.');
     return;
   }
@@ -2347,7 +2347,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const playerRef = ref(database, `players/${user.uid}`);
+    const playerRef = ref(database, `players/${user.username}`);
     const snapshot = await get(playerRef);
     const playerData = snapshot.val();
     const piBalance = playerData.piBalance || 0;
@@ -2372,7 +2372,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tampilkan popup
     withdrawPopupAmount.textContent = amount;
-    withdrawPopupUserId.textContent = user.uid;
+    withdrawPopupUsername.textContent = user.username;
     withdrawPopupWallet.textContent = walletAddress;
     withdrawPopup.style.display = 'block';
 
@@ -2438,8 +2438,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load user balances
   auth.onAuthStateChanged(user => {
     if (user) {
-      userId = user.uid;
-      localStorage.setItem('userId', userId);
+      username = user.username;
+      localStorage.setItem('username', username);
       loadUserBalances();
     }
   });

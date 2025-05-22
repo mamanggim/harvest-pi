@@ -48,23 +48,6 @@ let claimedToday = false;
 let isClaiming = false;
 let isAudioPlaying = false;
 
-function loadUserBalances() {
-    const playerRef = ref(database, `players/${username}`);
-    onValue(playerRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        
-        piBalance = data.piBalance || 0;
-        farmCoins = data.farmCoins || 0;
-
-        const piBalanceElement = document.getElementById('pi-balance');
-        const fcBalanceElement = document.getElementById('fc-balance');
-        if (piBalanceElement) piBalanceElement.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
-        if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
-
-        updateWallet();
-    });
-}
-
 // Audio elements
 const bgMusic = document.getElementById('bg-music');
 const bgVoice = document.getElementById('bg-voice');
@@ -232,156 +215,6 @@ async function loadData() {
 }
 // END loadData fix
 
-// Document ready event listener
-document.addEventListener('DOMContentLoaded', () => {
-    const startTextElement = document.getElementById('start-text');
-    if (startTextElement) addSafeClickListener(startTextElement, startGame);
-
-    const langToggleElement = document.getElementById('lang-toggle');
-    if (langToggleElement) addSafeClickListener(langToggleElement, toggleLanguage);
-
-    const gameLangToggleElement = document.getElementById('game-lang-toggle');
-    if (gameLangToggleElement) addSafeClickListener(gameLangToggleElement, toggleLanguage);
-
-    const settingsBtnElement = document.getElementById('settings-btn');
-    if (settingsBtnElement) {
-        addSafeClickListener(settingsBtnElement, () => {
-            const settingsModalElement = document.getElementById('settings-modal');
-            if (settingsModalElement) {
-                settingsModalElement.style.display = 'block';
-                playMenuSound();
-            }
-        });
-    }
-
-    const gameSettingsBtnElement = document.getElementById('game-settings-btn');
-    if (gameSettingsBtnElement) {
-        addSafeClickListener(gameSettingsBtnElement, () => {
-            const settingsModalElement = document.getElementById('settings-modal');
-            if (settingsModalElement) {
-                settingsModalElement.style.display = 'block';
-                playMenuSound();
-            }
-        });
-    }
-
-    const closeSettingsElement = document.getElementById('close-settings');
-    if (closeSettingsElement) {
-        addSafeClickListener(closeSettingsElement, () => {
-            const settingsModalElement = document.getElementById('settings-modal');
-            if (settingsModalElement) {
-                settingsModalElement.style.display = 'none';
-                playMenuSound();
-            }
-        });
-    }
-
-    const rewardModalCloseElement = document.getElementById('reward-modal-close');
-    if (rewardModalCloseElement) {
-        addSafeClickListener(rewardModalCloseElement, () => {
-            if (rewardModal) rewardModal.style.display = 'none';
-            playMenuSound();
-        });
-    }
-
-    const fullscreenToggleElement = document.getElementById('fullscreen-toggle');
-    if (fullscreenToggleElement) {
-        addSafeClickListener(fullscreenToggleElement, () => {
-            if (!document.fullscreenElement) {
-                enterFullScreen();
-            } else {
-                exitFullScreen();
-            }
-            playMenuSound();
-        });
-    }
-
-    if (musicVolumeSlider) {
-        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
-        musicVolumeSlider.addEventListener('input', () => {
-            localStorage.setItem('musicVolume', musicVolumeSlider.value);
-            updateVolumes();
-        });
-    }
-
-    if (voiceVolumeSlider) {
-        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
-        voiceVolumeSlider.addEventListener('input', () => {
-            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
-            updateVolumes();
-        });
-    }
-
-    const exitGameBtnElement = document.getElementById('exit-game-btn');
-    if (exitGameBtnElement) {
-        addSafeClickListener(exitGameBtnElement, () => {
-            if (bgMusic) bgMusic.pause();
-            if (bgVoice) bgVoice.pause();
-            window.location.reload();
-        });
-    }
-    
-    const exchangeBtnElement = document.getElementById('exchange-btn');
-    if (exchangeBtnElement) addSafeClickListener(exchangeBtnElement, handleExchange);
-    
-    const exchangeAmountElement = document.getElementById('exchange-amount');
-    if (exchangeAmountElement) exchangeAmountElement.addEventListener('input', updateExchangeResult);
-
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    if (tabButtons) {
-        tabButtons.forEach(btn => {
-            addSafeClickListener(btn, () => {
-                const tab = btn.getAttribute('data-tab');
-                switchTab(tab);
-            });
-        });
-    }
-
-    const directionSelect = document.getElementById("exchange-direction");
-    if (directionSelect) {
-      directionSelect.addEventListener("change", updateExchangeResult);
-    }
-
-    if (exchangeAmountElement) {
-      exchangeAmountElement.addEventListener("input", updateExchangeResult);
-    }
-
-    const buyTabElement = document.getElementById('shop-buy-tab');
-    const sellTabElement = document.getElementById('shop-sell-tab');
-    const shopContentElement = document.getElementById('shop-content');
-    const sellContentElement = document.getElementById('sell-section');
-
-    if (buyTabElement) {
-        addSafeClickListener(buyTabElement, () => {
-            buyTabElement.classList.add('active');
-            if (sellTabElement) sellTabElement.classList.remove('active');
-            if (shopContentElement) shopContentElement.style.display = 'block';
-            if (sellContentElement) sellContentElement.style.display = 'none';
-            renderShop();
-            playMenuSound();
-        });
-    }
-
-    if (sellTabElement) {
-        addSafeClickListener(sellTabElement, () => {
-            sellTabElement.classList.add('active');
-            if (buyTabElement) buyTabElement.classList.remove('active');
-            if (shopContentElement) shopContentElement.style.display = 'none';
-            if (sellContentElement) sellContentElement.style.display = 'block';
-            renderSellSection();
-            playMenuSound();
-        });
-    }
-
-    const loginEmailBtnElement = document.getElementById('login-email-btn');
-    if (loginEmailBtnElement) addSafeClickListener(loginEmailBtnElement, () => {});
-
-    const registerEmailBtnElement = document.getElementById('register-email-btn');
-    if (registerEmailBtnElement) addSafeClickListener(registerEmailBtnElement, () => {});
-
-    initializeGame();
-});
-
 // Deklarasi variabel (jangan hapus)
 const registerEmailBtn = document.getElementById('register-email-btn');
 const registerEmailInput = document.getElementById('register-email-input');
@@ -427,12 +260,8 @@ function switchToRegister() {
 document.addEventListener('DOMContentLoaded', () => {
     const registerLink = document.getElementById('register-link');
     const loginLink = document.getElementById('login-link');
-    if (registerLink) {
-        addSafeClickListener(registerLink, switchToRegister);
-    }
-    if (loginLink) {
-        addSafeClickListener(loginLink, switchToLogin);
-    }
+    if (registerLink) addSafeClickListener(registerLink, switchToRegister);
+    if (loginLink) addSafeClickListener(loginLink, switchToLogin);
     switchToLogin();
 });
 
@@ -718,78 +547,22 @@ if (registerEmailBtn) {
     });
 }
 
-// Fungsi pendukung lainnya
-const depositBtn = document.getElementById('deposit-btn');
-if (depositBtn) {
-    addSafeClickListener(depositBtn, async (e) => {
-        e.preventDefault();
-        const amountInput = document.getElementById('pi-amount');
-        const amount = parseFloat(amountInput.value) || 0;
-        if (amount <= 0) {
-            alert('Please enter a valid amount!');
-            return;
-        }
-        await handleDeposit(username, amount);
-        amountInput.value = '';
-    });
-}
-
-const copyLinkBtn = document.getElementById('copy-link-btn');
-if (copyLinkBtn) {
-    addSafeClickListener(copyLinkBtn, () => {
-        const referralLinkElement = document.getElementById('referral-link');
-        if (referralLinkElement) {
-            copyToClipboard(referralLinkElement.textContent);
-        } else {
-            console.error('Referral link element not found');
-        }
-    });
-}
-
-// Fungsi pendukung yang hilang
-async function handleDeposit(username, amount) {
-    if (!username || amount <= 0) return;
+// Load user balances
+function loadUserBalances() {
     const playerRef = ref(database, `players/${username}`);
-    try {
-        const snapshot = await get(playerRef);
-        const playerData = snapshot.val() || {};
-        const newBalance = (playerData.piBalance || 0) + amount;
-        await update(playerRef, { piBalance: newBalance });
-        console.log(`Deposit successful: ${amount} PI added to ${username}, new balance: ${newBalance} PI`);
-        showNotification('Deposit successful!');
-        loadUserBalances(); // Update UI
-    } catch (error) {
-        console.error('Error handling deposit:', error.message);
-        showNotification('Error depositing: ' + error.message);
-    }
-}
+    onValue(playerRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        
+        piBalance = data.piBalance || 0;
+        farmCoins = data.farmCoins || 0;
 
-// Save player data to Firebase
-async function savePlayerData() {
-    if (!username || !isDataLoaded) return;
-    const playerRef = ref(database, `players/${username}`);
+        const piBalanceElement = document.getElementById('pi-balance');
+        const fcBalanceElement = document.getElementById('fc-balance');
+        if (piBalanceElement) piBalanceElement.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+        if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
 
-    const dataToSave = {
-        farmCoins,
-        piBalance,
-        water,
-        level,
-        xp,
-        inventory,
-        farmPlots,
-        harvestCount,
-        achievements,
-        lastClaim,
-        claimedToday
-    };
-
-    try {
-        await update(playerRef, dataToSave);
-        console.log('Player data saved');
-    } catch (error) {
-        console.error('Error saving player data:', error.message);
-        showNotification('Error saving data');
-    }
+        updateWallet();
+    });
 }
 
 // Update wallet UI
@@ -1596,87 +1369,62 @@ function updateExchangeResult() {
     resultDiv.title = resultText;
 }
 
+// Perbaiki handleExchange pake username
 async function handleExchange() {
-  const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
-  const amount = parseFloat(rawAmount);
-  const direction = document.getElementById("exchange-direction").value;
-  const playerRef = ref(database, `players/${userId}`);
-  const snapshot = await get(playerRef);
-  const data = snapshot.val();
+    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
+    const amount = parseFloat(rawAmount);
+    const direction = document.getElementById("exchange-direction").value;
+    const playerRef = ref(database, `players/${username}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
 
-  if (!data) return showNotification("Player data not found!");
-  if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
+    if (!data) return showNotification("Player data not found!");
+    if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
 
-  let piBalance = Number(data.piBalance || 0);
-  let fc = Number(data.farmCoins || 0);
-  let resultText = "";
+    let piBalance = Number(data.piBalance || 0);
+    let fc = Number(data.farmCoins || 0);
+    let resultText = "";
 
-  if (direction === "piToFc") {
-    if (piBalance < amount) return showNotification("Not enough Pi!");
-    const converted = Math.floor(amount * currentExchangeRate);
-    piBalance -= amount;
-    fc += converted;
-    resultText = converted.toLocaleString();
-  } else {
-    if (fc < amount) return showNotification("Not enough FC!");
-    const converted = amount / currentExchangeRate;
-    fc -= amount;
-    piBalance += converted;
-    resultText = converted.toFixed(6);
-  }
+    if (direction === "piToFc") {
+        if (piBalance < amount) return showNotification("Not enough Pi!");
+        const converted = Math.floor(amount * currentExchangeRate);
+        piBalance -= amount;
+        fc += converted;
+        resultText = converted.toLocaleString();
+    } else {
+        if (fc < amount) return showNotification("Not enough FC!");
+        const converted = amount / currentExchangeRate;
+        fc -= amount;
+        piBalance += converted;
+        resultText = converted.toFixed(6);
+    }
 
-  piBalance = Math.round(piBalance * 1000000) / 1000000;
-  fc = Math.floor(fc);
+    piBalance = Math.round(piBalance * 1000000) / 1000000;
+    fc = Math.floor(fc);
 
-  document.getElementById("exchange-loading").style.display = "block";
+    document.getElementById("exchange-loading").style.display = "block";
 
-  setTimeout(() => {
-    (async () => {
-      try {
-        await update(playerRef, {
-          piBalance: piBalance,
-          farmCoins: fc
-        });
-
-        const piElem = document.getElementById("pi-balance");
-        const fcElem = document.getElementById("fc-balance");
-
-        if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
-        if (fcElem) fcElem.textContent = fc.toLocaleString();
-        document.getElementById("exchange-amount").value = "";
-
-        updateExchangeResult(resultText);
-       
-        try {
-          await coinSound.play();
-        } catch (err) {
-          console.error("Error playing sound:", err);
-        }
-
-        showNotification("Exchange success!");
-      } catch (error) {
-        console.error("Exchange failed:", error.message);
-        showNotification("Exchange failed: " + error.message);
-      } finally {
-        document.getElementById("exchange-loading").style.display = "none";
-      }
-    })();
-  }, 3000);
+    setTimeout(() => {
+        (async () => {
+            try {
+                await update(playerRef, { piBalance: piBalance, farmCoins: fc });
+                const piElem = document.getElementById("pi-balance");
+                const fcElem = document.getElementById("fc-balance");
+                if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+                if (fcElem) fcElem.textContent = fc.toLocaleString();
+                document.getElementById("exchange-amount").value = "";
+                updateExchangeResult();
+                try { await coinSound.play(); } catch (err) { console.error("Error playing sound:", err); }
+                showNotification("Exchange success!");
+            } catch (error) {
+                console.error("Exchange failed:", error.message);
+                showNotification("Exchange failed: " + error.message);
+            } finally {
+                document.getElementById("exchange-loading").style.display = "none";
+            }
+        })();
+    }, 3000);
 }
-
-const exchangeBtn = document.getElementById("exchange-btn");
-const directionSelect = document.getElementById("exchange-direction");
-
-directionSelect.addEventListener("change", () => {
-  const direction = directionSelect.value;
-  if (direction === "piToFc") {
-    exchangeBtn.textContent = "Exchange to FC";
-  } else {
-    exchangeBtn.textContent = "Exchange to Pi";
-  }
-});
-
-directionSelect.dispatchEvent(new Event("change"));
 
 // Modal untuk daily reward
 if (claimModalBtn) {
@@ -2136,333 +1884,288 @@ function copyToClipboard(text, button) {
   });
 }
 
-// Tunggu DOM siap
+// Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
-  // Tab Switching
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  const tabContents = document.querySelectorAll('.tab-content');
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      tabContents.forEach(content => content.classList.remove('active'));
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      const tabId = button.getAttribute('data-tab');
-      document.getElementById(tabId).classList.add('active');
-      button.classList.add('active');
-    });
-  });
-  document.querySelector('[data-tab="finance"]').click();
+    const startTextElement = document.getElementById('start-text');
+    if (startTextElement) addSafeClickListener(startTextElement, startGame);
 
-  // Fitur Deposit
-  const realDepositBtn = document.getElementById("real-deposit-btn");
-  const realDepositMsg = document.getElementById("real-deposit-msg");
-  const depositAmountInput = document.getElementById("deposit-amount");
-  const depositPopup = document.getElementById("deposit-popup");
-  const popupAmount = document.getElementById("popup-amount");
-  const popupMemo = document.getElementById("popup-memo");
-  const popupUsername = document.getElementById("popup-username");
-  const popupTransferAmount = document.getElementById("popup-transfer-amount");
-  const popupTransferMemo = document.getElementById("popup-transfer-memo");
-  const popupWalletAddress = document.getElementById("popup-wallet-address");
-  const countdownTimer = document.getElementById("countdown-timer");
-  const copyWalletBtn = document.getElementById("copy-wallet-btn");
-  const copyMemoBtn = document.getElementById("copy-memo-btn");
-  const confirmDepositBtn = document.getElementById("confirm-deposit");
-  const cancelDepositBtn = document.getElementById("cancel-deposit");
+    const langToggleElement = document.getElementById('lang-toggle');
+    if (langToggleElement) addSafeClickListener(langToggleElement, toggleLanguage);
 
-  // Logging untuk debug
-  console.log('Elemen deposit:', {
-    realDepositBtn,
-    realDepositMsg,
-    depositAmountInput,
-    depositPopup,
-    popupAmount,
-    popupMemo,
-    popupUsername,
-    popupTransferAmount,
-    popupTransferMemo,
-    popupWalletAddress,
-    countdownTimer,
-    copyWalletBtn,
-    copyMemoBtn,
-    confirmDepositBtn,
-    cancelDepositBtn
-  });
+    const gameLangToggleElement = document.getElementById('game-lang-toggle');
+    if (gameLangToggleElement) addSafeClickListener(gameLangToggleElement, toggleLanguage);
 
-  // Pengecekan elemen
-  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUsername || !popupTransferAmount || !popupTransferMemo || !popupWalletAddress || !countdownTimer || !copyWalletBtn || !copyMemoBtn || !confirmDepositBtn || !cancelDepositBtn) {
-    console.error('Salah satu elemen tidak ditemukan. Cek ID di HTML.');
-    return;
-  }
-
-  // Setup Deposit Request
-  let countdownInterval = null;
-  const countdownDuration = 30; // 30 detik countdown
-
-  realDepositBtn.addEventListener('click', async () => {
-    console.log('Tombol deposit diklik');
-
-    const user = auth.currentUser;
-    if (!user) {
-      realDepositMsg.textContent = 'Please login first.';
-      console.log('Validasi gagal: User belum login');
-      return;
-    }
-
-    const amount = parseFloat(depositAmountInput.value);
-    if (!amount || amount < 1) {
-      realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
-      console.log('Validasi gagal: Amount < 1');
-      return;
-    }
-
-    // Cek limit deposit harian
-    const encodedEmail = encodeEmail(user.email);
-    const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
-    const depositLimitRef = ref(database, `depositLimits/${encodedEmail}/${today}`);
-    const snapshot = await get(depositLimitRef);
-      const depositData = snapshot.val();
-    let dailyTotal = depositData ? depositData.total : 0;
-
-    if (dailyTotal + amount > 1000) {
-      realDepositMsg.textContent = 'Daily deposit limit exceeded (1000 PI).';
-      console.log('Validasi gagal: Melebihi limit harian');
-      return;
-    }
-
-    realDepositMsg.textContent = '';
-    realDepositBtn.disabled = true;
-    depositAmountInput.disabled = true;
-
-    const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Ganti dengan wallet address asli
-    const memo = `deposit_${user.username}_${Date.now()}`;
-
-    // Tampilkan popup
-    popupAmount.textContent = amount;
-    popupMemo.textContent = memo;
-    popupUsername.textContent = user.username;
-    popupTransferAmount.textContent = amount;
-    popupTransferMemo.textContent = memo;
-    popupWalletAddress.textContent = walletAddress;
-    depositPopup.style.display = 'block';
-
-    // Mulai countdown
-    let timeLeft = countdownDuration;
-    countdownTimer.textContent = `Time left: ${timeLeft}s`;
-    countdownInterval = setInterval(() => {
-      timeLeft--;
-      countdownTimer.textContent = `Time left: ${timeLeft}s`;
-      if (timeLeft <= 0) {
-        clearInterval(countdownInterval);
-        depositPopup.style.display = 'none';
-        realDepositBtn.disabled = false;
-        depositAmountInput.disabled = false;
-        realDepositMsg.textContent = 'Deposit request timed out.';
-      }
-    }, 1000);
-
-    // Copy Wallet Address
-    copyWalletBtn.addEventListener('click', () => {
-      copyToClipboard(walletAddress, copyWalletBtn);
-    });
-
-    // Copy Memo
-    copyMemoBtn.addEventListener('click', () => {
-      copyToClipboard(memo, copyMemoBtn);
-    });
-
-    // Confirm Deposit
-    confirmDepositBtn.addEventListener('click', async () => {
-      clearInterval(countdownInterval);
-      depositPopup.style.display = 'none';
-
-      try {
-        const playerRef = ref(database, `players/${user.username}`);
-        const snapshot = await get(playerRef);
-        const playerData = snapshot.val();
-        let totalDeposit = playerData.totalDeposit || 0;
-
-        totalDeposit += amount;
-        dailyTotal += amount;
-
-        await update(playerRef, { totalDeposit });
-        await set(depositLimitRef, { total: dailyTotal });
-
-        const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}`);
-        await push(depositHistoryRef, {
-          amount,
-          timestamp: Date.now(),
-          memo,
-          status: 'pending'
+    const settingsBtnElement = document.getElementById('settings-btn');
+    if (settingsBtnElement) {
+        addSafeClickListener(settingsBtnElement, () => {
+            const settingsModalElement = document.getElementById('settings-modal');
+            if (settingsModalElement) {
+                settingsModalElement.style.display = 'block';
+                playMenuSound();
+            }
         });
-
-        realDepositMsg.textContent = 'Deposit request submitted. Awaiting confirmation...';
-        console.log('Deposit request submitted:', { amount, memo });
-      } catch (error) {
-        console.error('Error submitting deposit:', error.message);
-        realDepositMsg.textContent = 'Error submitting deposit: ' + error.message;
-      } finally {
-        realDepositBtn.disabled = false;
-        depositAmountInput.disabled = false;
-        depositAmountInput.value = '';
-      }
-    });
-
-    // Cancel Deposit
-    cancelDepositBtn.addEventListener('click', () => {
-      clearInterval(countdownInterval);
-      depositPopup.style.display = 'none';
-      realDepositBtn.disabled = false;
-      depositAmountInput.disabled = false;
-      realDepositMsg.textContent = 'Deposit request cancelled.';
-    });
-  });
-
-  // Fitur Withdraw
-  const withdrawBtn = document.getElementById("withdraw-btn");
-  const withdrawAmountInput = document.getElementById("withdraw-amount");
-  const withdrawMsg = document.getElementById("withdraw-msg");
-  const withdrawPopup = document.getElementById("withdraw-popup");
-  const withdrawPopupAmount = document.getElementById("withdraw-popup-amount");
-  const withdrawPopupUserId = document.getElementById("withdraw-popup-userid");
-  const withdrawPopupWallet = document.getElementById("withdraw-popup-wallet");
-  const withdrawWalletInput = document.getElementById("withdraw-wallet-input");
-  const withdrawCountdownTimer = document.getElementById("withdraw-countdown-timer");
-  const confirmWithdrawBtn = document.getElementById("confirm-withdraw");
-  const cancelWithdrawBtn = document.getElementById("cancel-withdraw");
-
-  console.log('Elemen withdraw:', {
-    withdrawBtn,
-    withdrawAmountInput,
-    withdrawMsg,
-    withdrawPopup,
-    withdrawPopupAmount,
-    withdrawPopupUserId,
-    withdrawPopupWallet,
-    withdrawWalletInput,
-    withdrawCountdownTimer,
-    confirmWithdrawBtn,
-    cancelWithdrawBtn
-  });
-
-  if (!withdrawBtn || !withdrawAmountInput || !withdrawMsg || !withdrawPopup || !withdrawPopupAmount || !withdrawPopupUsername || !withdrawPopupWallet || !withdrawWalletInput || !withdrawCountdownTimer || !confirmWithdrawBtn || !cancelWithdrawBtn) {
-    console.error('Salah satu elemen withdraw tidak ditemukan. Cek ID di HTML.');
-    return;
-  }
-
-  let withdrawCountdownInterval = null;
-  const withdrawCountdownDuration = 30; // 30 detik countdown
-
-  withdrawBtn.addEventListener('click', async () => {
-    console.log('Tombol withdraw diklik');
-
-    const user = auth.currentUser;
-    if (!user) {
-      withdrawMsg.textContent = 'Please login first.';
-      console.log('Validasi gagal: User belum login');
-      return;
     }
 
-    const amount = parseFloat(withdrawAmountInput.value);
-    if (!amount || amount < 1) {
-      withdrawMsg.textContent = 'Minimum withdraw is 1 PI.';
-      console.log('Validasi gagal: Amount < 1');
-      return;
-    }
-
-    const playerRef = ref(database, `players/${user.username}`);
-    const snapshot = await get(playerRef);
-    const playerData = snapshot.val();
-    const piBalance = playerData.piBalance || 0;
-
-    if (amount > piBalance) {
-      withdrawMsg.textContent = 'Insufficient PI balance.';
-      console.log('Validasi gagal: Saldo tidak cukup');
-      return;
-    }
-
-    const walletAddress = withdrawWalletInput.value.trim();
-    if (!walletAddress) {
-      withdrawMsg.textContent = 'Please enter a valid wallet address.';
-      console.log('Validasi gagal: Wallet address kosong');
-      return;
-    }
-
-    withdrawMsg.textContent = '';
-    withdrawBtn.disabled = true;
-    withdrawAmountInput.disabled = true;
-    withdrawWalletInput.disabled = true;
-
-    // Tampilkan popup
-    withdrawPopupAmount.textContent = amount;
-    withdrawPopupUsername.textContent = user.username;
-    withdrawPopupWallet.textContent = walletAddress;
-    withdrawPopup.style.display = 'block';
-
-    // Mulai countdown
-    let timeLeft = withdrawCountdownDuration;
-    withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
-    withdrawCountdownInterval = setInterval(() => {
-      timeLeft--;
-      withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
-      if (timeLeft <= 0) {
-        clearInterval(withdrawCountdownInterval);
-        withdrawPopup.style.display = 'none';
-        withdrawBtn.disabled = false;
-        withdrawAmountInput.disabled = false;
-        withdrawWalletInput.disabled = false;
-        withdrawMsg.textContent = 'Withdraw request timed out.';
-      }
-    }, 1000);
-
-    // Confirm Withdraw
-    confirmWithdrawBtn.addEventListener('click', async () => {
-      clearInterval(withdrawCountdownInterval);
-      withdrawPopup.style.display = 'none';
-
-      try {
-        const updatedPiBalance = piBalance - amount;
-        await update(playerRef, { piBalance: updatedPiBalance });
-
-        const encodedEmail = encodeEmail(user.email);
-        const withdrawHistoryRef = ref(database, `withdrawHistory/${encodedEmail}`);
-        await push(withdrawHistoryRef, {
-          amount,
-          walletAddress,
-          timestamp: Date.now(),
-          status: 'pending'
+    const gameSettingsBtnElement = document.getElementById('game-settings-btn');
+    if (gameSettingsBtnElement) {
+        addSafeClickListener(gameSettingsBtnElement, () => {
+            const settingsModalElement = document.getElementById('settings-modal');
+            if (settingsModalElement) {
+                settingsModalElement.style.display = 'block';
+                playMenuSound();
+            }
         });
-
-        withdrawMsg.textContent = 'Withdraw request submitted. Awaiting confirmation...';
-        console.log('Withdraw request submitted:', { amount, walletAddress });
-      } catch (error) {
-        console.error('Error submitting withdraw:', error.message);
-        withdrawMsg.textContent = 'Error submitting withdraw: ' + error.message;
-      } finally {
-        withdrawBtn.disabled = false;
-        withdrawAmountInput.disabled = false;
-        withdrawWalletInput.disabled = false;
-        withdrawAmountInput.value = '';
-        withdrawWalletInput.value = '';
-      }
-    });
-
-    // Cancel Withdraw
-    cancelWithdrawBtn.addEventListener('click', () => {
-      clearInterval(withdrawCountdownInterval);
-      withdrawPopup.style.display = 'none';
-      withdrawBtn.disabled = false;
-      withdrawAmountInput.disabled = false;
-      withdrawWalletInput.disabled = false;
-      withdrawMsg.textContent = 'Withdraw request cancelled.';
-    });
-  });
-
-  // Load user balances
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      username = user.username;
-      localStorage.setItem('username', username);
-      loadUserBalances();
     }
-  });
+
+    const closeSettingsElement = document.getElementById('close-settings');
+    if (closeSettingsElement) {
+        addSafeClickListener(closeSettingsElement, () => {
+            const settingsModalElement = document.getElementById('settings-modal');
+            if (settingsModalElement) {
+                settingsModalElement.style.display = 'none';
+                playMenuSound();
+            }
+        });
+    }
+
+    const rewardModalCloseElement = document.getElementById('reward-modal-close');
+    if (rewardModalCloseElement) {
+        addSafeClickListener(rewardModalCloseElement, () => {
+            if (rewardModal) rewardModal.style.display = 'none';
+            playMenuSound();
+        });
+    }
+
+    const fullscreenToggleElement = document.getElementById('fullscreen-toggle');
+    if (fullscreenToggleElement) {
+        addSafeClickListener(fullscreenToggleElement, () => {
+            if (!document.fullscreenElement) {
+                enterFullScreen();
+            } else {
+                exitFullScreen();
+            }
+            playMenuSound();
+        });
+    }
+
+    if (musicVolumeSlider) {
+        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
+        musicVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('musicVolume', musicVolumeSlider.value);
+            updateVolumes();
+        });
+    }
+
+    if (voiceVolumeSlider) {
+        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
+        voiceVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
+            updateVolumes();
+        });
+    }
+
+    const exitGameBtnElement = document.getElementById('exit-game-btn');
+    if (exitGameBtnElement) {
+        addSafeClickListener(exitGameBtnElement, () => {
+            if (bgMusic) bgMusic.pause();
+            if (bgVoice) bgVoice.pause();
+            window.location.reload();
+        });
+    }
+    
+    const exchangeBtnElement = document.getElementById('exchange-btn');
+    if (exchangeBtnElement) addSafeClickListener(exchangeBtnElement, handleExchange);
+    
+    const exchangeAmountElement = document.getElementById('exchange-amount');
+    if (exchangeAmountElement) exchangeAmountElement.addEventListener('input', updateExchangeResult);
+
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    if (tabButtons) {
+        tabButtons.forEach(btn => {
+            addSafeClickListener(btn, () => {
+                const tab = btn.getAttribute('data-tab');
+                switchTab(tab);
+            });
+        });
+    }
+
+    const directionSelect = document.getElementById("exchange-direction");
+    if (directionSelect) {
+      directionSelect.addEventListener("change", updateExchangeResult);
+    }
+
+    const shopBuyTabElement = document.getElementById('shop-buy-tab');
+    const shopSellTabElement = document.getElementById('shop-sell-tab');
+    const shopContentElement = document.getElementById('shop-content');
+    const sellContentElement = document.getElementById('sell-section');
+
+    if (shopBuyTabElement) {
+        addSafeClickListener(shopBuyTabElement, () => {
+            if (shopBuyTabElement && shopSellTabElement && shopContentElement && sellContentElement) {
+                shopBuyTabElement.classList.add('active');
+                shopSellTabElement.classList.remove('active');
+                shopContentElement.style.display = 'block';
+                sellContentElement.style.display = 'none';
+                renderShop();
+            }
+        });
+    }
+
+    if (shopSellTabElement) {
+        addSafeClickListener(shopSellTabElement, () => {
+            if (shopBuyTabElement && shopSellTabElement && shopContentElement && sellContentElement) {
+                shopSellTabElement.classList.add('active');
+                shopBuyTabElement.classList.remove('active');
+                shopContentElement.style.display = 'none';
+                sellContentElement.style.display = 'block';
+                renderSellSection();
+            }
+        });
+    }
+
+    // START deposit handler
+    const depositBtn = document.getElementById('deposit-btn');
+    const depositAmountInput = document.getElementById('deposit-amount');
+    const depositResult = document.getElementById('deposit-result');
+    const depositLoading = document.getElementById('deposit-loading');
+
+    if (depositAmountInput) {
+        depositAmountInput.addEventListener('input', () => {
+            const rawAmount = depositAmountInput.value.replace(',', '.');
+            const amount = parseFloat(rawAmount) || 0;
+            const converted = amount * currentExchangeRate;
+            const resultText = `You will get: ${converted.toLocaleString()} Farm Coins`;
+            depositResult.textContent = resultText.length > 25 ? resultText.substring(0, 25) + '…' : resultText;
+            depositResult.title = resultText;
+        });
+    }
+
+    if (depositBtn) {
+        addSafeClickListener(depositBtn, async () => {
+            const rawAmount = depositAmountInput.value.replace(',', '.');
+            const amount = parseFloat(rawAmount);
+            const playerRef = ref(database, `players/${username}`);
+            const snapshot = await get(playerRef);
+            const data = snapshot.val();
+
+            if (!data) return showNotification('Player data not found!');
+            if (isNaN(amount) || amount <= 0) return showNotification('Invalid deposit amount!');
+            if (piBalance < amount) return showNotification('Not enough PI for deposit!');
+
+            const converted = Math.floor(amount * currentExchangeRate);
+            piBalance -= amount;
+            farmCoins += converted;
+
+            piBalance = Math.round(piBalance * 1000000) / 1000000;
+            farmCoins = Math.floor(farmCoins);
+
+            depositLoading.style.display = 'block';
+
+            setTimeout(async () => {
+                try {
+                    await update(playerRef, { piBalance, farmCoins });
+                    const piElem = document.getElementById('pi-balance');
+                    const fcElem = document.getElementById('fc-balance');
+                    if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+                    if (fcElem) fcElem.textContent = farmCoins.toLocaleString();
+                    depositAmountInput.value = '';
+                    depositResult.textContent = 'You will get: 0 Farm Coins';
+                    playCoinSound();
+                    showNotification('Deposit successful!');
+                } catch (error) {
+                    console.error('Deposit failed:', error.message);
+                    showNotification('Deposit failed: ' + error.message);
+                } finally {
+                    depositLoading.style.display = 'none';
+                }
+            }, 3000);
+        });
+    }
+    // END deposit handler
+
+    // Load username dari localStorage
+    username = localStorage.getItem('username');
+    if (username) {
+        loadPlayerData();
+        updateReferralLink();
+    }
+
+    initializeGame();
+});
+
+// Save player data with throttling
+let lastSave = 0;
+const saveCooldown = 2000;
+
+async function savePlayerData() {
+    if (!username) return;
+
+    const now = Date.now();
+    if (now - lastSave < saveCooldown) return;
+
+    lastSave = now;
+    isSaving = true;
+
+    const playerRef = ref(database, `players/${username}`);
+    const playerData = {
+        farmCoins: farmCoins,
+        piBalance: piBalance,
+        water: water,
+        level: level,
+        xp: xp,
+        inventory: inventory,
+        farmPlots: farmPlots,
+        harvestCount: harvestCount,
+        achievements: achievements,
+        lastClaim: lastClaim,
+        claimedToday: claimedToday,
+        referralEarnings: referralEarnings,
+        username: username
+    };
+
+    try {
+        await update(playerRef, playerData);
+        console.log('Player data saved:', playerData);
+    } catch (error) {
+        console.error('Error saving player data:', error.message);
+        showNotification('Error saving data: ' + error.message);
+    } finally {
+        isSaving = false;
+    }
+}
+
+// Handle referral link from URL
+function handleReferral() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const referralUsername = urlParams.get('referral');
+    if (referralUsername && username && referralUsername !== username) {
+        const referrerRef = ref(database, `players/${referralUsername}`);
+        get(referrerRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const referrerData = snapshot.val();
+                const newReferralEarnings = (referrerData.referralEarnings || 0) + 100;
+                update(referrerRef, { referralEarnings: newReferralEarnings })
+                    .then(() => {
+                        console.log(`Referral bonus given to ${referralUsername}`);
+                        showNotification('Referral bonus given to referrer!');
+                    })
+                    .catch(err => {
+                        console.error('Error updating referral earnings:', err);
+                    });
+            }
+        }).catch(err => {
+            console.error('Error fetching referrer data:', err);
+        });
+    }
+}
+
+// Check referral on load
+document.addEventListener('DOMContentLoaded', () => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+        username = storedUsername;
+        loadPlayerData();
+        updateReferralLink();
+        handleReferral();
+    }
 });

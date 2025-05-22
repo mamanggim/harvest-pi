@@ -9,10 +9,10 @@ exports.sendDepositNotification = functions.database.ref('/deposits/{depositId}'
       const payload = {
         notification: {
           title: 'New Deposit Request',
-          body: `User: ${deposit.userId}, Amount: ${deposit.amount} PI`
+          body: `User: ${deposit.username}, Amount: ${deposit.amount} PI`
         },
         data: {
-          userId: deposit.userId,
+          username: deposit.username,
           amount: deposit.amount,
           click_action: 'FLUTTER_NOTIFICATION_CLICK'
         }

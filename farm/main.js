@@ -436,6 +436,24 @@ document.addEventListener('DOMContentLoaded', () => {
     switchToLogin();
 });
 
+// Update referral link setelah login
+function updateReferralLink() {
+    const referralLinkElement = document.getElementById('referral-link');
+    const copyReferralBtn = document.getElementById('copy-referral-btn');
+    if (referralLinkElement && username) {
+        const link = generateReferralLink(username);
+        referralLinkElement.textContent = link;
+        if (copyReferralBtn) {
+            addSafeClickListener(copyReferralBtn, () => {
+                copyToClipboard(link, copyReferralBtn);
+                showNotification('Referral link copied!');
+            });
+        }
+    } else {
+        console.warn('Referral link element or username not found');
+    }
+}
+
 // Perbaiki set username dan hapus dependensi userId di login
 if (loginEmailBtn) {
     addSafeClickListener(loginEmailBtn, async (e) => {
@@ -514,6 +532,7 @@ if (loginEmailBtn) {
             }
 
             loadPlayerData();
+            updateReferralLink();
         } catch (error) {
             loginError.style.display = 'block';
             loginError.textContent = 'Login failed: ' + error.message;
@@ -727,6 +746,7 @@ if (copyLinkBtn) {
     });
 }
 
+// Fungsi pendukung yang hilang
 async function handleDeposit(username, amount) {
     if (!username || amount <= 0) return;
     const playerRef = ref(database, `players/${username}`);
@@ -736,8 +756,11 @@ async function handleDeposit(username, amount) {
         const newBalance = (playerData.piBalance || 0) + amount;
         await update(playerRef, { piBalance: newBalance });
         console.log(`Deposit successful: ${amount} PI added to ${username}, new balance: ${newBalance} PI`);
+        showNotification('Deposit successful!');
+        loadUserBalances(); // Update UI
     } catch (error) {
         console.error('Error handling deposit:', error.message);
+        showNotification('Error depositing: ' + error.message);
     }
 }
 

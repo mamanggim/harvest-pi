@@ -650,7 +650,7 @@ function loadPlayerData() {
 
 // Fungsi generate referral link
 function generateReferralLink(username) {
-    return `https://www.harvestpi.biz.id/referral/${username}`;
+    return `https://www.harvestpi.biz.id/?ref=${username}`;
 }
 
 // Register dengan username dan email
@@ -1600,7 +1600,7 @@ async function handleExchange() {
   const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
   const amount = parseFloat(rawAmount);
   const direction = document.getElementById("exchange-direction").value;
-  const playerRef = ref(database, `players/${userId}`);
+  const playerRef = ref(database, `players/${username}`);
   const snapshot = await get(playerRef);
   const data = snapshot.val();
 

@@ -233,7 +233,8 @@
     const ref = urlParams.get('ref');
     if (ref) {
         console.log(`Referred by ${ref}`);
-        // Simpen ke localStorage atau proses lebih lanjut
+        localStorage.setItem('referral', ref); // Simpen referral
+        window.location.href = '/register.html'; // Redirect ke halaman register
     }
 </script>
   <!-- FIREBASE -->

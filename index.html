@@ -227,16 +227,6 @@
   <audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3" preload="auto"></audio>
   <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3" preload="auto"></audio>
   <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
- <!-- LINK REFERRAL -->
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    if (ref) {
-        console.log(`Referred by ${ref}`);
-        localStorage.setItem('referral', ref); // Simpen referral
-        switchToRegister(); // Switch ke tampilan register
-    }
-</script>
   <!-- FIREBASE -->
   <script type="module" src="firebase/firebase-config.js"></script>
   <!-- PI NETWORK SDK -->
@@ -246,6 +236,16 @@
   </script>
   <!-- MAIN GAME SCRIPT -->
   <script type="module" src="farm/main.js?v=41"></script>
+  <!-- LINK REFERRAL -->
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) {
+        console.log(`Referred by ${ref}`);
+        localStorage.setItem('referral', ref); // Simpen referral
+        switchToRegister(); // Switch ke tampilan register
+    }
+</script>
   <!-- FALLBACK ERROR HANDLING -->
   <script>
     window.addEventListener('error', (event) => {

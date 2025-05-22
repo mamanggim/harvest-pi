@@ -2024,91 +2024,81 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 // START deposit handler
-const depositBtn = document.getElementById('real-deposit-btn'); // Sesuaikan dengan HTML
+const depositBtn = document.getElementById('real-deposit-btn');
 const depositAmountInput = document.getElementById('deposit-amount');
-const depositResult = document.getElementById('real-deposit-msg'); // Sesuaikan dengan HTML
-const depositLoading = document.getElementById('real-deposit-msg'); // Sesuaikan dengan HTML
+const depositMsg = document.getElementById('real-deposit-msg');
+const depositPopup = document.getElementById('deposit-popup');
+const popupAmount = document.getElementById('popup-amount');
+const confirmDepositBtn = document.getElementById('confirm-deposit');
+const cancelDepositBtn = document.getElementById('cancel-deposit');
 
-// Tambah elemen pop-up konfirmasi (pakai deposit-popup dari HTML)
-let confirmPopup = document.getElementById('deposit-popup'); // Pakai yang ada di HTML
-const confirmText = document.getElementById('popup-amount'); // Sesuaikan dengan HTML
-const confirmYes = document.getElementById('confirm-deposit');
-const confirmNo = document.getElementById('cancel-deposit');
-
+// Update pesan deposit sesuai input
 if (depositAmountInput) {
     depositAmountInput.addEventListener('input', () => {
         const rawAmount = depositAmountInput.value.replace(',', '.');
         const amount = parseFloat(rawAmount) || 0;
         const converted = amount * currentExchangeRate;
         const resultText = `You will get: ${converted.toLocaleString()} Farm Coins`;
-        if (depositResult) {
-            depositResult.textContent = resultText.length > 25 ? resultText.substring(0, 25) + '…' : resultText;
-            depositResult.title = resultText;
-        } else {
-            console.warn('deposit-result element not found');
+        if (depositMsg) {
+            depositMsg.textContent = resultText;
         }
     });
 }
 
+// Handle klik tombol deposit
 if (depositBtn) {
-    addSafeClickListener(depositBtn, async () => {
+    depositBtn.addEventListener('click', async () => {
         const rawAmount = depositAmountInput.value.replace(',', '.');
         const amount = parseFloat(rawAmount);
         const playerRef = ref(database, `players/${username}`);
         const snapshot = await get(playerRef);
         const data = snapshot.val();
 
+        // Cek kondisi dasar
         if (!data) return showNotification('Player data not found!');
         if (isNaN(amount) || amount <= 0) return showNotification('Invalid deposit amount!');
         if (piBalance < amount) return showNotification('Not enough PI for deposit!');
 
         const converted = Math.floor(amount * currentExchangeRate);
-        if (confirmText && confirmPopup && confirmYes && confirmNo) {
-            confirmText.textContent = amount.toFixed(6); // Tampilkan jumlah PI di popup
-            confirmPopup.style.display = 'block';
 
-            confirmYes.onclick = async () => {
+        // Tampilkan pop-up konfirmasi
+        if (popupAmount && depositPopup && confirmDepositBtn && cancelDepositBtn) {
+            popupAmount.textContent = amount.toFixed(6);
+            depositPopup.style.display = 'block';
+
+            // Tombol Yes: Proses deposit
+            confirmDepositBtn.onclick = async () => {
                 piBalance -= amount;
                 farmCoins += converted;
-
                 piBalance = Math.round(piBalance * 1000000) / 1000000;
                 farmCoins = Math.floor(farmCoins);
 
-                if (depositLoading) depositLoading.textContent = 'Processing deposit...';
-
-                setTimeout(async () => {
-                    try {
-                        await update(playerRef, { piBalance, farmCoins });
-                        const piElem = document.getElementById('pi-balance');
-                        const fcElem = document.getElementById('fc-balance');
-                        if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
-                        else console.warn('pi-balance element not found');
-                        if (fcElem) fcElem.textContent = farmCoins.toLocaleString();
-                        else console.warn('fc-balance element not found');
-                        if (depositAmountInput) depositAmountInput.value = '';
-                        if (depositResult) {
-                            depositResult.textContent = 'Deposit successful!';
-                            depositResult.title = '';
-                        }
-                        playCoinSound();
-                        showNotification('Deposit successful!');
-                    } catch (error) {
-                        console.error('Deposit failed:', error.message);
-                        showNotification('Deposit failed: ' + error.message);
-                        if (depositResult) depositResult.textContent = 'Deposit failed!';
-                    } finally {
-                        if (depositLoading) depositLoading.textContent = '';
-                        confirmPopup.style.display = 'none';
-                    }
-                }, 3000);
+                try {
+                    await update(playerRef, { piBalance, farmCoins });
+                    const piElem = document.getElementById('pi-balance');
+                    const fcElem = document.getElementById('fc-balance');
+                    if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+                    if (fcElem) fcElem.textContent = farmCoins.toLocaleString();
+                    depositAmountInput.value = '';
+                    depositMsg.textContent = 'Deposit successful!';
+                    playCoinSound();
+                    showNotification('Deposit successful!');
+                } catch (error) {
+                    console.error('Deposit failed:', error.message);
+                    showNotification('Deposit failed: ' + error.message);
+                    depositMsg.textContent = 'Deposit failed!';
+                } finally {
+                    depositPopup.style.display = 'none';
+                }
             };
 
-            confirmNo.onclick = () => {
-                confirmPopup.style.display = 'none';
+            // Tombol No: Batalkan deposit
+            cancelDepositBtn.onclick = () => {
+                depositPopup.style.display = 'none';
                 showNotification('Deposit cancelled!');
             };
         } else {
-            console.error('Confirm popup elements not found');
+            console.error('Popup elements not found');
         }
     });
 }

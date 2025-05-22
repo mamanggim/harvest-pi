@@ -231,63 +231,6 @@ async function loadData() {
 }
 // END loadData fix
 
-// Fungsi untuk switch antara login dan register screen
-function switchToLogin() {
-    const loginScreenElement = document.getElementById('login-screen');
-    const registerScreenElement = document.getElementById('register-screen');
-    if (loginScreenElement && registerScreenElement) {
-        loginScreenElement.style.display = 'flex';
-        loginScreenElement.classList.add('active');
-        registerScreenElement.style.display = 'none';
-        registerScreenElement.classList.remove('active');
-        console.log('switchToLogin called, login screen displayed');
-    } else {
-        console.error('Login or Register screen element not found');
-    }
-}
-
-function switchToRegister() {
-    const loginScreenElement = document.getElementById('login-screen');
-    const registerScreenElement = document.getElementById('register-screen');
-    if (loginScreenElement && registerScreenElement) {
-        loginScreenElement.style.display = 'none';
-        loginScreenElement.classList.remove('active');
-        registerScreenElement.style.display = 'flex';
-        registerScreenElement.classList.add('active');
-        console.log('switchToRegister called, register screen displayed');
-    } else {
-        console.error('Login or Register screen element not found');
-    }
-}
-
-// Event listener untuk link switch
-document.addEventListener('DOMContentLoaded', () => {
-    const registerLink = document.getElementById('register-link');
-    const loginLink = document.getElementById('login-link');
-    if (registerLink) {
-        addSafeClickListener(registerLink, switchToRegister);
-    }
-    if (loginLink) {
-        addSafeClickListener(loginLink, switchToLogin);
-    }
-    // Pastiin login screen aktif default saat loading selesai
-    switchToLogin();
-});
-
-// Fungsi register dengan Email/Password
-const registerEmailBtn = document.getElementById('register-email-btn');
-const registerEmailInput = document.getElementById('register-email-input');
-const registerPasswordInput = document.getElementById('register-password-input');
-const registerError = document.getElementById('register-error');
-const registerUsernameInput = document.getElementById('register-username-input');
-
-// Fungsi login dengan Email/Password
-const loginEmailBtn = document.getElementById('login-email-btn');
-const emailInput = document.getElementById('email-input');
-const passwordInput = document.getElementById('password-input');
-const loginError = document.getElementById('login-error');
-const verifyEmailMsg = document.getElementById('verify-status');
-
 // Document ready event listener
 document.addEventListener('DOMContentLoaded', () => {
     const startTextElement = document.getElementById('start-text');
@@ -441,6 +384,62 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global variable
 let referralEarnings = 0;
 let username = null;
+let isDataLoaded = false; // Pastiin diinisialisasi
+
+// Deklarasi variabel (jangan hapus)
+const registerEmailBtn = document.getElementById('register-email-btn');
+const registerEmailInput = document.getElementById('register-email-input');
+const registerPasswordInput = document.getElementById('register-password-input');
+const registerError = document.getElementById('register-error');
+const registerUsernameInput = document.getElementById('register-username-input');
+const loginEmailBtn = document.getElementById('login-email-btn');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const loginError = document.getElementById('login-error');
+const verifyEmailMsg = document.getElementById('verify-status');
+
+// Fungsi untuk switch antara login dan register screen
+function switchToLogin() {
+    const loginScreenElement = document.getElementById('login-screen');
+    const registerScreenElement = document.getElementById('register-screen');
+    if (loginScreenElement && registerScreenElement) {
+        loginScreenElement.style.display = 'flex';
+        loginScreenElement.classList.add('active');
+        registerScreenElement.style.display = 'none';
+        registerScreenElement.classList.remove('active');
+        console.log('switchToLogin called, login screen displayed');
+    } else {
+        console.error('Login or Register screen element not found');
+    }
+}
+
+function switchToRegister() {
+    const loginScreenElement = document.getElementById('login-screen');
+    const registerScreenElement = document.getElementById('register-screen');
+    if (loginScreenElement && registerScreenElement) {
+        loginScreenElement.style.display = 'none';
+        loginScreenElement.classList.remove('active');
+        registerScreenElement.style.display = 'flex';
+        registerScreenElement.classList.add('active');
+        console.log('switchToRegister called, register screen displayed');
+    } else {
+        console.error('Login or Register screen element not found');
+    }
+}
+
+// Event listener untuk link switch
+document.addEventListener('DOMContentLoaded', () => {
+    const registerLink = document.getElementById('register-link');
+    const loginLink = document.getElementById('login-link');
+    if (registerLink) {
+        addSafeClickListener(registerLink, switchToRegister);
+    }
+    if (loginLink) {
+        addSafeClickListener(loginLink, switchToLogin);
+    }
+    // Pastiin login screen aktif default saat loading selesai
+    switchToLogin();
+});
 
 // Login dengan cek username berdasarkan email
 if (loginEmailBtn) {
@@ -571,19 +570,8 @@ function loadPlayerData() {
                 });
             }
 
-            const referralLinkElement = document.getElementById('referral-link');
-            if (referralLinkElement) {
-                const link = generateReferralLink(username);
-                referralLinkElement.textContent = link;
-                referralLinkElement.setAttribute('data-clipboard-text', link);
-            }
-
-            const referralEarningsElement = document.getElementById('referral-earnings');
-            if (referralEarningsElement) {
-                referralEarningsElement.textContent = `${referralEarnings} PI`;
-            }
-
             isDataLoaded = true;
+            console.log('Data loading completed, isDataLoaded:', isDataLoaded);
             updateWallet();
             initializePlots();
             renderShop();
@@ -591,7 +579,6 @@ function loadPlayerData() {
             renderSellSection();
             renderAchievements();
             checkDailyReward();
-            console.log('Data loading completed');
         }, (error) => {
             console.error('OnValue error:', error.message);
             showNotification('Failed to load data: ' + error.message);
@@ -605,7 +592,7 @@ function loadPlayerData() {
 
 // Fungsi generate referral link
 function generateReferralLink(username) {
-    return `https://www.harvestpi.biz.id/referral/${username}`;
+    return `https://yourgame.com/referral/${username}`;
 }
 
 // Register dengan username dan email
@@ -675,6 +662,30 @@ if (registerEmailBtn) {
     });
 }
 
+// Fungsi untuk Start Game
+const startGameBtn = document.getElementById('start-game-btn'); // Pastiin id ini sesuai di HTML
+if (startGameBtn) {
+    addSafeClickListener(startGameBtn, () => {
+        console.log('Start Game clicked, isDataLoaded:', isDataLoaded);
+        if (isDataLoaded) {
+            showNotification('Game started!');
+            // Tambah logika game di sini (misalnya pindah ke game screen)
+            const startScreenElement = document.getElementById('start-screen');
+            const gameScreenElement = document.getElementById('game-screen'); // Pastiin ada di HTML
+            if (startScreenElement && gameScreenElement) {
+                startScreenElement.style.display = 'none';
+                gameScreenElement.style.display = 'flex';
+                console.log('Game screen displayed');
+            } else {
+                console.error('Start or Game screen element not found');
+            }
+        } else {
+            showNotification('Please wait, loading player data...');
+            console.warn('Data not loaded yet');
+        }
+    });
+}
+
 // Fungsi pendukung lainnya (simplified)
 const depositBtn = document.getElementById('deposit-btn');
 if (depositBtn) {
@@ -703,7 +714,7 @@ if (copyLinkBtn) {
     });
 }
 
-// Fungsi dummy buat handleDeposit (sesuai kebutuhan)
+// Fungsi dummy buat handleDeposit
 async function handleDeposit(username, amount) {
     if (!username || amount <= 0) return;
     const playerRef = ref(database, `players/${username}`);

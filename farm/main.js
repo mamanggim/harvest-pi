@@ -2024,70 +2024,220 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // START deposit handler
-    const depositBtn = document.getElementById('deposit-btn');
-    const depositAmountInput = document.getElementById('deposit-amount');
-    const depositResult = document.getElementById('deposit-result');
-    const depositLoading = document.getElementById('deposit-loading');
+const depositBtn = document.getElementById('deposit-btn');
+const depositAmountInput = document.getElementById('deposit-amount');
+const depositResult = document.getElementById('deposit-result');
+const depositLoading = document.getElementById('deposit-loading');
 
-    if (depositAmountInput) {
-        depositAmountInput.addEventListener('input', () => {
-            const rawAmount = depositAmountInput.value.replace(',', '.');
-            const amount = parseFloat(rawAmount) || 0;
-            const converted = amount * currentExchangeRate;
-            const resultText = `You will get: ${converted.toLocaleString()} Farm Coins`;
+// Tambah elemen pop-up konfirmasi (pastikan ada di HTML atau dibuat dinamis)
+let confirmPopup = document.getElementById('confirm-deposit-popup');
+if (!confirmPopup) {
+    confirmPopup = document.createElement('div');
+    confirmPopup.id = 'confirm-deposit-popup';
+    confirmPopup.style.cssText = 'display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border:2px solid #000; z-index:1000;';
+    confirmPopup.innerHTML = `
+        <p id="confirm-deposit-text"></p>
+        <button id="confirm-yes">Yes</button>
+        <button id="confirm-no">No</button>
+    `;
+    document.body.appendChild(confirmPopup);
+}
+const confirmText = document.getElementById('confirm-deposit-text');
+const confirmYes = document.getElementById('confirm-yes');
+const confirmNo = document.getElementById('confirm-no');
+
+if (depositAmountInput) {
+    depositAmountInput.addEventListener('input', () => {
+        const rawAmount = depositAmountInput.value.replace(',', '.');
+        const amount = parseFloat(rawAmount) || 0;
+        const converted = amount * currentExchangeRate;
+        const resultText = `You will get: ${converted.toLocaleString()} Farm Coins`;
+        if (depositResult) {
             depositResult.textContent = resultText.length > 25 ? resultText.substring(0, 25) + '…' : resultText;
             depositResult.title = resultText;
+        } else {
+            console.warn('deposit-result element not found');
+        }
+    });
+}
+
+if (depositBtn) {
+    addSafeClickListener(depositBtn, async () => {
+        const rawAmount = depositAmountInput.value.replace(',', '.');
+        const amount = parseFloat(rawAmount);
+        const playerRef = ref(database, `players/${username}`);
+        const snapshot = await get(playerRef);
+        const data = snapshot.val();
+
+        if (!data) return showNotification('Player data not found!');
+        if (isNaN(amount) || amount <= 0) return showNotification('Invalid deposit amount!');
+        if (piBalance < amount) return showNotification('Not enough PI for deposit!');
+
+        const converted = Math.floor(amount * currentExchangeRate);
+        if (confirmText && confirmPopup && confirmYes && confirmNo) {
+            confirmText.textContent = `Confirm deposit ${amount.toFixed(6)} PI to get ${converted} Farm Coins?`;
+            confirmPopup.style.display = 'block';
+
+            confirmYes.onclick = async () => {
+                piBalance -= amount;
+                farmCoins += converted;
+
+                piBalance = Math.round(piBalance * 1000000) / 1000000;
+                farmCoins = Math.floor(farmCoins);
+
+                if (depositLoading) depositLoading.style.display = 'block';
+
+                setTimeout(async () => {
+                    try {
+                        await update(playerRef, { piBalance, farmCoins });
+                        const piElem = document.getElementById('pi-balance');
+                        const fcElem = document.getElementById('fc-balance');
+                        if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+                        else console.warn('pi-balance element not found');
+                        if (fcElem) fcElem.textContent = farmCoins.toLocaleString();
+                        else console.warn('fc-balance element not found');
+                        if (depositAmountInput) depositAmountInput.value = '';
+                        if (depositResult) {
+                            depositResult.textContent = 'You will get: 0 Farm Coins';
+                            depositResult.title = '';
+                        }
+                        playCoinSound();
+                        showNotification('Deposit successful!');
+                    } catch (error) {
+                        console.error('Deposit failed:', error.message);
+                        showNotification('Deposit failed: ' + error.message);
+                    } finally {
+                        if (depositLoading) depositLoading.style.display = 'none';
+                        confirmPopup.style.display = 'none';
+                    }
+                }, 3000);
+            };
+
+            confirmNo.onclick = () => {
+                confirmPopup.style.display = 'none';
+                showNotification('Deposit cancelled!');
+            };
+        } else {
+            console.error('Confirm popup elements not found');
+        }
+    });
+}
+// END deposit handler
+
+// Load username dari localStorage
+username = localStorage.getItem('username');
+if (username) {
+    loadPlayerData();
+    updateReferralLink();
+}
+
+// Initialize game
+async function initializeGame() {
+    try {
+        await loadData();
+        updateUIText();
+
+        setTimeout(() => {
+            const loadingScreenElement = document.getElementById('loading-screen');
+            const loginScreenElement = document.getElementById('login-screen');
+            if (loadingScreenElement && loginScreenElement) {
+                console.log('Hiding loading screen, showing login screen');
+                loadingScreenElement.style.display = 'none';
+                switchToLogin();
+                console.log('Login screen display:', loginScreenElement.style.display);
+                console.log('Login screen opacity:', loginScreenElement.style.opacity);
+            } else {
+                console.error('Loading or Login screen element not found:', { loadingScreenElement, loginScreenElement });
+            }
+        }, 1000);
+    } catch (error) {
+        console.error('Error initializing game:', error.message);
+        showNotification('Error initializing game. Please reload.');
+        setTimeout(() => {
+            const loadingScreenElement = document.getElementById('loading-screen');
+            const loginScreenElement = document.getElementById('login-screen');
+            if (loadingScreenElement && loginScreenElement) {
+                loadingScreenElement.style.display = 'none';
+                switchToLogin();
+            }
+        }, 1000);
+    }
+}
+
+// Save player data with throttling
+let lastSave = 0;
+const saveCooldown = 2000;
+
+async function savePlayerData() {
+    if (!username) return;
+
+    const now = Date.now();
+    if (now - lastSave < saveCooldown) return;
+
+    lastSave = now;
+    isSaving = true;
+
+    const playerRef = ref(database, `players/${username}`);
+    const playerData = {
+        farmCoins: farmCoins,
+        piBalance: piBalance,
+        water: water,
+        level: level,
+        xp: xp,
+        inventory: inventory,
+        farmPlots: farmPlots,
+        harvestCount: harvestCount,
+        achievements: achievements,
+        lastClaim: lastClaim,
+        claimedToday: claimedToday,
+        referralEarnings: referralEarnings,
+        username: username
+    };
+
+    try {
+        await update(playerRef, playerData);
+        console.log('Player data saved:', playerData);
+    } catch (error) {
+        console.error('Error saving player data:', error.message);
+        showNotification('Error saving data: ' + error.message);
+    } finally {
+        isSaving = false;
+    }
+}
+
+// Handle referral link from URL
+function handleReferral() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const referralUsername = urlParams.get('referral');
+    if (referralUsername && username && referralUsername !== username) {
+        const referrerRef = ref(database, `players/${referralUsername}`);
+        get(referrerRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                const referrerData = snapshot.val();
+                const newReferralEarnings = (referrerData.referralEarnings || 0) + 100;
+                update(referrerRef, { referralEarnings: newReferralEarnings })
+                    .then(() => {
+                        console.log(`Referral bonus given to ${referralUsername}`);
+                        showNotification('Referral bonus given to referrer!');
+                    })
+                    .catch(err => {
+                        console.error('Error updating referral earnings:', err);
+                    });
+            }
+        }).catch(err => {
+            console.error('Error fetching referrer data:', err);
         });
     }
+}
 
-    if (depositBtn) {
-        addSafeClickListener(depositBtn, async () => {
-            const rawAmount = depositAmountInput.value.replace(',', '.');
-            const amount = parseFloat(rawAmount);
-            const playerRef = ref(database, `players/${username}`);
-            const snapshot = await get(playerRef);
-            const data = snapshot.val();
-
-            if (!data) return showNotification('Player data not found!');
-            if (isNaN(amount) || amount <= 0) return showNotification('Invalid deposit amount!');
-            if (piBalance < amount) return showNotification('Not enough PI for deposit!');
-
-            const converted = Math.floor(amount * currentExchangeRate);
-            piBalance -= amount;
-            farmCoins += converted;
-
-            piBalance = Math.round(piBalance * 1000000) / 1000000;
-            farmCoins = Math.floor(farmCoins);
-
-            depositLoading.style.display = 'block';
-
-            setTimeout(async () => {
-                try {
-                    await update(playerRef, { piBalance, farmCoins });
-                    const piElem = document.getElementById('pi-balance');
-                    const fcElem = document.getElementById('fc-balance');
-                    if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
-                    if (fcElem) fcElem.textContent = farmCoins.toLocaleString();
-                    depositAmountInput.value = '';
-                    depositResult.textContent = 'You will get: 0 Farm Coins';
-                    playCoinSound();
-                    showNotification('Deposit successful!');
-                } catch (error) {
-                    console.error('Deposit failed:', error.message);
-                    showNotification('Deposit failed: ' + error.message);
-                } finally {
-                    depositLoading.style.display = 'none';
-                }
-            }, 3000);
-        });
-    }
-    // END deposit handler
-
-    // Load username dari localStorage
-    username = localStorage.getItem('username');
-    if (username) {
+// Check referral on load
+document.addEventListener('DOMContentLoaded', () => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+        username = storedUsername;
         loadPlayerData();
         updateReferralLink();
+        handleReferral();
     }
 
     initializeGame();

@@ -437,9 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
     switchToLogin();
 });
 
-// Login dengan cek username berdasarkan email
+// Perbaiki set username dan hapus dependensi userId di login
 if (loginEmailBtn) {
-    console.log('Login button found:', loginEmailBtn); // Debug
     addSafeClickListener(loginEmailBtn, async (e) => {
         e.preventDefault();
         console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
@@ -487,7 +486,7 @@ if (loginEmailBtn) {
             }
 
             username = foundUsername;
-            localStorage.setItem('username', username);
+            localStorage.setItem('username', username); // Hanya simpan username
             showNotification('Logged in as ' + user.email);
             console.log('Login successful, username:', username);
 
@@ -521,6 +520,36 @@ if (loginEmailBtn) {
             loginError.textContent = 'Login failed: ' + error.message;
             verifyEmailMsg.style.display = 'none';
             console.error('Login error:', error.message);
+        }
+    });
+}
+
+// Perbaiki startGame untuk pakai username, bukan userId
+const startTextElement = document.getElementById('start-text');
+if (startTextElement) {
+    addSafeClickListener(startTextElement, () => {
+        console.log('Start Text clicked, isDataLoaded:', isDataLoaded, 'username:', username);
+        if (isDataLoaded && username) { // Ganti userId jadi username
+            showNotification('Game started!');
+            const startScreenElement = document.getElementById('start-screen');
+            const gameScreenElement = document.getElementById('game-screen');
+            if (startScreenElement && gameScreenElement) {
+                startScreenElement.style.display = 'none';
+                startScreenElement.classList.remove('center-screen');
+                gameScreenElement.style.display = 'flex';
+                gameScreenElement.classList.add('fade-in');
+                console.log('Game screen displayed');
+            } else {
+                console.error('Start or Game screen element not found');
+            }
+            isAudioPlaying = false;
+            playBgMusic();
+            playBgVoice();
+            switchTab('farm');
+            enterFullScreen();
+        } else {
+            showNotification('Please wait, loading player data or login first...');
+            console.warn('Data not loaded yet or user not logged in');
         }
     });
 }
@@ -667,29 +696,6 @@ if (registerEmailBtn) {
             registerError.style.display = 'block';
             registerError.textContent = 'Registration failed: ' + error.message;
             console.error('Registration error:', error.message);
-        }
-    });
-}
-
-// Fungsi untuk Start Game
-const startGameBtn = document.getElementById('start-game-btn');
-if (startGameBtn) {
-    addSafeClickListener(startGameBtn, () => {
-        console.log('Start Game clicked, isDataLoaded:', isDataLoaded);
-        if (isDataLoaded) {
-            showNotification('Game started!');
-            const startScreenElement = document.getElementById('start-screen');
-            const gameScreenElement = document.getElementById('game-screen');
-            if (startScreenElement && gameScreenElement) {
-                startScreenElement.style.display = 'none';
-                gameScreenElement.style.display = 'flex';
-                console.log('Game screen displayed');
-            } else {
-                console.error('Start or Game screen element not found');
-            }
-        } else {
-            showNotification('Please wait, loading player data...');
-            console.warn('Data not loaded yet');
         }
     });
 }

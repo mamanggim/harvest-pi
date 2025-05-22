@@ -395,6 +395,17 @@ const passwordInput = document.getElementById('password-input');
 const loginError = document.getElementById('login-error');
 const verifyEmailMsg = document.getElementById('verify-status');
 
+// Asumsi addSafeClickListener ada (kalo ga, definisikan)
+function addSafeClickListener(element, callback) {
+    if (element) {
+        element.addEventListener('click', (e) => {
+            callback(e);
+        });
+    } else {
+        console.error('Element not found for addSafeClickListener');
+    }
+}
+
 // Fungsi untuk switch antara login dan register screen
 function switchToLogin() {
     const loginScreenElement = document.getElementById('login-screen');
@@ -434,12 +445,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginLink) {
         addSafeClickListener(loginLink, switchToLogin);
     }
-    // Pastiin login screen aktif default saat loading selesai
     switchToLogin();
 });
 
 // Login dengan cek username berdasarkan email
 if (loginEmailBtn) {
+    console.log('Login button found:', loginEmailBtn); // Debug
     addSafeClickListener(loginEmailBtn, async (e) => {
         e.preventDefault();
         console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
@@ -491,14 +502,28 @@ if (loginEmailBtn) {
             showNotification('Logged in as ' + user.email);
             console.log('Login successful, username:', username);
 
-            const loginScreenElement = document.getElementById('login-screen');
-            const startScreenElement = document.getElementById('start-screen');
-            if (loginScreenElement && startScreenElement) {
-                loginScreenElement.style.display = 'none';
-                startScreenElement.style.display = 'flex';
-                console.log('Start screen displayed');
+            // Cek role dan redirect
+            const playerData = playersData[foundUsername];
+            if (playerData && playerData.role === 'admin') {
+                const adminDashboardElement = document.getElementById('admin-dashboard');
+                const loginScreenElement = document.getElementById('login-screen');
+                if (adminDashboardElement && loginScreenElement) {
+                    loginScreenElement.style.display = 'none';
+                    adminDashboardElement.style.display = 'flex';
+                    console.log('Redirected to admin dashboard');
+                } else {
+                    console.error('Admin dashboard or login screen element not found');
+                }
             } else {
-                console.error('Login or Start screen element not found');
+                const loginScreenElement = document.getElementById('login-screen');
+                const startScreenElement = document.getElementById('start-screen');
+                if (loginScreenElement && startScreenElement) {
+                    loginScreenElement.style.display = 'none';
+                    startScreenElement.style.display = 'flex';
+                    console.log('Start screen displayed');
+                } else {
+                    console.error('Login or Start screen element not found');
+                }
             }
 
             loadPlayerData();
@@ -559,7 +584,7 @@ function loadPlayerData() {
                     totalDeposit: 0,
                     referralEarnings: 0,
                     username: username,
-                    email: emailInput.value // Tambah email dari input login
+                    email: emailInput.value
                 };
                 set(playerRef, initialData).catch(err => {
                     console.error('Initial set failed:', err);
@@ -589,7 +614,7 @@ function loadPlayerData() {
 
 // Fungsi generate referral link
 function generateReferralLink(username) {
-    return `https://www.harvestpi.biz.id/referral/${username}`;
+    return `https://yourgame.com/referral/${username}`;
 }
 
 // Register dengan username dan email
@@ -616,7 +641,6 @@ if (registerEmailBtn) {
             const normalizedUsername = inputUsername.toLowerCase().replace(/[^a-z0-9]/g, '');
             const playerRef = ref(database, `players/${normalizedUsername}`);
             
-            // Cek apakah username sudah ada
             const snapshot = await get(playerRef);
             if (snapshot.exists()) {
                 throw new Error('Username already taken.');
@@ -643,13 +667,12 @@ if (registerEmailBtn) {
                 totalDeposit: 0,
                 referralEarnings: 0,
                 username: normalizedUsername,
-                email: email // Tambah email ke data
+                email: email
             });
 
             registerEmailInput.value = '';
             registerPasswordInput.value = '';
             if (registerUsernameInput) registerUsernameInput.value = '';
-            console.log('User data initialized, switching to login screen');
             switchToLogin();
         } catch (error) {
             registerError.style.display = 'block';
@@ -660,15 +683,14 @@ if (registerEmailBtn) {
 }
 
 // Fungsi untuk Start Game
-const startGameBtn = document.getElementById('start-game-btn'); // Pastiin id ini sesuai di HTML
+const startGameBtn = document.getElementById('start-game-btn');
 if (startGameBtn) {
     addSafeClickListener(startGameBtn, () => {
         console.log('Start Game clicked, isDataLoaded:', isDataLoaded);
         if (isDataLoaded) {
             showNotification('Game started!');
-            // Tambah logika game di sini (misalnya pindah ke game screen)
             const startScreenElement = document.getElementById('start-screen');
-            const gameScreenElement = document.getElementById('game-screen'); // Pastiin ada di HTML
+            const gameScreenElement = document.getElementById('game-screen');
             if (startScreenElement && gameScreenElement) {
                 startScreenElement.style.display = 'none';
                 gameScreenElement.style.display = 'flex';
@@ -683,7 +705,7 @@ if (startGameBtn) {
     });
 }
 
-// Fungsi pendukung lainnya (simplified)
+// Fungsi pendukung lainnya
 const depositBtn = document.getElementById('deposit-btn');
 if (depositBtn) {
     addSafeClickListener(depositBtn, async (e) => {
@@ -711,7 +733,6 @@ if (copyLinkBtn) {
     });
 }
 
-// Fungsi dummy buat handleDeposit
 async function handleDeposit(username, amount) {
     if (!username || amount <= 0) return;
     const playerRef = ref(database, `players/${username}`);

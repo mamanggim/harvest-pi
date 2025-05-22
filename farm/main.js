@@ -41,7 +41,6 @@ let farmPlots = [];
 let harvestCount = 0;
 let achievements = { harvest: false, coins: false };
 let username = null;
-let userId = null;
 let lastClaim = null;
 const plotCount = 4;
 const piToFarmRate = 1000000;

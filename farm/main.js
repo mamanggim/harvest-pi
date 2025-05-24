@@ -2208,6 +2208,25 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Ambil username dari database berdasarkan email
+    const email = user.email;
+    const encodedEmail = encodeEmail(email);
+    const playersRef = ref(database, 'players');
+    const snapshot = await get(playersRef);
+    const playersData = snapshot.val() || {};
+    let username = null;
+    for (const playerUsername in playersData) {
+      if (playersData[playerUsername].email === email) {
+        username = playerUsername;
+        break;
+      }
+    }
+    if (!username) {
+      realDepositMsg.textContent = 'Username not found. Please register.';
+      console.log('Validasi gagal: Username ga ketemu');
+      return;
+    }
+
     const amount = parseFloat(depositAmountInput.value);
     if (!amount || amount < 1) {
       realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
@@ -2216,11 +2235,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cek limit deposit harian
-    const encodedEmail = encodeEmail(user.email);
-    const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
     const depositLimitRef = ref(database, `depositLimits/${encodedEmail}/${today}`);
-    const snapshot = await get(depositLimitRef);
-    const depositData = snapshot.val();
+    const depositSnapshot = await get(depositLimitRef);
+    const depositData = depositSnapshot.val();
     let dailyTotal = depositData ? depositData.total : 0;
 
     if (dailyTotal + amount > 1000) {
@@ -2233,7 +2251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     realDepositBtn.disabled = true;
     depositAmountInput.disabled = true;
 
-    const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN'; // Ganti dengan wallet address asli
+    const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN';
     const memo = `deposit_${username}_${Date.now()}`;
 
     // Tampilkan popup
@@ -2278,12 +2296,17 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const playerRef = ref(database, `players/${username}`);
         const snapshot = await get(playerRef);
-        const playerData = snapshot.val();
-        let totalDeposit = playerData.totalDeposit || 0;
 
-        totalDeposit += amount;
+        if (!snapshot.exists()) {
+          console.log('Player data not found, creating new entry');
+          await set(playerRef, { totalDeposit: amount, piBalance: 0, farmCoins: 0 });
+          totalDeposit = amount;
+        } else {
+          const playerData = snapshot.val();
+          totalDeposit = playerData.totalDeposit || 0;
+        }
+
         dailyTotal += amount;
-
         await update(playerRef, { totalDeposit });
         await set(depositLimitRef, { total: dailyTotal });
 
@@ -2323,7 +2346,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const withdrawMsg = document.getElementById("withdraw-msg");
   const withdrawPopup = document.getElementById("withdraw-popup");
   const withdrawPopupAmount = document.getElementById("withdraw-popup-amount");
-  const withdrawPopupUserUsername = document.getElementById("withdraw-popup-username");
+  const withdrawPopupUsername = document.getElementById("withdraw-popup-username"); // Perbaiki typo
   const withdrawPopupWallet = document.getElementById("withdraw-popup-wallet");
   const withdrawWalletInput = document.getElementById("withdraw-wallet-input");
   const withdrawCountdownTimer = document.getElementById("withdraw-countdown-timer");
@@ -2336,7 +2359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     withdrawMsg,
     withdrawPopup,
     withdrawPopupAmount,
-    withdrawPopupUsername,
+    withdrawPopupUsername, // Perbaiki typo di log
     withdrawPopupWallet,
     withdrawWalletInput,
     withdrawCountdownTimer,
@@ -2362,6 +2385,25 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Ambil username dari database berdasarkan email
+    const email = user.email;
+    const encodedEmail = encodeEmail(email);
+    const playersRef = ref(database, 'players');
+    const snapshot = await get(playersRef);
+    const playersData = snapshot.val() || {};
+    let username = null;
+    for (const playerUsername in playersData) {
+      if (playersData[playerUsername].email === email) {
+        username = playerUsername;
+        break;
+      }
+    }
+    if (!username) {
+      withdrawMsg.textContent = 'Username not found. Please register.';
+      console.log('Validasi gagal: Username ga ketemu');
+      return;
+    }
+
     const amount = parseFloat(withdrawAmountInput.value);
     if (!amount || amount < 1) {
       withdrawMsg.textContent = 'Minimum withdraw is 1 PI.';
@@ -2370,8 +2412,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const playerRef = ref(database, `players/${username}`);
-    const snapshot = await get(playerRef);
-    const playerData = snapshot.val();
+    const playerSnapshot = await get(playerRef);
+    if (!playerSnapshot.exists()) {
+      withdrawMsg.textContent = 'Player data not found.';
+      console.log('Validasi gagal: Player data ga ketemu');
+      return;
+    }
+    const playerData = playerSnapshot.val();
     const piBalance = playerData.piBalance || 0;
 
     if (amount > piBalance) {
@@ -2436,7 +2483,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Withdraw request submitted:', { amount, walletAddress });
       } catch (error) {
         console.error('Error submitting withdraw:', error.message);
-        withdrawMsg.textContent = 'Error submitting withdraw: ' + error.message;
+        withdrawMsg.textContent = 'Error submitting withdraw: ' + error.message);
       } finally {
         withdrawBtn.disabled = false;
         withdrawAmountInput.disabled = false;
@@ -2460,7 +2507,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load user balances
   auth.onAuthStateChanged(user => {
     if (user) {
-      username = username;
+      username = user.displayName || user.email; // Ganti jadi displayName atau email sebagai fallback
       localStorage.setItem('username', username);
       loadUserBalances();
     }
@@ -2469,36 +2516,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Handle referral link from URL
 function handleReferral() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const referralUsername = urlParams.get('referral');
-    if (referralUsername && username && referralUsername !== username) {
-        const referrerRef = ref(database, `players/${referralUsername}`);
-        get(referrerRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const referrerData = snapshot.val();
-                const newReferralEarnings = (referrerData.referralEarnings || 0) + 100;
-                update(referrerRef, { referralEarnings: newReferralEarnings })
-                    .then(() => {
-                        console.log(`Referral bonus given to ${referralUsername}`);
-                        showNotification('Referral bonus given to referrer!');
-                    })
-                    .catch(err => {
-                        console.error('Error updating referral earnings:', err);
-                    });
-            }
-        }).catch(err => {
-            console.error('Error fetching referrer data:', err);
-        });
-    }
+  const urlParams = new URLSearchParams(window.location.search);
+  const referralUsername = urlParams.get('referral');
+  if (referralUsername && username && referralUsername !== username) {
+    const referrerRef = ref(database, `players/${referralUsername}`);
+    get(referrerRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const referrerData = snapshot.val();
+        const newReferralEarnings = (referrerData.referralEarnings || 0) + 100;
+        update(referrerRef, { referralEarnings: newReferralEarnings })
+          .then(() => {
+            console.log(`Referral bonus given to ${referralUsername}`);
+            showNotification('Referral bonus given to referrer!');
+          })
+          .catch(err => {
+            console.error('Error updating referral earnings:', err);
+          });
+      }
+    }).catch(err => {
+      console.error('Error fetching referrer data:', err);
+    });
+  }
 }
 
 // Check referral on load
 document.addEventListener('DOMContentLoaded', () => {
-    const storedUsername = localStorage.getItem('username');
-    if (storedUsername) {
-        username = storedUsername;
-        loadPlayerData();
-        updateReferralLink();
-        handleReferral();
-    }
+  const storedUsername = localStorage.getItem('username');
+  if (storedUsername) {
+    username = storedUsername;
+    loadPlayerData();
+    updateReferralLink();
+    handleReferral();
+  }
 });

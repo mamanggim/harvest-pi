@@ -2203,9 +2203,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const user = auth.currentUser;
     if (!user) {
-      realDepositMsg.textContent = 'Please login first.';
-      console.log('Validasi gagal: User belum login');
-      return;
+        realDepositMsg.textContent = 'Please login first.';
+        console.log('Validasi gagal: User belum login');
+        return;
     }
 
     // Ambil username dari database berdasarkan email
@@ -2216,22 +2216,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const playersData = snapshot.val() || {};
     let username = null;
     for (const playerUsername in playersData) {
-      if (playersData[playerUsername].email === email) {
-        username = playerUsername;
-        break;
-      }
+        if (playersData[playerUsername].email === email) {
+            username = playerUsername;
+            break;
+        }
     }
     if (!username) {
-      realDepositMsg.textContent = 'Username not found. Please register.';
-      console.log('Validasi gagal: Username ga ketemu');
-      return;
+        realDepositMsg.textContent = 'Username not found. Please register.';
+        console.log('Validasi gagal: Username ga ketemu');
+        return;
     }
 
     const amount = parseFloat(depositAmountInput.value);
     if (!amount || amount < 1) {
-      realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
-      console.log('Validasi gagal: Amount < 1');
-      return;
+        realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
+        console.log('Validasi gagal: Amount < 1');
+        return;
     }
 
     // Cek limit deposit harian
@@ -2242,9 +2242,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let dailyTotal = depositData ? depositData.total : 0;
 
     if (dailyTotal + amount > 1000) {
-      realDepositMsg.textContent = 'Daily deposit limit exceeded (1000 PI).';
-      console.log('Validasi gagal: Melebihi limit harian');
-      return;
+        realDepositMsg.textContent = 'Daily deposit limit exceeded (1000 PI).';
+        console.log('Validasi gagal: Melebihi limit harian');
+        return;
     }
 
     realDepositMsg.textContent = '';
@@ -2267,78 +2267,81 @@ document.addEventListener('DOMContentLoaded', () => {
     let timeLeft = countdownDuration;
     countdownTimer.textContent = `Time left: ${timeLeft}s`;
     countdownInterval = setInterval(() => {
-      timeLeft--;
-      countdownTimer.textContent = `Time left: ${timeLeft}s`;
-      if (timeLeft <= 0) {
-        clearInterval(countdownInterval);
-        depositPopup.style.display = 'none';
-        realDepositBtn.disabled = false;
-        depositAmountInput.disabled = false;
-        realDepositMsg.textContent = 'Deposit request timed out.';
-      }
+        timeLeft--;
+        countdownTimer.textContent = `Time left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            depositPopup.style.display = 'none';
+            realDepositBtn.disabled = false;
+            depositAmountInput.disabled = false;
+            realDepositMsg.textContent = 'Deposit request timed out.';
+        }
     }, 1000);
 
     // Copy Wallet Address
     copyWalletBtn.addEventListener('click', () => {
-      copyToClipboard(walletAddress, copyWalletBtn);
+        copyToClipboard(walletAddress, copyWalletBtn);
     });
 
     // Copy Memo
     copyMemoBtn.addEventListener('click', () => {
-      copyToClipboard(memo, copyMemoBtn);
+        copyToClipboard(memo, copyMemoBtn);
     });
 
     // Confirm Deposit
     confirmDepositBtn.addEventListener('click', async () => {
-      clearInterval(countdownInterval);
-      depositPopup.style.display = 'none';
+        clearInterval(countdownInterval);
+        depositPopup.style.display = 'none';
 
-      try {
-        const playerRef = ref(database, `players/${username}`);
-        const snapshot = await get(playerRef);
+        try {
+            const playerRef = ref(database, `players/${username}`);
+            const snapshot = await get(playerRef);
+            let totalDeposit; // Deklarasikan di sini
 
-        if (!snapshot.exists()) {
-          console.log('Player data not found, creating new entry');
-          await set(playerRef, { totalDeposit: amount, piBalance: 0, farmCoins: 0 });
-          totalDeposit = amount;
-        } else {
-          const playerData = snapshot.val();
-          totalDeposit = playerData.totalDeposit || 0;
+            if (!snapshot.exists()) {
+                console.log('Player data not found, creating new entry');
+                await set(playerRef, { totalDeposit: amount, piBalance: 0, farmCoins: 0 });
+                totalDeposit = amount;
+            } else {
+                const playerData = snapshot.val();
+                totalDeposit = playerData.totalDeposit || 0;
+            }
+
+            totalDeposit += amount;
+            dailyTotal += amount;
+
+            await update(playerRef, { totalDeposit });
+            await set(depositLimitRef, { total: dailyTotal });
+
+            const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}`);
+            await push(depositHistoryRef, {
+                amount,
+                timestamp: Date.now(),
+                memo,
+                status: 'pending'
+            });
+
+            realDepositMsg.textContent = 'Deposit request submitted. Awaiting confirmation...';
+            console.log('Deposit request submitted:', { amount, memo });
+        } catch (error) {
+            console.error('Error submitting deposit:', error.message);
+            realDepositMsg.textContent = 'Error submitting deposit: ' + error.message;
+        } finally {
+            realDepositBtn.disabled = false;
+            depositAmountInput.disabled = false;
+            depositAmountInput.value = '';
         }
-
-        dailyTotal += amount;
-        await update(playerRef, { totalDeposit });
-        await set(depositLimitRef, { total: dailyTotal });
-
-        const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}`);
-        await push(depositHistoryRef, {
-          amount,
-          timestamp: Date.now(),
-          memo,
-          status: 'pending'
-        });
-
-        realDepositMsg.textContent = 'Deposit request submitted. Awaiting confirmation...';
-        console.log('Deposit request submitted:', { amount, memo });
-      } catch (error) {
-        console.error('Error submitting deposit:', error.message);
-        realDepositMsg.textContent = 'Error submitting deposit: ' + error.message;
-      } finally {
-        realDepositBtn.disabled = false;
-        depositAmountInput.disabled = false;
-        depositAmountInput.value = '';
-      }
     });
 
     // Cancel Deposit
     cancelDepositBtn.addEventListener('click', () => {
-      clearInterval(countdownInterval);
-      depositPopup.style.display = 'none';
-      realDepositBtn.disabled = false;
-      depositAmountInput.disabled = false;
-      realDepositMsg.textContent = 'Deposit request cancelled.';
+        clearInterval(countdownInterval);
+        depositPopup.style.display = 'none';
+        realDepositBtn.disabled = false;
+        depositAmountInput.disabled = false;
+        realDepositMsg.textContent = 'Deposit request cancelled.';
     });
-  });
+});
 
   // Fitur Withdraw
   const withdrawBtn = document.getElementById("withdraw-btn");

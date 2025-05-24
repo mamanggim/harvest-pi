@@ -2276,7 +2276,7 @@ document.addEventListener('DOMContentLoaded', () => {
       depositPopup.style.display = 'none';
 
       try {
-        const playerRef = ref(database, `players/${user.username}`);
+        const playerRef = ref(database, `players/${username}`);
         const snapshot = await get(playerRef);
         const playerData = snapshot.val();
         let totalDeposit = playerData.totalDeposit || 0;
@@ -2323,7 +2323,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const withdrawMsg = document.getElementById("withdraw-msg");
   const withdrawPopup = document.getElementById("withdraw-popup");
   const withdrawPopupAmount = document.getElementById("withdraw-popup-amount");
-  const withdrawPopupUserId = document.getElementById("withdraw-popup-userid");
+  const withdrawPopupUserUsername = document.getElementById("withdraw-popup-username");
   const withdrawPopupWallet = document.getElementById("withdraw-popup-wallet");
   const withdrawWalletInput = document.getElementById("withdraw-wallet-input");
   const withdrawCountdownTimer = document.getElementById("withdraw-countdown-timer");
@@ -2336,7 +2336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     withdrawMsg,
     withdrawPopup,
     withdrawPopupAmount,
-    withdrawPopupUserId,
+    withdrawPopupUsername,
     withdrawPopupWallet,
     withdrawWalletInput,
     withdrawCountdownTimer,
@@ -2460,7 +2460,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load user balances
   auth.onAuthStateChanged(user => {
     if (user) {
-      username = user.username;
+      username = username;
       localStorage.setItem('username', username);
       loadUserBalances();
     }

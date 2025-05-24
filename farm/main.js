@@ -2483,7 +2483,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Withdraw request submitted:', { amount, walletAddress });
       } catch (error) {
         console.error('Error submitting withdraw:', error.message);
-        withdrawMsg.textContent = 'Error submitting withdraw: ' + error.message);
+        withdrawMsg.textContent = 'Error submitting withdraw: ' + error.message;
       } finally {
         withdrawBtn.disabled = false;
         withdrawAmountInput.disabled = false;
@@ -2502,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', () => {
       withdrawWalletInput.disabled = false;
       withdrawMsg.textContent = 'Withdraw request cancelled.';
     });
-  });
+});
 
   // Load user balances
   auth.onAuthStateChanged(user => {

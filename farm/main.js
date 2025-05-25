@@ -456,90 +456,73 @@ function updateReferralLink() {
 
 // Perbaiki set username dan hapus dependensi userId di login
 if (loginEmailBtn) {
-    addSafeClickListener(loginEmailBtn, async (e) => {
-        e.preventDefault();
-        console.log('Login button clicked, email:', emailInput.value, 'password:', passwordInput.value);
-        const email = emailInput.value;
-        const password = passwordInput.value;
+  addSafeClickListener(loginEmailBtn, async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
 
-        if (!email || !password) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Please enter email and password.';
-            console.log('Validation failed: Empty fields');
-            return;
+    if (!email || !password) {
+      loginError.style.display = 'block';
+      loginError.textContent = 'Please enter email and password.';
+      return;
+    }
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      if (!user.emailVerified) {
+        await sendEmailVerification(user);
+        verifyEmailMsg.style.display = 'block';
+        loginError.style.display = 'none';
+        return;
+      }
+
+      // Encode email jadi key Firebase
+      const encodedEmail = email.replace('@', '_at_').replace(/\./g, '_dot_');
+      const playerRef = ref(database, 'players/' + encodedEmail);
+      const snapshot = await get(playerRef);
+      const playerData = snapshot.val();
+
+      if (!playerData) {
+        loginError.style.display = 'block';
+        loginError.textContent = 'Account data not found. Please register.';
+        return;
+      }
+
+      // Simpan ke localStorage
+      localStorage.setItem('encodedEmail', encodedEmail);
+      localStorage.setItem('email', email);
+
+      // Redirect berdasarkan role
+      const role = playerData.role || 'user';
+      showNotification('Logged in as ' + email);
+
+      if (role === 'admin') {
+        const adminDashboardElement = document.getElementById('admin-dashboard');
+        const loginScreenElement = document.getElementById('login-screen');
+        if (adminDashboardElement && loginScreenElement) {
+          loginScreenElement.style.display = 'none';
+          adminDashboardElement.style.display = 'flex';
         }
-
-        try {
-            console.log('Attempting login...');
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            if (!user.emailVerified) {
-                await sendEmailVerification(user);
-                verifyEmailMsg.style.display = 'block';
-                loginError.style.display = 'none';
-                console.log('Email not verified');
-                return;
-            }
-
-            // Cari username berdasarkan email di semua players
-            const playersRef = ref(database, 'players');
-            const snapshot = await get(playersRef);
-            const playersData = snapshot.val() || {};
-            let foundUsername = null;
-
-            for (const playerUsername in playersData) {
-                if (playersData[playerUsername].email === email) {
-                    foundUsername = playerUsername;
-                    break;
-                }
-            }
-
-            if (!foundUsername) {
-                loginError.style.display = 'block';
-                loginError.textContent = 'Username not found for this email. Please register first.';
-                console.error('No player data found for email:', email);
-                return;
-            }
-
-            username = foundUsername;
-            localStorage.setItem('username', username); // Hanya simpan username
-            showNotification('Logged in as ' + user.email);
-            console.log('Login successful, username:', username);
-
-            // Cek role dan redirect
-            const playerData = playersData[foundUsername];
-            if (playerData && playerData.role === 'admin') {
-                const adminDashboardElement = document.getElementById('admin-dashboard');
-                const loginScreenElement = document.getElementById('login-screen');
-                if (adminDashboardElement && loginScreenElement) {
-                    loginScreenElement.style.display = 'none';
-                    adminDashboardElement.style.display = 'flex';
-                    console.log('Redirected to admin dashboard');
-                } else {
-                    console.error('Admin dashboard or login screen element not found');
-                }
-            } else {
-                const loginScreenElement = document.getElementById('login-screen');
-                const startScreenElement = document.getElementById('start-screen');
-                if (loginScreenElement && startScreenElement) {
-                    loginScreenElement.style.display = 'none';
-                    startScreenElement.style.display = 'flex';
-                    console.log('Start screen displayed');
-                } else {
-                    console.error('Login or Start screen element not found');
-                }
-            }
-
-            loadPlayerData();
-            updateReferralLink();
-        } catch (error) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Login failed: ' + error.message;
-            verifyEmailMsg.style.display = 'none';
-            console.error('Login error:', error.message);
+      } else {
+        const loginScreenElement = document.getElementById('login-screen');
+        const startScreenElement = document.getElementById('start-screen');
+        if (loginScreenElement && startScreenElement) {
+          loginScreenElement.style.display = 'none';
+          startScreenElement.style.display = 'flex';
         }
-    });
+      }
+
+      // Lanjut load data
+      loadPlayerData();
+      updateReferralLink();
+    } catch (error) {
+      loginError.style.display = 'block';
+      loginError.textContent = 'Login failed: ' + error.message;
+      verifyEmailMsg.style.display = 'none';
+    }
+  });
 }
 
 // Perbaiki startGame untuk pakai username, bukan userId

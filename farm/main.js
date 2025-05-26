@@ -229,16 +229,25 @@ updateVolumes();
 async function loadData() {
     try {
         const langRes = await fetch('/data/lang.json');
+        if (!langRes.ok) {
+            throw new Error(`Failed to fetch lang.json: ${langRes.statusText}`);
+        }
         langData = await langRes.json();
         console.log('Language data loaded:', langData);
 
         const vegRes = await fetch('/data/vegetables.json');
+        if (!vegRes.ok) {
+            throw new Error(`Failed to fetch vegetables.json: ${vegRes.statusText}`);
+        }
         const vegJson = await vegRes.json();
         vegetables = vegJson.vegetables;
         console.log('Vegetables data loaded:', vegetables);
     } catch (error) {
         console.error('Error loading data:', error.message);
-        showNotification('Error loading game data.');
+        showNotification('Error loading game data: ' + error.message);
+        // Fallback kalo gagal load
+        langData[currentLang] = { title: 'Harvest Pi', startGame: 'Start Game' }; // Minimal data biar ga stuck
+        vegetables = [];
     }
 }
 // END loadData fix
@@ -477,7 +486,8 @@ function loadPlayerData() {
                 lastClaim = data.lastClaim || null;
                 claimedToday = data.claimedToday || false;
                 referralEarnings = data.referralEarnings || 0;
-                username = data.username || ''; // Load username
+                username = data.username || '';
+                totalReferrals = data.totalReferrals || 0; // Tambah totalReferrals
                 localStorage.setItem('username', username);
                 console.log('Player data loaded:', data);
             } else {
@@ -496,12 +506,13 @@ function loadPlayerData() {
                     claimedToday: false,
                     totalDeposit: 0,
                     referralEarnings: 0,
+                    totalReferrals: 0, // Tambah totalReferrals
                     email: localStorage.getItem('email'),
                     username: localStorage.getItem('username') || ''
                 };
                 set(playerRef, initialData).catch(err => {
                     console.error('Initial set failed:', err);
-                    showNotification('Error initializing player data.');
+                    showNotification('Error initializing player data: ' + err.message);
                 });
             }
 
@@ -517,11 +528,20 @@ function loadPlayerData() {
         }, (error) => {
             console.error('OnValue error:', error.message);
             showNotification('Failed to load data: ' + error.message);
+            isDataLoaded = false;
+            const loginScreenElement = document.getElementById('login-screen');
+            if (loginScreenElement) {
+                loginScreenElement.style.display = 'flex';
+            }
         }, { onlyOnce: false });
     } catch (error) {
         console.error('Error in loadPlayerData:', error.message);
         showNotification('Failed to connect to Firebase: ' + error.message);
         isDataLoaded = false;
+        const loginScreenElement = document.getElementById('login-screen');
+        if (loginScreenElement) {
+            loginScreenElement.style.display = 'flex';
+        }
     }
 }
 
@@ -869,6 +889,7 @@ async function savePlayerData() {
         lastClaim,
         claimedToday,
         referralEarnings,
+        totalReferrals, // Tambah totalReferrals
         email: localStorage.getItem('email'),
         username: localStorage.getItem('username')
     };
@@ -878,7 +899,7 @@ async function savePlayerData() {
         console.log('Player data saved');
     } catch (error) {
         console.error('Error saving player data:', error.message);
-        showNotification('Error saving data');
+        showNotification('Error saving data: ' + error.message);
     }
 }
 
@@ -1961,7 +1982,17 @@ function copyToClipboard(text, buttonElement) {
 
 // Initialize game
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadData();
+    try {
+        // Tambah timeout buat loadData
+        const loadDataPromise = loadData();
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Load data timed out')), 10000); // Timeout 10 detik
+        });
+        await Promise.race([loadDataPromise, timeoutPromise]);
+    } catch (error) {
+        console.error('Load data failed:', error.message);
+        showNotification('Failed to load game data: ' + error.message);
+    }
     updateUIText();
 
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -1994,41 +2025,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     auth.onAuthStateChanged(async (user) => {
-        if (user && user.emailVerified) {
-            encodedEmail = encodeEmail(user.email);
-            localStorage.setItem('encodedEmail', encodedEmail);
-            localStorage.setItem('email', user.email);
+        try {
+            if (user && user.emailVerified) {
+                encodedEmail = encodeEmail(user.email);
+                localStorage.setItem('encodedEmail', encodedEmail);
+                localStorage.setItem('email', user.email);
 
-            const playerRef = ref(database, `players/${encodedEmail}`);
-            const snapshot = await get(playerRef);
-            const playerData = snapshot.val();
+                const playerRef = ref(database, `players/${encodedEmail}`);
+                const snapshot = await get(playerRef);
+                const playerData = snapshot.val();
 
-            if (playerData) {
-                const role = playerData.role || 'user';
-                username = playerData.username; // Load username
-                localStorage.setItem('username', username);
+                if (playerData) {
+                    const role = playerData.role || 'user';
+                    username = playerData.username;
+                    localStorage.setItem('username', username);
 
-                if (role === 'admin') {
-                    const loginScreenElement = document.getElementById('login-screen');
-                    const adminDashboardElement = document.getElementById('admin-dashboard');
-                    if (loginScreenElement && adminDashboardElement) {
-                        loginScreenElement.style.display = 'none';
-                        adminDashboardElement.style.display = 'flex';
-                        loadAdminTransactions();
+                    if (role === 'admin') {
+                        const loginScreenElement = document.getElementById('login-screen');
+                        const adminDashboardElement = document.getElementById('admin-dashboard');
+                        if (loginScreenElement && adminDashboardElement) {
+                            loginScreenElement.style.display = 'none';
+                            adminDashboardElement.style.display = 'flex';
+                            loadAdminTransactions();
+                        }
+                    } else {
+                        const loginScreenElement = document.getElementById('login-screen');
+                        const startScreenElement = document.getElementById('start-screen');
+                        if (loginScreenElement && startScreenElement) {
+                            loginScreenElement.style.display = 'none';
+                            startScreenElement.style.display = 'flex';
+                        }
                     }
+                    loadPlayerData();
+                    updateReferralLink();
+                    handleReferral();
                 } else {
+                    console.warn('No player data found for:', encodedEmail);
+                    showNotification('Account data not found. Please register.');
                     const loginScreenElement = document.getElementById('login-screen');
-                    const startScreenElement = document.getElementById('start-screen');
-                    if (loginScreenElement && startScreenElement) {
-                        loginScreenElement.style.display = 'none';
-                        startScreenElement.style.display = 'flex';
+                    if (loginScreenElement) {
+                        loginScreenElement.style.display = 'flex';
                     }
                 }
-                loadPlayerData();
-                updateReferralLink();
-                handleReferral();
+            } else {
+                const loginScreenElement = document.getElementById('login-screen');
+                if (loginScreenElement) {
+                    loginScreenElement.style.display = 'flex';
+                }
             }
-        } else {
+        } catch (error) {
+            console.error('Error in auth.onAuthStateChanged:', error.message);
+            showNotification('Error checking auth state: ' + error.message);
             const loginScreenElement = document.getElementById('login-screen');
             if (loginScreenElement) {
                 loginScreenElement.style.display = 'flex';

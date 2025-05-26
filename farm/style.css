@@ -41,12 +41,9 @@ input[type="number"] {
   border: 2px solid #fff;
   padding: 6px;
   font-size: 12px;
-  background: #444;
-  color: #fff;
-  font-family: 'Press Start 2P', cursive;
 }
 
-/* ========== PART 2: GAME HEADER, JUDUL, TAB, & WALLET ========== */
+/* ========== PART 2: GAME HEADER: JUDUL, TAB, WALLET ========== */
 
 #game-header {
   position: fixed;
@@ -63,7 +60,7 @@ input[type="number"] {
 #game-title {
   font-size: 24px;
   color: #66ff00;
-  margin-bottom: 0;
+  margin-bottom: 0px;
   text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
   animation: pulse 2s infinite ease-in-out;
   margin: 0 0 20px;
@@ -85,7 +82,6 @@ input[type="number"] {
   padding: 6px 12px;
   font-size: 11px;
   border-radius: 8px;
-  transition: all 0.3s;
 }
 
 .tab-btn.active {
@@ -93,33 +89,27 @@ input[type="number"] {
   border-color: #ffeb3b;
 }
 
-.tab-btn:hover {
-  background: #555;
-  border-color: #ffeb3b;
-}
-
 #wallet {
-  margin: 10px auto;
-  font-size: 14px;
+  margin: 5px auto 0;
+  font-size: 13px;
   background: rgba(0, 0, 0, 0.4);
-  padding: 10px;
+  padding: 8px 12px;
   border-radius: 8px;
   width: fit-content;
-  max-width: 90%;
 }
 
 #level {
-  margin-top: 5px;
-  font-size: 12px;
+  margin-top: 4px;
+  font-size: 11px;
 }
 
 #xp-bar {
-  width: 150px;
+  width: 160px;
   height: 8px;
-  background: #333;
+  background: #222;
   border: 2px solid #fff;
   border-radius: 5px;
-  margin: 5px auto;
+  margin: 6px auto;
   overflow: hidden;
 }
 
@@ -130,7 +120,7 @@ input[type="number"] {
   transition: width 0.3s;
 }
 
-/* ========== PART 3: GAME SCREEN, TAB CONTENT, & SECTIONS ========== */
+/* ========== PART 3: GAME SCREEN & TAB KONTEN ========== */
 
 #game-screen {
   display: flex;
@@ -164,7 +154,280 @@ input[type="number"] {
   display: block;
 }
 
-/* Farm Area */
+/* ========== PART 4: TOMBOL, MODAL & NOTIFIKASI ========== */
+
+.corner-buttons {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+  z-index: 1001;
+}
+
+#lang-toggle, #settings-btn, #game-lang-toggle, #game-settings-btn, #exit-game-btn {
+  background: #333;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+#lang-toggle:hover, #settings-btn:hover, #game-lang-toggle:hover,
+#game-settings-btn:hover, #exit-game-btn:hover {
+  background: #555;
+  border-color: #ffeb3b;
+}
+
+button {
+  background: #4caf50;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+button:hover {
+  background: #66bb6a;
+}
+
+#notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  display: none;
+  font-size: 14px;
+  min-width: 200px;
+  text-align: center;
+  z-index: 1000;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: #333;
+  margin: 20% auto;
+  padding: 20px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  width: 300px;
+  color: #fff;
+}
+
+.close {
+  color: #fff;
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #ffeb3b;
+}
+
+#settings-modal button {
+  margin-top: 10px;
+  display: block;
+  width: 100%;
+}
+
+label {
+  display: block;
+  margin: 10px 0 5px;
+  font-size: 14px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+/* ========== PART 5: WALLET, XP BAR & DAILY REWARD ========== */
+
+#wallet {
+  margin: 10px auto;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 10px;
+  border-radius: 8px;
+  width: fit-content;
+  max-width: 90%;
+}
+
+#level {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+#xp-bar {
+  width: 150px;
+  height: 8px;
+  background: #333;
+  border: 2px solid #fff;
+  border-radius: 5px;
+  margin: 5px auto;
+  overflow: hidden;
+}
+
+#xp-fill {
+  width: 0%;
+  height: 100%;
+  background: #4caf50;
+  transition: width 0.3s;
+}
+
+#claim-reward-btn {
+  background: #4caf50;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+#claim-reward-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+#claim-reward-btn.claimed {
+  background: #888;
+  opacity: 0.6;
+}
+
+/* ========== PART 6: SHOP, INVENTORY, SELL SECTION ========== */
+
+#shop-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 15px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.shop-item, .inventory-item, .sell-item {
+  background: #333;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  padding: 10px;
+  width: calc(33.33% - 20px);
+  min-width: 120px;
+  max-width: 160px;
+  text-align: center;
+}
+
+.shop-item-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.shop-item h3, .inventory-item h3, .sell-item h3 {
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+.shop-item p, .inventory-item p, .sell-item p {
+  font-size: 10px;
+  margin: 5px 0;
+}
+
+.shop-switch {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.shop-tab-btn {
+  padding: 8px 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  background-color: #ccc;
+  cursor: pointer;
+}
+
+.shop-tab-btn.active {
+  background-color: #4CAF50;
+  color: #fff;
+}
+
+.sell-to-shop-btn {
+  margin-top: 16px;
+  padding: 10px 20px;
+  font-weight: bold;
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  transition: background 0.3s;
+}
+
+.sell-to-shop-btn:hover {
+  background-color: #45a049;
+}
+
+#sell-section {
+  margin-top: 15px;
+  padding: 15px;
+  background: #444;
+  border-radius: 10px;
+}
+
+#inventory-content, #sell-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 15px 15px 15px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0px auto;
+  box-sizing: border-box;
+}
+
+/* Responsif untuk layar kecil */
+@media (max-width: 480px) {
+  .shop-item, .inventory-item, .sell-item {
+    width: calc(50% - 15px);
+  }
+}
+
+/* ========== PART 7: FARM AREA & PLOT STYLE ========== */
+
 #farm-area {
   display: grid;
   grid-template-columns: repeat(2, 160px);
@@ -253,96 +516,648 @@ input[type="number"] {
   width: 100%;
 }
 
-/* Shop, Inventory, Sell Section */
-#shop-content, #inventory-content, #sell-content {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  padding: 15px;
-  width: 100%;
-  max-width: 700px;
-  margin: 0 auto;
-  box-sizing: border-box;
+/* ========== PART 8: REWARD BUTTON, MODAL, DAN SETTING VOLUME ========== */
+
+#claim-reward-btn {
+  background: #4caf50;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 8px;
+  margin-top: 20px;
 }
 
-.shop-item, .inventory-item, .sell-item {
+#claim-reward-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+#claim-reward-btn.claimed {
+  background: #888;
+  opacity: 0.6;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
   background: #333;
+  margin: 20% auto;
+  padding: 20px;
   border: 2px solid #fff;
   border-radius: 10px;
-  padding: 10px;
-  width: calc(33.33% - 20px);
-  min-width: 120px;
-  max-width: 160px;
+  width: 300px;
+  color: #fff;
+}
+
+.close {
+  color: #fff;
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #ffeb3b;
+}
+
+label {
+  display: block;
+  margin: 10px 0 5px;
+  font-size: 14px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+#settings-modal button {
+  margin-top: 10px;
+  display: block;
+  width: 100%;
+}
+
+/* ========== PART 9: NOTIFIKASI & TRANSAKSI ========== */
+
+#notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  display: none;
+  font-size: 14px;
+  min-width: 200px;
+  text-align: center;
+  z-index: 1000;
+}
+
+.transaction-animation {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  animation: floatUp 1s ease-out forwards;
+}
+
+.transaction-animation.positive {
+  color: #4caf50;
+}
+
+.transaction-animation.negative {
+  color: #f44336;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-50px); }
+}
+
+/* ========== PART 10: ANIMASI FLY (PANEN & AIR) ========== */
+
+.plant-fly {
+  position: absolute;
+  animation: fly-up 0.8s ease-out forwards;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+.water-fly {
+  position: absolute;
+  animation: fly-down 0.8s ease-out forwards;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+}
+
+.amount-text {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 11;
+  animation: fly-up 0.8s ease-out forwards;
+  left: 70%;
+  transform: translateX(-50%);
+  bottom: 0;
+}
+
+.amount-text.negative {
+  color: #f44336;
+}
+
+.amount-text.positive {
+  color: #4caf50;
+}
+
+@keyframes fly-up {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes fly-down {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(50px);
+    opacity: 0;
+  }
+}
+
+/* ========== PART 11: MODAL, LOADING & LOGIN SCREEN ========== */
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: #333;
+  margin: 20% auto;
+  padding: 20px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  width: 300px;
+  color: #fff;
+}
+
+.close {
+  color: #fff;
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #ffeb3b;
+}
+
+/* Loading Screen */
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+
+#loading-screen.active {
+  opacity: 1;
+}
+
+#loading-screen:not(.active) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#loading-screen h1 {
+  font-size: 36px;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
+  margin-bottom: 20px;
+}
+
+.spinner {
+  border: 4px solid #333;
+  border-top: 4px solid #66ff00;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-animation {
+  font-size: 24px;
+  color: #fff;
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0% { content: 'Loading'; }
+  33% { content: 'Loading.'; }
+  66% { content: 'Loading..'; }
+  100% { content: 'Loading...'; }
+}
+
+/* Login Screen */
+#login-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2001;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
+
+#login-screen.active {
+  opacity: 1;
+}
+
+.login-container {
+  background: #333;
+  padding: 20px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  text-align: center;
+  color: #fff;
+}
+
+.login-container h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: #66ff00;
+  text-shadow: 0 0 10px #66ff00;
+}
+
+/* Register Screen */
+#register-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2001;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+#register-screen.active {
+    opacity: 1;
+}
+
+/* Link Styling (No Underline) */
+.policy-links a {
+    color: #ffeb3b;
+    text-decoration: none; /* Hapus garis bawah */
+}
+
+.policy-links a:hover {
+    text-decoration: underline; /* Tambah underline saat hover aja */
+}
+
+/* Styling untuk form login dan register */
+.login-form, .register-form {
+  margin: 15px 0;
+}
+
+.login-form input, .register-form input {
+  display: block;
+  width: 200px;
+  margin: 10px auto;
+  padding: 8px;
+  background: #444;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  opacity: 1 !important; /* Pastiin ga ikut opacity parent */
+}
+
+#register-username-input {
+  display: block;
+  width: 200px;
+  margin: 10px auto;
+  padding: 8px;
+  background: #444;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  opacity: 1 !important; /* Pastiin ga ikut opacity parent */
+}
+
+.login-form button, .register-form button {
+    margin-top: 10px;
+    background: #66ff00; /* Warna hijau terang biar kontras */
+    color: #000; /* Teks hitam biar jelas */
+    padding: 8px 16px;
+    border: 2px solid #fff;
+    border-radius: 6px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 1 !important; /* Pastiin ga ikut opacity parent */
+    transition: background 0.3s ease;
+}
+
+.login-form button:hover, .register-form button:hover {
+    background: #55cc00; /* Warna lebih gelap saat hover */
+}
+
+.login-form #login-error, .login-form #verify-status,
+.register-form #register-error {
+  font-size: 10px;
+  margin-top: 8px;
+  opacity: 1 !important; /* Pastiin ga ikut opacity parent */
+}
+
+.policy-links {
+  margin-top: 15px;
+  font-size: 12px;
+}
+
+.policy-links a {
+  color: #ffeb3b;
+  text-decoration: none;
+}
+
+.policy-links a:hover {
+  text-decoration: underline;
+}
+
+/* ========== PART 12: RESPONSIVE (MAX WIDTH 600px) ========== */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 24px;
+  }
+
+  .start-text {
+    font-size: 20px;
+  }
+
+  #wallet {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  #level {
+    font-size: 10px;
+  }
+
+  #xp-bar {
+    width: 120px;
+    height: 6px;
+  }
+
+  .tabs {
+    gap: 5px;
+  }
+
+  .tab-btn {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+
+  .shop-item, .inventory-item, .sell-item {
+    width: 100px;
+    padding: 8px;
+  }
+
+  .shop-item-img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .shop-item h3, .inventory-item h3, .sell-item h3 {
+    font-size: 10px;
+  }
+
+  .shop-item p, .inventory-item p, .sell-item p {
+    font-size: 9px;
+  }
+
+  button {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+
+  #exchange-amount {
+    width: 120px;
+  }
+
+  .achievement {
+    width: 200px;
+  }
+
+  #notification {
+    font-size: 12px;
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  #farm-area {
+    grid-template-columns: repeat(2, 170px);
+    grid-template-rows: repeat(2, 17px);
+    row-gap: 40px;
+    column-gap: 40px;
+    justify-content: center !important;
+    align-content: space-around;
+    padding: 80px 20px 20px 80px;
+    width: 100%;
+    max-width: 450px;
+    height: 450px;
+    margin: 0 auto;
+  }
+
+  .plot {
+    width: 100px;
+    height: 10px;
+  }
+
+  .plot-content {
+    height: 30px;
+    top: -26px;
+  }
+
+  .plant-img {
+    width: 100px;
+    max-height: 100px;
+  }
+
+  .countdown-bar {
+    top: 8px;
+    width: 60px;
+    height: 5px;
+  }
+
+  .plot-status {
+    font-size: 6px;
+    top: 16px;
+  }
+
+  #claim-reward-btn {
+    margin-top: 10px;
+  }
+
+  .modal-content {
+    margin: 30% auto;
+  }
+
+  #loading-screen h1 {
+    font-size: 20px;
+  }
+
+  .loading-animation {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  #farm-area {
+    grid-template-columns: repeat(2, 130px);
+    grid-template-rows: repeat(2, 13px);
+    row-gap: 30px;
+    column-gap: 30px;
+    justify-content: center !important;
+    align-content: space-around;
+    padding: 70px 15px 15px 70px;
+    width: 100%;
+    max-width: 330px;
+    height: 330px;
+    margin: 0 auto;
+  }
+
+  .plot {
+    width: 80px;
+    height: 8px;
+  }
+
+  .plot-content {
+    height: 30px;
+    top: -26px;
+  }
+
+  .plant-img {
+    width: 80px;
+    max-height: 80px;
+  }
+
+  .countdown-bar {
+    top: 8px;
+    width: 50px;
+    height: 5px;
+  }
+
+  .plot-status {
+    font-size: 6px;
+    top: 16px;
+  }
+
+  #claim-reward-btn {
+    margin-top: 10px;
+  }
+
+  .modal-content {
+    margin: 35% auto;
+  }
+
+  #loading-screen h1 {
+    font-size: 18px;
+  }
+
+  .loading-animation {
+    font-size: 14px;
+  }
+}
+
+/* ========== PART 13: START SCREEN ========== */
+.start-text {
+  font-size: 20px;
+  color: #ffeb3b;
+  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
+  animation: blink 1s infinite;
+  cursor: pointer;
+  margin-top: 15px;
+  padding: 15px;
+  user-select: none;
+}
+
+.start-text:hover {
+  background: #66bb6a;
+  transform: scale(1.05);
+}
+
+.start-text:active {
+  transform: scale(0.95);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+#start-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: rgba(0,0,0,0.0);
   text-align: center;
 }
 
-.shop-item-img {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
+#start-screen h1#title {
+  font-size: 38px;
+  color: #66ff00;
+  text-shadow: 0 0 10px #66ff00, 0 0 20px #ffeb3b, 0 0 30px #f44336;
+  animation: pulse 2s infinite ease-in-out;
+  margin: 0 0 20px;
 }
 
-.shop-item h3, .inventory-item h3, .sell-item h3 {
-  font-size: 12px;
-  margin: 8px 0;
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-.shop-item p, .inventory-item p, .sell-item p {
-  font-size: 10px;
-  margin: 5px 0;
-}
-
-.shop-switch {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.shop-tab-btn {
-  padding: 8px 16px;
-  font-weight: bold;
-  border: none;
-  border-radius: 6px;
-  background-color: #ccc;
-  cursor: pointer;
-}
-
-.shop-tab-btn.active {
-  background-color: #4CAF50;
-  color: #fff;
-}
-
-.sell-to-shop-btn {
-  margin-top: 16px;
-  padding: 10px 20px;
-  font-weight: bold;
-  background-color: #4CAF50;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100%;
-  max-width: 300px;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
-  transition: background 0.3s;
-}
-
-.sell-to-shop-btn:hover {
-  background-color: #45a049;
-}
-
-#sell-section {
-  margin-top: 15px;
-  padding: 15px;
-  background: #444;
-  border-radius: 10px;
-}
-
-/* Finance */
+/* ========== PART 14: FINANCE ========== */
 #finance {
   background: #333;
   border-radius: 10px;
@@ -362,13 +1177,19 @@ input[type="number"] {
 #finance p {
   font-size: 12px;
   margin: 8px 0;
-  line-height: 1.4;
 }
 
 #finance p span#farm-coin-balance,
-#finance p span#pi-coin-balance {
+#finance p span#pi-coin-balance,
+#finance p span#referral-earnings {
   color: #66ff00;
   font-weight: bold;
+}
+
+#finance p span#referral-link {
+  color: #ffeb3b;
+  font-weight: bold;
+  word-break: break-all;
 }
 
 #finance h3 {
@@ -449,61 +1270,7 @@ input[type="number"] {
   line-height: 1.4;
 }
 
-/* Referral */
-#referral {
-  background: #333;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  max-width: 330px;
-  margin: 15px auto;
-}
-
-#referral h2 {
-  font-size: 18px;
-  color: #66ff00;
-  text-shadow: 0 0 5px #66ff00;
-  margin-bottom: 15px;
-}
-
-#referral p {
-  font-size: 12px;
-  margin: 12px 0;
-  line-height: 1.4;
-}
-
-#referral p span#referral-link {
-  color: #ffeb3b;
-  font-weight: bold;
-  word-wrap: break-word;
-  display: inline-block;
-  max-width: 100%;
-}
-
-#referral p span#total-referrals,
-#referral p span#referral-earnings {
-  color: #66ff00;
-  font-weight: bold;
-}
-
-#referral button#copy-referral-btn {
-  background: #00ff00;
-  border: 2px solid #ffff00;
-  color: #000;
-  padding: 4px 8px;
-  border-radius: 3px;
-  cursor: pointer;
-  margin-left: 5px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 10px;
-  transition: all 0.3s;
-}
-
-#referral button#copy-referral-btn:hover {
-  background: #00cc00;
-}
-
-/* Exchange */
+/* ========== PART 15: EXCHANGE CENTER ========== */
 .exchange-container {
   background: #333;
   border-radius: 10px;
@@ -527,8 +1294,26 @@ input[type="number"] {
   margin-bottom: 10px;
 }
 
-.exchange-section input,
-.exchange-section select {
+.exchange-output {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  overflow: hidden;
+  text-align: center;
+}
+
+.exchange-result {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #ffeb3b;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.exchange-section input, .exchange-section select {
   width: 150px;
   margin: 10px 0;
   padding: 8px;
@@ -570,440 +1355,162 @@ input[type="number"] {
   animation: spin 0.8s linear infinite;
 }
 
-/* ========== PART 4: BUTTONS, MODAL, NOTIFICATIONS, & ANIMATIONS ========== */
-
-.corner-buttons {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  gap: 10px;
-  z-index: 1001;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-#lang-toggle, #settings-btn, #game-lang-toggle, #game-settings-btn, #exit-game-btn {
-  background: #333;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 8px;
-  transition: all 0.3s;
+/* ========== PART 16: GENERAL STYLES ========== */
+.tab-content {
+  display: none;
 }
 
-#lang-toggle:hover, #settings-btn:hover, #game-lang-toggle:hover,
-#game-settings-btn:hover, #exit-game-btn:hover {
-  background: #555;
-  border-color: #ffeb3b;
+.tab-content.active {
+  display: block;
 }
 
-#notification {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: #fff;
+.tab-buttons {
+  margin: 10px 0;
+}
+
+.tab-button {
   padding: 10px 20px;
-  border: 2px solid #fff;
-  border-radius: 8px;
-  display: none;
-  font-size: 14px;
-  min-width: 200px;
-  text-align: center;
-  z-index: 1000;
+  margin-right: 5px;
+  cursor: pointer;
 }
 
-.modal {
+.tab-content {
   display: none;
+  padding: 20px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+/* ========== PART 17: POP UP STYLE ========== */
+.popup {
   position: fixed;
-  z-index: 9999;
-  left: 0;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
 }
 
-.modal-content {
-  background: #333;
-  margin: 20% auto;
+.popup-content {
+  background: white;
   padding: 20px;
-  border: 2px solid #fff;
-  border-radius: 10px;
-  width: 300px;
-  color: #fff;
+  border-radius: 5px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #333;
+  font-size: 10px;
+  line-height: 1.2;
 }
 
-.close {
-  color: #fff;
-  float: right;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-.close:hover {
-  color: #ffeb3b;
-}
-
-#settings-modal button {
-  margin-top: 10px;
-  display: block;
-  width: 100%;
-}
-
-label {
-  display: block;
-  margin: 10px 0 5px;
-  font-size: 14px;
-}
-
-input[type="range"] {
-  width: 100%;
-}
-
-.transaction-animation {
-  position: absolute;
-  font-size: 14px;
-  font-weight: bold;
-  animation: floatUp 1s ease-out forwards;
-}
-
-.transaction-animation.positive {
-  color: #4caf50;
-}
-
-.transaction-animation.negative {
-  color: #f44336;
-}
-
-.plant-fly {
-  position: absolute;
-  animation: fly-up 0.8s ease-out forwards;
-  z-index: 10;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 0;
-}
-
-.water-fly {
-  position: absolute;
-  animation: fly-down 0.8s ease-out forwards;
-  z-index: 10;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 0;
-}
-
-.amount-text {
-  position: absolute;
+.popup-content h3 {
+  margin-top: 0;
+  color: #333;
   font-size: 12px;
-  font-weight: bold;
-  z-index: 11;
-  animation: fly-up 0.8s ease-out forwards;
-  left: 70%;
-  transform: translateX(-50%);
-  bottom: 0;
 }
 
-.amount-text.negative {
-  color: #f44336;
+.popup-content p {
+  margin: 8px 0;
+  font-size: 10px;
 }
 
-.amount-text.positive {
-  color: #4caf50;
+.popup-content span {
+  color: #000;
+  font-size: 10px;
 }
 
-@keyframes floatUp {
-  0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-50px); }
+/* Neon Effect untuk Judul */
+.neon-title {
+  color: #00ff00;
+  text-shadow: 
+    0 0 5px #00ff00,
+    0 0 10px #00ff00,
+    0 0 20px #00ff00;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
 }
 
-@keyframes fly-up {
-  0% { transform: translateX(-50%) translateY(0); opacity: 1; }
-  100% { transform: translateX(-50%) translateY(-50px); opacity: 0; }
+.text-limit {
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
 }
 
-@keyframes fly-down {
-  0% { transform: translateX(-50%) translateY(0); opacity: 1; }
-  100% { transform: translateX(-50%) translateY(50px); opacity: 0; }
+/* Styling tombol sesuai tema game */
+.game-button {
+  background: #00ff00;
+  border: 2px solid #ffff00;
+  color: #000;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 5px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.game-button:hover {
+  background: #00cc00;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.85; }
-  100% { transform: scale(1); opacity: 1; }
+/* Styling tombol copy */
+.copy-button {
+  background: #00ff00;
+  border: 2px solid #ffff00;
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 5px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+.copy-button:hover {
+  background: #00cc00;
 }
 
-/* Loading & Login Screen */
-#loading-screen, #login-screen, #register-screen {
+/* Tambahan untuk loading screen biar gak konflik */
+#loading-screen {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
+  background: #000;
+  color: #fff;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
-
-#loading-screen.active,
-#login-screen.active,
-#register-screen.active {
-  opacity: 1;
-}
-
-#loading-screen h1, #login-screen h1, #register-screen h1 {
-  font-size: 36px;
-  color: #ffeb3b;
-  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
-  margin-bottom: 20px;
-}
-
-.spinner {
-  border: 4px solid #333;
-  border-top: 4px solid #66ff00;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 20px auto;
-}
-
-.loading-animation {
-  font-size: 24px;
-  color: #fff;
-  animation: dots 1.5s infinite;
-}
-
-@keyframes dots {
-  0% { content: 'Loading'; }
-  33% { content: 'Loading.'; }
-  66% { content: 'Loading..'; }
-  100% { content: 'Loading...'; }
-}
-
-.login-container, .register-container {
-  background: #333;
-  padding: 20px;
-  border: 2px solid #fff;
-  border-radius: 10px;
-  text-align: center;
-  color: #fff;
-}
-
-.login-form, .register-form {
-  margin: 15px 0;
-}
-
-.login-form input,
-.register-form input {
-  display: block;
-  width: 200px;
-  margin: 10px auto;
-  padding: 8px;
-  background: #444;
-  color: #fff;
-  border: 2px solid #fff;
-  border-radius: 6px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
-  opacity: 1 !important;
-}
-
-.login-form button,
-.register-form button {
-  margin-top: 10px;
-  background: #66ff00;
-  color: #000;
-  padding: 8px 16px;
-  border: 2px solid #fff;
-  border-radius: 6px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 12px;
-  cursor: pointer;
-  opacity: 1 !important;
-  transition: background 0.3s ease;
-}
-
-.login-form button:hover,
-.register-form button:hover {
-  background: #55cc00;
-}
-
-.login-form #login-error,
-.login-form #verify-status,
-.register-form #register-error {
-  font-size: 10px;
-  margin-top: 8px;
-  opacity: 1 !important;
-}
-
-.policy-links {
-  margin-top: 15px;
-  font-size: 12px;
-}
-
-.policy-links a {
-  color: #ffeb3b;
-  text-decoration: none;
-}
-
-.policy-links a:hover {
-  text-decoration: underline;
-}
-
-/* Start Screen */
-#start-screen {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  background: rgba(0,0,0,0.0);
-  text-align: center;
-}
-
-.start-text {
-  font-size: 20px;
-  color: #ffeb3b;
-  text-shadow: 0 0 10px #ffeb3b, 0 0 20px #f44336, 0 0 30px #f44336;
-  animation: blink 1s infinite;
-  cursor: pointer;
-  margin-top: 15px;
-  padding: 15px;
-  user-select: none;
-}
-
-.start-text:hover {
-  background: #66bb6a;
-  transform: scale(1.05);
-}
-
-.start-text:active {
-  transform: scale(0.95);
-}
-
-/* Admin Dashboard */
-#admin-dashboard {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  background: #333;
-  border-radius: 10px;
-  max-width: 600px;
-  margin: 20px auto;
-}
-
-#admin-dashboard h1 {
-  font-size: 24px;
-  color: #66ff00;
-  text-shadow: 0 0 10px #66ff00;
-  margin-bottom: 20px;
-}
-
-#admin-dashboard h2 {
-  font-size: 18px;
-  color: #ffeb3b;
-  margin-bottom: 10px;
-}
-
-#admin-transactions {
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-#admin-logout-btn {
-  background: #f44336;
-  color: #fff;
-  border: 2px solid #fff;
-  padding: 8px 16px;
-  font-size: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-#admin-logout-btn:hover {
-  background: #ef5350;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  h1 { font-size: 24px; }
-  .start-text { font-size: 20px; }
-  #wallet { font-size: 12px; padding: 8px; }
-  #level { font-size: 10px; }
-  #xp-bar { width: 120px; height: 6px; }
-  .tabs { gap: 5px; }
-  .tab-btn { padding: 6px 12px; font-size: 10px; }
-  .shop-item, .inventory-item, .sell-item { width: 100px; padding: 8px; }
-  .shop-item-img { width: 50px; height: 50px; }
-  .shop-item h3, .inventory-item h3, .sell-item h3 { font-size: 10px; }
-  .shop-item p, .inventory-item p, .sell-item p { font-size: 9px; }
-  button { padding: 6px 10px; font-size: 10px; }
-  #exchange-amount { width: 120px; }
-  .achievement { width: 200px; }
-  #notification { font-size: 12px; min-width: 150px; }
-  #referral p { font-size: 10px; }
-  #referral p span#referral-link { font-size: 10px; }
-  #referral button#copy-referral-btn { padding: 3px 6px; font-size: 8px; }
-}
-
-@media (max-width: 480px) {
-  #farm-area {
-    grid-template-columns: repeat(2, 170px);
-    grid-template-rows: repeat(2, 17px);
-    row-gap: 40px;
-    column-gap: 40px;
-    padding: 80px 20px 20px 80px;
-    max-width: 450px;
-    height: 450px;
-  }
-  .plot { width: 100px; height: 10px; }
-  .plot-content { height: 30px; top: -26px; }
-  .plant-img { width: 100px; max-height: 100px; }
-  .countdown-bar { top: 8px; width: 60px; height: 5px; }
-  .plot-status { font-size: 6px; top: 16px; }
-  #claim-reward-btn { margin-top: 10px; }
-  .modal-content { margin: 30% auto; }
-  #loading-screen h1 { font-size: 20px; }
-  .loading-animation { font-size: 16px; }
-}
-
-@media (max-width: 360px) {
-  #farm-area {
-    grid-template-columns: repeat(2, 130px);
-    grid-template-rows: repeat(2, 13px);
-    row-gap: 30px;
-    column-gap: 30px;
-    padding: 70px 15px 15px 70px;
-    max-width: 330px;
-    height: 330px;
-  }
-  .plot { width: 80px; height: 8px; }
-  .plot-content { height: 30px; top: -26px; }
-  .plant-img { width: 80px; max-height: 80px; }
-  .countdown-bar { top: 8px; width: 50px; height: 5px; }
-  .plot-status { font-size: 6px; top: 16px; }
-  .modal-content { margin: 35% auto; }
-  #loading-screen h1 { font-size: 18px; }
-  .loading-animation { font-size: 14px; }
+  z-index: 5000;
 }

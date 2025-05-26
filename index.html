@@ -24,36 +24,8 @@
   <div id="login-screen" class="center-screen" style="display: none;">
     <div class="login-container">
       <h1>Harvest Pi</h1>
-      <form class="login-form">
-        <input id="email-input" type="email" placeholder="Email">
-        <input id="password-input" type="password" placeholder="Password">
-        <button id="login-email-btn" type="button">Login</button>
-        <div id="login-error" style="display: none;"></div>
-        <div id="verify-status" style="display: none;"></div>
-      </form>
+      <button id="pi-login-btn" type="button">Login with Pi</button>
       <div class="policy-links">
-        <span>Don't have an account?</span> <a href="#" id="register-link">Register</a>
-        <br>
-        <a href="/privacy-policy" class="policy-link">Privacy Policy</a> | 
-        <a href="/terms-of-service" class="policy-link">Terms of Service</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- REGISTER SCREEN -->
-  <div id="register-screen" class="center-screen" style="display: none;">
-    <div class="login-container">
-      <h1>Harvest Pi</h1>
-      <form class="register-form">
-        <input id="register-email-input" type="email" placeholder="Register Email">
-        <input id="register-password-input" type="password" placeholder="Register Password">
-        <input id="register-username-input" type="text" placeholder="Username">
-        <button id="register-email-btn" type="button">Register</button>
-        <div id="register-error" style="display: none;"></div>
-      </form>
-      <div class="policy-links">
-        <span>Already have an account?</span> <a href="#" id="login-link">Login</a>
-        <br>
         <a href="/privacy-policy" class="policy-link">Privacy Policy</a> | 
         <a href="/terms-of-service" class="policy-link">Terms of Service</a>
       </div>
@@ -253,9 +225,7 @@
 
   <!-- PI NETWORK SDK -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-  <script>
-    Pi.init({ version: "2.0" });
-  </script>
+  <!-- Hapus inisialisasi Pi di sini, biar main.js yang handle -->
 
   <!-- MAIN GAME SCRIPT -->
   <script type="module" src="farm/main.js?v=41"></script>
@@ -267,16 +237,7 @@
     if (ref) {
       console.log(`Referred by ${ref}`);
       localStorage.setItem('referral', ref); // Simpen referral
-      switchToRegister(); // Switch ke tampilan register
-    }
-
-    function switchToRegister() {
-      const loginScreen = document.getElementById('login-screen');
-      const registerScreen = document.getElementById('register-screen');
-      if (loginScreen && registerScreen) {
-        loginScreen.style.display = 'none';
-        registerScreen.style.display = 'flex';
-      }
+      // Ga perlu switch ke register lagi, langsung ke login Pi
     }
   </script>
 

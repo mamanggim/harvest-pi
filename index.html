@@ -84,7 +84,7 @@
         <button class="tab-btn" data-tab="inventory">Inventory</button>
         <button class="tab-btn" data-tab="exchange">Exchange</button>
         <button class="tab-btn" data-tab="finance">Finance</button>
-        <button class="tab-btn" data-tab="referral">Referral</button> <!-- Tambah tab Referral -->
+        <button class="tab-btn" data-tab="referral">Referral</button>
         <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
         <button class="tab-btn" data-tab="achievements">Achievements</button>
       </div>
@@ -280,16 +280,45 @@
     }
   </script>
 
-  <!-- FALLBACK ERROR HANDLING -->
+  <!-- FALLBACK ERROR HANDLING & TIMEOUT -->
   <script>
     window.addEventListener('error', (event) => {
+      console.error('Error occurred:', event.message);
       alert('Main script failed to load: ' + event.message);
+      switchToLoginScreen();
+    });
+
+    // Timeout kalo loading ga selesai dalam 10 detik
+    setTimeout(() => {
       const loadingScreen = document.getElementById('loading-screen');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      if (loadingScreen && loadingScreen.classList.contains('active')) {
+        console.warn('Loading timeout after 10 seconds');
+        alert('Loading took too long. Please check your connection and try again.');
+        switchToLoginScreen();
+      }
+      if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+      }
+    }, 10000);
+
+    function switchToLoginScreen() {
+      const loadingScreen = document.getElementById('loading-screen');
+      const loadingIndicator = document.getElementById('loading-indicator');
       const loginScreen = document.getElementById('login-screen');
       if (loadingScreen && loginScreen) {
         loadingScreen.classList.remove('active');
-        loginScreen.classList.add('active');
+        loadingScreen.style.display = 'none'; // Pastiin bener-bener ilang
+        loginScreen.style.display = 'flex';
       }
+      if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+      }
+    }
+
+    // Debug pas window load
+    window.addEventListener('load', () => {
+      console.log('Window fully loaded');
     });
   </script>
 </body>

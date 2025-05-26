@@ -362,6 +362,7 @@ input[type="number"] {
 #finance p {
   font-size: 12px;
   margin: 8px 0;
+  line-height: 1.4;
 }
 
 #finance p span#farm-coin-balance,
@@ -467,13 +468,16 @@ input[type="number"] {
 
 #referral p {
   font-size: 12px;
-  margin: 8px 0;
+  margin: 12px 0;
+  line-height: 1.4;
 }
 
 #referral p span#referral-link {
   color: #ffeb3b;
   font-weight: bold;
-  word-break: break-all;
+  word-wrap: break-word;
+  display: inline-block;
+  max-width: 100%;
 }
 
 #referral p span#total-referrals,
@@ -486,12 +490,13 @@ input[type="number"] {
   background: #00ff00;
   border: 2px solid #ffff00;
   color: #000;
-  padding: 2px 6px;
+  padding: 4px 8px;
   border-radius: 3px;
   cursor: pointer;
   margin-left: 5px;
   font-family: 'Press Start 2P', cursive;
-  font-size: 8px;
+  font-size: 10px;
+  transition: all 0.3s;
 }
 
 #referral button#copy-referral-btn:hover {
@@ -957,6 +962,9 @@ input[type="range"] {
   #exchange-amount { width: 120px; }
   .achievement { width: 200px; }
   #notification { font-size: 12px; min-width: 150px; }
+  #referral p { font-size: 10px; }
+  #referral p span#referral-link { font-size: 10px; }
+  #referral button#copy-referral-btn { padding: 3px 6px; font-size: 8px; }
 }
 
 @media (max-width: 480px) {

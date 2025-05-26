@@ -1,6 +1,5 @@
-// Ambil database dan auth dari firebase-config.js
-import { auth, database, messaging, ref, onValue, set, update, get, push } from '/firebase/firebase-config.js';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+// Ambil database dan auth dari firebase-config.js (cuma pake database)
+import { database, ref, onValue, set, update, get, push } from '/firebase/firebase-config.js';
 
 // Deklarasi claimModalBtn dan rewardModal sebagai global
 const claimModalBtn = document.getElementById('claim-modal-btn');
@@ -40,8 +39,8 @@ let currentLang = 'en';
 let farmPlots = [];
 let harvestCount = 0;
 let achievements = { harvest: false, coins: false };
-let encodedEmail = null;
-let username = null; // Tambah username
+let encodedEmail = null; // Sekarang pake Pi User ID langsung
+let username = null; // Pake Pi User ID sebagai username
 let lastClaim = null;
 const plotCount = 4;
 const piToFarmRate = 1000000;
@@ -49,15 +48,10 @@ let claimedToday = false;
 let isClaiming = false;
 let isAudioPlaying = false;
 
-// Fungsi untuk encode email
-function encodeEmail(email) {
-    return email.replace('@', '_at_').replace(/\./g, '_dot_');
-}
-
 // Load user balances
 function loadUserBalances() {
     if (!encodedEmail) {
-        console.warn('No encoded email, please login first!');
+        console.warn('No Pi ID, please login first!');
         return;
     }
     const playerRef = ref(database, `players/${encodedEmail}`);
@@ -252,297 +246,64 @@ async function loadData() {
 }
 // END loadData fix
 
-// Deklarasi variabel untuk login dan register
-const registerEmailBtn = document.getElementById('register-email-btn');
-const registerEmailInput = document.getElementById('register-email-input');
-const registerPasswordInput = document.getElementById('register-password-input');
-const registerError = document.getElementById('register-error');
-const registerUsernameInput = document.getElementById('register-username-input');
-const loginEmailBtn = document.getElementById('login-email-btn');
-const emailInput = document.getElementById('email-input');
-const passwordInput = document.getElementById('password-input');
-const loginError = document.getElementById('login-error');
-const verifyEmailMsg = document.getElementById('verify-status');
-
-// Fungsi untuk switch antara login dan register screen
-function switchToLogin() {
-    const loginScreenElement = document.getElementById('login-screen');
-    const registerScreenElement = document.getElementById('register-screen');
-    if (loginScreenElement && registerScreenElement) {
-        loginScreenElement.style.display = 'flex';
-        loginScreenElement.classList.add('active');
-        registerScreenElement.style.display = 'none';
-        registerScreenElement.classList.remove('active');
-        console.log('switchToLogin called, login screen displayed');
-    } else {
-        console.error('Login or Register screen element not found');
+// Login dengan Pi Network SDK
+async function loginWithPi() {
+    // Cek kalo ga di Pi Browser
+    if (!window.Pi || !window.Pi.authenticate) {
+        showNotification('This app must be opened in Pi Browser to login with Pi. Please switch to Pi Browser.');
+        return;
     }
-}
 
-function switchToRegister() {
-    const loginScreenElement = document.getElementById('login-screen');
-    const registerScreenElement = document.getElementById('register-screen');
-    if (loginScreenElement && registerScreenElement) {
-        loginScreenElement.style.display = 'none';
-        loginScreenElement.classList.remove('active');
-        registerScreenElement.style.display = 'flex';
-        registerScreenElement.classList.add('active');
-        console.log('switchToRegister called, register screen displayed');
-    } else {
-        console.error('Login or Register screen element not found');
-    }
-}
-
-// Event listener untuk link switch
-document.addEventListener('DOMContentLoaded', () => {
-    const registerLink = document.getElementById('register-link');
-    const loginLink = document.getElementById('login-link');
-    if (registerLink) {
-        addSafeClickListener(registerLink, switchToRegister);
-    }
-    if (loginLink) {
-        addSafeClickListener(loginLink, switchToLogin);
-    }
-    switchToLogin();
-});
-
-// Register dengan email yang di-encode
-if (registerEmailBtn) {
-    addSafeClickListener(registerEmailBtn, async (e) => {
-        e.preventDefault();
-        console.log('Register button clicked, email:', registerEmailInput.value, 'password:', registerPasswordInput.value);
-        const email = registerEmailInput.value.trim();
-        const password = registerPasswordInput.value.trim();
-        const inputUsername = registerUsernameInput.value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); // Normalize username
-
-        if (!email || !password || !inputUsername) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Please enter email, password, and username.';
-            console.log('Validation failed: Empty fields');
-            return;
-        }
-
-        try {
-            console.log('Attempting registration...');
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // Encode email untuk jadi key di database
-            const encodedEmailForKey = encodeEmail(email);
-            const playerRef = ref(database, `players/${encodedEmailForKey}`);
-
-            // Cek apakah email udah ada
-            const snapshot = await get(playerRef);
-            if (snapshot.exists()) {
-                throw new Error('Email already registered.');
-            }
-
-            // Cek apakah username udah dipake
-            const playersRef = ref(database, 'players');
-            const playersSnapshot = await get(playersRef);
-            const playersData = playersSnapshot.val() || {};
-            const usernameTaken = Object.values(playersData).some(player => player.username === inputUsername);
-            if (usernameTaken) {
-                throw new Error('Username already taken.');
-            }
-
-            await sendEmailVerification(user);
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration successful! Please verify your email.';
-            showNotification('Registration successful! Check your email for verification.');
-            console.log('Registration successful, user email:', email);
-
-            // Simpan data user pake email yang di-encode sebagai key
-            await set(playerRef, {
-                farmCoins: 0,
-                piBalance: 0,
-                water: 0,
-                level: 1,
-                xp: 0,
-                inventory: [],
-                farmPlots: [],
-                harvestCount: 0,
-                achievements: { harvest: false, coins: false },
-                lastClaim: null,
-                claimedToday: false,
-                totalDeposit: 0,
-                referralEarnings: 0,
-                email: email,
-                username: inputUsername, // Simpan username
-                role: email === 'miminharvestpi@gmail.com' ? 'admin' : 'user'
-            });
-
-            registerEmailInput.value = '';
-            registerPasswordInput.value = '';
-            if (registerUsernameInput) registerUsernameInput.value = '';
-            switchToLogin();
-        } catch (error) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration failed: ' + error.message;
-            console.error('Registration error:', error.message);
-        }
-    });
-}
-
-// Login dengan email yang di-encode
-if (loginEmailBtn) {
-    addSafeClickListener(loginEmailBtn, async (e) => {
-        e.preventDefault();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-
-        if (!email || !password) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Please enter email and password.';
-            return;
-        }
-
-        try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            if (!user.emailVerified) {
-                await sendEmailVerification(user);
-                verifyEmailMsg.style.display = 'block';
-                loginError.style.display = 'none';
-                return;
-            }
-
-            // Encode email jadi key Firebase
-            encodedEmail = encodeEmail(email);
-            const playerRef = ref(database, `players/${encodedEmail}`);
-            const snapshot = await get(playerRef);
-            const playerData = snapshot.val();
-
-            if (!playerData) {
-                loginError.style.display = 'block';
-                loginError.textContent = 'Account data not found. Please register.';
-                return;
-            }
-
-            // Simpan ke localStorage
-            localStorage.setItem('encodedEmail', encodedEmail);
-            localStorage.setItem('email', email);
-            localStorage.setItem('username', playerData.username);
-
-            // Redirect berdasarkan role
-            const role = playerData.role || 'user';
-            showNotification('Logged in as ' + email);
-
-            if (role === 'admin') {
-                const adminDashboardElement = document.getElementById('admin-dashboard');
-                const loginScreenElement = document.getElementById('login-screen');
-                if (adminDashboardElement && loginScreenElement) {
-                    loginScreenElement.style.display = 'none';
-                    adminDashboardElement.style.display = 'flex';
-                }
-            } else {
-                const loginScreenElement = document.getElementById('login-screen');
-                const startScreenElement = document.getElementById('start-screen');
-                if (loginScreenElement && startScreenElement) {
-                    loginScreenElement.style.display = 'none';
-                    startScreenElement.style.display = 'flex';
-                }
-            }
-
-            // Lanjut load data
-            loadPlayerData();
-            updateReferralLink();
-        } catch (error) {
-            loginError.style.display = 'block';
-            loginError.textContent = 'Login failed: ' + error.message;
-            verifyEmailMsg.style.display = 'none';
-        }
-    });
-}
-
-// Load player data pake encodedEmail
-function loadPlayerData() {
     try {
-        if (!encodedEmail) {
-            console.warn('No encoded email, please login first!');
-            showNotification('Please login first.');
-            return;
-        }
-        console.log('Loading data for encodedEmail:', encodedEmail);
-        const playerRef = ref(database, `players/${encodedEmail}`);
-        console.log('Attempting to load from:', playerRef.toString());
-
-        onValue(playerRef, (snapshot) => {
-            console.log('Snapshot received:', snapshot.val());
-            if (isDataLoaded) return;
-
-            const data = snapshot.val();
-            if (data) {
-                farmCoins = data.farmCoins || 0;
-                piBalance = data.piBalance || 0;
-                water = data.water || 0;
-                level = data.level || 1;
-                xp = data.xp || 0;
-                inventory = data.inventory || [];
-                farmPlots = data.farmPlots || [];
-                harvestCount = data.harvestCount || 0;
-                achievements = data.achievements || { harvest: false, coins: false };
-                lastClaim = data.lastClaim || null;
-                claimedToday = data.claimedToday || false;
-                referralEarnings = data.referralEarnings || 0;
-                username = data.username || '';
-                totalReferrals = data.totalReferrals || 0; // Tambah totalReferrals
-                localStorage.setItem('username', username);
-                console.log('Player data loaded:', data);
+        await new Promise((resolve) => {
+            window.Pi = window.Pi || {};
+            if (window.Pi.init) {
+                resolve();
             } else {
-                console.log('No data found, initializing new data...');
-                const initialData = {
-                    farmCoins: 0,
-                    piBalance: 0,
-                    water: 0,
-                    level: 1,
-                    xp: 0,
-                    inventory: [],
-                    farmPlots: [],
-                    harvestCount: 0,
-                    achievements: { harvest: false, coins: false },
-                    lastClaim: null,
-                    claimedToday: false,
-                    totalDeposit: 0,
-                    referralEarnings: 0,
-                    totalReferrals: 0, // Tambah totalReferrals
-                    email: localStorage.getItem('email'),
-                    username: localStorage.getItem('username') || ''
-                };
-                set(playerRef, initialData).catch(err => {
-                    console.error('Initial set failed:', err);
-                    showNotification('Error initializing player data: ' + err.message);
-                });
+                const script = document.createElement('script');
+                script.src = 'https://sdk.minepi.com/pi-sdk.js';
+                script.onload = resolve;
+                document.body.appendChild(script);
             }
+        });
+        await window.Pi.init({ version: "2.0" });
 
-            isDataLoaded = true;
-            console.log('Data loading completed, isDataLoaded:', isDataLoaded);
-            updateWallet();
-            initializePlots();
-            renderShop();
-            renderInventory();
-            renderSellSection();
-            renderAchievements();
-            checkDailyReward();
-        }, (error) => {
-            console.error('OnValue error:', error.message);
-            showNotification('Failed to load data: ' + error.message);
-            isDataLoaded = false;
-            const loginScreenElement = document.getElementById('login-screen');
-            if (loginScreenElement) {
-                loginScreenElement.style.display = 'flex';
-            }
-        }, { onlyOnce: false });
-    } catch (error) {
-        console.error('Error in loadPlayerData:', error.message);
-        showNotification('Failed to connect to Firebase: ' + error.message);
-        isDataLoaded = false;
+        const scopes = ['payments'];
+        const authResult = await new Promise((resolve, reject) => {
+            window.Pi.authenticate(scopes, resolve, reject);
+        });
+
+        const piUserId = authResult.userId;
+        console.log('Login berhasil, User ID:', piUserId);
+
+        // Simpan Pi ID langsung sebagai key database
+        encodedEmail = `pi_${piUserId}`; // Format unik buat Pi user
+        username = piUserId; // Pake Pi ID sebagai username
+        localStorage.setItem('encodedEmail', encodedEmail);
+        localStorage.setItem('username', username);
+
+        // Load data player berdasarkan Pi ID
+        loadPlayerData();
+
+        // Pindah ke start screen
         const loginScreenElement = document.getElementById('login-screen');
-        if (loginScreenElement) {
-            loginScreenElement.style.display = 'flex';
+        const startScreenElement = document.getElementById('start-screen');
+        if (loginScreenElement && startScreenElement) {
+            loginScreenElement.style.display = 'none';
+            startScreenElement.style.display = 'flex';
         }
+        updateReferralLink();
+        handleReferral();
+    } catch (error) {
+        console.error('Error login dengan Pi:', error);
+        showNotification('Gagal login, cek koneksi Pi Browser atau coba lagi.');
     }
+}
+
+// Event listener buat tombol login Pi
+const piLoginBtn = document.getElementById('pi-login-btn');
+if (piLoginBtn) {
+    addSafeClickListener(piLoginBtn, loginWithPi);
 }
 
 // Initialize farm plots
@@ -889,9 +650,8 @@ async function savePlayerData() {
         lastClaim,
         claimedToday,
         referralEarnings,
-        totalReferrals, // Tambah totalReferrals
-        email: localStorage.getItem('email'),
-        username: localStorage.getItem('username')
+        totalReferrals,
+        username
     };
 
     try {
@@ -1310,7 +1070,7 @@ function checkLevelUp() {
 function updateReferralLink() {
     const referralLinkElement = document.getElementById('referral-link');
     const copyReferralBtn = document.getElementById('copy-referral-btn');
-    const totalReferralsElement = document.getElementById('total-referrals'); // Tambah elemen buat total referral
+    const totalReferralsElement = document.getElementById('total-referrals');
     if (referralLinkElement) {
         const userUsername = localStorage.getItem('username');
         if (!userUsername) {
@@ -1326,7 +1086,6 @@ function updateReferralLink() {
             });
         }
     }
-    // Update total referrals
     if (totalReferralsElement && encodedEmail) {
         const referralRef = ref(database, `referrals/${localStorage.getItem('username')}`);
         get(referralRef).then((snapshot) => {
@@ -1346,10 +1105,9 @@ function generateReferralLink(username) {
 function handleReferral() {
     const urlParams = new URLSearchParams(window.location.search);
     const referralUsername = urlParams.get('ref');
-    const userEmail = localStorage.getItem('email');
     const userUsername = localStorage.getItem('username');
 
-    if (referralUsername && userEmail && userUsername && referralUsername !== userUsername) {
+    if (referralUsername && userUsername && referralUsername !== userUsername) {
         const referrerRef = ref(database, `players`);
         get(referrerRef).then((snapshot) => {
             const playersData = snapshot.val();
@@ -1374,44 +1132,25 @@ function handleReferral() {
             get(referrerPlayerRef).then((playerSnapshot) => {
                 if (playerSnapshot.exists()) {
                     const referrerData = playerSnapshot.val();
-                    const newReferralEarnings = (referrerData.referralEarnings || 0) + 100; // Bonus awal 100
-                    const totalReferrals = (referrerData.totalReferrals || 0) + 1; // Tambah total referral
+                    const newReferralEarnings = (referrerData.referralEarnings || 0) + 100;
+                    const totalReferrals = (referrerData.totalReferrals || 0) + 1;
 
-                    // Tambah bonus 10% dari deposit pertama user yang diajak
-                    const referredUserRef = ref(database, `players/${encodeEmail(userEmail)}`);
-                    get(referredUserRef).then((referredSnapshot) => {
-                        const referredData = referredSnapshot.val();
-                        if (referredData && referredData.totalDeposit > 0) {
-                            const referralBonus = referredData.totalDeposit * 0.10; // 10% dari total deposit
-                            update(referrerPlayerRef, {
-                                referralEarnings: newReferralEarnings + referralBonus,
-                                totalReferrals: totalReferrals
-                            }).then(() => {
-                                console.log(`Referral bonus (100 + ${referralBonus}) given to ${referralUsername}`);
-                                showNotification(`Referral bonus (100 + ${referralBonus.toFixed(2)} PI) given to referrer!`);
-                            }).catch(err => {
-                                console.error('Error updating referral earnings:', err);
-                            });
-                        } else {
-                            update(referrerPlayerRef, {
-                                referralEarnings: newReferralEarnings,
-                                totalReferrals: totalReferrals
-                            }).then(() => {
-                                console.log(`Referral bonus (100) given to ${referralUsername}`);
-                                showNotification('Referral bonus (100 PI) given to referrer!');
-                            }).catch(err => {
-                                console.error('Error updating referral earnings:', err);
-                            });
-                        }
+                    update(referrerPlayerRef, {
+                        referralEarnings: newReferralEarnings,
+                        totalReferrals: totalReferrals
+                    }).then(() => {
+                        console.log(`Referral bonus (100) given to ${referralUsername}`);
+                        showNotification('Referral bonus (100 PI) given to referrer!');
+                    }).catch(err => {
+                        console.error('Error updating referral earnings:', err);
                     });
 
-                    // Simpen data referral
                     set(referralRef, {
                         referrer: referralUsername,
                         referred: userUsername,
                         earnings: 100,
                         timestamp: Date.now(),
-                        totalReferrals: 1 // Inisialisasi total referrals buat referrer
+                        totalReferrals: 1
                     }).catch(err => {
                         console.error('Error saving referral data:', err);
                     });
@@ -1463,530 +1202,12 @@ function switchTab(tab) {
     playMenuSound();
 }
 
-// Exchange PI to Farm Coins to PI
-let currentExchangeRate = 1000000;
-
-function loadExchangeRate() {
-    const rateRef = ref(database, "exchangeRate/liveRate");
-    onValue(rateRef, (snapshot) => {
-        currentExchangeRate = snapshot.val() || currentExchangeRate;
-        const rateEl = document.getElementById("live-rate");
-        if (rateEl) rateEl.textContent = `1 Pi = ${currentExchangeRate.toLocaleString()} FC`;
-        updateExchangeResult();
-    });
-}
-loadExchangeRate();
-
-function updateExchangeResult() {
-    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
-    const amount = parseFloat(rawAmount) || 0;
-    const direction = document.getElementById("exchange-direction").value;
-
-    const result = (direction === "piToFc")
-        ? Math.floor(amount * currentExchangeRate)
-        : amount / currentExchangeRate;
-
-    const resultText = `You will get: ${
-        direction === "piToFc"
-            ? result.toLocaleString()
-            : result.toLocaleString(undefined, { maximumFractionDigits: 6 })
-    }`;
-
-    const resultDiv = document.getElementById("exchange-result");
-
-    const shortDisplay = resultText.length > 25 ? resultText.substring(0, 25) + "…" : resultText;
-
-    resultDiv.textContent = shortDisplay;
-    resultDiv.title = resultText;
-}
-
-async function handleExchange() {
-    const rawAmount = document.getElementById("exchange-amount").value.replace(",", ".");
-    const amount = parseFloat(rawAmount);
-    const direction = document.getElementById("exchange-direction").value;
-    const playerRef = ref(database, `players/${encodedEmail}`);
-    const snapshot = await get(playerRef);
-    const data = snapshot.val();
-
-    if (!data) return showNotification("Player data not found!");
-    if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
-
-    let piBalance = Number(data.piBalance || 0);
-    let fc = Number(data.farmCoins || 0);
-    let resultText = "";
-
-    if (direction === "piToFc") {
-        if (piBalance < amount) return showNotification("Not enough Pi!");
-        const converted = Math.floor(amount * currentExchangeRate);
-        piBalance -= amount;
-        fc += converted;
-        resultText = converted.toLocaleString();
-    } else {
-        if (fc < amount) return showNotification("Not enough FC!");
-        const converted = amount / currentExchangeRate;
-        fc -= amount;
-        piBalance += converted;
-        resultText = converted.toFixed(6);
-    }
-
-    piBalance = Math.round(piBalance * 1000000) / 1000000;
-    fc = Math.floor(fc);
-
-    document.getElementById("exchange-loading").style.display = "block";
-
-    setTimeout(() => {
-        (async () => {
-            try {
-                await update(playerRef, {
-                    piBalance: piBalance,
-                    farmCoins: fc
-                });
-
-                const piElem = document.getElementById("pi-balance");
-                const fcElem = document.getElementById("fc-balance");
-
-                if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
-                if (fcElem) fcElem.textContent = fc.toLocaleString();
-                document.getElementById("exchange-amount").value = "";
-
-                updateExchangeResult(resultText);
-
-                try {
-                    await coinSound.play();
-                } catch (err) {
-                    console.error("Error playing sound:", err);
-                }
-
-                showNotification("Exchange success!");
-            } catch (error) {
-                console.error("Exchange failed:", error.message);
-                showNotification("Exchange failed: " + error.message);
-            } finally {
-                document.getElementById("exchange-loading").style.display = "none";
-            }
-        })();
-    }, 3000);
-}
-
-const exchangeBtn = document.getElementById("exchange-btn");
-const directionSelect = document.getElementById("exchange-direction");
-
-directionSelect.addEventListener("change", () => {
-    const direction = directionSelect.value;
-    if (direction === "piToFc") {
-        exchangeBtn.textContent = "Exchange to FC";
-    } else {
-        exchangeBtn.textContent = "Exchange to Pi";
-    }
-});
-
-directionSelect.dispatchEvent(new Event("change"));
-
-// Modal untuk daily reward
-if (claimModalBtn) {
-    addSafeClickListener(document.getElementById('claim-reward-btn'), async () => {
-        const playerRef = ref(database, `players/${encodedEmail}/lastClaim`);
-        try {
-            const snapshot = await get(playerRef);
-            lastClaim = snapshot.val();
-
-            const today = new Date().toISOString().split('T')[0];
-            const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().split('T')[0] : null;
-
-            if (lastClaimDate === today) {
-                const claimRewardBtnElement = document.getElementById('claim-reward-btn');
-                if (claimRewardBtnElement) {
-                    claimRewardBtnElement.classList.add('claimed');
-                    claimRewardBtnElement.textContent = langData[currentLang]?.claimed || 'Claimed!';
-                    claimRewardBtnElement.disabled = true;
-                }
-                claimedToday = true;
-                return;
-            }
-
-            if (isClaiming) return;
-            isClaiming = true;
-
-            if (rewardModal) rewardModal.style.display = 'block';
-            const dailyRewardTextElement = document.getElementById('daily-reward-text');
-            if (dailyRewardTextElement) {
-                dailyRewardTextElement.textContent = `${langData[currentLang]?.dailyRewardText || 'You got +100 Farm Coins & +50 Water!'}`;
-            }
-        } catch (error) {
-            console.error('Error checking last claim:', error.message);
-            showNotification('Error checking daily reward.');
-            isClaiming = false;
-        }
-    });
-}
-
-// Claim daily reward
-if (claimModalBtn) {
-    addSafeClickListener(claimModalBtn, async () => {
-        if (!encodedEmail) return;
-
-        farmCoins += 100;
-        water += 50;
-        xp += 10;
-
-        const today = new Date().toISOString();
-        lastClaim = today;
-        claimedToday = true;
-
-        const playerRef = ref(database, `players/${encodedEmail}`);
-        try {
-            await update(playerRef, { farmCoins, water, xp, lastClaim, claimedToday });
-            updateWallet();
-            if (rewardModal) rewardModal.style.display = 'none';
-            const claimRewardBtnElement = document.getElementById('claim-reward-btn');
-            if (claimRewardBtnElement) {
-                claimRewardBtnElement.classList.add('claimed');
-                claimRewardBtnElement.textContent = langData[currentLang]?.claimed || 'Claimed!';
-                claimRewardBtnElement.disabled = true;
-            }
-            checkLevelUp();
-            playCoinSound();
-            showNotification(langData[currentLang]?.rewardClaimed || 'Reward Claimed!');
-        } catch (error) {
-            console.error('Error claiming reward:', error.message);
-            showNotification('Error claiming reward: ' + error.message);
-        } finally {
-            isClaiming = false;
-        }
-    });
-}
-
-// Check daily reward
-function checkDailyReward() {
-    if (!encodedEmail) return;
-
-    const today = new Date().toISOString().split('T')[0];
-    const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().split('T')[0] : null;
-
-    const claimRewardBtnElement = document.getElementById('claim-reward-btn');
-    if (claimRewardBtnElement) {
-        if (lastClaimDate === today) {
-            claimRewardBtnElement.classList.add('claimed');
-            claimRewardBtnElement.textContent = langData[currentLang]?.claimed || 'Claimed!';
-            claimRewardBtnElement.disabled = true;
-            claimedToday = true;
-        } else {
-            claimRewardBtnElement.classList.remove('claimed');
-            claimRewardBtnElement.textContent = langData[currentLang]?.claimDailyReward || 'Claim Daily Reward';
-            claimRewardBtnElement.disabled = false;
-            claimedToday = false;
-        }
-    }
-}
-
-// Deposit handling
-const depositBtn = document.getElementById('deposit-btn');
-const depositAmountInput = document.getElementById('deposit-amount');
-
-if (depositBtn && depositAmountInput) {
-    addSafeClickListener(depositBtn, async () => {
-        const amount = parseFloat(depositAmountInput.value);
-        if (isNaN(amount) || amount <= 0) {
-            showNotification('Invalid deposit amount.');
-            return;
-        }
-
-        if (!encodedEmail) {
-            showNotification('Please login first.');
-            return;
-        }
-
-        const depositLimitRef = ref(database, `depositLimits/${encodedEmail}`);
-        const snapshot = await get(depositLimitRef);
-        const depositLimitData = snapshot.val() || { total: 0 };
-        const totalDeposited = depositLimitData.total || 0;
-
-        if (totalDeposited + amount > 1000) {
-            showNotification('Deposit limit exceeded. Maximum total deposit is 1000 PI.');
-            return;
-        }
-
-        const transactionRef = ref(database, 'transactions');
-        const newTransactionRef = push(transactionRef);
-        const transactionId = newTransactionRef.key;
-
-        try {
-            await set(newTransactionRef, {
-                amount: amount,
-                timestamp: Date.now(),
-                memo: `Deposit of ${amount} PI`,
-                status: 'pending',
-                email: localStorage.getItem('email')
-            });
-
-            const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}/${transactionId}`);
-            await set(depositHistoryRef, {
-                amount: amount,
-                timestamp: Date.now(),
-                status: 'pending'
-            });
-
-            showNotification(`Deposit request of ${amount} PI submitted for approval.`);
-            depositAmountInput.value = '';
-        } catch (error) {
-            console.error('Error submitting deposit:', error.message);
-            showNotification('Error submitting deposit: ' + error.message);
-        }
-    });
-}
-
-// Withdraw handling
-const withdrawBtn = document.getElementById('withdraw-btn');
-const withdrawAmountInput = document.getElementById('withdraw-amount');
-
-if (withdrawBtn && withdrawAmountInput) {
-    addSafeClickListener(withdrawBtn, async () => {
-        const amount = parseFloat(withdrawAmountInput.value);
-        if (isNaN(amount) || amount <= 0) {
-            showNotification('Invalid withdraw amount.');
-            return;
-        }
-
-        if (!encodedEmail) {
-            showNotification('Please login first.');
-            return;
-        }
-
-        const playerRef = ref(database, `players/${encodedEmail}`);
-        const snapshot = await get(playerRef);
-        const playerData = snapshot.val();
-
-        if (!playerData) {
-            showNotification('Player data not found.');
-            return;
-        }
-
-        if (playerData.piBalance < amount) {
-            showNotification('Not enough PI to withdraw.');
-            return;
-        }
-
-        const transactionRef = ref(database, 'transactions');
-        const newTransactionRef = push(transactionRef);
-        const transactionId = newTransactionRef.key;
-
-        try {
-            await set(newTransactionRef, {
-                amount: amount,
-                timestamp: Date.now(),
-                memo: `Withdraw of ${amount} PI`,
-                status: 'pending',
-                email: localStorage.getItem('email')
-            });
-
-            const withdrawHistoryRef = ref(database, `withdrawHistory/${encodedEmail}/${transactionId}`);
-            await set(withdrawHistoryRef, {
-                amount: amount,
-                timestamp: Date.now(),
-                status: 'pending'
-            });
-
-            showNotification(`Withdraw request of ${amount} PI submitted for approval.`);
-            withdrawAmountInput.value = '';
-        } catch (error) {
-            console.error('Error submitting withdraw:', error.message);
-            showNotification('Error submitting withdraw: ' + error.message);
-        }
-    });
-}
-
-// Admin dashboard - Load transactions
-function loadAdminTransactions() {
-    const transactionListElement = document.getElementById('transaction-list');
-    if (!transactionListElement) return;
-
-    const transactionsRef = ref(database, 'transactions');
-    onValue(transactionsRef, (snapshot) => {
-        const transactions = snapshot.val();
-        if (!transactions) {
-            transactionListElement.innerHTML = '<p>No transactions found.</p>';
-            return;
-        }
-
-        transactionListElement.innerHTML = '';
-
-        Object.entries(transactions).forEach(([transactionId, transaction]) => {
-            const transactionDiv = document.createElement('div');
-            transactionDiv.classList.add('transaction-item');
-            transactionDiv.innerHTML = `
-                <p>Email: ${transaction.email}</p>
-                <p>Amount: ${transaction.amount} PI</p>
-                <p>Memo: ${transaction.memo}</p>
-                <p>Status: ${transaction.status}</p>
-                <button class="approve-btn" data-id="${transactionId}" ${transaction.status !== 'pending' ? 'disabled' : ''}>Approve</button>
-                <button class="reject-btn" data-id="${transactionId}" ${transaction.status !== 'pending' ? 'disabled' : ''}>Reject</button>
-            `;
-            transactionListElement.appendChild(transactionDiv);
-        });
-
-        const approveButtons = document.querySelectorAll('.approve-btn');
-        approveButtons.forEach(btn => {
-            addSafeClickListener(btn, async () => {
-                const transactionId = btn.getAttribute('data-id');
-                await handleAdminAction(transactionId, 'approved');
-            });
-        });
-
-        const rejectButtons = document.querySelectorAll('.reject-btn');
-        rejectButtons.forEach(btn => {
-            addSafeClickListener(btn, async () => {
-                const transactionId = btn.getAttribute('data-id');
-                await handleAdminAction(transactionId, 'rejected');
-            });
-        });
-    });
-}
-
-// Admin handle transaction
-async function handleAdminAction(transactionId, action) {
-    const transactionRef = ref(database, `transactions/${transactionId}`);
-    const snapshot = await get(transactionRef);
-    const transaction = snapshot.val();
-
-    if (!transaction) return;
-
-    const userEmail = transaction.email;
-    const encodedUserEmail = encodeEmail(userEmail);
-    const playerRef = ref(database, `players/${encodedUserEmail}`);
-    const playerSnapshot = await get(playerRef);
-    const playerData = playerSnapshot.val();
-
-    if (!playerData) {
-        showNotification('User data not found.');
-        return;
-    }
-
-    try {
-        if (action === 'approved') {
-            if (transaction.memo.includes('Deposit')) {
-                const newPiBalance = (playerData.piBalance || 0) + transaction.amount;
-                const newTotalDeposit = (playerData.totalDeposit || 0) + transaction.amount;
-
-                await update(playerRef, {
-                    piBalance: newPiBalance,
-                    totalDeposit: newTotalDeposit
-                });
-
-                const depositLimitRef = ref(database, `depositLimits/${encodedUserEmail}`);
-                const depositLimitSnapshot = await get(depositLimitRef);
-                const depositLimitData = depositLimitSnapshot.val() || { total: 0 };
-                await update(depositLimitRef, { total: depositLimitData.total + transaction.amount });
-
-                const depositHistoryRef = ref(database, `depositHistory/${encodedUserEmail}/${transactionId}`);
-                await update(depositHistoryRef, { status: 'approved' });
-            } else if (transaction.memo.includes('Withdraw')) {
-                const newPiBalance = (playerData.piBalance || 0) - transaction.amount;
-                if (newPiBalance < 0) {
-                    showNotification('User does not have enough PI to withdraw.');
-                    return;
-                }
-                await update(playerRef, { piBalance: newPiBalance });
-
-                const withdrawHistoryRef = ref(database, `withdrawHistory/${encodedUserEmail}/${transactionId}`);
-                await update(withdrawHistoryRef, { status: 'approved' });
-            }
-        } else if (action === 'rejected') {
-            if (transaction.memo.includes('Deposit')) {
-                const depositHistoryRef = ref(database, `depositHistory/${encodedUserEmail}/${transactionId}`);
-                await update(depositHistoryRef, { status: 'rejected' });
-            } else if (transaction.memo.includes('Withdraw')) {
-                const withdrawHistoryRef = ref(database, `withdrawHistory/${encodedUserEmail}/${transactionId}`);
-                await update(withdrawHistoryRef, { status: 'rejected' });
-            }
-        }
-
-        await update(transactionRef, { status: action });
-        showNotification(`Transaction ${action} successfully.`);
-    } catch (error) {
-        console.error(`Error ${action} transaction:`, error.message);
-        showNotification(`Error ${action} transaction: ${error.message}`);
-    }
-}
-
-// Update UI text based on language
-function updateUIText() {
-    if (!langData[currentLang]) return;
-
-    const titleElement = document.getElementById('title');
-    if (titleElement) {
-        titleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
-    }
-
-    const gameTitleElement = document.getElementById('game-title');
-    if (gameTitleElement) {
-        gameTitleElement.textContent = langData[currentLang]?.title || 'Harvest Pi';
-    }
-
-    const startTextElement = document.getElementById('start-text');
-    if (startTextElement) {
-        startTextElement.textContent = langData[currentLang]?.startGame || 'Start Game';
-    }
-
-    const farmTabElement = document.querySelector('.tab-btn[data-tab="farm"]');
-    if (farmTabElement) {
-        farmTabElement.textContent = langData[currentLang]?.farmTab || 'Farm';
-    }
-
-    const shopTabElement = document.querySelector('.tab-btn[data-tab="shop"]');
-    if (shopTabElement) {
-        shopTabElement.textContent = langData[currentLang]?.shopTab || 'Shop';
-    }
-
-    const inventoryTabElement = document.querySelector('.tab-btn[data-tab="inventory"]');
-    if (inventoryTabElement) {
-        inventoryTabElement.textContent = langData[currentLang]?.inventoryTab || 'Inventory';
-    }
-
-    const achievementsTabElement = document.querySelector('.tab-btn[data-tab="achievements"]');
-    if (achievementsTabElement) {
-        achievementsTabElement.textContent = langData[currentLang]?.achievementsTab || 'Achievements';
-    }
-
-    const exchangeTabElement = document.querySelector('.tab-btn[data-tab="exchange"]');
-    if (exchangeTabElement) {
-        exchangeTabElement.textContent = langData[currentLang]?.exchangeTab || 'Exchange';
-    }
-
-    const referralTabElement = document.querySelector('.tab-btn[data-tab="referral"]');
-    if (referralTabElement) {
-        referralTabElement.textContent = langData[currentLang]?.referralTab || 'Referral';
-    }
-
-    const financeTabElement = document.querySelector('.tab-btn[data-tab="finance"]');
-    if (financeTabElement) {
-        financeTabElement.textContent = langData[currentLang]?.financeTab || 'Finance';
-    }
-}
-
-// Copy to clipboard
-function copyToClipboard(text, buttonElement) {
-    navigator.clipboard.writeText(text).then(() => {
-        console.log('Text copied to clipboard:', text);
-        if (buttonElement) {
-            const originalText = buttonElement.textContent;
-            buttonElement.textContent = langData[currentLang]?.copied || 'Copied!';
-            setTimeout(() => {
-                buttonElement.textContent = originalText;
-            }, 2000);
-        }
-    }).catch(err => {
-        console.error('Failed to copy text:', err);
-        showNotification('Failed to copy text.');
-    });
-}
-
 // Initialize game
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Tambah timeout buat loadData
         const loadDataPromise = loadData();
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Load data timed out')), 10000); // Timeout 10 detik
+            setTimeout(() => reject(new Error('Load data timed out')), 10000);
         });
         await Promise.race([loadDataPromise, timeoutPromise]);
     } catch (error) {
@@ -2024,62 +1245,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    auth.onAuthStateChanged(async (user) => {
-        try {
-            if (user && user.emailVerified) {
-                encodedEmail = encodeEmail(user.email);
-                localStorage.setItem('encodedEmail', encodedEmail);
-                localStorage.setItem('email', user.email);
-
-                const playerRef = ref(database, `players/${encodedEmail}`);
-                const snapshot = await get(playerRef);
-                const playerData = snapshot.val();
-
-                if (playerData) {
-                    const role = playerData.role || 'user';
-                    username = playerData.username;
-                    localStorage.setItem('username', username);
-
-                    if (role === 'admin') {
-                        const loginScreenElement = document.getElementById('login-screen');
-                        const adminDashboardElement = document.getElementById('admin-dashboard');
-                        if (loginScreenElement && adminDashboardElement) {
-                            loginScreenElement.style.display = 'none';
-                            adminDashboardElement.style.display = 'flex';
-                            loadAdminTransactions();
-                        }
-                    } else {
-                        const loginScreenElement = document.getElementById('login-screen');
-                        const startScreenElement = document.getElementById('start-screen');
-                        if (loginScreenElement && startScreenElement) {
-                            loginScreenElement.style.display = 'none';
-                            startScreenElement.style.display = 'flex';
-                        }
-                    }
-                    loadPlayerData();
-                    updateReferralLink();
-                    handleReferral();
-                } else {
-                    console.warn('No player data found for:', encodedEmail);
-                    showNotification('Account data not found. Please register.');
-                    const loginScreenElement = document.getElementById('login-screen');
-                    if (loginScreenElement) {
-                        loginScreenElement.style.display = 'flex';
-                    }
-                }
-            } else {
-                const loginScreenElement = document.getElementById('login-screen');
-                if (loginScreenElement) {
-                    loginScreenElement.style.display = 'flex';
-                }
-            }
-        } catch (error) {
-            console.error('Error in auth.onAuthStateChanged:', error.message);
-            showNotification('Error checking auth state: ' + error.message);
-            const loginScreenElement = document.getElementById('login-screen');
-            if (loginScreenElement) {
-                loginScreenElement.style.display = 'flex';
-            }
-        }
-    });
+    // Cek kalo ga di Pi Browser pas load
+    if (!window.Pi || !window.Pi.authenticate) {
+        showNotification('This app must be opened in Pi Browser to login with Pi. Please switch to Pi Browser.');
+    }
 });

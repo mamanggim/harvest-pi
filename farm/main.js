@@ -2102,40 +2102,43 @@ function exitFullScreen() {
     }
 }
 
-// Fungsi encode email
+// === Fungsi Pendukung ===
+
+// Encode email untuk digunakan sebagai key Firebase
 function encodeEmail(email) {
-  return email.replace('@', '_at_').replace('.', '_dot_');
+  return email.replace('@', '_at_').replace(/\./g, '_dot_');
 }
 
-// Fungsi copy ke clipboard
+// Copy ke clipboard
 function copyToClipboard(text, button) {
   navigator.clipboard.writeText(text).then(() => {
     button.textContent = 'Copied!';
-    setTimeout(() => {
-      button.textContent = 'Copy';
-    }, 2000);
+    setTimeout(() => { button.textContent = 'Copy'; }, 2000);
   }).catch(err => {
-    console.error('Gagal copy: ', err);
+    console.error('Gagal copy:', err);
   });
 }
 
-// Tunggu DOM siap
-document.addEventListener('DOMContentLoaded', () => {
-  // Tab Switching
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  const tabContents = document.querySelectorAll('.tab-content');
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      tabContents.forEach(content => content.classList.remove('active'));
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      const tabId = button.getAttribute('data-tab');
-      document.getElementById(tabId).classList.add('active');
-      button.classList.add('active');
-    });
-  });
-  document.querySelector('[data-tab="finance"]').click();
+// Simpan deposit ke Firebase
+async function handleDeposit(username, amount) {
+  if (!username || amount <= 0) return;
+  const playerRef = ref(database, `players/${username}`);
+  try {
+    const snapshot = await get(playerRef);
+    const playerData = snapshot.val() || {};
+    const newBalance = (playerData.piBalance || 0) + amount;
+    await update(playerRef, { piBalance: newBalance });
+    console.log(`Deposit successful: ${amount} PI added to ${username}, new balance: ${newBalance} PI`);
+    showNotification('Deposit successful!');
+    loadUserBalances(); // Update UI
+  } catch (error) {
+    console.error('Error handling deposit:', error.message);
+    showNotification('Error depositing: ' + error.message);
+  }
+}
 
-  // Fitur Deposit
+document.addEventListener('DOMContentLoaded', () => {
+  // === DEPOSIT ===
   const realDepositBtn = document.getElementById("real-deposit-btn");
   const realDepositMsg = document.getElementById("real-deposit-msg");
   const depositAmountInput = document.getElementById("deposit-amount");
@@ -2152,46 +2155,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmDepositBtn = document.getElementById("confirm-deposit");
   const cancelDepositBtn = document.getElementById("cancel-deposit");
 
-  // Logging untuk debug
-  console.log('Elemen deposit:', {
-    realDepositBtn,
-    realDepositMsg,
-    depositAmountInput,
-    depositPopup,
-    popupAmount,
-    popupMemo,
-    popupUsername,
-    popupTransferAmount,
-    popupTransferMemo,
-    popupWalletAddress,
-    countdownTimer,
-    copyWalletBtn,
-    copyMemoBtn,
-    confirmDepositBtn,
-    cancelDepositBtn
-  });
-
-  // Pengecekan elemen
-  if (!realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup || !popupAmount || !popupMemo || !popupUsername || !popupTransferAmount || !popupTransferMemo || !popupWalletAddress || !countdownTimer || !copyWalletBtn || !copyMemoBtn || !confirmDepositBtn || !cancelDepositBtn) {
-    console.error('Salah satu elemen tidak ditemukan. Cek ID di HTML.');
-    return;
-  }
-
-  // Setup Deposit Request
   let countdownInterval = null;
-  const countdownDuration = 100; // 100 detik countdown
+  const countdownDuration = 100; // 100 detik
 
   realDepositBtn.addEventListener('click', async () => {
-    console.log('Tombol deposit diklik');
-
     const user = auth.currentUser;
     if (!user) {
-        realDepositMsg.textContent = 'Please login first.';
-        console.log('Validasi gagal: User belum login');
-        return;
+      realDepositMsg.textContent = 'Please login first.';
+      return;
     }
 
-    // Ambil username dari database berdasarkan email
     const email = user.email;
     const encodedEmail = encodeEmail(email);
     const playersRef = ref(database, 'players');
@@ -2199,25 +2172,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const playersData = snapshot.val() || {};
     let username = null;
     for (const playerUsername in playersData) {
-        if (playersData[playerUsername].email === email) {
-            username = playerUsername;
-            break;
-        }
+      if (playersData[playerUsername].email === email) {
+        username = playerUsername;
+        break;
+      }
     }
+
     if (!username) {
-        realDepositMsg.textContent = 'Username not found. Please register.';
-        console.log('Validasi gagal: Username ga ketemu');
-        return;
+      realDepositMsg.textContent = 'Username not found.';
+      return;
     }
 
     const amount = parseFloat(depositAmountInput.value);
     if (!amount || amount < 1) {
-        realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
-        console.log('Validasi gagal: Amount < 1');
-        return;
+      realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
+      return;
     }
 
-    // Cek limit deposit harian
     const today = new Date().toISOString().split('T')[0];
     const depositLimitRef = ref(database, `depositLimits/${encodedEmail}/${today}`);
     const depositSnapshot = await get(depositLimitRef);
@@ -2225,9 +2196,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let dailyTotal = depositData ? depositData.total : 0;
 
     if (dailyTotal + amount > 1000) {
-        realDepositMsg.textContent = 'Daily deposit limit exceeded (1000 PI).';
-        console.log('Validasi gagal: Melebihi limit harian');
-        return;
+      realDepositMsg.textContent = 'Daily deposit limit exceeded (1000 PI).';
+      return;
     }
 
     realDepositMsg.textContent = '';
@@ -2248,290 +2218,565 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mulai countdown
     let timeLeft = countdownDuration;
-    countdownTimer.textContent = `Time left: ${timeLeft}s`;
+    countdownTimer.textContent = `${timeLeft}s`;
     countdownInterval = setInterval(() => {
-        timeLeft--;
-        countdownTimer.textContent = `Time left: ${timeLeft}s`;
-        if (timeLeft <= 0) {
-            clearInterval(countdownInterval);
-            depositPopup.style.display = 'none';
-            realDepositBtn.disabled = false;
-            depositAmountInput.disabled = false;
-            realDepositMsg.textContent = 'Deposit request timed out.';
-        }
-    }, 1000);
-
-    // Copy Wallet Address
-    copyWalletBtn.addEventListener('click', () => {
-        copyToClipboard(walletAddress, copyWalletBtn);
-    });
-
-    // Copy Memo
-    copyMemoBtn.addEventListener('click', () => {
-        copyToClipboard(memo, copyMemoBtn);
-    });
-
-    // Confirm Deposit
-    confirmDepositBtn.addEventListener('click', async () => {
-        clearInterval(countdownInterval);
-        depositPopup.style.display = 'none';
-
-        try {
-            const playerRef = ref(database, `players/${username}`);
-            const snapshot = await get(playerRef);
-            let totalDeposit; // Deklarasikan di sini
-
-            if (!snapshot.exists()) {
-                console.log('Player data not found, creating new entry');
-                await set(playerRef, { totalDeposit: amount, piBalance: 0, farmCoins: 0 });
-                totalDeposit = amount;
-            } else {
-                const playerData = snapshot.val();
-                totalDeposit = playerData.totalDeposit || 0;
-            }
-
-            totalDeposit += amount;
-            dailyTotal += amount;
-
-            await update(playerRef, { totalDeposit });
-            await set(depositLimitRef, { total: dailyTotal });
-
-            const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}`);
-            await push(depositHistoryRef, {
-                amount,
-                timestamp: Date.now(),
-                memo,
-                status: 'pending'
-            });
-
-            realDepositMsg.textContent = 'Deposit request submitted. Awaiting confirmation...';
-            console.log('Deposit request submitted:', { amount, memo });
-        } catch (error) {
-            console.error('Error submitting deposit:', error.message);
-            realDepositMsg.textContent = 'Error submitting deposit: ' + error.message;
-        } finally {
-            realDepositBtn.disabled = false;
-            depositAmountInput.disabled = false;
-            depositAmountInput.value = '';
-        }
-    });
-
-    // Cancel Deposit
-    cancelDepositBtn.addEventListener('click', () => {
+      timeLeft--;
+      countdownTimer.textContent = `${timeLeft}s`;
+      if (timeLeft <= 0) {
         clearInterval(countdownInterval);
         depositPopup.style.display = 'none';
         realDepositBtn.disabled = false;
         depositAmountInput.disabled = false;
-        realDepositMsg.textContent = 'Deposit request cancelled.';
-    });
+        realDepositMsg.textContent = 'Deposit request timed out.';
+      }
+    }, 1000);
+
+    // Event salin
+    copyWalletBtn.onclick = () => copyToClipboard(walletAddress, copyWalletBtn);
+    copyMemoBtn.onclick = () => copyToClipboard(memo, copyMemoBtn);
+
+    // Confirm Deposit
+    confirmDepositBtn.onclick = async () => {
+      clearInterval(countdownInterval);
+      depositPopup.style.display = 'none';
+
+        try {
+        const playerRef = ref(database, `players/${username}`);
+        const snapshot = await get(playerRef);
+        let totalDeposit = 0;
+
+        if (!snapshot.exists()) {
+          await set(playerRef, { totalDeposit: amount, piBalance: 0, farmCoins: 0 });
+          totalDeposit = amount;
+        } else {
+          const playerData = snapshot.val();
+          totalDeposit = (playerData.totalDeposit || 0) + amount;
+        }
+
+        dailyTotal += amount;
+        await update(playerRef, { totalDeposit });
+        await set(depositLimitRef, { total: dailyTotal });
+
+        const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}`);
+        await push(depositHistoryRef, {
+          amount,
+          timestamp: Date.now(),
+          memo,
+          status: 'pending'
+        });
+
+        realDepositMsg.textContent = 'Deposit request submitted. Awaiting confirmation...';
+        console.log('Deposit request submitted:', { amount, memo });
+      } catch (error) {
+        console.error('Error submitting deposit:', error.message);
+        realDepositMsg.textContent = 'Error submitting deposit: ' + error.message;
+      } finally {
+        realDepositBtn.disabled = false;
+        depositAmountInput.disabled = false;
+        depositAmountInput.value = '';
+      }
+    };
+
+    // Cancel Deposit
+    cancelDepositBtn.onclick = () => {
+      clearInterval(countdownInterval);
+      depositPopup.style.display = 'none';
+      realDepositBtn.disabled = false;
+      depositAmountInput.disabled = false;
+      realDepositMsg.textContent = 'Deposit request cancelled.';
+    };
+  });
 });
 
-  // Fitur Withdraw
+// Fitur Withdraw
   const withdrawBtn = document.getElementById("withdraw-btn");
   const withdrawAmountInput = document.getElementById("withdraw-amount");
-  const withdrawMsg = document.getElementById("withdraw-msg");
+  const withdrawMsg = document.getElementById("real-withdraw-msg");
   const withdrawPopup = document.getElementById("withdraw-popup");
   const withdrawPopupAmount = document.getElementById("withdraw-popup-amount");
-  const withdrawPopupUsername = document.getElementById("withdraw-popup-username"); // Perbaiki typo
+  const withdrawPopupUsername = document.getElementById("withdraw-popup-username");
   const withdrawPopupWallet = document.getElementById("withdraw-popup-wallet");
   const withdrawWalletInput = document.getElementById("withdraw-wallet-input");
   const withdrawCountdownTimer = document.getElementById("withdraw-countdown-timer");
   const confirmWithdrawBtn = document.getElementById("confirm-withdraw");
   const cancelWithdrawBtn = document.getElementById("cancel-withdraw");
 
-  console.log('Elemen withdraw:', {
-    withdrawBtn,
-    withdrawAmountInput,
-    withdrawMsg,
-    withdrawPopup,
-    withdrawPopupAmount,
-    withdrawPopupUsername, // Perbaiki typo di log
-    withdrawPopupWallet,
-    withdrawWalletInput,
-    withdrawCountdownTimer,
-    confirmWithdrawBtn,
-    cancelWithdrawBtn
-  });
+  if (
+    withdrawBtn && withdrawAmountInput && withdrawMsg &&
+    withdrawPopup && withdrawPopupAmount && withdrawPopupUsername &&
+    withdrawPopupWallet && withdrawWalletInput &&
+    withdrawCountdownTimer && confirmWithdrawBtn && cancelWithdrawBtn
+  ) {
+    const withdrawCountdownDuration = 100;
+    let withdrawCountdownInterval = null;
 
-  if (!withdrawBtn || !withdrawAmountInput || !withdrawMsg || !withdrawPopup || !withdrawPopupAmount || !withdrawPopupUsername || !withdrawPopupWallet || !withdrawWalletInput || !withdrawCountdownTimer || !confirmWithdrawBtn || !cancelWithdrawBtn) {
-    console.error('Salah satu elemen withdraw tidak ditemukan. Cek ID di HTML.');
-    return;
-  }
-
-  let withdrawCountdownInterval = null;
-  const withdrawCountdownDuration = 100; // 100 detik countdown
-
-  withdrawBtn.addEventListener('click', async () => {
-    console.log('Tombol withdraw diklik');
-
-    const user = auth.currentUser;
-    if (!user) {
-      withdrawMsg.textContent = 'Please login first.';
-      console.log('Validasi gagal: User belum login');
-      return;
-    }
-
-    // Ambil username dari database berdasarkan email
-    const email = user.email;
-    const encodedEmail = encodeEmail(email);
-    const playersRef = ref(database, 'players');
-    const snapshot = await get(playersRef);
-    const playersData = snapshot.val() || {};
-    let username = null;
-    for (const playerUsername in playersData) {
-      if (playersData[playerUsername].email === email) {
-        username = playerUsername;
-        break;
+    withdrawBtn.addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        withdrawMsg.textContent = 'Please login first.';
+        return;
       }
-    }
-    if (!username) {
-      withdrawMsg.textContent = 'Username not found. Please register.';
-      console.log('Validasi gagal: Username ga ketemu');
-      return;
-    }
 
-    const amount = parseFloat(withdrawAmountInput.value);
-    if (!amount || amount < 1) {
-      withdrawMsg.textContent = 'Minimum withdraw is 1 PI.';
-      console.log('Validasi gagal: Amount < 1');
-      return;
-    }
+      const email = user.email;
+      const encodedEmail = encodeEmail(email);
+      const playersRef = ref(database, 'players');
+      const snapshot = await get(playersRef);
+      const playersData = snapshot.val() || {};
+      let username = null;
+      for (const playerUsername in playersData) {
+        if (playersData[playerUsername].email === email) {
+          username = playerUsername;
+          break;
+        }
+      }
+      if (!username) {
+        withdrawMsg.textContent = 'Username not found.';
+        return;
+      }
 
-    const playerRef = ref(database, `players/${username}`);
-    const playerSnapshot = await get(playerRef);
-    if (!playerSnapshot.exists()) {
-      withdrawMsg.textContent = 'Player data not found.';
-      console.log('Validasi gagal: Player data ga ketemu');
-      return;
-    }
-    const playerData = playerSnapshot.val();
-    const piBalance = playerData.piBalance || 0;
+      const amount = parseFloat(withdrawAmountInput.value);
+      if (!amount || amount < 1) {
+        withdrawMsg.textContent = 'Minimum withdraw is 1 PI.';
+        return;
+      }
 
-    if (amount > piBalance) {
-      withdrawMsg.textContent = 'Insufficient PI balance.';
-      console.log('Validasi gagal: Saldo tidak cukup');
-      return;
-    }
+      const playerRef = ref(database, `players/${username}`);
+      const playerSnapshot = await get(playerRef);
+      if (!playerSnapshot.exists()) {
+        withdrawMsg.textContent = 'Player data not found.';
+        return;
+      }
 
-    const walletAddress = withdrawWalletInput.value.trim();
-    if (!walletAddress) {
-      withdrawMsg.textContent = 'Please enter a valid wallet address.';
-      console.log('Validasi gagal: Wallet address kosong');
-      return;
-    }
+      const playerData = playerSnapshot.val();
+      const piBalance = playerData.piBalance || 0;
+      if (amount > piBalance) {
+        withdrawMsg.textContent = 'Insufficient PI balance.';
+        return;
+      }
 
-    withdrawMsg.textContent = '';
-    withdrawBtn.disabled = true;
-    withdrawAmountInput.disabled = true;
-    withdrawWalletInput.disabled = true;
+      const walletAddress = withdrawWalletInput.value.trim();
+      if (!walletAddress) {
+        withdrawMsg.textContent = 'Wallet address is required.';
+        return;
+      }
 
-    // Tampilkan popup
-    withdrawPopupAmount.textContent = amount;
-    withdrawPopupUsername.textContent = username;
-    withdrawPopupWallet.textContent = walletAddress;
-    withdrawPopup.style.display = 'block';
+      // Tampilkan popup
+      withdrawPopupAmount.textContent = amount;
+      withdrawPopupUsername.textContent = username;
+      withdrawPopupWallet.textContent = walletAddress;
+      withdrawPopup.style.display = 'block';
 
-    // Mulai countdown
-    let timeLeft = withdrawCountdownDuration;
-    withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
-    withdrawCountdownInterval = setInterval(() => {
-      timeLeft--;
+      // Countdown
+      let timeLeft = withdrawCountdownDuration;
       withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
-      if (timeLeft <= 0) {
+      withdrawCountdownInterval = setInterval(() => {
+        timeLeft--;
+        withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(withdrawCountdownInterval);
+          withdrawPopup.style.display = 'none';
+          withdrawMsg.textContent = 'Withdraw request timed out.';
+          withdrawBtn.disabled = false;
+          withdrawAmountInput.disabled = false;
+          withdrawWalletInput.disabled = false;
+        }
+      }, 1000);
+
+         // Confirm Withdraw
+      confirmWithdrawBtn.addEventListener('click', async () => {
+        clearInterval(withdrawCountdownInterval);
+        withdrawPopup.style.display = 'none';
+
+        try {
+          const updatedBalance = piBalance - amount;
+          await update(playerRef, { piBalance: updatedBalance });
+
+          const withdrawHistoryRef = ref(database, `withdrawHistory/${encodedEmail}`);
+          await push(withdrawHistoryRef, {
+            amount,
+            walletAddress,
+            timestamp: Date.now(),
+            status: 'pending'
+          });
+
+          withdrawMsg.textContent = 'Withdraw request submitted. Awaiting admin confirmation...';
+          console.log(`Withdraw ${amount} PI submitted by ${username}`);
+        } catch (error) {
+          console.error('Error submitting withdraw:', error.message);
+          withdrawMsg.textContent = 'Withdraw error: ' + error.message;
+        } finally {
+          withdrawBtn.disabled = false;
+          withdrawAmountInput.disabled = false;
+          withdrawWalletInput.disabled = false;
+          withdrawAmountInput.value = '';
+          withdrawWalletInput.value = '';
+        }
+      });
+
+      // Cancel Withdraw
+      cancelWithdrawBtn.addEventListener('click', () => {
         clearInterval(withdrawCountdownInterval);
         withdrawPopup.style.display = 'none';
         withdrawBtn.disabled = false;
         withdrawAmountInput.disabled = false;
         withdrawWalletInput.disabled = false;
-        withdrawMsg.textContent = 'Withdraw request timed out.';
-      }
-    }, 1000);
-
-    // Confirm Withdraw
-    confirmWithdrawBtn.addEventListener('click', async () => {
-      clearInterval(withdrawCountdownInterval);
-      withdrawPopup.style.display = 'none';
-
-      try {
-        const updatedPiBalance = piBalance - amount;
-        await update(playerRef, { piBalance: updatedPiBalance });
-
-        const encodedEmail = encodeEmail(user.email);
-        const withdrawHistoryRef = ref(database, `withdrawHistory/${encodedEmail}`);
-        await push(withdrawHistoryRef, {
-          amount,
-          walletAddress,
-          timestamp: Date.now(),
-          status: 'pending'
-        });
-
-        withdrawMsg.textContent = 'Withdraw request submitted. Awaiting confirmation...';
-        console.log('Withdraw request submitted:', { amount, walletAddress });
-      } catch (error) {
-        console.error('Error submitting withdraw:', error.message);
-        withdrawMsg.textContent = 'Error submitting withdraw: ' + error.message;
-      } finally {
-        withdrawBtn.disabled = false;
-        withdrawAmountInput.disabled = false;
-        withdrawWalletInput.disabled = false;
-        withdrawAmountInput.value = '';
-        withdrawWalletInput.value = '';
-      }
+        withdrawMsg.textContent = 'Withdraw request cancelled.';
+      });
     });
+  } else {
+    console.warn('One or more withdraw elements are missing in DOM.');
+  }
 
-    // Cancel Withdraw
-    cancelWithdrawBtn.addEventListener('click', () => {
-      clearInterval(withdrawCountdownInterval);
-      withdrawPopup.style.display = 'none';
-      withdrawBtn.disabled = false;
-      withdrawAmountInput.disabled = false;
-      withdrawWalletInput.disabled = false;
-      withdrawMsg.textContent = 'Withdraw request cancelled.';
-    });
-});
-
-  // Load user balances
-  auth.onAuthStateChanged(user => {
+// Load user balances saat auth berubah
+  auth.onAuthStateChanged(async (user) => {
     if (user) {
-      username = user.displayName || user.email; // Ganti jadi displayName atau email sebagai fallback
-      localStorage.setItem('username', username);
-      loadUserBalances();
+      // Cari username berdasarkan email
+      const email = user.email;
+      const playersRef = ref(database, 'players');
+      const snapshot = await get(playersRef);
+      const playersData = snapshot.val() || {};
+
+      for (const playerUsername in playersData) {
+        if (playersData[playerUsername].email === email) {
+          username = playerUsername;
+          localStorage.setItem('username', username);
+          break;
+        }
+      }
+
+      if (username) {
+        loadPlayerData();
+        updateReferralLink();
+        handleReferral(); // Cek referral dari URL
+      } else {
+        console.warn('Username tidak ditemukan saat auth state berubah.');
+      }
     }
   });
-});
 
-// Handle referral link from URL
-function handleReferral() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const referralUsername = urlParams.get('referral');
-  if (referralUsername && username && referralUsername !== username) {
-    const referrerRef = ref(database, `players/${referralUsername}`);
-    get(referrerRef).then((snapshot) => {
-      if (snapshot.exists()) {
-        const referrerData = snapshot.val();
-        const newReferralEarnings = (referrerData.referralEarnings || 0) + 100;
-        update(referrerRef, { referralEarnings: newReferralEarnings })
-          .then(() => {
-            console.log(`Referral bonus given to ${referralUsername}`);
-            showNotification('Referral bonus given to referrer!');
-          })
-          .catch(err => {
-            console.error('Error updating referral earnings:', err);
+  // Handle referral dari URL saat halaman dibuka
+  function handleReferral() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const referralUsername = urlParams.get('referral');
+
+    if (referralUsername && username && referralUsername !== username) {
+      const referrerRef = ref(database, `players/${referralUsername}`);
+      get(referrerRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const referrerData = snapshot.val();
+          const newEarnings = (referrerData.referralEarnings || 0) + 100;
+
+          update(referrerRef, { referralEarnings: newEarnings }).then(() => {
+            console.log(`Referral bonus diberikan ke ${referralUsername}`);
+            showNotification('Referral bonus diberikan!');
+          }).catch(err => {
+            console.error('Gagal update referral bonus:', err);
           });
-      }
-    }).catch(err => {
-      console.error('Error fetching referrer data:', err);
-    });
+        }
+      }).catch(err => {
+        console.error('Gagal mendapatkan data referrer:', err);
+      });
+    }
+  }
+
+  // Check referral ketika DOM sudah siap
+  document.addEventListener('DOMContentLoaded', () => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+      username = storedUsername;
+      loadPlayerData();
+      updateReferralLink();
+      handleReferral();
+    }
+  });
+
+// Encode email untuk path Firebase
+function encodeEmail(email) {
+  return email.replace('@', '_at_').replace(/\./g, '_dot_');
+}
+
+// Fungsi copy ke clipboard dengan feedback
+function copyToClipboard(text, button) {
+  navigator.clipboard.writeText(text).then(() => {
+    button.textContent = 'Copied!';
+    setTimeout(() => {
+      button.textContent = 'Copy';
+    }, 2000);
+  }).catch(err => {
+    console.error('Clipboard copy error:', err);
+  });
+}
+
+// Tampilkan notifikasi
+function showNotification(message) {
+  const notif = document.getElementById("notification");
+  if (notif) {
+    notif.textContent = message;
+    notif.style.display = "block";
+    setTimeout(() => {
+      notif.style.display = "none";
+    }, 3000);
   }
 }
 
-// Check referral on load
-document.addEventListener('DOMContentLoaded', () => {
+// Update UI wallet balance
+async function loadUserBalances() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const playersRef = ref(database, 'players');
+  const snapshot = await get(playersRef);
+  const playersData = snapshot.val() || {};
+  let currentUsername = null;
+
+  for (const playerUsername in playersData) {
+    if (playersData[playerUsername].email === user.email) {
+      currentUsername = playerUsername;
+      break;
+    }
+  }
+
+  if (!currentUsername) {
+    console.error('Username not found for balance load.');
+    return;
+  }
+
+  const playerData = playersData[currentUsername];
+  const pi = playerData.piBalance || 0;
+  const fc = playerData.farmCoins || 0;
+
+  document.getElementById('pi-coins').textContent = `${pi.toFixed(6)} PI`;
+  document.getElementById('farm-coins').textContent = `${fc} Farm Coins`;
+
+  // Sembunyikan pi/fc balance raw element (opsional)
+  const piBalanceRaw = document.getElementById('pi-balance');
+  const fcBalanceRaw = document.getElementById('fc-balance');
+  if (piBalanceRaw) piBalanceRaw.textContent = pi;
+  if (fcBalanceRaw) fcBalanceRaw.textContent = fc;
+}
+
+// Fungsi load saldo pengguna
+async function loadUserBalances() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const email = user.email;
+  const playersRef = ref(database, 'players');
+  const snapshot = await get(playersRef);
+  const playersData = snapshot.val() || {};
+  let username = null;
+  for (const key in playersData) {
+    if (playersData[key].email === email) {
+      username = key;
+      break;
+    }
+  }
+
+  if (!username) return;
+
+  const playerData = playersData[username];
+  if (!playerData) return;
+
+  document.getElementById('farm-coin-balance').textContent = playerData.farmCoins || 0;
+  document.getElementById('pi-coin-balance').textContent = playerData.piBalance || 0;
+  document.getElementById('referral-earnings').textContent = (playerData.referralEarnings || 0) + " PI";
+}
+
+// Fungsi untuk update link referral
+function updateReferralLink() {
   const storedUsername = localStorage.getItem('username');
-  if (storedUsername) {
-    username = storedUsername;
-    loadPlayerData();
-    updateReferralLink();
-    handleReferral();
+  const referralSpan = document.getElementById('referral-link');
+  if (storedUsername && referralSpan) {
+    const url = `${window.location.origin}?ref=${storedUsername}`;
+    referralSpan.textContent = url;
+    referralSpan.style.wordBreak = "break-all";
+
+    const copyBtn = document.getElementById('copy-referral-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        copyToClipboard(url, copyBtn);
+      });
+    }
+  }
+}
+
+// Fungsi load data pemain
+async function loadPlayerData() {
+  const storedUsername = localStorage.getItem('username');
+  if (!storedUsername) return;
+
+  const playerRef = ref(database, `players/${storedUsername}`);
+  const snapshot = await get(playerRef);
+  if (!snapshot.exists()) {
+    console.warn('Player data not found.');
+    return;
+  }
+
+  const data = snapshot.val();
+  if (data) {
+    // Kamu bisa isi ini untuk update UI atau cache data
+    console.log("Player data loaded:", data);
+  }
+}
+
+// Cek apakah user adalah admin
+async function checkIfAdmin(email) {
+  const encodedEmail = encodeEmail(email);
+  const playersRef = ref(database, 'players');
+  const snapshot = await get(playersRef);
+  const playersData = snapshot.val() || {};
+
+  for (const username in playersData) {
+    const player = playersData[username];
+    if (player.email === email && player.role === 'admin') {
+      console.log('User is admin:', username);
+      return true;
+    }
+  }
+
+  console.log('User is not admin:', email);
+  return false;
+}
+
+// Fungsi helper show notification
+function showNotification(message) {
+  const notification = document.getElementById("notification");
+  if (!notification) return;
+
+  notification.textContent = message;
+  notification.style.display = "block";
+  setTimeout(() => {
+    notification.style.display = "none";
+  }, 3000);
+}
+
+// Fungsi untuk logout user
+function logoutUser() {
+  auth.signOut().then(() => {
+    localStorage.removeItem("username");
+    window.location.href = "/";
+  });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const user = auth.currentUser;
+
+  if (user && user.emailVerified) {
+    const storedUsername = localStorage.getItem("username");
+
+    if (!storedUsername) {
+      // Ambil username dari database berdasarkan email
+      const playersRef = ref(database, 'players');
+      const snapshot = await get(playersRef);
+      const playersData = snapshot.val() || {};
+      let usernameFromDb = null;
+
+      for (const playerUsername in playersData) {
+        if (playersData[playerUsername].email === user.email) {
+          usernameFromDb = playerUsername;
+          break;
+        }
+      }
+
+      if (usernameFromDb) {
+        localStorage.setItem("username", usernameFromDb);
+        username = usernameFromDb;
+      }
+    } else {
+      username = storedUsername;
+    }
+
+    // Load data pemain
+    if (username) {
+      loadPlayerData();
+      updateReferralLink();
+      handleReferral();
+      loadUserBalances();
+    }
+
+    // Cek apakah admin
+    const isAdmin = await checkIfAdmin(user.email);
+    if (isAdmin) {
+      document.getElementById("admin-dashboard")?.style.display = "flex";
+      document.getElementById("login-screen")?.style.display = "none";
+    } else {
+      document.getElementById("start-screen")?.style.display = "flex";
+      document.getElementById("login-screen")?.style.display = "none";
+    }
+
+  } else {
+    document.getElementById("login-screen")?.style.display = "flex";
+  }
+
+  // Tombol logout
+  const logoutBtn = document.getElementById("exit-game-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", logoutUser);
   }
 });
+
+// Tampilkan notifikasi
+function showNotification(message, duration = 3000) {
+  const notif = document.getElementById('notification');
+  if (notif) {
+    notif.textContent = message;
+    notif.style.display = 'block';
+    setTimeout(() => {
+      notif.style.display = 'none';
+    }, duration);
+  } else {
+    alert(message); // fallback kalau elemen tidak ada
+  }
+}
+
+// Update saldo di wallet UI
+function updateWallet() {
+  const piBalanceEl = document.getElementById("pi-coin-balance");
+  const farmBalanceEl = document.getElementById("farm-coin-balance");
+  const waterEl = document.getElementById("water");
+  if (piBalanceEl) piBalanceEl.textContent = (window.piBalance || 0).toFixed(6);
+  if (farmBalanceEl) farmBalanceEl.textContent = (window.farmCoins || 0).toLocaleString();
+  if (waterEl) waterEl.textContent = (window.water || 0).toLocaleString();
+}
+
+// Load ulang saldo user saat login berhasil
+async function loadUserBalances() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const playersRef = ref(database, 'players');
+  const snapshot = await get(playersRef);
+  const playersData = snapshot.val() || {};
+  const email = user.email;
+  for (const playerUsername in playersData) {
+    if (playersData[playerUsername].email === email) {
+      const data = playersData[playerUsername];
+      window.piBalance = data.piBalance || 0;
+      window.farmCoins = data.farmCoins || 0;
+      window.water = data.water || 0;
+      updateWallet();
+      break;
+    }
+  }
+}
+
+// Bersihkan interval ketika keluar popup
+function clearAllCountdowns() {
+  if (typeof countdownInterval !== 'undefined') clearInterval(countdownInterval);
+  if (typeof withdrawCountdownInterval !== 'undefined') clearInterval(withdrawCountdownInterval);
+}
+
+// Tambahan: logout listener
+const logoutBtn = document.getElementById("exit-game-btn");
+if (logoutBtn) {
+  addSafeClickListener(logoutBtn, async () => {
+    try {
+      await auth.signOut();
+      localStorage.removeItem("username");
+      showNotification("Logged out.");
+      location.reload();
+    } catch (err) {
+      console.error("Logout error:", err.message);
+    }
+  });
+}

@@ -6,252 +6,306 @@
   <title>Harvest Pi</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="farm/style.css?v=41" />
+  <style>
+    #start-text {
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      padding: 15px;
+      font-size: 18px;
+      user-select: none;
+    }
+    #start-text:active {
+      transform: scale(0.95);
+    }
+    /* Popup Styling */
+    #deposit-popup, #withdraw-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border: 2px solid #333;
+      z-index: 1000;
+      display: none;
+      text-align: center;
+      font-family: 'Press Start 2P', cursive;
+    }
+    #deposit-popup button, #withdraw-popup button {
+      margin: 5px;
+      padding: 10px;
+      cursor: pointer;
+    }
+    /* Referral Tab */
+    #referral-tab {
+      padding: 20px;
+      text-align: center;
+    }
+    #referral-link {
+      width: 80%;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    #referral-list {
+      list-style: none;
+      padding: 0;
+    }
+    #referral-list li {
+      padding: 5px 0;
+    }
+    /* Notification */
+    #notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
-  <!-- LOADING SCREEN -->
-  <div id="loading-screen" class="active">
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <h1>Harvest Pi</h1>
+  <div class="loading-animation">Loading...</div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="display: flex;">
+  <div class="login-container">
     <h1>Harvest Pi</h1>
-    <div class="spinner"></div>
-    <div class="loading-animation">Loading...</div>
-  </div>
-
-  <!-- LOGIN SCREEN -->
-  <div id="login-screen" class="center-screen" style="display: none;">
-    <div class="login-container">
-      <h1>Harvest Pi</h1>
-      <button id="pi-login-btn" class="game-button">Login with Pi</button>
-      <div id="login-error" style="display: none;"></div>
-      <div class="policy-links">
-        <a href="/privacy-policy" class="policy-link">Privacy Policy</a> | 
-        <a href="/terms-of-service" class="policy-link">Terms of Service</a>
-      </div>
+    <button id="login-pi-btn">Login with Pi</button>
+    <div class="policy-links">
+      <a href="/privacy-policy.html" target="_blank">Privacy Policy</a> |
+      <a href="/term-of-service.html" target="_blank">Terms of Service</a>
     </div>
   </div>
+</div>
 
-  <!-- START SCREEN -->
-  <div id="start-screen" style="display: none;">
-    <h1 id="title">Harvest Pi</h1>
-    <div id="start-text" class="start-text">Start Game</div>
+<!-- START SCREEN -->
+<div id="start-screen" style="display: none;">
+  <h1 id="title">Harvest Pi</h1>
+  <div id="start-text" class="start-text">Start Game</div>
+  <div class="corner-buttons">
+    <button id="lang-toggle">Switch Language (EN/ID)</button>
+    <button id="settings-btn">⚙️</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" style="display: none;">
+  <div id="game-header">
     <div class="corner-buttons">
-      <button id="lang-toggle">Switch Language (EN/ID)</button>
-      <button id="settings-btn">⚙️</button>
+      <button id="game-settings-btn">⚙️</button>
+      <button id="exit-game-btn" style="display: none;">Exit</button>
+    </div>
+    <h1 id="game-title">Harvest Pi</h1>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="farm">Farm</button>
+      <button class="tab-btn" data-tab="shop">Shop</button>
+      <button class="tab-btn" data-tab="upgrades">Upgrades</button>
+      <button class="tab-btn" data-tab="inventory">Inventory</button>
+      <button class="tab-btn" data-tab="exchange">Exchange</button>
+      <button class="tab-btn" data-tab="finance">Finance</button>
+      <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
+      <button class="tab-btn" data-tab="achievements">Achievements</button>
+      <button class="tab-btn" data-tab="referral">Referral</button>
+    </div>
+    <div id="wallet">
+      <span id="farm-coins">0 Farm Coins</span> |
+      <span id="pi-coins">0.000000 PI</span> |
+      <span id="water">0 Water</span>
+      <div id="level">Level: 1 | XP: 0</div>
+      <div id="xp-bar"><div id="xp-fill"></div></div>
     </div>
   </div>
 
-  <!-- GAME SCREEN -->
-  <div id="game-screen" style="display: none;">
-    <div id="game-header">
-      <div class="corner-buttons">
-        <button id="game-settings-btn">⚙️</button>
-      </div>
-      <h1 id="game-title">Harvest Pi</h1>
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="farm">Farm</button>
-        <button class="tab-btn" data-tab="shop">Shop</button>
-        <button class="tab-btn" data-tab="upgrades">Upgrades</button>
-        <button class="tab-btn" data-tab="inventory">Inventory</button>
-        <button class="tab-btn" data-tab="exchange">Exchange</button>
-        <button class="tab-btn" data-tab="finance">Finance</button>
-        <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
-        <button class="tab-btn" data-tab="achievements">Achievements</button>
-        <button class="tab-btn" data-tab="referral">Referral</button>
-      </div>
-      <div id="wallet">
-        <span id="farm-coins">0 Farm Coins</span> |
-        <span id="pi-coins">0.000000 PI</span> |
-        <span id="water">0 Water</span>
-        <div id="level">Level: 1 | XP: 0</div>
-        <div id="xp-bar"><div id="xp-fill"></div></div>
-      </div>
-    </div>
-    <!-- FARM -->
-    <div id="farm" class="tab-content active">
-      <div id="farm-area"></div>
-      <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
-    </div>
-    <!-- SHOP -->
-    <div id="shop" class="tab-content">
-      <div class="shop-switch">
-        <button id="shop-buy-tab" class="shop-tab-btn active">Buy</button>
-        <button id="shop-sell-tab" class="shop-tab-btn">Sell</button>
-      </div>
-      <div id="shop-content"></div>
-      <div id="sell-section" style="display: none;">
-        <h2 id="sell-section-title">Sell Items</h2>
-        <div id="sell-content"></div>
-      </div>
-    </div>
-    <!-- UPGRADES -->
-    <div id="upgrades" class="tab-content">
-      <h2 id="upgrades-title">Upgrades</h2>
-      <p id="upgrades-content">Coming soon...</p>
-    </div>
-    <!-- INVENTORY -->
-    <div id="inventory" class="tab-content">
-      <div id="inventory-content"></div>
-    </div>
-    <!-- EXCHANGE -->
-    <div id="exchange" class="tab-content">
-      <div class="exchange-container">
-        <h3 class="exchange-title">Live Exchange</h3>
-        <div class="exchange-rate" id="live-rate">Loading rate...</div>
-        <div class="exchange-section">
-          <label for="exchange-amount">Amount:</label>
-          <input type="number" id="exchange-amount" placeholder="Enter amount" />
-          <select id="exchange-direction">
-            <option value="piToFc">Pi → FC</option>
-            <option value="fcToPi">FC → Pi</option>
-          </select>
-          <div id="exchange-result" class="exchange-result">You will get: 0</div>
-          <span id="pi-balance" style="display: none;"></span>
-          <span id="fc-balance" style="display: none;"></span>
-          <button id="exchange-btn">Exchange</button>
-          <div id="exchange-loading">
-            <div class="loader"></div>
-            <div>Processing exchange...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- FINANCE -->
-    <div id="finance" class="tab-content">
-      <h2 id="finance-title">Finance</h2>
-      <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
-      <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
-      <hr />
-      <h3>Deposit</h3>
-      <input type="number" id="deposit-amount" placeholder="Enter PI Amount" />
-      <button id="real-deposit-btn">Deposit PI</button>
-      <div id="real-deposit-msg" class="deposit-message"></div>
-      <h3>Withdraw</h3>
-      <input type="text" id="withdraw-wallet-input" placeholder="Enter Wallet Address" />
-      <input type="number" id="withdraw-amount" placeholder="Enter PI Amount" />
-      <button id="withdraw-btn">Withdraw PI</button>
-      <div id="real-withdraw-msg" class="deposit-message"></div>
-      <p id="withdraw-note" class="note">
-        This feature will unlock when you reach: <br />
-        - Level 10<br />
-        - Farm Coin ≥ 10.000.000<br />
-        - Total Deposit ≥ 10 PI
-      </p>
-      <!-- Deposit Popup -->
-      <div id="deposit-popup" class="popup" style="display: none;">
-        <div class="popup-content">
-          <h3 class="neon-title">Deposit Details</h3>
-          <p><strong>Amount:</strong> <span id="popup-amount">0</span> PI</p>
-          <p><strong>Memo:</strong> <span id="popup-memo" class="text-limit">-</span></p>
-          <p><strong>Username:</strong> <span id="popup-username" class="text-limit">-</span></p>
-          <p>
-            Transfer <span id="popup-transfer-amount">0</span> PI to wallet address: 
-            <strong><span id="popup-wallet-address" class="text-limit">YOUR_WALLET_ADDRESS</span></strong>
-            <button id="copy-wallet-btn" class="copy-button">Copy</button>
-          </p>
-          <p>
-            with memo: <span id="popup-transfer-memo" class="text-limit">-</span>
-            <button id="copy-memo-btn" class="copy-button">Copy</button>
-          </p>
-          <p><strong>Time Left:</strong> <span id="countdown-timer">100</span> seconds</p>
-          <button id="confirm-deposit" class="game-button">Confirm</button>
-          <button id="cancel-deposit" class="game-button">Cancel</button>
-        </div>
-      </div>
-      <!-- Withdraw Popup -->
-      <div id="withdraw-popup" class="popup" style="display: none;">
-        <div class="popup-content">
-          <h3 class="neon-title">Withdraw Details</h3>
-          <p><strong>Amount:</strong> <span id="withdraw-popup-amount">0</span> PI</p>
-          <p><strong>Username:</strong> <span id="withdraw-popup-username" class="text-limit">-</span></p>
-          <p><strong>Wallet Address:</strong> <span id="withdraw-popup-wallet" class="text-limit">-</span></p>
-          <p><strong>Time Left:</strong> <span id="withdraw-countdown-timer">100</span> seconds</p>
-          <button id="confirm-withdraw" class="game-button">Confirm</button>
-          <button id="cancel-withdraw" class="game-button">Cancel</button>
-        </div>
-      </div>
-    </div>
-    <!-- LEADERBOARD -->
-    <div id="leaderboard" class="tab-content">
-      <h2 id="leaderboard-title">Leaderboard</h2>
-      <p id="leaderboard-content">Coming soon...</p>
-    </div>
-    <!-- ACHIEVEMENTS -->
-    <div id="achievements" class="tab-content">
-      <div id="achievements-content"></div>
-    </div>
-    <!-- REFERRAL -->
-    <div id="referral" class="tab-content">
-      <h2 id="referral-title">Referral Program</h2>
-      <p>Your Referral Link: <span id="referral-link">Loading...</span> <button id="copy-referral-btn" class="copy-button">Copy</button></p>
-      <p>Referral Earnings: <span id="referral-earnings">0 PI</span></p>
-      <h3>Your Referrals</h3>
-      <div id="referral-content"></div>
-    </div>
-    <!-- MODAL REWARD -->
-    <div id="reward-modal" class="modal">
-      <div class="modal-content">
-        <span id="reward-modal-close" class="close">×</span>
-        <h2 id="daily-reward-title">Daily Reward</h2>
-        <p id="daily-reward-text">You got +100 Farm Coins, +50 Water & +10 XP!</p>
-        <button id="claim-modal-btn" aria-label="Claim Reward">Claim</button>
-      </div>
-    </div>
-    <!-- SETTINGS MODAL -->
-    <div id="settings-modal" class="modal">
-      <div class="modal-content">
-        <span id="close-settings" class="close">×</span>
-        <h2 id="settings-title">Settings</h2>
-        <button id="fullscreen-toggle">⛶</button>
-        <button id="game-lang-toggle">Switch Language (EN/ID)</button>
-        <button id="exit-game-btn">Logout</button>
-        <label id="music-volume-label" for="music-volume">Music Volume:</label>
-        <input type="range" id="music-volume" min="0" max="100" step="1" value="100" />
-        <label id="voice-volume-label" for="voice-volume">Voice/SFX Volume:</label>
-        <input type="range" id="voice-volume" min="0" max="100" step="1" value="100" />
-      </div>
-    </div>
-    <!-- NOTIFIKASI -->
-    <div id="notification" style="display: none;"></div>
+  <!-- FARM -->
+  <div id="farm" class="tab-content active">
+    <div id="farm-area"></div>
+    <button id="claim-reward-btn" aria-label="Claim Daily Reward">Claim Daily Reward</button>
   </div>
-  <!-- AUDIO -->
-  <audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop preload="auto"></audio>
-  <audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop preload="auto"></audio>
-  <audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3" preload="auto"></audio>
-  <audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3" preload="auto"></audio>
-  <audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3" preload="auto"></audio>
-  <audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3" preload="auto"></audio>
-  <audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3" preload="auto"></audio>
-  <audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
-  <!-- FIREBASE -->
-  <script type="module" src="firebase/firebase-config.js"></script>
-  <!-- PI NETWORK SDK -->
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-  <script>
-    Pi.init({ version: "2.0" });
-  </script>
-  <!-- MAIN GAME SCRIPT -->
-  <script type="module" src="farm/main.js?v=41"></script>
-  <!-- REFERRAL SCRIPT -->
-  <script type="module" src="referral/referral.js?v=41"></script>
-  <!-- LINK REFERRAL -->
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    if (ref) {
-      console.log(`Referred by ${ref}`);
-      localStorage.setItem('referral', ref);
+
+  <!-- SHOP -->
+  <div id="shop" class="tab-content">
+    <div class="shop-switch">
+      <button id="shop-buy-tab" class="shop-tab-btn active">Buy</button>
+      <button id="shop-sell-tab" class="shop-tab-btn">Sell</button>
+    </div>
+    <div id="shop-content"></div>
+    <div id="sell-section" style="display: none;">
+      <h2 id="sell-section-title">Sell Items</h2>
+      <div id="sell-content"></div>
+    </div>
+  </div>
+
+  <!-- UPGRADES -->
+  <div id="upgrades" class="tab-content">
+    <h2 id="upgrades-title">Upgrades</h2>
+    <p id="upgrades-content">Coming soon...</p>
+  </div>
+
+  <!-- INVENTORY -->
+  <div id="inventory" class="tab-content">
+    <div id="inventory-content"></div>
+  </div>
+
+  <!-- EXCHANGE -->
+  <div id="exchange" class="tab-content">
+    <div class="exchange-container">
+      <h3 id="exchange-title">Live Exchange</h3>
+      <div class="exchange-rate" id="live-rate">Loading rate...</div>
+      <div class="exchange-section">
+        <label for="exchange-amount">Amount:</label>
+        <input type="number" id="exchange-amount" placeholder="Enter amount" step="0.000001">
+        <select id="exchange-direction">
+          <option value="piToFc">Pi → FC</option>
+          <option value="fcToPi">FC → Pi</option>
+        </select>
+        <div id="exchange-result" class="exchange-result">You will get: 0</div>
+        <button id="exchange-btn">Exchange</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCE -->
+  <div id="finance" class="tab-content">
+    <h2 id="finance-title">Finance</h2>
+    <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
+    <p>Pi Coin Balance: <span id="pi-coin-balance">0.000000</span></p>
+    <hr/>
+    <h3>Deposit</h3>
+    <input type="number" id="deposit-amount" placeholder="Enter PI Amount" step="0.000001" min="1" />
+    <button id="confirm-deposit">Deposit</button>
+    <p id="deposit-message" class="deposit-message">Minimum deposit 1 PI</p>
+    <hr/>
+    <h3>Withdraw</h3>
+    <input type="number" id="withdraw-amount" placeholder="Enter PI Amount" step="0.000001" min="0" />
+    <input type="text" id="withdraw-wallet-input" placeholder="Enter Wallet Address" />
+    <button id="withdraw-btn" disabled>Withdraw PI</button>
+    <p id="withdraw-note" class="note">
+      This feature will unlock when you reach: <br />
+      - Level 10<br />
+      - Farm Coin ≥ 10,000,000<br />
+      - Total Deposit ≥ 10 PI
+    </p>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="leaderboard" class="tab-content">
+    <h2 id="leaderboard-title">Leaderboard</h2>
+    <p id="leaderboard-content">Coming soon...</p>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div id="achievements" class="tab-content">
+    <div id="achievements-content"></div>
+  </div>
+
+  <!-- REFERRAL -->
+  <div id="referral" class="tab-content">
+    <h2>Referral Program</h2>
+    <input id="referral-link" readonly placeholder="Your referral link" />
+    <button id="copy-referral-btn">Copy Link</button>
+    <p>Referral Count: <span id="referral-count">0</span></p>
+    <ul id="referral-list"></ul>
+  </div>
+</div>
+
+<!-- DEPOSIT POPUP -->
+<div id="deposit-popup">
+  <h3>Deposit Details</h3>
+  <p>Amount: <span id="popup-amount"></span> PI</p>
+  <p>Memo: <span id="popup-memo"></span> <button id="copy-memo-btn">Copy</button></p>
+  <p>Wallet: <span id="popup-wallet-address"></span> <button id="copy-wallet-btn">Copy</button></p>
+  <p>Time Left: <span id="countdown-timer">100</span>s</p>
+  <button id="confirm-deposit">Confirm</button>
+  <button id="cancel-deposit">Cancel</button>
+</div>
+
+<!-- WITHDRAW POPUP -->
+<div id="withdraw-popup">
+  <h3>Withdraw Details</h3>
+  <p>Amount: <span id="withdraw-popup-amount"></span> PI</p>
+  <p>Wallet: <span id="withdraw-popup-wallet"></span></p>
+  <p>Time Left: <span id="withdraw-countdown-timer">100</span>s</p>
+  <button id="confirm-withdraw">Confirm</button>
+  <button id="cancel-withdraw">Cancel</button>
+</div>
+
+<!-- MODAL REWARD -->
+<div id="reward-modal" class="modal">
+  <div class="modal-content">
+    <span id="reward-modal-close" class="close">×</span>
+    <h2 id="daily-reward-title">Daily Reward</h2>
+    <p id="daily-reward-text">You got +100 Farm Coins & +50 Water!</p>
+    <button id="claim-modal-btn" aria-label="Claim Reward">Claim</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal" class="modal">
+  <div class="modal-content">
+    <span id="close-settings" class="close">×</span>
+    <h2 id="settings-title">Settings</h2>
+    <button id="fullscreen-toggle">⛶</button>
+    <button id="game-lang-toggle">Switch Language (EN/ID)</button>
+    <button id="exit-game-btn">Exit</button>
+    <label id="music-volume-label" for="music-volume">Music Volume:</label>
+    <input type="range" id="music-volume" min="0" max="100" step="1" value="50" />
+    <label id="voice-volume-label" for="voice-volume">Voice/SFX Volume:</label>
+    <input type="range" id="voice-volume" min="0" max="100" step="1" value="50" />
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div id="notification"></div>
+
+<!-- AUDIO -->
+<audio id="bg-music" src="assets/sfx/music/main-bgm.mp3" loop preload="auto"></audio>
+<audio id="bg-voice" src="assets/sfx/voice/main-bgv.mp3" loop preload="auto"></audio>
+<audio id="harvesting-sound" src="assets/sfx/voice/harvesting-bgv.mp3" preload="auto"></audio>
+<audio id="watering-sound" src="assets/sfx/voice/watering-bgv.mp3" preload="auto"></audio>
+<audio id="planting-sound" src="assets/sfx/voice/planting-bgv.mp3" preload="auto"></audio>
+<audio id="menu-sound" src="assets/sfx/voice/menu-bgv.mp3" preload="auto"></audio>
+<audio id="buying-sound" src="assets/sfx/voice/buying-bgv.mp3" preload="auto"></audio>
+<audio id="coin-sound" src="assets/sfx/voice/coin-bgv.mp3" preload="auto"></audio>
+
+<!-- FIREBASE -->
+<script type="module" src="firebase/firebase-config.js"></script>
+
+<!-- PI NETWORK SDK -->
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+<!-- REFERRAL SCRIPT -->
+<script type="module" src="referral/referral.js?v=41"></script>
+
+<!-- MAIN GAME SCRIPT -->
+<script type="module" src="farm/main.js?v=41"></script>
+
+<!-- FALLBACK ERROR HANDLING -->
+<script>
+  window.addEventListener('error', (event) => {
+    console.error('Error:', event.message, event.filename, event.lineno);
+    alert('An error occurred: ' + event.message + '. Please reload the page.');
+    const loadingScreen = document.getElementById('loading-screen');
+    const loginScreen = document.getElementById('login-screen');
+    if (loadingScreen && loginScreen) {
+      loadingScreen.style.display = 'none';
+      loginScreen.style.display = 'flex';
     }
-  </script>
-  <!-- FALLBACK ERROR HANDLING -->
-  <script>
-    window.addEventListener('error', (event) => {
-      alert('Main script failed to load: ' + event.message);
-      const loadingScreen = document.getElementById('loading-screen');
-      const loginScreen = document.getElementById('login-screen');
-      if (loadingScreen && loginScreen) {
-        loadingScreen.classList.remove('active');
-        loginScreen.classList.add('active');
-        loginScreen.style.display = 'flex';
-      }
-    });
-  </script>
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    alert('An error occurred: ' + event.reason + '. Please reload the page.');
+  });
+</script>
 </body>
 </html>

@@ -17,42 +17,15 @@
 
   <!-- LOGIN SCREEN -->
   <div id="login-screen" class="center-screen" style="display: none;">
-      <div class="login-container">
-          <h1>Harvest Pi</h1>
-          <form class="login-form">
-              <input id="email-input" type="email" placeholder="Email">
-              <input id="password-input" type="password" placeholder="Password">
-              <button id="login-email-btn" type="button">Login</button>
-              <div id="login-error" style="display: none;"></div>
-              <div id="verify-status" style="display: none;"></div>
-          </form>
-          <div class="policy-links">
-              <span>Don't have an account?</span> <a href="#" id="register-link">Register</a>
-              <br>
-              <a href="/privacy-policy" class="policy-link">Privacy Policy</a> | 
-              <a href="/terms-of-service" class="policy-link">Terms of Service</a>
-          </div>
+    <div class="login-container">
+      <h1>Harvest Pi</h1>
+      <button id="pi-login-btn" class="game-button">Login with Pi</button>
+      <div id="login-error" style="display: none;"></div>
+      <div class="policy-links">
+        <a href="/privacy-policy" class="policy-link">Privacy Policy</a> | 
+        <a href="/terms-of-service" class="policy-link">Terms of Service</a>
       </div>
-  </div>
-
-  <!-- Register Screen -->
-  <div id="register-screen" class="center-screen" style="display: none;">
-      <div class="login-container">
-          <h1>Harvest Pi</h1>
-          <form class="register-form">
-              <input id="register-email-input" type="email" placeholder="Register Email">
-              <input id="register-password-input" type="password" placeholder="Register Password">
-              <input id="register-username-input" type="text" placeholder="Username">
-              <button id="register-email-btn" type="button">Register</button>
-              <div id="register-error" style="display: none;"></div>
-          </form>
-          <div class="policy-links">
-              <span>Already have an account?</span> <a href="#" id="login-link">Login</a>
-              <br>
-              <a href="/privacy-policy" class="policy-link">Privacy Policy</a> | 
-              <a href="/terms-of-service" class="policy-link">Terms of Service</a>
-          </div>
-      </div>
+    </div>
   </div>
 
   <!-- START SCREEN -->
@@ -81,6 +54,7 @@
         <button class="tab-btn" data-tab="finance">Finance</button>
         <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
         <button class="tab-btn" data-tab="achievements">Achievements</button>
+        <button class="tab-btn" data-tab="referral">Referral</button>
       </div>
       <div id="wallet">
         <span id="farm-coins">0 Farm Coins</span> |
@@ -145,15 +119,14 @@
       <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
       <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
       <hr />
-      <h3>Referral Program</h3>
-      <p>Your Referral Link: <span id="referral-link">Loading...</span> <button id="copy-referral-btn" class="copy-button">Copy</button></p>
-      <p>Referral Earnings: <span id="referral-earnings">0 PI</span></p>
       <h3>Deposit</h3>
       <input type="number" id="deposit-amount" placeholder="Enter PI Amount" />
       <button id="real-deposit-btn">Deposit PI</button>
       <div id="real-deposit-msg" class="deposit-message"></div>
       <h3>Withdraw</h3>
-      <button id="withdraw-btn" disabled>Withdraw PI</button>
+      <input type="text" id="withdraw-wallet-input" placeholder="Enter Wallet Address" />
+      <input type="number" id="withdraw-amount" placeholder="Enter PI Amount" />
+      <button id="withdraw-btn">Withdraw PI</button>
       <div id="real-withdraw-msg" class="deposit-message"></div>
       <p id="withdraw-note" class="note">
         This feature will unlock when you reach: <br />
@@ -167,7 +140,7 @@
           <h3 class="neon-title">Deposit Details</h3>
           <p><strong>Amount:</strong> <span id="popup-amount">0</span> PI</p>
           <p><strong>Memo:</strong> <span id="popup-memo" class="text-limit">-</span></p>
-          <p><strong>Email:</strong> <span id="popup-username" class="text-limit">-</span></p>
+          <p><strong>Username:</strong> <span id="popup-username" class="text-limit">-</span></p>
           <p>
             Transfer <span id="popup-transfer-amount">0</span> PI to wallet address: 
             <strong><span id="popup-wallet-address" class="text-limit">YOUR_WALLET_ADDRESS</span></strong>
@@ -182,6 +155,18 @@
           <button id="cancel-deposit" class="game-button">Cancel</button>
         </div>
       </div>
+      <!-- Withdraw Popup -->
+      <div id="withdraw-popup" class="popup" style="display: none;">
+        <div class="popup-content">
+          <h3 class="neon-title">Withdraw Details</h3>
+          <p><strong>Amount:</strong> <span id="withdraw-popup-amount">0</span> PI</p>
+          <p><strong>Username:</strong> <span id="withdraw-popup-username" class="text-limit">-</span></p>
+          <p><strong>Wallet Address:</strong> <span id="withdraw-popup-wallet" class="text-limit">-</span></p>
+          <p><strong>Time Left:</strong> <span id="withdraw-countdown-timer">100</span> seconds</p>
+          <button id="confirm-withdraw" class="game-button">Confirm</button>
+          <button id="cancel-withdraw" class="game-button">Cancel</button>
+        </div>
+      </div>
     </div>
     <!-- LEADERBOARD -->
     <div id="leaderboard" class="tab-content">
@@ -191,6 +176,14 @@
     <!-- ACHIEVEMENTS -->
     <div id="achievements" class="tab-content">
       <div id="achievements-content"></div>
+    </div>
+    <!-- REFERRAL -->
+    <div id="referral" class="tab-content">
+      <h2 id="referral-title">Referral Program</h2>
+      <p>Your Referral Link: <span id="referral-link">Loading...</span> <button id="copy-referral-btn" class="copy-button">Copy</button></p>
+      <p>Referral Earnings: <span id="referral-earnings">0 PI</span></p>
+      <h3>Your Referrals</h3>
+      <div id="referral-content"></div>
     </div>
     <!-- MODAL REWARD -->
     <div id="reward-modal" class="modal">
@@ -236,16 +229,17 @@
   </script>
   <!-- MAIN GAME SCRIPT -->
   <script type="module" src="farm/main.js?v=41"></script>
+  <!-- REFERRAL SCRIPT -->
+  <script type="module" src="referral/referral.js?v=41"></script>
   <!-- LINK REFERRAL -->
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
     if (ref) {
-        console.log(`Referred by ${ref}`);
-        localStorage.setItem('referral', ref); // Simpen referral
-        switchToRegister(); // Switch ke tampilan register
+      console.log(`Referred by ${ref}`);
+      localStorage.setItem('referral', ref);
     }
-</script>
+  </script>
   <!-- FALLBACK ERROR HANDLING -->
   <script>
     window.addEventListener('error', (event) => {
@@ -255,6 +249,7 @@
       if (loadingScreen && loginScreen) {
         loadingScreen.classList.remove('active');
         loginScreen.classList.add('active');
+        loginScreen.style.display = 'flex';
       }
     });
   </script>

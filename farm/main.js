@@ -454,7 +454,13 @@ function updateReferralLink() {
     }
 }
 
-// Perbaiki set username dan hapus dependensi userId di login
+// Listener untuk LOGIN
+const loginEmailBtn = document.getElementById('login-email-btn');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const loginError = document.getElementById('login-error');
+const verifyEmailMsg = document.getElementById('verify-email-message');
+
 if (loginEmailBtn) {
   addSafeClickListener(loginEmailBtn, async (e) => {
     e.preventDefault();
@@ -464,35 +470,96 @@ if (loginEmailBtn) {
     if (!email || !password) {
       loginError.style.display = 'block';
       loginError.textContent = 'Please enter email and password.';
+      console.log('Login failed: Empty email or password');
       return;
     }
 
     try {
+      // Login dengan Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Cek verifikasi email
       if (!user.emailVerified) {
         await sendEmailVerification(user);
+        loginError.style.display = 'block';
+        loginError.textContent = 'Please verify your email. Check your inbox.';
         verifyEmailMsg.style.display = 'block';
-        loginError.style.display = 'none';
+        console.log('Login failed: Email not verified, verification sent');
         return;
       }
 
-      // Encode email jadi key Firebase
-      const encodedEmail = email.replace('@', '_at_').replace(/\./g, '_dot_');
-      const playerRef = ref(database, 'players/' + encodedEmail);
-      const snapshot = await get(playerRef);
-      const playerData = snapshot.val();
+      // Cari username berdasarkan email
+      const playersRef = ref(database, 'players');
+      const snapshot = await get(playersRef);
+      const playersData = snapshot.val() || {};
+      console.log('Players data:', playersData); // Debug
+      let foundUsername = null;
+      for (const playerUsername in playersData) {
+        console.log('Checking:', playerUsername, 'Email:', playersData[playerUsername].email); // Debug
+        if (playersData[playerUsername].email === email) {
+          foundUsername = playerUsername;
+          break;
+        }
+      }
+
+      // Fallback ke encodedEmail
+      if (!foundUsername) {
+        const encodedEmail = email.replace('@', '_at_').replace(/\./g, '_dot_');
+        const playerRef = ref(database, `players/${encodedEmail}`);
+        const playerSnapshot = await get(playerRef);
+        if (playerSnapshot.exists()) {
+          foundUsername = encodedEmail;
+        }
+      }
+
+      if (!foundUsername) {
+        loginError.style.display = 'block';
+        loginError.textContent = 'Account data not found in database. Please register.';
+        console.log('Login failed: No player data for email', email);
+        return;
+      }
+
+      // Cek player data
+      const playerRef = ref(database, `players/${foundUsername}`);
+      const playerSnapshot = await get(playerRef);
+      const playerData = playerSnapshot.val();
 
       if (!playerData) {
         loginError.style.display = 'block';
-        loginError.textContent = 'Account data not found. Please register.';
+        loginError.textContent = 'Player data not found. Please register.';
+        console.log('Login failed: Player data missing for username', foundUsername);
+        return;
+      }
+
+      // Cek status
+      if (playerData.status !== 'approved') {
+        loginError.style.display = 'block';
+        loginError.textContent = `Account ${playerData.status}. Please contact support.`;
+        console.log('Login failed: Account status', playerData.status, { email, foundUsername });
         return;
       }
 
       // Simpan ke localStorage
+      const encodedEmail = email.replace('@', '_at_').replace(/\./g, '_dot_');
       localStorage.setItem('encodedEmail', encodedEmail);
       localStorage.setItem('email', email);
+      localStorage.setItem('username', foundUsername); // Tambah username
+      console.log('Login success:', { email, foundUsername, role: playerData.role }); // Debug
+
+      // Setup notifikasi listener
+      onValue(ref(database, `notifications/${foundUsername}`), (snapshot) => {
+        const notifications = snapshot.val();
+        if (notifications) {
+          for (const id in notifications) {
+            const notif = notifications[id];
+            if (!notif.read) {
+              showNotification(notif.message);
+              update(ref(database, `notifications/${foundUsername}/${id}`), { read: true });
+            }
+          }
+        }
+      });
 
       // Redirect berdasarkan role
       const role = playerData.role || 'user';
@@ -504,6 +571,11 @@ if (loginEmailBtn) {
         if (adminDashboardElement && loginScreenElement) {
           loginScreenElement.style.display = 'none';
           adminDashboardElement.style.display = 'flex';
+          console.log('Redirected to admin dashboard');
+        } else {
+          console.error('Admin dashboard or login screen element not found');
+          loginError.style.display = 'block';
+          loginError.textContent = 'Error: Admin dashboard not found.';
         }
       } else {
         const loginScreenElement = document.getElementById('login-screen');
@@ -511,15 +583,39 @@ if (loginEmailBtn) {
         if (loginScreenElement && startScreenElement) {
           loginScreenElement.style.display = 'none';
           startScreenElement.style.display = 'flex';
+          console.log('Redirected to start screen');
+        } else {
+          console.error('Start or login screen element not found');
+          loginError.style.display = 'block';
+          loginError.textContent = 'Error: Start screen not found.';
         }
       }
 
-      // Lanjut load data
+      // Load data player
       loadPlayerData();
       updateReferralLink();
     } catch (error) {
       loginError.style.display = 'block';
-      loginError.textContent = 'Login failed: ' + error.message;
+      let errorMessage = 'Login failed. Please try again.';
+      console.error('Login error:', error.code, error.message);
+      switch (error.code) {
+        case 'auth/invalid-credential':
+          errorMessage = 'Invalid email or password.';
+          break;
+        case 'auth/user-not-found':
+          errorMessage = 'Account not found.';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many attempts. Try again later.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Check your connection.';
+          break;
+      }
+      loginError.textContent = errorMessage;
       verifyEmailMsg.style.display = 'none';
     }
   });

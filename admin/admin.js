@@ -1,65 +1,42 @@
-import { auth, database, ref, onValue, set, get } from '../firebase/firebase-config.js';
+import { auth, database, ref, onValue, set, get, update } from '../firebase/firebase-config.js';
 
-// Tunggu DOM siap
 document.addEventListener('DOMContentLoaded', () => {
-  let isLoggingOut = false; // Flag buat tandain logout
-  let lastNotificationTime = 0; // Buat batasin notif berulang
+  let isLoggingOut = false;
+  let lastNotificationTime = 0;
 
-  // Cek kalau udah pernah redirect biar ga loop
-  const redirectFlag = sessionStorage.getItem('adminRedirect');
-  if (redirectFlag) {
-    sessionStorage.removeItem('adminRedirect');
-    return;
-  }
-
-  // Cek auth sekali aja
+  // Cek auth dan role (tetep sama, cuma rapihin error message)
   auth.onAuthStateChanged((user) => {
-    if (user) {
-      // Cek role admin
-      get(ref(database, `players/${encodeEmail(user.email)}/role`))
-        .then((snapshot) => {
-          const role = snapshot.val();
-          if (role === 'admin') {
-            // Lanjut ke dashboard
-            // Setup FCM (komentar dulu, panggil kalo butuh)
-            /*
-            if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.register('/firebase/firebase-messaging-sw.js')
-                .then((registration) => {
-                  messaging.useServiceWorker(registration);
-                  return messaging.getToken();
-                })
-                .then((token) => {
-                  set(ref(database, `adminTokens/${user.uid}`), token);
-                })
-                .catch((err) => {
-                  showUserNotification('Failed to setup notifications.');
-                });
-            }
-            */
-          } else {
-            showUserNotification('Access denied. Admins only.');
-            auth.signOut().then(() => {
-              sessionStorage.setItem('adminRedirect', 'true');
-              window.location.href = '/index.html';
-            });
-          }
-        })
-        .catch((err) => {
-          showUserNotification('Error checking permissions. Please login again.');
-          auth.signOut().then(() => {
-            sessionStorage.setItem('adminRedirect', 'true');
-            window.location.href = '/index.html';
-          });
-        });
-    } else if (!isLoggingOut) {
+    if (!user && !isLoggingOut) {
       showUserNotification('Please login first.');
       sessionStorage.setItem('adminRedirect', 'true');
       window.location.href = '/index.html';
+      return;
+    }
+    if (user) {
+      const encodedEmail = encodeEmail(user.email);
+      get(ref(database, `players/${encodedEmail}/role`))
+        .then((snapshot) => {
+          if (snapshot.val() !== 'admin') {
+            showUserNotification('Access denied. Admins only.');
+            auth.signOut().then(() => {
+              sessionStorage.setItem('adminRedirect', 'true');
+              window.location.href = '/index.html');
+            });
+            return;
+          }
+          // Lanjut ke dashboard
+        })
+        .catch(() => {
+          showUserNotification('Error checking permissions. Please login again.');
+          auth.signOut().then(() => {
+            sessionStorage.setItem('adminRedirect', 'true');
+            window.location.href = '/index.html');
+          });
+        });
     }
   });
 
-  // Logout
+  // Logout (tetep sama)
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
@@ -67,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       auth.signOut().then(() => {
         sessionStorage.setItem('adminRedirect', 'true');
         window.location.href = '/index.html';
-      }).catch((err) => {
+      }).catch(() => {
         showUserNotification('Error logging out. Try again.');
       });
     });
@@ -85,19 +62,16 @@ document.addEventListener('DOMContentLoaded', () => {
       let pending = 0;
       let approvedTodayCount = 0;
       const today = new Date().toISOString().split('T')[0];
-      let newDepositFound = false;
 
       if (transactions) {
-        for (let id in transactions) {
+        for (const id in transactions) {
           const t = transactions[id];
-          if (t.type === 'deposit') {
+          if (t.type === 'deposit' || t.type === 'withdraw') {
             if (t.status === 'pending') {
               pending++;
-              // Cek apakah ini deposit baru (contoh: berdasarkan timestamp)
-              if (!newDepositFound && (!t.lastNotified || Date.now() - t.lastNotified > 60000)) { // 1 menit cooldown
-                newDepositFound = true;
-                showUserNotification(`New deposit request from ${t.email} for ${t.amount} PI`);
-                set(ref(database, `transactions/${id}/lastNotified`), Date.now()); // Tandai udah dinotif
+              if (Date.now() - lastNotificationTime > 60000) {
+                showUserNotification(`New ${t.type} request from ${t.email} for ${t.amount} PI`);
+                lastNotificationTime = Date.now();
               }
             }
             if (t.status === 'approved' && new Date(t.timestamp).toISOString().split('T')[0] === today) {
@@ -106,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let timeLeft = t.expiresAt ? Math.max(0, Math.floor((t.expiresAt - Date.now()) / 1000)) : 0;
             if (timeLeft <= 0 && t.status === 'pending') {
-              set(ref(database, `transactions/${id}/status`), 'cancelled');
+              update(ref(database, `transactions/${id}`), { status: 'cancelled' });
               continue;
             }
 
@@ -119,8 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${t.status}</td>
                 <td id="countdown-${id}">${timeLeft} sec</td>
                 <td>
-                  <button class="game-button" onclick="approveDeposit('${id}')">Approve</button>
-                  <button class="game-button" onclick="rejectDeposit('${id}')">Reject</button>
+                  ${t.status === 'pending' ? `
+                    <button class="game-button" data-id="${id}" data-action="approve">Approve</button>
+                    <button class="game-button" data-id="${id}" data-action="reject">Reject</button>
+                  ` : '-'}
                 </td>
               </tr>
             `;
@@ -132,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 countdownElement.textContent = `${timeLeft} sec`;
                 if (timeLeft <= 0) {
                   clearInterval(interval);
-                  set(ref(database, `transactions/${id}/status`), 'cancelled');
+                  update(ref(database, `transactions/${id}`), { status: 'cancelled' });
                 }
               }, 1000);
             }
@@ -145,47 +121,117 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  window.approveDeposit = function(id) {
-    set(ref(database, `transactions/${id}/status`), 'approved')
-      .then(() => {
-        get(ref(database, `transactions/${id}`)).then((snap) => {
-          const transaction = snap.val();
-          if (transaction && transaction.type === 'deposit') {
-            const userRef = ref(database, `players/${encodeEmail(transaction.email)}`);
-            get(userRef).then((playerSnap) => {
-              const player = playerSnap.val();
-              if (player) {
-                set(userRef, {
-                  ...player,
-                  piBalance: (player.piBalance || 0) + parseFloat(transaction.amount)
-                });
-                showUserNotification(`Deposit ${transaction.amount} PI approved!`);
-              } else {
-                showUserNotification('User not found. Deposit approved but balance not updated.');
-              }
-            });
-          } else {
-            showUserNotification('Invalid transaction data.');
-          }
-        });
-      })
-      .catch((err) => {
-        showUserNotification('Error approving deposit.');
-      });
-  };
+  // Handle button clicks
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('game-button')) {
+      const id = e.target.dataset.id;
+      const action = e.target.dataset.action;
+      if (id && action) {
+        if (action === 'approve') {
+          approveTransaction(id);
+        } else if (action === 'reject') {
+          rejectTransaction(id);
+        }
+      }
+    }
+  });
 
-  window.rejectDeposit = function(id) {
-    set(ref(database, `transactions/${id}/status`), 'rejected')
-      .then(() => {
-        get(ref(database, `transactions/${id}`)).then((snap) => {
-          const transaction = snap.val();
-          showUserNotification(`Deposit ${transaction.amount} PI rejected. Contact support.`);
+  // Approve transaksi
+  async function approveTransaction(id) {
+    try {
+      const transactionRef = ref(database, `transactions/${id}`);
+      const snap = await get(transactionRef);
+      const transaction = snap.val();
+      if (!transaction || !['deposit', 'withdraw'].includes(transaction.type)) {
+        showUserNotification('Invalid transaction.');
+        return;
+      }
+      if (transaction.status !== 'pending') {
+        showUserNotification('Transaction already processed.');
+        return;
+      }
+
+      const amount = parseFloat(transaction.amount);
+      if (isNaN(amount) || amount <= 0) {
+        showUserNotification('Invalid amount.');
+        return;
+      }
+
+      const encodedEmail = encodeEmail(transaction.email);
+      const userRef = ref(database, `players/${encodedEmail}`);
+      const playerSnap = await get(userRef);
+      const player = playerSnap.val();
+
+      if (!player) {
+        showUserNotification('User not found.');
+        return;
+      }
+
+      if (transaction.type === 'deposit') {
+        await update(userRef, {
+          piBalance: (player.piBalance || 0) + amount
         });
-      })
-      .catch((err) => {
-        showUserNotification('Error rejecting deposit.');
+      } else if (transaction.type === 'withdraw') {
+        if ((player.piBalance || 0) < amount) {
+          showUserNotification('Insufficient balance for withdrawal.');
+          return;
+        }
+        await update(userRef, {
+          piBalance: (player.piBalance || 0) - amount
+        });
+      }
+
+      await update(transactionRef, {
+        status: 'approved',
+        processedAt: Date.now()
       });
-  };
+
+      // Simpan notif buat user
+      await set(ref(database, `notifications/${encodedEmail}/${id}`), {
+        message: `${transaction.type} of ${amount} PI approved.`,
+        timestamp: Date.now(),
+        read: false
+      });
+
+      showUserNotification(`${transaction.type} ${amount} PI approved!`);
+    } catch {
+      showUserNotification(`Error approving ${transaction.type}.`);
+    }
+  }
+
+  // Reject transaksi
+  async function rejectTransaction(id) {
+    try {
+      const transactionRef = ref(database, `transactions/${id}`);
+      const snap = await get(transactionRef);
+      const transaction = snap.val();
+      if (!transaction || !['deposit', 'withdraw'].includes(transaction.type)) {
+        showUserNotification('Invalid transaction.');
+        return;
+      }
+      if (transaction.status !== 'pending') {
+        showUserNotification('Transaction already processed.');
+        return;
+      }
+
+      await update(transactionRef, {
+        status: 'rejected',
+        processedAt: Date.now()
+      });
+
+      // Simpan notif buat user
+      const encodedEmail = encodeEmail(transaction.email);
+      await set(ref(database, `notifications/${encodedEmail}/${id}`), {
+        message: `${transaction.type} of ${transaction.amount} PI rejected. Contact admin.`,
+        timestamp: Date.now(),
+        read: false
+      });
+
+      showUserNotification(`${transaction.type} ${transaction.amount} PI rejected.`);
+    } catch {
+      showUserNotification(`Error rejecting ${transaction.type}.`);
+    }
+  }
 
   function showUserNotification(message) {
     const notification = document.getElementById('notification');

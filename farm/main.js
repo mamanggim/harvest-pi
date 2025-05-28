@@ -654,67 +654,75 @@ function generateReferralLink(username) {
 
 // Register dengan username dan email
 if (registerEmailBtn) {
-    addSafeClickListener(registerEmailBtn, async (e) => {
-        e.preventDefault();
-        console.log('Register button clicked, email:', registerEmailInput.value, 'password:', registerPasswordInput.value, 'username:', registerUsernameInput.value);
-        const email = registerEmailInput.value;
-        const password = registerPasswordInput.value;
-        const inputUsername = registerUsernameInput ? registerUsernameInput.value : '';
+  addSafeClickListener(registerEmailBtn, async (e) => {
+    e.preventDefault();
+    const email = registerEmailInput.value;
+    const password = registerPasswordInput.value;
+    const inputUsername = registerUsernameInput ? registerUsernameInput.value : '';
 
-        if (!email || !password || !inputUsername) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Please enter email, password, and username.';
-            console.log('Validation failed: Empty fields');
-            return;
-        }
+    if (!email || !password || !inputUsername) {
+      registerError.style.display = 'block';
+      registerError.textContent = 'Please enter email, password, and username.';
+      return;
+    }
 
-        try {
-            console.log('Attempting registration...');
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+    try {
+      // Validasi username
+      const normalizedUsername = inputUsername.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!normalizedUsername || normalizedUsername.length < 3) {
+        throw new Error('Username must be at least 3 characters and use letters/numbers only.');
+      }
 
-            const normalizedUsername = inputUsername.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const playerRef = ref(database, `players/${normalizedUsername}`);
-            
-            const snapshot = await get(playerRef);
-            if (snapshot.exists()) {
-                throw new Error('Username already taken.');
-            }
+      // Encode email sebagai fallback
+      const encodedEmail = email.replace('@', '_at_').replace('.', '_dot_');
 
-            await sendEmailVerification(user);
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration successful! Please verify your email.';
-            showNotification('Registration successful! Check your email for verification.');
-            console.log('Registration successful, user email:', email);
+      // Cek duplikat username
+      const playerRef = ref(database, `players/${normalizedUsername}`);
+      const snapshot = await get(playerRef);
+      if (snapshot.exists()) {
+        throw new Error('Username already taken.');
+      }
 
-            await set(playerRef, {
-                farmCoins: 0,
-                piBalance: 0,
-                water: 0,
-                level: 1,
-                xp: 0,
-                inventory: [],
-                farmPlots: [],
-                harvestCount: 0,
-                achievements: { harvest: false, coins: false },
-                lastClaim: null,
-                claimedToday: false,
-                totalDeposit: 0,
-                referralEarnings: 0,
-                username: normalizedUsername,
-                email: email
-            });
+      // Buat akun di Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-            registerEmailInput.value = '';
-            registerPasswordInput.value = '';
-            if (registerUsernameInput) registerUsernameInput.value = '';
-            switchToLogin();
-        } catch (error) {
-            registerError.style.display = 'block';
-            registerError.textContent = 'Registration failed: ' + error.message;
-            console.error('Registration error:', error.message);
-        }
-    });
+      // Simpan data
+      console.log('Saving player data:', { email, normalizedUsername, encodedEmail }); // Debug
+      await set(playerRef, {
+        email: email,
+        username: normalizedUsername,
+        role: 'user',
+        status: 'pending',
+        farmCoins: 0,
+        piBalance: 0,
+        water: 0,
+        level: 1,
+        xp: 0,
+        inventory: [],
+        farmPlots: [],
+        harvestCount: 0,
+        achievements: { harvest: false, coins: false },
+        lastClaim: null,
+        claimedToday: false,
+        totalDeposit: 0,
+        referralEarnings: 0
+      });
+
+      await sendEmailVerification(user);
+      registerError.style.display = 'block';
+      registerError.textContent = 'Registration successful! Please verify your email.';
+      showNotification('Registration successful! Check your email for verification.');
+      registerEmailInput.value = '';
+      registerPasswordInput.value = '';
+      if (registerUsernameInput) registerUsernameInput.value = '';
+      switchToLogin();
+    } catch (error) {
+      registerError.style.display = 'block';
+      registerError.textContent = 'Registration failed: ' + error.message;
+      console.error('Registration error:', error.message);
+    }
+  });
 }
 
 // Fungsi pendukung lainnya

@@ -525,6 +525,22 @@ if (loginEmailBtn) {
   });
 }
 
+// Tambah di main.js, setelah login sukses
+if (username) {
+  onValue(ref(database, `notifications/${username}`), (snapshot) => {
+    const notifications = snapshot.val();
+    if (notifications) {
+      for (const id in notifications) {
+        const notif = notifications[id];
+        if (!notif.read) {
+          showNotification(notif.message);
+          update(ref(database, `notifications/${username}/${id}`), { read: true });
+        }
+      }
+    }
+  });
+}
+
 // Perbaiki startGame untuk pakai username, bukan userId
 const startTextElement = document.getElementById('start-text');
 if (startTextElement) {

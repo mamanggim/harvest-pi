@@ -560,17 +560,8 @@ if (loginEmailBtn) {
       showNotification('Logged in as ' + email);
 
       if (role === 'admin') {
-        const adminDashboardElement = document.getElementById('admin-dashboard');
-        const loginScreenElement = document.getElementById('login-screen');
-        if (adminDashboardElement && loginScreenElement) {
-          loginScreenElement.style.display = 'none';
-          adminDashboardElement.style.display = 'flex';
-          console.log('Redirected to admin dashboard');
-        } else {
-          console.error('Admin dashboard or login screen element not found');
-          loginError.style.display = 'block';
-          loginError.textContent = 'Error: Admin dashboard not found.';
-        }
+        console.log('Redirecting to admin.html');
+        window.location.href = 'admin.html';
       } else {
         const loginScreenElement = document.getElementById('login-screen');
         const startScreenElement = document.getElementById('start-screen');

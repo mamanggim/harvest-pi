@@ -424,37 +424,20 @@ function switchToRegister() {
 }
 
 // Event listener untuk link switch
-document.addEventListener('DOMContentLoaded', () => {
-    const registerLink = document.getElementById('register-link');
-    const loginLink = document.getElementById('login-link');
-    if (registerLink) {
-        addSafeClickListener(registerLink, switchToRegister);
-    }
-    if (loginLink) {
-        addSafeClickListener(loginLink, switchToLogin);
-    }
-    switchToLogin();
-});
+// Ambil elemen UI
+const registerEmailBtn = document.getElementById('register-email-btn');
+const registerEmailInput = document.getElementById('register-email-input');
+const registerPasswordInput = document.getElementById('register-password-input');
+const registerError = document.getElementById('register-error');
+const registerUsernameInput = document.getElementById('register-username-input');
 
-// Update referral link setelah login
-function updateReferralLink() {
-    const referralLinkElement = document.getElementById('referral-link');
-    const copyReferralBtn = document.getElementById('copy-referral-btn');
-    if (referralLinkElement && username) {
-        const link = generateReferralLink(username);
-        referralLinkElement.textContent = link;
-        if (copyReferralBtn) {
-            addSafeClickListener(copyReferralBtn, () => {
-                copyToClipboard(link, copyReferralBtn);
-                showNotification('Referral link copied!');
-            });
-        }
-    } else {
-        console.warn('Referral link element or username not found');
-    }
-}
+const loginEmailBtn = document.getElementById('login-email-btn');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const loginError = document.getElementById('login-error');
+const verifyEmailMsg = document.getElementById('verify-status');
 
-//Helper
+// Fungsi helper
 function encodeEmail(email) {
   return email.replace('@', '_at_').replace(/\./g, '_dot_');
 }
@@ -463,7 +446,33 @@ function resolveUserKey(role, email, username) {
   return role === 'admin' ? encodeEmail(email) : username;
 }
 
-// Listener untuk LOGIN
+// SWITCH login/register screen
+function switchToLogin() {
+  const loginScreen = document.getElementById('login-screen');
+  const registerScreen = document.getElementById('register-screen');
+  if (loginScreen && registerScreen) {
+    loginScreen.style.display = 'flex';
+    registerScreen.style.display = 'none';
+  }
+}
+function switchToRegister() {
+  const loginScreen = document.getElementById('login-screen');
+  const registerScreen = document.getElementById('register-screen');
+  if (loginScreen && registerScreen) {
+    loginScreen.style.display = 'none';
+    registerScreen.style.display = 'flex';
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const registerLink = document.getElementById('register-link');
+  const loginLink = document.getElementById('login-link');
+  if (registerLink) addSafeClickListener(registerLink, switchToRegister);
+  if (loginLink) addSafeClickListener(loginLink, switchToLogin);
+  switchToLogin();
+  initializeGame(); // Inisialisasi game setelah semuanya siap
+});
+
+// LOGIN
 if (loginEmailBtn) {
   addSafeClickListener(loginEmailBtn, async (e) => {
     e.preventDefault();
@@ -479,16 +488,14 @@ if (loginEmailBtn) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
       if (!user.emailVerified) {
         await sendEmailVerification(user);
-        loginError.textContent = 'Please verify your email. Check your inbox.';
+        loginError.textContent = 'Please verify your email.';
         loginError.style.display = 'block';
         verifyEmailMsg.style.display = 'block';
         return;
       }
 
-      // Ambil username atau fallback ke encodedEmail
       const playersSnapshot = await get(ref(database, 'players'));
       const players = playersSnapshot.val() || {};
       let foundUsername = null;
@@ -500,40 +507,27 @@ if (loginEmailBtn) {
         }
       }
 
-      if (!foundUsername) {
-        loginError.textContent = 'Account not found in database.';
-        loginError.style.display = 'block';
-        return;
-      }
+      if (!foundUsername) throw new Error('User not found in players database.');
 
-      const playerRef = ref(database, `players/${foundUsername}`);
-      const playerSnapshot = await get(playerRef);
-      const playerData = playerSnapshot.val();
-
-      if (!playerData) {
-        loginError.textContent = 'Player data missing.';
-        loginError.style.display = 'block';
-        return;
-      }
-
+      const playerData = players[foundUsername];
+      if (!playerData) throw new Error('Player data missing.');
       if (playerData.status !== 'approved') {
-        loginError.textContent = `Account ${playerData.status}. Contact admin.`;
-        loginError.style.display = 'block';
-        return;
+        throw new Error(`Account ${playerData.status}. Contact admin.`);
       }
 
       const role = playerData.role || 'user';
       const encodedEmail = encodeEmail(email);
       const userKey = resolveUserKey(role, email, foundUsername);
 
-      // Simpan info login
-      localStorage.setItem('username', foundUsername);
+      // Simpan localStorage
+      username = foundUsername;
+      localStorage.setItem('username', username);
       localStorage.setItem('email', email);
       localStorage.setItem('role', role);
       localStorage.setItem('encodedEmail', encodedEmail);
-      localStorage.setItem('userKey', userKey); // penting buat notifikasi dll
+      localStorage.setItem('userKey', userKey);
 
-      // Notifikasi real-time
+      // Notifikasi realtime
       onValue(ref(database, `notifications/${userKey}`), (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -548,6 +542,7 @@ if (loginEmailBtn) {
 
       showNotification('Logged in as ' + email);
 
+      // Redirect berdasarkan role
       if (role === 'admin') {
         window.location.href = 'admin/admin.html';
       } else {
@@ -557,12 +552,10 @@ if (loginEmailBtn) {
 
       loadPlayerData(userKey);
       updateReferralLink();
+
     } catch (error) {
-      console.error('Login error:', error.code, error.message);
-      let msg = 'Login failed. Try again.';
-      if (error.code === 'auth/wrong-password') msg = 'Wrong password.';
-      if (error.code === 'auth/user-not-found') msg = 'User not found.';
-      loginError.textContent = msg;
+      console.error('Login error:', error.message);
+      loginError.textContent = error.message;
       loginError.style.display = 'block';
     }
   });

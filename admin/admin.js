@@ -2,7 +2,6 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getDatabase, ref, onValue, set, get, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
-// Konfigurasi Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
   authDomain: "harvest-pi.firebaseapp.com",
@@ -14,20 +13,57 @@ const firebaseConfig = {
   measurementId: "G-HV6J072QQZ"
 };
 
-// Inisialisasi Firebase
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig, 'adminApp');
 const auth = getAuth(app);
 const database = getDatabase(app);
 
+function encodeEmail(email) {
+  return email.replace('@', '_at_').replace('.', '_dot_');
+}
+
+function showUserNotification(message) {
+  const notification = document.getElementById('notification');
+  if (notification) {
+    notification.textContent = message;
+    notification.style.display = 'block';
+    setTimeout(() => notification.style.display = 'none', 5000);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false;
-  let lastNotificationTime = 0;
 
-  // Logout tombol
+  setTimeout(() => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        showUserNotification('Please login first.');
+        sessionStorage.setItem('adminRedirect', 'true');
+        window.location.href = '/index.html';
+        return;
+      }
+
+      const encodedEmail = encodeEmail(user.email);
+      const roleRef = ref(database, `players/${encodedEmail}/role`);
+      const roleSnap = await get(roleRef);
+      const role = roleSnap.val();
+
+      if (role !== 'admin') {
+        showUserNotification('Access denied. Admins only.');
+        await signOut(auth);
+        sessionStorage.setItem('adminRedirect', 'true');
+        window.location.href = '/index.html';
+        return;
+      }
+
+      // Lanjut load dashboard
+    });
+  }, 1000);
+
+  // Logout Button
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
-      console.log('Logout clicked');
+      if (isLoggingOut) return;
       isLoggingOut = true;
       try {
         await signOut(auth);
@@ -41,193 +77,126 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Auth state listener
-  onAuthStateChanged(auth, async (user) => {
-    if (!user && !isLoggingOut) {
-      sessionStorage.setItem('adminRedirect', 'true');
-      window.location.href = '/index.html';
-      return;
-    }
-
-    if (user) {
-      const encodedEmail = encodeEmail(user.email);
-      try {
-        const snapshot = await get(ref(database, `players/${encodedEmail}/role`));
-        const role = snapshot.val();
-        if (role !== 'admin') {
-          showUserNotification('Access denied. Admin only.');
-          isLoggingOut = true;
-          await signOut(auth);
-          sessionStorage.setItem('adminRedirect', 'true');
-          window.location.href = '/index.html';
-        }
-      } catch (err) {
-        console.error('Error checking role:', err.message);
-        isLoggingOut = true;
-        await signOut(auth);
-        sessionStorage.setItem('adminRedirect', 'true');
-        window.location.href = '/index.html';
-      }
-    }
-  });
-
-  // Load transaksi
-  onValue(ref(database, 'transactions'), (snapshot) => {
+  // Tampilkan Transaksi
+  const transactionsRef = ref(database, 'transactions');
+  onValue(transactionsRef, (snapshot) => {
     const transactions = snapshot.val();
     const depositItems = document.getElementById('deposit-items');
     const pendingCount = document.getElementById('pending-count');
     const approvedToday = document.getElementById('approved-today');
 
-    if (depositItems && pendingCount && approvedToday) {
-      depositItems.innerHTML = '';
-      let pending = 0;
-      let approvedTodayCount = 0;
-      const today = new Date().toISOString().split('T')[0];
+    depositItems.innerHTML = '';
+    let pending = 0;
+    let approvedTodayCount = 0;
+    const today = new Date().toISOString().split('T')[0];
 
-      if (transactions) {
-        for (const id in transactions) {
-          const t = transactions[id];
-          if (t.type === 'deposit' || t.type === 'withdraw') {
-            if (t.status === 'pending') {
-              pending++;
-              if (Date.now() - lastNotificationTime > 60000) {
-                showUserNotification(`New ${t.type} request from ${t.email} for ${t.amount} PI`);
-                lastNotificationTime = Date.now();
-              }
-            }
-            if (t.status === 'approved' && new Date(t.timestamp).toISOString().split('T')[0] === today) {
-              approvedTodayCount++;
-            }
+    if (transactions) {
+      for (const id in transactions) {
+        const t = transactions[id];
+        if (!['deposit', 'withdraw'].includes(t.type)) continue;
 
-            let timeLeft = t.expiresAt ? Math.max(0, Math.floor((t.expiresAt - Date.now()) / 1000)) : 0;
-            if (timeLeft <= 0 && t.status === 'pending') {
+        if (t.status === 'pending') pending++;
+        if (t.status === 'approved' && new Date(t.timestamp).toISOString().split('T')[0] === today) {
+          approvedTodayCount++;
+        }
+
+        const timeLeft = t.expiresAt ? Math.max(0, Math.floor((t.expiresAt - Date.now()) / 1000)) : 0;
+
+        depositItems.innerHTML += `
+          <tr>
+            <td class="text-limit">${t.email}</td>
+            <td>${t.amount} PI</td>
+            <td class="text-limit">${t.memo || '-'}</td>
+            <td class="text-limit">${new Date(t.timestamp).toLocaleString()}</td>
+            <td>${t.status}</td>
+            <td id="countdown-${id}">${timeLeft}s</td>
+            <td>
+              ${t.status === 'pending' ? `
+                <button class="game-button" data-id="${id}" data-action="approve">Approve</button>
+                <button class="game-button" data-id="${id}" data-action="reject">Reject</button>
+              ` : '-'}
+            </td>
+          </tr>
+        `;
+
+        // Countdown timeout cancel
+        if (t.status === 'pending' && timeLeft > 0) {
+          const countdownEl = document.getElementById(`countdown-${id}`);
+          const interval = setInterval(() => {
+            const newTime = Math.max(0, Math.floor((t.expiresAt - Date.now()) / 1000));
+            countdownEl.textContent = `${newTime}s`;
+            if (newTime <= 0) {
+              clearInterval(interval);
               update(ref(database, `transactions/${id}`), { status: 'cancelled' });
-              continue;
             }
-
-            depositItems.innerHTML += `
-              <tr>
-                <td class="text-limit">${t.email}</td>
-                <td>${t.amount} PI</td>
-                <td class="text-limit">${t.memo || '-'}</td>
-                <td class="text-limit">${new Date(t.timestamp).toLocaleString()}</td>
-                <td>${t.status}</td>
-                <td id="countdown-${id}">${timeLeft} sec</td>
-                <td>
-                  ${t.status === 'pending' ? `
-                    <button class="game-button" data-id="${id}" data-action="approve">Approve</button>
-                    <button class="game-button" data-id="${id}" data-action="reject">Reject</button>
-                  ` : '-'}
-                </td>
-              </tr>
-            `;
-
-            if (t.status === 'pending') {
-              const countdownElement = document.getElementById(`countdown-${id}`);
-              const interval = setInterval(() => {
-                timeLeft--;
-                if (countdownElement) {
-                  countdownElement.textContent = `${timeLeft} sec`;
-                  if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    update(ref(database, `transactions/${id}`), { status: 'cancelled' });
-                  }
-                }
-              }, 1000);
-            }
-          }
+          }, 1000);
         }
       }
-
-      pendingCount.textContent = pending;
-      approvedToday.textContent = approvedTodayCount;
-
-      const buttons = depositItems.querySelectorAll('.game-button');
-      buttons.forEach((btn) => {
-        const id = btn.dataset.id;
-        const action = btn.dataset.action;
-        btn.addEventListener('click', () => {
-          if (action === 'approve') approveTransaction(id);
-          else if (action === 'reject') rejectTransaction(id);
-        });
-      });
     }
+
+    pendingCount.textContent = pending;
+    approvedToday.textContent = approvedTodayCount;
+
+    // Event listener tombol approve/reject
+    depositItems.querySelectorAll('.game-button').forEach(btn => {
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      btn.addEventListener('click', () => {
+        if (action === 'approve') approveTransaction(id);
+        else if (action === 'reject') rejectTransaction(id);
+      });
+    });
   });
 
   async function approveTransaction(id) {
-    try {
-      const txRef = ref(database, `transactions/${id}`);
-      const snap = await get(txRef);
-      const tx = snap.val();
-      if (!tx || tx.status !== 'pending') return;
+    const transRef = ref(database, `transactions/${id}`);
+    const snap = await get(transRef);
+    const data = snap.val();
+    if (!data || data.status !== 'pending') return;
 
-      const encodedEmail = encodeEmail(tx.email);
-      const userRef = ref(database, `players/${encodedEmail}`);
-      const userSnap = await get(userRef);
-      const userData = userSnap.val();
+    const email = data.email;
+    const encodedEmail = encodeEmail(email);
+    const userRef = ref(database, `players/${encodedEmail}`);
+    const userSnap = await get(userRef);
+    const user = userSnap.val();
+    if (!user) return;
 
-      if (!userData) return;
-
-      const amount = parseFloat(tx.amount);
-      if (tx.type === 'deposit') {
-        await update(userRef, { piBalance: (userData.piBalance || 0) + amount });
-      } else if (tx.type === 'withdraw') {
-        if ((userData.piBalance || 0) < amount) return;
-        await update(userRef, { piBalance: (userData.piBalance || 0) - amount });
+    const amount = parseFloat(data.amount);
+    if (data.type === 'deposit') {
+      await update(userRef, { piBalance: (user.piBalance || 0) + amount });
+    } else if (data.type === 'withdraw') {
+      if ((user.piBalance || 0) < amount) {
+        showUserNotification('Insufficient balance.');
+        return;
       }
-
-      await update(txRef, {
-        status: 'approved',
-        processedAt: Date.now()
-      });
-
-      await set(ref(database, `notifications/${encodedEmail}/${id}`), {
-        message: `${tx.type} of ${amount} PI approved.`,
-        timestamp: Date.now(),
-        read: false
-      });
-
-      showUserNotification(`${tx.type} ${amount} PI approved!`);
-    } catch (err) {
-      showUserNotification(`Failed to approve transaction.`);
+      await update(userRef, { piBalance: (user.piBalance || 0) - amount });
     }
+
+    await update(transRef, { status: 'approved', processedAt: Date.now() });
+    await set(ref(database, `notifications/${encodedEmail}/${id}`), {
+      message: `${data.type} of ${amount} PI approved.`,
+      timestamp: Date.now(),
+      read: false
+    });
+
+    showUserNotification(`${data.type} approved: ${amount} PI`);
   }
 
   async function rejectTransaction(id) {
-    try {
-      const txRef = ref(database, `transactions/${id}`);
-      const snap = await get(txRef);
-      const tx = snap.val();
-      if (!tx || tx.status !== 'pending') return;
+    const transRef = ref(database, `transactions/${id}`);
+    const snap = await get(transRef);
+    const data = snap.val();
+    if (!data || data.status !== 'pending') return;
 
-      await update(txRef, {
-        status: 'rejected',
-        processedAt: Date.now()
-      });
+    await update(transRef, { status: 'rejected', processedAt: Date.now() });
 
-      const encodedEmail = encodeEmail(tx.email);
-      await set(ref(database, `notifications/${encodedEmail}/${id}`), {
-        message: `${tx.type} of ${tx.amount} PI rejected. Contact admin.`,
-        timestamp: Date.now(),
-        read: false
-      });
+    const encodedEmail = encodeEmail(data.email);
+    await set(ref(database, `notifications/${encodedEmail}/${id}`), {
+      message: `${data.type} of ${data.amount} PI rejected.`,
+      timestamp: Date.now(),
+      read: false
+    });
 
-      showUserNotification(`${tx.type} ${tx.amount} PI rejected.`);
-    } catch {
-      showUserNotification(`Failed to reject transaction.`);
-    }
-  }
-
-  function showUserNotification(msg) {
-    const notif = document.getElementById('notification');
-    if (notif) {
-      notif.textContent = msg;
-      notif.style.display = 'block';
-      setTimeout(() => notif.style.display = 'none', 5000);
-    }
-  }
-
-  function encodeEmail(email) {
-    return email.replace('@', '_at_').replace(/\./g, '_dot_');
+    showUserNotification(`${data.type} rejected: ${data.amount} PI`);
   }
 });

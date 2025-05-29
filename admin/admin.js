@@ -1,7 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getDatabase, ref, onValue, set, get, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-import { addSafeClickListener } from '../main.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDi5nCsLUOQNhPG6Bnxgsw8W60ZPaQewgw",
@@ -13,17 +12,19 @@ const firebaseConfig = {
   appId: "1:650006770674:web:bf6291198fc0a02be7b16b",
   measurementId: "G-HV6J072QQZ"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
 
-// ... (sisa kode admin.js)
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('admin.js loaded, auth:', auth); // Debug
   let isLoggingOut = false;
   let lastNotificationTime = 0;
 
   // Cek auth dan role
   auth.onAuthStateChanged((user) => {
+    console.log('Auth state changed, user:', user); // Debug
     if (!user && !isLoggingOut) {
       showUserNotification('Please login first.');
       sessionStorage.setItem('adminRedirect', 'true');
@@ -44,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })
         .catch((error) => {
-          console.error('Error checking role:', error); // Debug
+          console.error('Error checking role:', error);
           showUserNotification('Error checking permissions. Please login again.');
           auth.signOut().then(() => {
             sessionStorage.setItem('adminRedirect', 'true');
@@ -56,48 +57,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
-if (logoutBtn) {
-  console.log('Logout button found:', logoutBtn);
-  try {
-    addSafeClickListener(logoutBtn, async (e) => {
-      console.log('Logout button clicked, isLoggingOut:', isLoggingOut);
-      if (isLoggingOut) return;
-      isLoggingOut = true;
-      try {
-        console.log('Auth object:', auth);
-        if (!auth) throw new Error('Auth object undefined');
-        await auth.signOut();
-        console.log('Sign out successful');
-        sessionStorage.setItem('adminRedirect', 'true');
-        window.location.href = '/index.html';
-      } catch (error) {
-        isLoggingOut = false;
-        console.error('Logout error:', error.code || error.message);
-        showUserNotification(`Error logging out: ${error.message}`);
-      }
-    });
-  } catch (error) {
-    console.error('addSafeClickListener error:', error);
+  if (logoutBtn) {
+    console.log('Logout button found:', logoutBtn);
     logoutBtn.addEventListener('click', async () => {
-      console.log('Fallback: Logout button clicked');
+      console.log('Logout button clicked');
       if (isLoggingOut) return;
       isLoggingOut = true;
       try {
         if (!auth) throw new Error('Auth object undefined');
-        await auth.signOut();
+        await signOut(auth);
         console.log('Sign out successful');
         sessionStorage.setItem('adminRedirect', 'true');
         window.location.href = '/index.html';
       } catch (error) {
         isLoggingOut = false;
-        console.error('Logout error:', error.code || error.message);
+        console.error('Logout error:', error.message);
         showUserNotification(`Error logging out: ${error.message}`);
       }
     });
+  } else {
+    console.error('Logout button not found');
   }
-} else {
-  console.error('Logout button not found');
-}
 
   // Admin Dashboard
   onValue(ref(database, 'transactions'), (snapshot) => {
@@ -174,8 +154,8 @@ if (logoutBtn) {
         const id = button.dataset.id;
         const action = button.dataset.action;
         if (id && action) {
-          addSafeClickListener(button, () => {
-            console.log(`Button clicked: ${action} for ID ${id}`); // Debug
+          button.addEventListener('click', () => {
+            console.log(`Button clicked: ${action} for ID ${id}`);
             if (action === 'approve') {
               approveTransaction(id);
             } else if (action === 'reject') {
@@ -237,7 +217,6 @@ if (logoutBtn) {
         processedAt: Date.now()
       });
 
-      // Simpan notif buat user
       await set(ref(database, `notifications/${encodedEmail}/${id}`), {
         message: `${transaction.type} of ${amount} PI approved.`,
         timestamp: Date.now(),
@@ -246,7 +225,7 @@ if (logoutBtn) {
 
       showUserNotification(`${transaction.type} ${amount} PI approved!`);
     } catch {
-      showUserNotification(`Error approving ${transaction.type}.`);
+      showUserNotification(`Error approving transaction.`);
     }
   }
 
@@ -270,7 +249,6 @@ if (logoutBtn) {
         processedAt: Date.now()
       });
 
-      // Simpan notif buat user
       const encodedEmail = encodeEmail(transaction.email);
       await set(ref(database, `notifications/${encodedEmail}/${id}`), {
         message: `${transaction.type} of ${transaction.amount} PI rejected. Contact admin.`,
@@ -280,7 +258,7 @@ if (logoutBtn) {
 
       showUserNotification(`${transaction.type} ${transaction.amount} PI rejected.`);
     } catch {
-      showUserNotification(`Error rejecting ${transaction.type}.`);
+      showUserNotification(`Error rejecting transaction.`);
     }
   }
 

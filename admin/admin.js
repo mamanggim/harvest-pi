@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getDatabase, ref, onValue, set, get, update } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
 const firebaseConfig = {
@@ -13,7 +13,7 @@ const firebaseConfig = {
   measurementId: "G-HV6J072QQZ"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig, 'adminApp'); // Nama instance unik
 const auth = getAuth(app);
 const database = getDatabase(app);
 
@@ -22,38 +22,46 @@ document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false;
   let lastNotificationTime = 0;
 
-  // Cek auth dan role
-  auth.onAuthStateChanged((user) => {
-    console.log('Auth state changed, user:', user); // Debug
-    if (!user && !isLoggingOut) {
-      showUserNotification('Please login first.');
-      sessionStorage.setItem('adminRedirect', 'true');
-      window.location.href = '/index.html';
-      return;
-    }
-    if (user) {
-      const encodedEmail = encodeEmail(user.email);
-      get(ref(database, `players/${encodedEmail}/role`))
-        .then((snapshot) => {
-          if (snapshot.val() !== 'admin') {
-            showUserNotification('Access denied. Admins only.');
-            auth.signOut().then(() => {
+  // Tunggu auth state stabil
+  setTimeout(() => {
+    onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed, user:', user); // Debug
+      if (!user && !isLoggingOut) {
+        showUserNotification('Please login first.');
+        sessionStorage.setItem('adminRedirect', 'true');
+        window.location.href = '/index.html';
+        return;
+      }
+      if (user) {
+        const encodedEmail = encodeEmail(user.email);
+        console.log('Checking role for:', encodedEmail); // Debug
+        get(ref(database, `players/${encodedEmail}/role`))
+          .then((snapshot) => {
+            const role = snapshot.val();
+            console.log('Role:', role); // Debug
+            if (role !== 'admin') {
+              showUserNotification('Access denied. Admins only.');
+              signOut(auth).then(() => {
+                sessionStorage.setItem('adminRedirect', 'true');
+                window.location.href = '/index.html';
+              });
+              return;
+            }
+            // Lanjut ke dashboard
+          })
+          .catch((error) => {
+            console.error('Error checking role:', error);
+            showUserNotification('Error checking permissions. Please login again.');
+            signOut(auth).then(() => {
               sessionStorage.setItem('adminRedirect', 'true');
-              window.location.href = '/index.html';
+              window.location.href = '/index.html');
             });
-            return;
-          }
-        })
-        .catch((error) => {
-          console.error('Error checking role:', error);
-          showUserNotification('Error checking permissions. Please login again.');
-          auth.signOut().then(() => {
-            sessionStorage.setItem('adminRedirect', 'true');
-            window.location.href = '/index.html';
           });
-        });
-    }
-  });
+      }
+    }, (error) => {
+      console.error('Auth state error:', error); // Debug
+    });
+  }, 1000); // Delay 1 detik
 
   // Logout
   const logoutBtn = document.getElementById('logout-btn');

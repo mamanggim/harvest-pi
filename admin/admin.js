@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Error checking role:', error); // Debug
           showUserNotification('Error checking permissions. Please login again.');
           auth.signOut().then(() => {
             sessionStorage.setItem('adminRedirect', 'true');
@@ -46,13 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
       isLoggingOut = true;
       try {
         console.log('Auth object:', auth); // Debug
+        if (!auth) throw new Error('Auth object undefined');
         await auth.signOut();
         console.log('Sign out successful'); // Debug
         sessionStorage.setItem('adminRedirect', 'true');
         window.location.href = '/index.html';
       } catch (error) {
         isLoggingOut = false;
-        console.error('Logout error:', error.code, error.message); // Debug
+        console.error('Logout error:', error.code || error.message); // Debug
         showUserNotification(`Error logging out: ${error.message}`);
       }
     });

@@ -2159,11 +2159,6 @@ function exitFullScreen() {
     }
 }
 
-// Fungsi encode email
-function encodeEmail(email) {
-  return email.replace('@', '_at_').replace('.', '_dot_');
-}
-
 // Fungsi copy ke clipboard
 function copyToClipboard(text, button) {
   navigator.clipboard.writeText(text).then(() => {

@@ -560,8 +560,8 @@ if (loginEmailBtn) {
       showNotification('Logged in as ' + email);
 
       if (role === 'admin') {
-        console.log('Redirecting to admin.html');
-        window.location.href = 'admin.html';
+        console.log('Redirecting to admin/admin.html');
+        window.location.href = 'admin/admin.html';
       } else {
         const loginScreenElement = document.getElementById('login-screen');
         const startScreenElement = document.getElementById('start-screen');

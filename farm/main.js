@@ -454,6 +454,15 @@ function updateReferralLink() {
     }
 }
 
+//Helper
+function encodeEmail(email) {
+  return email.replace('@', '_at_').replace(/\./g, '_dot_');
+}
+
+function resolveUserKey(role, email, username) {
+  return role === 'admin' ? encodeEmail(email) : username;
+}
+
 // Listener untuk LOGIN
 if (loginEmailBtn) {
   addSafeClickListener(loginEmailBtn, async (e) => {

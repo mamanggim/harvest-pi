@@ -1,5 +1,5 @@
-import { auth, database, ref, onValue, set, get, update } from '../firebase/firebase-config.js';
-import { addSafeClickListener } from '../main.js'; // Sesuain path
+import { auth, database, ref, onValue, set, get, update } from '/firebase/firebase-config.js';
+import { addSafeClickListener } from '/main.js'; // Sesuain path
 
 document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false;

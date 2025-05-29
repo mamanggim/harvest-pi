@@ -462,146 +462,99 @@ if (loginEmailBtn) {
     const password = passwordInput.value.trim();
 
     if (!email || !password) {
-      loginError.style.display = 'block';
       loginError.textContent = 'Please enter email and password.';
-      console.log('Login failed: Empty email or password');
+      loginError.style.display = 'block';
       return;
     }
 
     try {
-      // Login dengan Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Cek verifikasi email
       if (!user.emailVerified) {
         await sendEmailVerification(user);
-        loginError.style.display = 'block';
         loginError.textContent = 'Please verify your email. Check your inbox.';
+        loginError.style.display = 'block';
         verifyEmailMsg.style.display = 'block';
-        console.log('Login failed: Email not verified, verification sent');
         return;
       }
 
-      // Cari username berdasarkan email
-      const playersRef = ref(database, 'players');
-      const snapshot = await get(playersRef);
-      const playersData = snapshot.val() || {};
-      console.log('Players data:', playersData); // Debug
+      // Ambil username atau fallback ke encodedEmail
+      const playersSnapshot = await get(ref(database, 'players'));
+      const players = playersSnapshot.val() || {};
       let foundUsername = null;
-      for (const playerUsername in playersData) {
-        console.log('Checking:', playerUsername, 'Email:', playersData[playerUsername].email); // Debug
-        if (playersData[playerUsername].email === email) {
-          foundUsername = playerUsername;
+
+      for (const key in players) {
+        if (players[key].email === email) {
+          foundUsername = key;
           break;
         }
       }
 
-      // Fallback ke encodedEmail
       if (!foundUsername) {
-        const encodedEmail = email.replace('@', '_at_').replace(/\./g, '_dot_');
-        const playerRef = ref(database, `players/${encodedEmail}`);
-        const playerSnapshot = await get(playerRef);
-        if (playerSnapshot.exists()) {
-          foundUsername = encodedEmail;
-        }
-      }
-
-      if (!foundUsername) {
+        loginError.textContent = 'Account not found in database.';
         loginError.style.display = 'block';
-        loginError.textContent = 'Account data not found in database. Please register.';
-        console.log('Login failed: No player data for email', email);
         return;
       }
 
-      // Cek player data
       const playerRef = ref(database, `players/${foundUsername}`);
       const playerSnapshot = await get(playerRef);
       const playerData = playerSnapshot.val();
 
       if (!playerData) {
+        loginError.textContent = 'Player data missing.';
         loginError.style.display = 'block';
-        loginError.textContent = 'Player data not found. Please register.';
-        console.log('Login failed: Player data missing for username', foundUsername);
         return;
       }
 
-      // Cek status
       if (playerData.status !== 'approved') {
+        loginError.textContent = `Account ${playerData.status}. Contact admin.`;
         loginError.style.display = 'block';
-        loginError.textContent = `Account ${playerData.status}. Please contact support.`;
-        console.log('Login failed: Account status', playerData.status, { email, foundUsername });
         return;
       }
 
-      // Simpan ke localStorage
-      const encodedEmail = email.replace('@', '_at_').replace(/\./g, '_dot_');
-      localStorage.setItem('encodedEmail', encodedEmail);
-      localStorage.setItem('email', email);
-      localStorage.setItem('username', foundUsername); // Tambah username
-      console.log('Login success:', { email, foundUsername, role: playerData.role }); // Debug
+      const role = playerData.role || 'user';
+      const encodedEmail = encodeEmail(email);
+      const userKey = resolveUserKey(role, email, foundUsername);
 
-      // Setup notifikasi listener
-      onValue(ref(database, `notifications/${foundUsername}`), (snapshot) => {
-        const notifications = snapshot.val();
-        if (notifications) {
-          for (const id in notifications) {
-            const notif = notifications[id];
-            if (!notif.read) {
-              showNotification(notif.message);
-              update(ref(database, `notifications/${foundUsername}/${id}`), { read: true });
+      // Simpan info login
+      localStorage.setItem('username', foundUsername);
+      localStorage.setItem('email', email);
+      localStorage.setItem('role', role);
+      localStorage.setItem('encodedEmail', encodedEmail);
+      localStorage.setItem('userKey', userKey); // penting buat notifikasi dll
+
+      // Notifikasi real-time
+      onValue(ref(database, `notifications/${userKey}`), (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          for (const id in data) {
+            if (!data[id].read) {
+              showNotification(data[id].message);
+              update(ref(database, `notifications/${userKey}/${id}`), { read: true });
             }
           }
         }
       });
 
-      // Redirect berdasarkan role
-      const role = playerData.role || 'user';
       showNotification('Logged in as ' + email);
 
       if (role === 'admin') {
-        console.log('Redirecting to admin/admin.html');
         window.location.href = 'admin/admin.html';
       } else {
-        const loginScreenElement = document.getElementById('login-screen');
-        const startScreenElement = document.getElementById('start-screen');
-        if (loginScreenElement && startScreenElement) {
-          loginScreenElement.style.display = 'none';
-          startScreenElement.style.display = 'flex';
-          console.log('Redirected to start screen');
-        } else {
-          console.error('Start or login screen element not found');
-          loginError.style.display = 'block';
-          loginError.textContent = 'Error: Start screen not found.';
-        }
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('start-screen').style.display = 'flex';
       }
 
-      // Load data player
-      loadPlayerData();
+      loadPlayerData(userKey);
       updateReferralLink();
     } catch (error) {
-      loginError.style.display = 'block';
-      let errorMessage = 'Login failed. Please try again.';
       console.error('Login error:', error.code, error.message);
-      switch (error.code) {
-        case 'auth/invalid-credential':
-          errorMessage = 'Invalid email or password.';
-          break;
-        case 'auth/user-not-found':
-          errorMessage = 'Account not found.';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many attempts. Try again later.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Check your connection.';
-          break;
-      }
-      loginError.textContent = errorMessage;
-      verifyEmailMsg.style.display = 'none';
+      let msg = 'Login failed. Try again.';
+      if (error.code === 'auth/wrong-password') msg = 'Wrong password.';
+      if (error.code === 'auth/user-not-found') msg = 'User not found.';
+      loginError.textContent = msg;
+      loginError.style.display = 'block';
     }
   });
 }
@@ -653,79 +606,72 @@ if (startTextElement) {
 }
 
 // Load player data langsung dari username
-function loadPlayerData() {
-    try {
-        if (!username) {
-            console.warn('No username, please login first!');
-            showNotification('Please login first.');
-            return;
-        }
-        console.log('Loading data for username:', username);
-        const playerRef = ref(database, `players/${username}`);
-        console.log('Attempting to load from:', playerRef.toString());
+function loadPlayerData(userKey) {
+  if (!userKey) {
+    showNotification('Login required.');
+    return;
+  }
 
-        onValue(playerRef, (snapshot) => {
-            console.log('Snapshot received:', snapshot.val());
-            if (isDataLoaded) return;
+  const playerRef = ref(database, `players/${userKey}`);
+  onValue(playerRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) {
+      // Jangan bikin data kalau admin
+      const role = localStorage.getItem('role');
+      if (role === 'admin') {
+        console.warn('Skip initializing admin data');
+        return;
+      }
 
-            const data = snapshot.val();
-            if (data) {
-                farmCoins = data.farmCoins || 0;
-                piBalance = data.piBalance || 0;
-                water = data.water || 0;
-                level = data.level || 1;
-                xp = data.xp || 0;
-                inventory = data.inventory || [];
-                farmPlots = data.farmPlots || [];
-                harvestCount = data.harvestCount || 0;
-                achievements = data.achievements || { harvest: false, coins: false };
-                lastClaim = data.lastClaim || null;
-                claimedToday = data.claimedToday || false;
-                referralEarnings = data.referralEarnings || 0;
-                console.log('Player data loaded:', data);
-            } else {
-                console.log('No data found, initializing new data...');
-                const initialData = {
-                    farmCoins: 0,
-                    piBalance: 0,
-                    water: 0,
-                    level: 1,
-                    xp: 0,
-                    inventory: [],
-                    farmPlots: [],
-                    harvestCount: 0,
-                    achievements: { harvest: false, coins: false },
-                    lastClaim: null,
-                    claimedToday: false,
-                    totalDeposit: 0,
-                    referralEarnings: 0,
-                    username: username,
-                    email: emailInput.value
-                };
-                set(playerRef, initialData).catch(err => {
-                    console.error('Initial set failed:', err);
-                    showNotification('Error initializing player data.');
-                });
-            }
-
-            isDataLoaded = true;
-            console.log('Data loading completed, isDataLoaded:', isDataLoaded);
-            updateWallet();
-            initializePlots();
-            renderShop();
-            renderInventory();
-            renderSellSection();
-            renderAchievements();
-            checkDailyReward();
-        }, (error) => {
-            console.error('OnValue error:', error.message);
-            showNotification('Failed to load data: ' + error.message);
-        }, { onlyOnce: false });
-    } catch (error) {
-        console.error('Error in loadPlayerData:', error.message);
-        showNotification('Failed to connect to Firebase: ' + error.message);
-        isDataLoaded = false;
+      const init = {
+        farmCoins: 0,
+        piBalance: 0,
+        water: 0,
+        level: 1,
+        xp: 0,
+        inventory: [],
+        farmPlots: [],
+        harvestCount: 0,
+        achievements: { harvest: false, coins: false },
+        totalDeposit: 0,
+        claimedToday: false,
+        referralEarnings: 0,
+        email: localStorage.getItem('email'),
+        username: localStorage.getItem('username'),
+        status: 'approved',
+        role: 'user'
+      };
+      set(playerRef, init).then(() => {
+        console.log('Initialized new user data:', userKey);
+      }).catch((err) => {
+        console.error('Failed to init user data:', err.message);
+        showNotification('Failed to init data');
+      });
+      return;
     }
+
+    // Assign ke variabel globalmu
+    farmCoins = data.farmCoins || 0;
+    piBalance = data.piBalance || 0;
+    water = data.water || 0;
+    level = data.level || 1;
+    xp = data.xp || 0;
+    inventory = data.inventory || [];
+    farmPlots = data.farmPlots || [];
+    harvestCount = data.harvestCount || 0;
+    achievements = data.achievements || { harvest: false, coins: false };
+    referralEarnings = data.referralEarnings || 0;
+
+    isDataLoaded = true;
+    updateWallet();
+    initializePlots();
+    renderShop();
+    renderInventory();
+    renderSellSection();
+    renderAchievements();
+    checkDailyReward();
+    console.log('User data loaded for:', userKey);
+  });
 }
 
 // Fungsi generate referral link

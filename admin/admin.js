@@ -1,10 +1,11 @@
 import { auth, database, ref, onValue, set, get, update } from '../firebase/firebase-config.js';
+import { addSafeClickListener } from '../main.js'; // Sesuain path
 
 document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false;
   let lastNotificationTime = 0;
 
-  // Cek auth dan role (tetep sama, cuma rapihin error message)
+  // Cek auth dan role
   auth.onAuthStateChanged((user) => {
     if (!user && !isLoggingOut) {
       showUserNotification('Please login first.');
@@ -20,34 +21,43 @@ document.addEventListener('DOMContentLoaded', () => {
             showUserNotification('Access denied. Admins only.');
             auth.signOut().then(() => {
               sessionStorage.setItem('adminRedirect', 'true');
-              window.location.href = '/index.html');
+              window.location.href = '/index.html';
             });
             return;
           }
-          // Lanjut ke dashboard
         })
         .catch(() => {
           showUserNotification('Error checking permissions. Please login again.');
           auth.signOut().then(() => {
             sessionStorage.setItem('adminRedirect', 'true');
-            window.location.href = '/index.html');
+            window.location.href = '/index.html';
           });
         });
     }
   });
 
-  // Logout (tetep sama)
+  // Logout
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
+    console.log('Logout button found:', logoutBtn); // Debug
+    addSafeClickListener(logoutBtn, async (e) => {
+      console.log('Logout button clicked, isLoggingOut:', isLoggingOut); // Debug
+      if (isLoggingOut) return;
       isLoggingOut = true;
-      auth.signOut().then(() => {
+      try {
+        console.log('Auth object:', auth); // Debug
+        await auth.signOut();
+        console.log('Sign out successful'); // Debug
         sessionStorage.setItem('adminRedirect', 'true');
         window.location.href = '/index.html';
-      }).catch(() => {
-        showUserNotification('Error logging out. Try again.');
-      });
+      } catch (error) {
+        isLoggingOut = false;
+        console.error('Logout error:', error.code, error.message); // Debug
+        showUserNotification(`Error logging out: ${error.message}`);
+      }
     });
+  } else {
+    console.error('Logout button not found'); // Debug
   }
 
   // Admin Dashboard
@@ -118,21 +128,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       pendingCount.textContent = pending;
       approvedToday.textContent = approvedTodayCount;
-    }
-  });
 
-  // Handle button clicks
-  document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('game-button')) {
-      const id = e.target.dataset.id;
-      const action = e.target.dataset.action;
-      if (id && action) {
-        if (action === 'approve') {
-          approveTransaction(id);
-        } else if (action === 'reject') {
-          rejectTransaction(id);
+      // Listener approve/reject
+      const buttons = depositItems.querySelectorAll('.game-button');
+      buttons.forEach((button) => {
+        const id = button.dataset.id;
+        const action = button.dataset.action;
+        if (id && action) {
+          addSafeClickListener(button, () => {
+            console.log(`Button clicked: ${action} for ID ${id}`); // Debug
+            if (action === 'approve') {
+              approveTransaction(id);
+            } else if (action === 'reject') {
+              rejectTransaction(id);
+            }
+          });
         }
-      }
+      });
     }
   });
 

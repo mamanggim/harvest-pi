@@ -7,7 +7,7 @@ const claimModalBtn = document.getElementById('claim-modal-btn');
 const rewardModal = document.getElementById('reward-modal');
 
 // START addSafeClickListener helper
-function addSafeClickListener(element, callback) {
+export function addSafeClickListener(element, callback) {
     let isLocked = false;
     element.addEventListener('click', (e) => {
         if (isLocked) return;

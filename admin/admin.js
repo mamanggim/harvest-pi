@@ -56,28 +56,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Logout
   const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    console.log('Logout button found:', logoutBtn); // Debug
+if (logoutBtn) {
+  console.log('Logout button found:', logoutBtn);
+  try {
     addSafeClickListener(logoutBtn, async (e) => {
-      console.log('Logout button clicked, isLoggingOut:', isLoggingOut); // Debug
+      console.log('Logout button clicked, isLoggingOut:', isLoggingOut);
       if (isLoggingOut) return;
       isLoggingOut = true;
       try {
-        console.log('Auth object:', auth); // Debug
+        console.log('Auth object:', auth);
         if (!auth) throw new Error('Auth object undefined');
         await auth.signOut();
-        console.log('Sign out successful'); // Debug
+        console.log('Sign out successful');
         sessionStorage.setItem('adminRedirect', 'true');
         window.location.href = '/index.html';
       } catch (error) {
         isLoggingOut = false;
-        console.error('Logout error:', error.code || error.message); // Debug
+        console.error('Logout error:', error.code || error.message);
         showUserNotification(`Error logging out: ${error.message}`);
       }
     });
-  } else {
-    console.error('Logout button not found'); // Debug
+  } catch (error) {
+    console.error('addSafeClickListener error:', error);
+    logoutBtn.addEventListener('click', async () => {
+      console.log('Fallback: Logout button clicked');
+      if (isLoggingOut) return;
+      isLoggingOut = true;
+      try {
+        if (!auth) throw new Error('Auth object undefined');
+        await auth.signOut();
+        console.log('Sign out successful');
+        sessionStorage.setItem('adminRedirect', 'true');
+        window.location.href = '/index.html';
+      } catch (error) {
+        isLoggingOut = false;
+        console.error('Logout error:', error.code || error.message);
+        showUserNotification(`Error logging out: ${error.message}`);
+      }
+    });
   }
+} else {
+  console.error('Logout button not found');
+}
 
   // Admin Dashboard
   onValue(ref(database, 'transactions'), (snapshot) => {

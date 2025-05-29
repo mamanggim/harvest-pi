@@ -697,7 +697,7 @@ if (registerEmailBtn) {
     const inputUsername = registerUsernameInput ? registerUsernameInput.value : '';
 
     if (!email || !password || !inputUsername) {
-      registerError.style.display = 8'block';
+      registerError.style.display = 'block';
       registerError.textContent = 'Please enter email, password, and username.';
       return;
     }

@@ -697,7 +697,7 @@ if (registerEmailBtn) {
     const inputUsername = registerUsernameInput ? registerUsernameInput.value : '';
 
     if (!email || !password || !inputUsername) {
-      registerError.style.display = 'block';
+      registerError.style.display = 8'block';
       registerError.textContent = 'Please enter email, password, and username.';
       return;
     }
@@ -708,9 +708,6 @@ if (registerEmailBtn) {
       if (!normalizedUsername || normalizedUsername.length < 3) {
         throw new Error('Username must be at least 3 characters and use letters/numbers only.');
       }
-
-      // Encode email sebagai fallback
-      const encodedEmail = email.replace('@', '_at_').replace('.', '_dot_');
 
       // Cek duplikat username
       const playerRef = ref(database, `players/${normalizedUsername}`);

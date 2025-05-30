@@ -1,18 +1,33 @@
-// PART 1 //
-import { auth, database, ref, onValue } from '../firebase/firebase-config.js';
-import { addSafeClickListener } from './utils.js';
-import { handleLogin, handleRegister, switchToLogin, switchToRegister, loadPlayerData, handleReferral } from './auth.js';
-import { initializeGame, startGame, enterFullScreen, exitFullScreen } from './game.js';
-import { initAudioControls, playMenuSound } from './audio.js';
-import { switchTab, toggleLanguage } from './ui.js';
-import { loadExchangeRate, handleExchange, updateExchangeResult } from './exchange.js';
-import { handleDeposit } from './finance.js';
-import { checkDailyReward } from './achievements.js';
-import { initializePlots } from './farm-logic.js';
-import { renderShop, renderSellSection } from './shop.js';
-import { renderInventory } from './inventory.js';
+// Ambil database dan auth dari firebase-config.js
+import {
+  auth, database, messaging,
+  ref, onValue, set, update, get, push
+} from '/firebase/firebase-config.js';
 
-// Variabel global
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+// ==== Global Element ====
+const claimModalBtn = document.getElementById('claim-modal-btn');
+const rewardModal = document.getElementById('reward-modal');
+
+// ==== Helper: Tambahkan event click/touch dengan lock ====
+export function addSafeClickListener(element, callback) {
+  let isLocked = false;
+  const handler = (e) => {
+    if (isLocked) return;
+    isLocked = true;
+    callback(e);
+    setTimeout(() => isLocked = false, 300);
+  };
+  element.addEventListener('click', handler);
+  element.addEventListener('touchstart', handler);
+}
+
+// ==== Global State ====
 let isDataLoaded = false;
 let piInitialized = false;
 let referralEarnings = 0;
@@ -24,372 +39,723 @@ let xp = 0;
 let inventory = [];
 let vegetables = [];
 let langData = {};
-let currentLang = localStorage.getItem('language') || 'en';
+let currentLang = 'en';
 let farmPlots = [];
 let harvestCount = 0;
 let achievements = { harvest: false, coins: false };
-let username = localStorage.getItem('username');
+let username = null;
 let lastClaim = null;
 let claimedToday = false;
 let isClaiming = false;
 let isAudioPlaying = false;
 
-document.addEventListener('DOMContentLoaded', () => {
-    const elements = {
-        'start-text': () => startGame(),
-        'lang-toggle': () => toggleLanguage(),
-        'game-lang-toggle': () => toggleLanguage(),
-        'settings-btn': () => { document.getElementById('settings-modal').style.display = 'block'; playMenuSound(); },
-        'game-settings-btn': () => { document.getElementById('settings-modal').style.display = 'block'; playMenuSound(); },
-        'close-settings': () => { document.getElementById('settings-modal').style.display = 'none'; playMenuSound(); },
-        'reward-modal-close': () => { document.getElementById('reward-modal').style.display = 'none'; playMenuSound(); },
-        'fullscreen-toggle': () => { document.fullscreenElement ? exitFullScreen() : enterFullScreen(); playMenuSound(); },
-        'exit-game-btn': () => { if (bgMusic) bgMusic.pause(); if (bgVoice) bgVoice.pause(); window.location.reload(); },
-        'exchange-btn': () => handleExchange(),
-        'claim-reward-btn': () => {
-            document.getElementById('reward-modal').style.display = 'block';
-            document.getElementById('daily-reward-text').textContent = langData[currentLang]?.dailyRewardText || 'You got +100 Farm Coins & +50 Water!';
-        },
-        'shop-buy-tab': () => {
-            document.getElementById('shop-buy-tab').classList.add('active');
-            document.getElementById('shop-sell-tab').classList.remove('active');
-            document.getElementById('shop-content').style.display = 'block';
-            document.getElementById('sell-section').style.display = 'none';
-            renderShop();
-            playMenuSound();
-        },
-        'shop-sell-tab': () => {
-            document.getElementById('shop-sell-tab').classList.add('active');
-            document.getElementById('shop-buy-tab').classList.remove('active');
-            document.getElementById('shop-content').style.display = 'none';
-            document.getElementById('sell-section').style.display = 'block';
-            renderSellSection();
-            playMenuSound();
-        },
-        'login-email-btn': (e) => handleLogin(e),
-        'register-email-btn': (e) => handleRegister(e),
-        'register-link': () => switchToRegister(),
-        'login-link': () => switchToLogin(),
-        'copy-link-btn': () => {
-            const referralLink = document.getElementById('referral-link');
-            if (referralLink) copyToClipboard(referralLink.textContent, document.getElementById('copy-link-btn'));
-        },
-    };
+const plotCount = 4;
+const piToFarmRate = 1000000;
 
-    Object.entries(elements).forEach(([id, callback]) => {
-        const el = document.getElementById(id);
-        if (el) addSafeClickListener(el, callback);
+// ==== Load Saldo Pi dan Farm Coin dari Firebase ====
+function loadUserBalances() {
+  const playerRef = ref(database, `players/${username}`);
+  onValue(playerRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    piBalance = data.piBalance || 0;
+    farmCoins = data.farmCoins || 0;
+
+    const piBalanceElement = document.getElementById('pi-balance');
+    const fcBalanceElement = document.getElementById('fc-balance');
+    if (piBalanceElement) piBalanceElement.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
+    if (fcBalanceElement) fcBalanceElement.textContent = farmCoins.toLocaleString();
+
+    updateWallet();
+  });
+}
+
+// ==== Audio ====
+const audioElements = {
+  music: document.getElementById('bg-music'),
+  voice: document.getElementById('bg-voice'),
+  harvesting: document.getElementById('harvesting-sound'),
+  watering: document.getElementById('watering-sound'),
+  planting: document.getElementById('planting-sound'),
+  menu: document.getElementById('menu-sound'),
+  buying: document.getElementById('buying-sound'),
+  coin: document.getElementById('coin-sound')
+};
+
+function tryPlay(audioKey) {
+  const audio = audioElements[audioKey];
+  if (audio) {
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.warn(`${audioKey} sound failed:`, e.message));
+    }
+  }
+}
+
+// Fungsi-fungsi pemutar audio
+function playBgMusic() {
+  const music = audioElements.music;
+  if (music && !isAudioPlaying) {
+    const promise = music.play();
+    if (promise !== undefined) {
+      promise
+        .then(() => {
+          console.log('Background music started');
+          isAudioPlaying = true;
+        })
+        .catch(e => {
+          console.warn('BG Music failed:', e.message);
+          setTimeout(() => music.play().catch(err => console.warn('Retry failed:', err.message)), 100);
+        });
+    }
+  }
+}
+
+function playBgVoice() {
+  const voice = audioElements.voice;
+  if (voice && !isAudioPlaying) {
+    const promise = voice.play();
+    if (promise !== undefined) {
+      promise.catch(e => {
+        console.warn('BG Voice failed:', e.message);
+        setTimeout(() => voice.play().catch(err => console.warn('Retry voice failed:', err.message)), 100);
+      });
+    }
+  }
+}
+
+// Shortcut audio lainnya
+const playHarvestingSound = () => tryPlay('harvesting');
+const playWateringSound = () => tryPlay('watering');
+const playPlantingSound = () => tryPlay('planting');
+const playMenuSound = () => tryPlay('menu');
+const playBuyingSound = () => tryPlay('buying');
+const playCoinSound = () => tryPlay('coin');
+
+// ==== Inisialisasi Slider Volume ====
+function initAudioControls() {
+  const musicSlider = document.getElementById('music-volume');
+  const voiceSlider = document.getElementById('voice-volume');
+
+  if (musicSlider) {
+    musicSlider.value = localStorage.getItem('musicVolume') ?? 50;
+    musicSlider.addEventListener('input', () => {
+      localStorage.setItem('musicVolume', musicSlider.value);
+      updateVolumes();
     });
+  }
 
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        addSafeClickListener(btn, () => switchTab(btn.getAttribute('data-tab')));
+  if (voiceSlider) {
+    voiceSlider.value = localStorage.getItem('voiceVolume') ?? 50;
+    voiceSlider.addEventListener('input', () => {
+      localStorage.setItem('voiceVolume', voiceSlider.value);
+      updateVolumes();
     });
+  }
+}
 
-    const exchangeAmount = document.getElementById('exchange-amount');
-    if (exchangeAmount) exchangeAmount.addEventListener('input', updateExchangeResult);
+// ==== Update Volume berdasarkan localStorage ====
+function updateVolumes() {
+  const musicVol = Math.min(Math.max((parseFloat(localStorage.getItem('musicVolume')) || 50) / 100, 0), 1);
+  const voiceVol = Math.min(Math.max((parseFloat(localStorage.getItem('voiceVolume')) || 50) / 100, 0), 1);
 
-    const directionSelect = document.getElementById('exchange-direction');
-    if (directionSelect) directionSelect.addEventListener('change', updateExchangeResult);
+  if (audioElements.music) audioElements.music.volume = musicVol;
+  if (audioElements.voice) audioElements.voice.volume = voiceVol;
 
-    initAudioControls();
-    initializeGame();
-    initializePlots();
-    loadExchangeRate();
-    handleDeposit();
-    checkDailyReward();
+  ['harvesting', 'watering', 'planting', 'menu', 'buying', 'coin'].forEach(key => {
+    if (audioElements[key]) audioElements[key].volume = voiceVol;
+  });
 
-    auth.onAuthStateChanged(user => {
-        if (user && username) {
-            loadPlayerData(username);
-            handleReferral();
-        } else {
-            switchToLogin();
-        }
-    });
-});
+  console.log('Updated Volumes:', { musicVol, voiceVol });
+}
 
-// PART 2 //
-export async function loadData() {
+// ==== Panggil saat awal ====
+initAudioControls();
+updateVolumes();
+
+// START loadData fix
+async function loadData() {
     try {
-        const langRes = await fetch('../data/lang.json');
+        const langRes = await fetch('/data/lang.json');
         langData = await langRes.json();
         console.log('Language data loaded:', langData);
-        const vegRes = await fetch('../data/vegetables.json');
-        vegetables = (await vegRes.json()).vegetables;
+
+        const vegRes = await fetch('/data/vegetables.json');
+        const vegJson = await vegRes.json();
+        vegetables = vegJson.vegetables;
         console.log('Vegetables data loaded:', vegetables);
     } catch (error) {
         console.error('Error loading data:', error.message);
         showNotification('Error loading game data.');
     }
 }
+// END loadData fix
 
-export function addSafeClickListener(element, callback) {
-    let isLocked = false;
-    const handler = (e) => {
-        if (isLocked) return;
-        isLocked = true;
-        callback(e);
-        setTimeout(() => isLocked = false, 300);
-    };
-    element.addEventListener('click', handler);
-    element.addEventListener('touchstart', handler);
-}
+// Document ready event listener
+document.addEventListener('DOMContentLoaded', () => {
+    const elementsWithHandlers = [
+        { id: 'start-text', handler: startGame },
+        { id: 'lang-toggle', handler: toggleLanguage },
+        { id: 'game-lang-toggle', handler: toggleLanguage },
+        { id: 'settings-btn', handler: showSettings },
+        { id: 'game-settings-btn', handler: showSettings },
+        { id: 'close-settings', handler: hideSettings },
+        { id: 'reward-modal-close', handler: () => { if (rewardModal) rewardModal.style.display = 'none'; playMenuSound(); } },
+        { id: 'fullscreen-toggle', handler: toggleFullScreen },
+        { id: 'exit-game-btn', handler: () => { if (bgMusic) bgMusic.pause(); if (bgVoice) bgVoice.pause(); window.location.reload(); } },
+        { id: 'exchange-btn', handler: handleExchange },
+        { id: 'login-email-btn', handler: () => {} },
+        { id: 'register-email-btn', handler: () => {} },
+    ];
 
-export function copyToClipboard(text, button) {
-    navigator.clipboard.writeText(text).then(() => {
-        button.textContent = 'Copied!';
-        setTimeout(() => button.textContent = 'Copy', 2000);
-    }).catch(err => console.error('Gagal copy:', err));
-}
+    elementsWithHandlers.forEach(({ id, handler }) => {
+        const el = document.getElementById(id);
+        if (el) addSafeClickListener(el, handler);
+    });
 
-// PART 3 //
-import { auth, database, ref, onValue, set, update, get } from '../firebase/firebase-config.js';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { showNotification } from './ui.js';
-import { updateWallet, savePlayerData } from './game.js';
-import { initializePlots } from './farm-logic.js';
-import { renderShop, renderSellSection } from './shop.js';
-import { renderInventory } from './inventory.js';
-import { renderAchievements, checkDailyReward } from './achievements.js';
+    const musicVolumeSlider = document.getElementById('music-volume');
+    if (musicVolumeSlider) {
+        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
+        musicVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('musicVolume', musicVolumeSlider.value);
+            updateVolumes();
+        });
+    }
 
-export function encodeEmail(email) {
-    return email.replace('@', '_at_').replace(/\./g, '_dot_');
-}
+    const voiceVolumeSlider = document.getElementById('voice-volume');
+    if (voiceVolumeSlider) {
+        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
+        voiceVolumeSlider.addEventListener('input', () => {
+            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
+            updateVolumes();
+        });
+    }
 
-export function resolveUserKey(role, email, username) {
-    return role === 'admin' ? encodeEmail(email) : username;
-}
+    const exchangeAmountElement = document.getElementById('exchange-amount');
+    if (exchangeAmountElement) exchangeAmountElement.addEventListener('input', updateExchangeResult);
 
-export function switchToLogin() {
-    const loginScreen = document.getElementById('login-screen');
-    const registerScreen = document.getElementById('register-screen');
-    if (loginScreen && registerScreen) {
-        loginScreen.style.display = 'flex';
-        registerScreen.style.display = 'none';
+    const directionSelect = document.getElementById('exchange-direction');
+    if (directionSelect) directionSelect.addEventListener('change', updateExchangeResult);
+
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        addSafeClickListener(btn, () => {
+            const tab = btn.getAttribute('data-tab');
+            switchTab(tab);
+        });
+    });
+
+    const buyTabElement = document.getElementById('shop-buy-tab');
+    const sellTabElement = document.getElementById('shop-sell-tab');
+    const shopContentElement = document.getElementById('shop-content');
+    const sellContentElement = document.getElementById('sell-section');
+
+    if (buyTabElement) {
+        addSafeClickListener(buyTabElement, () => {
+            buyTabElement.classList.add('active');
+            if (sellTabElement) sellTabElement.classList.remove('active');
+            if (shopContentElement) shopContentElement.style.display = 'block';
+            if (sellContentElement) sellContentElement.style.display = 'none';
+            renderShop();
+            playMenuSound();
+        });
+    }
+
+    if (sellTabElement) {
+        addSafeClickListener(sellTabElement, () => {
+            sellTabElement.classList.add('active');
+            if (buyTabElement) buyTabElement.classList.remove('active');
+            if (shopContentElement) shopContentElement.style.display = 'none';
+            if (sellContentElement) sellContentElement.style.display = 'block';
+            renderSellSection();
+            playMenuSound();
+        });
+    }
+
+    initializeGame();
+});
+
+// Show/hide settings modal
+function showSettings() {
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal) {
+        settingsModal.style.display = 'block';
+        playMenuSound();
     }
 }
 
-export function switchToRegister() {
-    const loginScreen = document.getElementById('login-screen');
-    const registerScreen = document.getElementById('register-screen');
-    if (loginScreen && registerScreen) {
-        loginScreen.style.display = 'none';
-        registerScreen.style.display = 'flex';
+function hideSettings() {
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal) {
+        settingsModal.style.display = 'none';
+        playMenuSound();
     }
 }
 
-export async function handleLogin(e) {
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        enterFullScreen();
+    } else {
+        exitFullScreen();
+    }
+    playMenuSound();
+}
+
+// Deklarasi variabel (jangan hapus)
+const registerEmailBtn = document.getElementById('register-email-btn');
+const registerEmailInput = document.getElementById('register-email-input');
+const registerPasswordInput = document.getElementById('register-password-input');
+const registerError = document.getElementById('register-error');
+const registerUsernameInput = document.getElementById('register-username-input');
+const loginEmailBtn = document.getElementById('login-email-btn');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const loginError = document.getElementById('login-error');
+const verifyEmailMsg = document.getElementById('verify-status');
+
+// Fungsi untuk switch antara login dan register screen
+function switchToLogin() {
+    const loginScreenElement = document.getElementById('login-screen');
+    const registerScreenElement = document.getElementById('register-screen');
+    if (loginScreenElement && registerScreenElement) {
+        loginScreenElement.style.display = 'flex';
+        loginScreenElement.classList.add('active');
+        registerScreenElement.style.display = 'none';
+        registerScreenElement.classList.remove('active');
+        console.log('switchToLogin called, login screen displayed');
+    } else {
+        console.error('Login or Register screen element not found');
+    }
+}
+
+function switchToRegister() {
+    const loginScreenElement = document.getElementById('login-screen');
+    const registerScreenElement = document.getElementById('register-screen');
+    if (loginScreenElement && registerScreenElement) {
+        loginScreenElement.style.display = 'none';
+        loginScreenElement.classList.remove('active');
+        registerScreenElement.style.display = 'flex';
+        registerScreenElement.classList.add('active');
+        console.log('switchToRegister called, register screen displayed');
+    } else {
+        console.error('Login or Register screen element not found');
+    }
+}
+
+// ========================
+// UI Elements
+// ========================
+const registerEmailBtn = document.getElementById('register-email-btn');
+const registerEmailInput = document.getElementById('register-email-input');
+const registerPasswordInput = document.getElementById('register-password-input');
+const registerUsernameInput = document.getElementById('register-username-input');
+const registerError = document.getElementById('register-error');
+
+const loginEmailBtn = document.getElementById('login-email-btn');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const loginError = document.getElementById('login-error');
+const verifyEmailMsg = document.getElementById('verify-status');
+
+// ========================
+// Helper Functions
+// ========================
+const encodeEmail = email =>
+  email.replace('@', '_at_').replace(/\./g, '_dot_');
+
+const resolveUserKey = (role, email, username) =>
+  role === 'admin' ? encodeEmail(email) : username;
+
+const switchToLogin = () => {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('register-screen').style.display = 'none';
+};
+
+const switchToRegister = () => {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('register-screen').style.display = 'flex';
+};
+
+// ========================
+// DOM Ready
+// ========================
+document.addEventListener('DOMContentLoaded', () => {
+  const registerLink = document.getElementById('register-link');
+  const loginLink = document.getElementById('login-link');
+
+  if (registerLink) addSafeClickListener(registerLink, switchToRegister);
+  if (loginLink) addSafeClickListener(loginLink, switchToLogin);
+
+  switchToLogin(); // Default ke login
+  initializeGame(); // Jalankan game setelah UI siap
+});
+
+// ========================
+// Login Handler
+// ========================
+if (loginEmailBtn) {
+  addSafeClickListener(loginEmailBtn, async (e) => {
     e.preventDefault();
-    const email = document.getElementById('email-input').value.trim();
-    const password = document.getElementById('password-input').value.trim();
-    const loginError = document.getElementById('login-error');
-    const verifyEmailMsg = document.getElementById('verify-status');
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
 
     if (!email || !password) {
-        loginError.textContent = 'Please enter email and password.';
-        loginError.style.display = 'block';
-        return;
+      loginError.textContent = 'Please enter email and password.';
+      loginError.style.display = 'block';
+      return;
     }
 
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        if (!user.emailVerified) {
-            await sendEmailVerification(user);
-            loginError.textContent = 'Please verify your email.';
-            loginError.style.display = 'block';
-            verifyEmailMsg.style.display = 'block';
-            return;
-        }
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
 
-        const playersSnapshot = await get(ref(database, 'players'));
-        const players = playersSnapshot.val() || {};
-        let foundUsername = null;
-        for (const key in players) {
-            if (players[key].email === email) {
-                foundUsername = key;
-                break;
-            }
-        }
-
-        if (!foundUsername) throw new Error('User not found in players database.');
-        const playerData = players[foundUsername];
-        if (!playerData) throw new Error('Player data missing.');
-        if (playerData.status !== 'approved') throw new Error(`Account ${playerData.status}. Contact admin.`);
-
-        const role = playerData.role || 'user';
-        const encodedEmail = encodeEmail(email);
-        const userKey = resolveUserKey(role, email, foundUsername);
-
-        username = foundUsername;
-        localStorage.setItem('username', username);
-        localStorage.setItem('email', email);
-        localStorage.setItem('role', role);
-        localStorage.setItem('encodedEmail', encodedEmail);
-        localStorage.setItem('userKey', userKey);
-
-        onValue(ref(database, `notifications/${userKey}`), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                for (const id in data) {
-                    if (!data[id].read) {
-                        showNotification(data[id].message);
-                        update(ref(database, `notifications/${userKey}/${id}`), { read: true });
-                    }
-                }
-            }
-        });
-
-        showNotification('Logged in as ' + email);
-        if (role === 'admin') {
-            window.location.href = '../admin/admin.html';
-        } else {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('start-screen').style.display = 'flex';
-        }
-
-        loadPlayerData(userKey);
-    } catch (error) {
-        console.error('Login error:', error.message);
-        loginError.textContent = error.message;
+      if (!user.emailVerified) {
+        await sendEmailVerification(user);
+        loginError.textContent = 'Please verify your email.';
         loginError.style.display = 'block';
+        verifyEmailMsg.style.display = 'block';
+        return;
+      }
+
+      const playersSnapshot = await get(ref(database, 'players'));
+      const players = playersSnapshot.val() || {};
+      const foundUsername = Object.keys(players).find(key => players[key].email === email);
+
+      if (!foundUsername) throw new Error('User not found in players database.');
+
+      const playerData = players[foundUsername];
+      if (!playerData) throw new Error('Player data missing.');
+      if (playerData.status !== 'approved') {
+        throw new Error(`Account ${playerData.status}. Contact admin.`);
+      }
+
+      const role = playerData.role || 'user';
+      const encodedEmail = encodeEmail(email);
+      const userKey = resolveUserKey(role, email, foundUsername);
+
+      // Simpan ke localStorage
+      localStorage.setItem('username', foundUsername);
+      localStorage.setItem('email', email);
+      localStorage.setItem('role', role);
+      localStorage.setItem('encodedEmail', encodedEmail);
+      localStorage.setItem('userKey', userKey);
+
+      // Notifikasi realtime
+      onValue(ref(database, `notifications/${userKey}`), (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          Object.entries(data).forEach(([id, notif]) => {
+            if (!notif.read) {
+              showNotification(notif.message);
+              update(ref(database, `notifications/${userKey}/${id}`), { read: true });
+            }
+          });
+        }
+      });
+
+      showNotification(`Logged in as ${email}`);
+
+      // Redirect berdasarkan role
+      if (role === 'admin') {
+        window.location.href = 'admin/admin.html';
+      } else {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('start-screen').style.display = 'flex';
+      }
+
+      loadPlayerData(userKey);
+      updateReferralLink();
+
+    } catch (error) {
+      console.error('Login error:', error.message);
+      loginError.textContent = error.message;
+      loginError.style.display = 'block';
     }
+  });
 }
 
-export async function handleRegister(e) {
+// ========================
+// Notifikasi Realtime
+// ========================
+if (username) {
+  const notifRef = ref(database, `notifications/${username}`);
+  onValue(notifRef, (snapshot) => {
+    const notifications = snapshot.val();
+    if (notifications) {
+      Object.entries(notifications).forEach(([id, notif]) => {
+        if (!notif.read) {
+          showNotification(notif.message);
+          update(ref(database, `notifications/${username}/${id}`), { read: true });
+        }
+      });
+    }
+  });
+}
+
+// ========================
+// Start Game Handler
+// ========================
+const startTextElement = document.getElementById('start-text');
+if (startTextElement) {
+  addSafeClickListener(startTextElement, () => {
+    console.log('Start Text clicked, isDataLoaded:', isDataLoaded, 'username:', username);
+    if (isDataLoaded && username) {
+      showNotification('Game started!');
+      const startScreenElement = document.getElementById('start-screen');
+      const gameScreenElement = document.getElementById('game-screen');
+      if (startScreenElement && gameScreenElement) {
+        startScreenElement.style.display = 'none';
+        startScreenElement.classList.remove('center-screen');
+        gameScreenElement.style.display = 'flex';
+        gameScreenElement.classList.add('fade-in');
+        console.log('Game screen displayed');
+      } else {
+        console.error('Start or Game screen element not found');
+      }
+      isAudioPlaying = false;
+      playBgMusic();
+      playBgVoice();
+      switchTab('farm');
+      enterFullScreen();
+    } else {
+      showNotification('Please wait, loading player data or login first...');
+      console.warn('Data not loaded yet or user not logged in');
+    }
+  });
+}
+
+// ========================
+// Load Player Data
+// ========================
+function loadPlayerData(userKey) {
+  if (!userKey) {
+    showNotification('Login required.');
+    return;
+  }
+
+  const playerRef = ref(database, `players/${userKey}`);
+  onValue(playerRef, (snapshot) => {
+    const data = snapshot.val();
+
+    // Jika data tidak ada dan bukan admin, inisialisasi
+    if (!data) {
+      const role = localStorage.getItem('role');
+      if (role === 'admin') {
+        console.warn('Skip initializing admin data');
+        return;
+      }
+
+      const init = {
+        farmCoins: 0,
+        piBalance: 0,
+        water: 0,
+        level: 1,
+        xp: 0,
+        inventory: [],
+        farmPlots: [],
+        harvestCount: 0,
+        achievements: { harvest: false, coins: false },
+        totalDeposit: 0,
+        claimedToday: false,
+        referralEarnings: 0,
+        email: localStorage.getItem('email'),
+        username: localStorage.getItem('username'),
+        status: 'approved',
+        role: 'user'
+      };
+
+      set(playerRef, init)
+        .then(() => console.log('Initialized new user data:', userKey))
+        .catch((err) => {
+          console.error('Failed to init user data:', err.message);
+          showNotification('Failed to init data');
+        });
+      return;
+    }
+
+    // Assign ke variabel global
+    farmCoins = data.farmCoins || 0;
+    piBalance = data.piBalance || 0;
+    water = data.water || 0;
+    level = data.level || 1;
+    xp = data.xp || 0;
+    inventory = data.inventory || [];
+    farmPlots = data.farmPlots || [];
+    harvestCount = data.harvestCount || 0;
+    achievements = data.achievements || { harvest: false, coins: false };
+    referralEarnings = data.referralEarnings || 0;
+
+    isDataLoaded = true;
+    updateWallet();
+    initializePlots();
+    renderShop();
+    renderInventory();
+    renderSellSection();
+    renderAchievements();
+    checkDailyReward();
+    console.log('User data loaded for:', userKey);
+  });
+}
+
+// ========================
+// Referral Link Generator
+// ========================
+function generateReferralLink(username) {
+  return `https://www.harvestpi.biz.id/?ref=${username}`;
+}
+
+// ======= Bagian 5: Register, Deposit, dan Referral =======
+
+// Register dengan username dan email
+if (registerEmailBtn) {
+  addSafeClickListener(registerEmailBtn, async (e) => {
     e.preventDefault();
-    const email = document.getElementById('register-email-input').value;
-    const password = document.getElementById('register-password-input').value;
-    const inputUsername = document.getElementById('register-username-input').value;
-    const registerError = document.getElementById('register-error');
+
+    const email = registerEmailInput.value.trim();
+    const password = registerPasswordInput.value;
+    const inputUsername = registerUsernameInput?.value.trim() || '';
+
+    registerError.style.display = 'none';
 
     if (!email || !password || !inputUsername) {
-        registerError.style.display = 'block';
-        registerError.textContent = 'Please enter email, password, and username.';
-        return;
+      registerError.style.display = 'block';
+      registerError.textContent = 'Please enter email, password, and username.';
+      return;
     }
 
     try {
-        const normalizedUsername = inputUsername.toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (!normalizedUsername || normalizedUsername.length < 3) {
-            throw new Error('Username must be at least 3 characters and use letters/numbers only.');
-        }
+      // Validasi username (huruf dan angka minimal 3 karakter)
+      const normalizedUsername = inputUsername.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (normalizedUsername.length < 3) {
+        throw new Error('Username must be at least 3 characters and only use letters/numbers.');
+      }
 
-        const playerRef = ref(database, `players/${normalizedUsername}`);
-        const snapshot = await get(playerRef);
-        if (snapshot.exists()) throw new Error('Username already taken.');
+      // Cek duplikat username di database
+      const playerRef = ref(database, `players/${normalizedUsername}`);
+      const snapshot = await get(playerRef);
+      if (snapshot.exists()) {
+        throw new Error('Username already taken.');
+      }
 
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+      // Daftar akun di Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-        await set(playerRef, {
-            email, username: normalizedUsername, role: 'user', status: 'pending',
-            farmCoins: 0, piBalance: 0, water: 0, level: 1, xp: 0,
-            inventory: [], farmPlots: [], harvestCount: 0,
-            achievements: { harvest: false, coins: false }, lastClaim: null,
-            claimedToday: false, totalDeposit: 0, referralEarnings: 0
-        });
+      // Simpan data player awal ke Realtime Database
+      await set(playerRef, {
+        email,
+        username: normalizedUsername,
+        role: 'user',
+        status: 'pending',
+        farmCoins: 0,
+        piBalance: 0,
+        water: 0,
+        level: 1,
+        xp: 0,
+        inventory: [],
+        farmPlots: [],
+        harvestCount: 0,
+        achievements: { harvest: false, coins: false },
+        lastClaim: null,
+        claimedToday: false,
+        totalDeposit: 0,
+        referralEarnings: 0
+      });
 
-        await sendEmailVerification(user);
-        registerError.style.display = 'block';
-        registerError.textContent = 'Registration successful! Please verify your email.';
-        showNotification('Registration successful! Check your email for verification.');
-        document.getElementById('register-email-input').value = '';
-        document.getElementById('register-password-input').value = '';
-        document.getElementById('register-username-input').value = '';
-        switchToLogin();
+      // Kirim email verifikasi
+      await sendEmailVerification(user);
+
+      // Beri notifikasi sukses
+      registerError.style.display = 'block';
+      registerError.textContent = 'Registration successful! Please verify your email.';
+      showNotification('Registration successful! Check your email for verification.');
+
+      // Reset input dan kembali ke login
+      registerEmailInput.value = '';
+      registerPasswordInput.value = '';
+      if (registerUsernameInput) registerUsernameInput.value = '';
+      switchToLogin();
+
     } catch (error) {
-        registerError.style.display = 'block';
-        registerError.textContent = 'Registration failed: ' + error.message;
-        console.error('Registration error:', error.message);
+      registerError.style.display = 'block';
+      registerError.textContent = `Registration failed: ${error.message}`;
+      console.error('Registration error:', error);
     }
+  });
 }
 
-export function loadPlayerData(userKey) {
-    if (!userKey) {
-        showNotification('Login required.');
-        return;
+// Tombol deposit PI
+const depositBtn = document.getElementById('deposit-btn');
+if (depositBtn) {
+  addSafeClickListener(depositBtn, async (e) => {
+    e.preventDefault();
+
+    const amountInput = document.getElementById('pi-amount');
+    const amount = parseFloat(amountInput.value) || 0;
+
+    if (amount <= 0) {
+      alert('Please enter a valid amount!');
+      return;
     }
 
-    const playerRef = ref(database, `players/${userKey}`);
-    onValue(playerRef, (snapshot) => {
-        const data = snapshot.val();
-        if (!data) {
-            const role = localStorage.getItem('role');
-            if (role === 'admin') {
-                console.warn('Skip initializing admin data');
-                return;
-            }
-            const init = {
-                farmCoins: 0, piBalance: 0, water: 0, level: 1, xp: 0,
-                inventory: [], farmPlots: [], harvestCount: 0,
-                achievements: { harvest: false, coins: false }, totalDeposit: 0,
-                claimedToday: false, referralEarnings: 0, email: localStorage.getItem('email'),
-                username: localStorage.getItem('username'), status: 'approved', role: 'user'
-            };
-            set(playerRef, init).then(() => console.log('Initialized new user data:', userKey))
-                .catch(err => {
-                    console.error('Failed to init user data:', err.message);
-                    showNotification('Failed to init data');
-                });
-            return;
-        }
-
-        farmCoins = data.farmCoins || 0;
-        piBalance = data.piBalance || 0;
-        water = data.water || 0;
-        level = data.level || 1;
-        xp = data.xp || 0;
-        inventory = data.inventory || [];
-        farmPlots = data.farmPlots || [];
-        harvestCount = data.harvestCount || 0;
-        achievements = data.achievements || { harvest: false, coins: false };
-        referralEarnings = data.referralEarnings || 0;
-
-        isDataLoaded = true;
-        updateWallet();
-        initializePlots();
-        renderShop();
-        renderInventory();
-        renderSellSection();
-        renderAchievements();
-        checkDailyReward();
-        console.log('User data loaded for:', userKey);
-    });
+    await handleDeposit(username, amount);
+    amountInput.value = '';
+  });
 }
 
-export function handleReferral() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const referralUsername = urlParams.get('referral');
-    if (referralUsername && username && referralUsername !== username) {
-        const referrerRef = ref(database, `players/${referralUsername}`);
-        get(referrerRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                const referrerData = snapshot.val();
-                const newReferralEarnings = (referrerData.referralEarnings || 0) + 100;
-                update(referrerRef, { referralEarnings: newReferralEarnings })
-                    .then(() => {
-                        console.log(`Referral bonus given to ${referralUsername}`);
-                        showNotification('Referral bonus given to referrer!');
-                    })
-                    .catch(err => console.error('Error updating referral earnings:', err));
-            }
-        }).catch(err => console.error('Error fetching referrer data:', err));
+// Tombol salin referral link
+const copyLinkBtn = document.getElementById('copy-link-btn');
+if (copyLinkBtn) {
+  addSafeClickListener(copyLinkBtn, () => {
+    const referralLinkElement = document.getElementById('referral-link');
+    if (referralLinkElement && referralLinkElement.textContent) {
+      copyToClipboard(referralLinkElement.textContent);
+      showNotification('Referral link copied!');
+    } else {
+      console.error('Referral link element not found or empty');
     }
+  });
 }
 
-// PART 4 //
-import { loadData } from './utils.js';
-import { showNotification, updateUIText } from './ui.js';
-import { ref, update } from '../firebase/firebase-config.js';
+// Fungsi untuk menangani deposit
+async function handleDeposit(username, amount) {
+  if (!username || amount <= 0) return;
 
-export async function savePlayerData() {
+  const playerRef = ref(database, `players/${username}`);
+  try {
+    const snapshot = await get(playerRef);
+    const playerData = snapshot.val() || {};
+    const newBalance = (playerData.piBalance || 0) + amount;
+
+    await update(playerRef, { piBalance: newBalance });
+    console.log(`Deposit successful: ${amount} PI added to ${username}`);
+    showNotification(`Deposit successful: ${amount} PI`);
+
+    loadUserBalances(); // Refresh UI jika ada
+  } catch (error) {
+    console.error('Deposit error:', error);
+    showNotification('Error depositing: ' + error.message);
+  }
+}
+
+// Save player data to Firebase
+async function savePlayerData() {
     if (!username || !isDataLoaded) return;
     const playerRef = ref(database, `players/${username}`);
+
     const dataToSave = {
-        farmCoins, piBalance, water, level, xp, inventory,
-        farmPlots, harvestCount, achievements, lastClaim, claimedToday
+        farmCoins,
+        piBalance,
+        water,
+        level,
+        xp,
+        inventory,
+        farmPlots,
+        harvestCount,
+        achievements,
+        lastClaim,
+        claimedToday
     };
+
     try {
         await update(playerRef, dataToSave);
         console.log('Player data saved');
@@ -399,7 +765,8 @@ export async function savePlayerData() {
     }
 }
 
-export function updateWallet() {
+// Update wallet UI
+function updateWallet() {
     const farmCoinsElement = document.getElementById('farm-coins');
     const piCoinsElement = document.getElementById('pi-coins');
     const waterElement = document.getElementById('water');
@@ -412,504 +779,15 @@ export function updateWallet() {
     if (piCoinsElement) piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`;
     if (waterElement) waterElement.textContent = `${water} Water`;
     if (levelElement) levelElement.textContent = `Level: ${level} | XP: ${xp}`;
-    if (xpFillElement) {
-        const xpPercentage = (xp / (level * 100)) * 100;
-        xpFillElement.style.width = `${xpPercentage}%`;
-    }
+    if (xpFillElement) xpFillElement.style.width = `${(xp / (level * 100)) * 100}%`;
     if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins;
     if (piCoinBalanceElement) piCoinBalanceElement.textContent = piBalance.toFixed(6);
 
     savePlayerData();
 }
 
-export async function initializeGame() {
-    try {
-        await loadData();
-        updateUIText();
-        setTimeout(() => {
-            const loadingScreenElement = document.getElementById('loading-screen');
-            const loginScreenElement = document.getElementById('login-screen');
-            if (loadingScreenElement && loginScreenElement) {
-                console.log('Hiding loading screen, showing login screen');
-                loadingScreenElement.style.display = 'none';
-                switchToLogin();
-            } else {
-                console.error('Loading or Login screen element not found');
-            }
-        }, 1000);
-    } catch (error) {
-        console.error('Error initializing game:', error.message);
-        showNotification('Error initializing game. Please reload.');
-        setTimeout(() => {
-            const loadingScreenElement = document.getElementById('loading-screen');
-            const loginScreenElement = document.getElementById('login-screen');
-            if (loadingScreenElement && loginScreenElement) {
-                loadingScreenElement.style.display = 'none';
-                switchToLogin();
-            }
-        }, 1000);
-    }
-}
-
-export function startGame() {
-    if (!username) {
-        console.warn('Please login with Email first!');
-        return;
-    }
-    console.log('Starting game...');
-    const startScreenElement = document.getElementById('start-screen');
-    const gameScreenElement = document.getElementById('game-screen');
-    const exitGameBtnElement = document.getElementById('exit-game-btn');
-    if (startScreenElement && gameScreenElement && exitGameBtnElement) {
-        startScreenElement.style.display = 'none';
-        startScreenElement.classList.remove('center-screen');
-        gameScreenElement.style.display = 'flex';
-        gameScreenElement.classList.add('fade-in');
-        exitGameBtnElement.style.display = 'block';
-    }
-    isAudioPlaying = false;
-    playBgMusic();
-    playBgVoice();
-    switchTab('farm');
-    enterFullScreen();
-}
-
-export function enterFullScreen() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) elem.requestFullscreen();
-    else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
-    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-}
-
-export function exitFullScreen() {
-    if (document.exitFullscreen) document.exitFullscreen();
-    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-    else if (document.msExitFullscreen) document.msExitFullscreen();
-}
-
-// PART 5 //
-const bgMusic = document.getElementById('bg-music');
-const bgVoice = document.getElementById('bg-voice');
-const harvestingSound = document.getElementById('harvesting-sound');
-const wateringSound = document.getElementById('watering-sound');
-const plantingSound = document.getElementById('planting-sound');
-const menuSound = document.getElementById('menu-sound');
-const buyingSound = document.getElementById('buying-sound');
-const coinSound = document.getElementById('coin-sound');
-
-export function playBgMusic() {
-    if (bgMusic && !isAudioPlaying) {
-        const playPromise = bgMusic.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                console.log('Background music started successfully');
-                isAudioPlaying = true;
-            }).catch(e => {
-                console.log('BG Music failed to start:', e.message);
-                setTimeout(() => bgMusic.play().catch(err => console.log('Retry BG Music failed:', err.message)), 100);
-            });
-        }
-    }
-}
-
-export function playBgVoice() {
-    if (bgVoice && !isAudioPlaying) {
-        const playPromise = bgVoice.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => console.log('Background voice started successfully'))
-                .catch(e => {
-                    console.log('BG Voice failed to start:', e.message);
-                    setTimeout(() => bgVoice.play().catch(err => console.log('Retry BG Voice failed:', err.message)), 100);
-                });
-        }
-    }
-}
-
-export function playHarvestingSound() {
-    if (harvestingSound) harvestingSound.play().catch(e => console.log('Harvest sound failed:', e.message));
-}
-
-export function playWateringSound() {
-    if (wateringSound) wateringSound.play().catch(e => console.log('Watering sound failed:', e.message));
-}
-
-export function playPlantingSound() {
-    if (plantingSound) plantingSound.play().catch(e => console.log('Planting sound failed:', e.message));
-}
-
-export function playMenuSound() {
-    if (menuSound) menuSound.play().catch(e => console.log('Menu sound failed:', e.message));
-}
-
-export function playBuyingSound() {
-    if (buyingSound) buyingSound.play().catch(e => console.log('Buying sound failed:', e.message));
-}
-
-export function playCoinSound() {
-    if (coinSound) coinSound.play().catch(e => console.log('Coin sound failed:', e.message));
-}
-
-export function initAudioControls() {
-    const musicVolumeSlider = document.getElementById('music-volume');
-    const voiceVolumeSlider = document.getElementById('voice-volume');
-
-    if (musicVolumeSlider) {
-        musicVolumeSlider.value = localStorage.getItem('musicVolume') || 50;
-        musicVolumeSlider.addEventListener('input', () => {
-            localStorage.setItem('musicVolume', musicVolumeSlider.value);
-            updateVolumes();
-        });
-    }
-
-    if (voiceVolumeSlider) {
-        voiceVolumeSlider.value = localStorage.getItem('voiceVolume') || 50;
-        voiceVolumeSlider.addEventListener('input', () => {
-            localStorage.setItem('voiceVolume', voiceVolumeSlider.value);
-            updateVolumes();
-        });
-    }
-
-    updateVolumes();
-}
-
-function updateVolumes() {
-    const musicVolume = parseFloat(localStorage.getItem('musicVolume') || 50);
-    const voiceVolume = parseFloat(localStorage.getItem('voiceVolume') || 50);
-    const musicVol = Math.min(Math.max(musicVolume / 100, 0), 1);
-    const voiceVol = Math.min(Math.max(voiceVolume / 100, 0), 1);
-
-    if (bgMusic) bgMusic.volume = musicVol;
-    if (bgVoice) bgVoice.volume = voiceVol;
-    if (harvestingSound) harvestingSound.volume = voiceVol;
-    if (wateringSound) wateringSound.volume = voiceVol;
-    if (plantingSound) plantingSound.volume = voiceVol;
-    if (menuSound) menuSound.volume = voiceVol;
-    if (buyingSound) buyingSound.volume = voiceVol;
-    if (coinSound) coinSound.volume = voiceVol;
-
-    console.log('Updated Volumes:', { musicVol, voiceVol });
-}
-
-// PART 6 //
-import { renderShop, renderSellSection } from './shop.js';
-import { renderInventory } from './inventory.js';
-import { renderAchievements } from './achievements.js';
-import { updateExchangeResult } from './exchange.js';
-import { playMenuSound } from './audio.js';
-
-export function switchTab(tab) {
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabContents.forEach(content => content.classList.remove('active'));
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach(btn => btn.classList.remove('active'));
-
-    const tabContentElement = document.getElementById(tab);
-    const tabBtnElement = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-    if (tabContentElement && tabBtnElement) {
-        tabContentElement.classList.add('active');
-        tabBtnElement.classList.add('active');
-    }
-
-    if (tab === 'shop') {
-        renderShop();
-        renderSellSection();
-    } else if (tab === 'inventory') {
-        renderInventory();
-    } else if (tab === 'achievements') {
-        renderAchievements();
-    } else if (tab === 'exchange') {
-        updateExchangeResult();
-    }
-    playMenuSound();
-}
-
-export function showNotification(message) {
-    const notificationElement = document.getElementById('notification');
-    if (!notificationElement) return;
-    notificationElement.textContent = message;
-    notificationElement.style.display = 'block';
-    setTimeout(() => notificationElement.style.display = 'none', 3000);
-}
-
-export function toggleLanguage() {
-    currentLang = currentLang === 'en' ? 'id' : 'en';
-    localStorage.setItem('language', currentLang);
-    updateUIText();
-}
-
-export function updateUIText() {
-    if (!langData[currentLang]) return;
-    const elements = {
-        'title': 'title', 'game-title': 'title', 'start-text': 'startGame',
-        '.tab-btn[data-tab="farm"]': 'farmTab', '.tab-btn[data-tab="shop"]': 'shopTab',
-        '.tab-btn[data-tab="upgrades"]': 'upgradesTab', '.tab-btn[data-tab="inventory"]': 'inventoryTab',
-        '.tab-btn[data-tab="exchange"]': 'exchangeTab', '.tab-btn[data-tab="finance"]': 'financeTab',
-        '.tab-btn[data-tab="leaderboard"]': 'leaderboardTab', '.tab-btn[data-tab="achievements"]': 'achievementsTab',
-        'lang-toggle': 'switchLang', 'game-lang-toggle': 'switchLang', 'upgrades-title': 'upgradesTitle',
-        'upgrades-content': 'comingSoon', 'exchange-title': 'exchangeTitle', 'exchange-rate': 'exchangeRate',
-        'exchange-amount': { attr: 'placeholder', key: 'enterPiAmount' }, 'exchange-result-label': 'farmCoinsLabel',
-        'exchange-btn': 'exchangeButton', 'leaderboard-title': 'leaderboardTitle', 'leaderboard-content': 'comingSoon',
-        'settings-title': 'settingsTitle', 'music-volume-label': 'musicVolumeLabel', 'voice-volume-label': 'voiceVolumeLabel',
-        'exit-game-btn': 'exitGame', 'daily-reward-title': 'dailyRewardTitle', 'claim-modal-btn': 'claimButton',
-        'shop-buy-tab': 'buyTab', 'shop-sell-tab': 'sellTab', 'sell-section-title': 'sellSectionTitle',
-        'finance-title': 'financeTitle'
-    };
-
-    Object.entries(elements).forEach(([selector, key]) => {
-        const el = typeof key === 'string' ? document.querySelector(selector) : document.getElementById(selector);
-        if (el) {
-            if (typeof key === 'object') {
-                el[key.attr] = langData[currentLang]?.[key.key] || '';
-            } else {
-                el.textContent = langData[currentLang]?.[key] || '';
-            }
-        }
-    });
-
-    updateWallet();
-    renderShop();
-    renderInventory();
-    renderSellSection();
-    renderAchievements();
-    checkDailyReward();
-}
-
-// PART 7 //
-import { ref, onValue, update, get } from '../firebase/firebase-config.js';
-import { showNotification } from './ui.js';
-import { playCoinSound } from './audio.js';
-
-let currentExchangeRate = 1000000;
-
-export function loadExchangeRate() {
-    const rateRef = ref(database, 'exchangeRate/liveRate');
-    onValue(rateRef, (snapshot) => {
-        currentExchangeRate = snapshot.val() || currentExchangeRate;
-        const rateEl = document.getElementById('live-rate');
-        if (rateEl) rateEl.textContent = `1 Pi = ${currentExchangeRate.toLocaleString()} FC`;
-        updateExchangeResult();
-    });
-}
-
-export function updateExchangeResult() {
-    const rawAmount = document.getElementById('exchange-amount').value.replace(',', '.');
-    const amount = parseFloat(rawAmount) || 0;
-    const direction = document.getElementById('exchange-direction').value;
-    const result = direction === 'piToFc' ? Math.floor(amount * currentExchangeRate) : amount / currentExchangeRate;
-    const resultText = `You will get: ${direction === 'piToFc' ? result.toLocaleString() : result.toLocaleString(undefined, { maximumFractionDigits: 6 })}`;
-    const resultDiv = document.getElementById('exchange-result');
-    resultDiv.textContent = resultText.length > 25 ? resultText.substring(0, 25) + '…' : resultText;
-    resultDiv.title = resultText;
-}
-
-export async function handleExchange() {
-    const rawAmount = document.getElementById('exchange-amount').value.replace(',', '.');
-    const amount = parseFloat(rawAmount) || 0;
-    const direction = document.getElementById('exchange-direction').value;
-    const playerRef = ref(database, `players/${username}`);
-    const snapshot = await get(playerRef);
-    const data = snapshot.val();
-
-    if (!data) return showNotification('Player data not found!');
-    if (isNaN(amount) || amount <= 0) return showNotification('Invalid amount!');
-
-    let piBalance = Number(data.piBalance || 0);
-    let fcBalance = Number(data.farmCoins || 0);
-    let resultText = '';
-
-    if (direction === 'piToFc') {
-        if (piBalance < amount) return showNotification('Not enough PI!');
-        const converted = Math.floor(amount * currentExchangeRate);
-        piBalance -= amount;
-        fcBalance += converted;
-        resultText = converted.toLocaleString();
-    } else {
-        if (fcBalance < amount) return showNotification('Not enough FC!');
-        const converted = amount / currentExchangeRate;
-        fcBalance -= amount;
-        piBalance += converted;
-        resultText = converted.toFixed(6);
-    }
-
-    piBalance = Math.round(piBalance * 1000000) / 1000000;
-    fcBalance = Math.floor(fcBalance);
-
-    document.getElementById('exchange-loading').style.display = 'block';
-    setTimeout(async () => {
-        try {
-            await update(playerRef, { piBalance, farmCoins: fcBalance });
-            const piElem = document.getElementById('pi-balance');
-            const fcElem = document.getElementById('fc-balance');
-            if (piElem) piElem.textContent = piBalance.toLocaleString(undefined, { maximumFractionDigits: 6 });
-            if (fcElem) fcElem.textContent = fcBalance.toLocaleString();
-            document.getElementById('exchange-amount').value = '';
-            updateExchangeResult();
-            playCoinSound();
-            showNotification('Exchange succeeded!');
-        } catch (error) {
-            console.error('Exchange failed:', error.message);
-            showNotification('Exchange failed: ' + error.message);
-        } finally {
-            document.getElementById('exchange-loading').style.display = 'none';
-        }
-    }, 1000);
-}
-
-const exchangeBtn = document.getElementById('exchange-btn');
-const directionSelect = document.getElementById('exchange-direction');
-if (directionSelect) {
-    directionSelect.addEventListener('change', () => {
-        exchangeBtn.textContent = directionSelect.value === 'piToFc' ? 'Exchange to FC' : 'Exchange to Pi';
-    });
-    directionSelect.dispatchEvent(new Event('change'));
-}
-
-// PART 8 //
-import { auth, database, ref, get, update, push } from '../firebase/firebase-config.js';
-import { encodeEmail } from './auth.js';
-import { showNotification } from './ui.js';
-import { copyToClipboard } from './utils.js';
-
-export async function handleDeposit() {
-    const depositBtn = document.getElementById('real-deposit-btn');
-    const message = document.getElementById('real-deposit-message');
-    const amountInput = document.getElementById('deposit-amount');
-    const depositPopup = document.getElementById('deposit-popup');
-    const popupAmount = document.getElementById('popup-amount');
-    const popupMemo = document.getElementById('popup-memo');
-    const popupUsername = document.getElementById('popup-username');
-    const popupTransferAmount = document.getElementById('popup-transfer-amount');
-    const popupTransferMemo = document.getElementById('popup-transfer-memo');
-    const popupWallet = document.getElementById('popup-wallet-address');
-    const countdownTimer = document.getElementById('countdown-timer');
-    const copyWalletBtn = document.getElementById('copy-wallet-btn');
-    const copyMemoBtn = document.getElementById('copy-memo-btn');
-    const confirmBtn = document.getElementById('confirm-deposit');
-    const cancelBtn = document.getElementById('cancel-deposit');
-
-    if (!depositBtn || !message || !amountInput || !depositPopup || !popupAmount || !popupMemo || !popupUsername ||
-        !popupTransferAmount || !popupTransferMemo || !popupWallet || !countdownTimer || !copyWalletBtn || !copyMemoBtn ||
-        !confirmBtn || !cancelBtn) {
-        console.error('Deposit element missing.');
-        return;
-    }
-
-    depositBtn.addEventListener('click', async () => {
-        const user = auth.currentUser;
-        if (!user) {
-            message.textContent = 'Please login first.';
-            return;
-        }
-
-        const email = user.email;
-        const encodedEmail = encodeEmail(email);
-        const playersRef = ref(database, 'players');
-        const snapshot = await get(playersRef);
-        const playersData = snapshot.val() || {};
-        let username = null;
-        for (const playerUsername in playersData) {
-            if (playersData[playerUsername].email === email) {
-                username = playerUsername;
-                break;
-            }
-        }
-        if (!username) {
-            message.textContent = 'Username not found. Please register.';
-            return;
-        }
-
-        const amount = parseFloat(amountInput.value);
-        if (!amount || amount < 1) {
-            message.textContent = 'Minimum deposit is 1 PI.';
-            return;
-        }
-
-        const today = new Date().toISOString().split('T')[0];
-        const depositLimitRef = ref(database, `depositLimits/${encodedEmail}/${today}`);
-        const depositSnapshot = await get(depositLimitRef);
-        const dailyTotal = depositSnapshot.val()?.total || 0;
-        if (dailyTotal + amount > 1000) {
-            message.textContent = 'Daily deposit limit exceeded (1000 PI).';
-            return;
-        }
-
-        message.textContent = '';
-        depositBtn.disabled = true;
-        amountInput.disabled = true;
-        const walletAddress = 'GCUPGJNSX6QDI7MTNBVES6LHDCTP3QHZSHZP5WJG4BKBQVG4L2CW6ZULPN';
-        const memo = `deposit_${username}_${Date.now()}`;
-        popupAmount.textContent = amount;
-        popupMemo.textContent = memo;
-        popupUsername.textContent = username;
-        popupTransferAmount.textContent = amount;
-        popupTransferMemo.textContent = memo;
-        popupWallet.textContent = walletAddress;
-        depositPopup.style.display = 'block';
-
-        let timeLeft = 100;
-        countdownTimer.textContent = `Time left: ${timeLeft}s`;
-        const countdownInterval = setInterval(() => {
-            timeLeft--;
-            countdownTimer.textContent = `Time left: ${timeLeft}s`;
-            if (timeLeft <= 0) {
-                clearInterval(countdownInterval);
-                depositPopup.style.display = 'none';
-                depositBtn.disabled = false;
-                amountInput.disabled = false;
-                message.textContent = 'Deposit request timed out.';
-            }
-        }, 1000);
-
-        copyWalletBtn.addEventListener('click', () => copyToClipboard(walletAddress, copyWalletBtn));
-        copyMemoBtn.addEventListener('click', () => copyToClipboard(memo, copyMemoBtn));
-
-        confirmBtn.addEventListener('click', async () => {
-            clearInterval(countdownInterval);
-            depositPopup.style.display = 'none';
-            try {
-                const playerRef = ref(database, `players/${username}`);
-                const snapshot = await get(playerRef);
-                let totalDeposit = snapshot.exists() ? snapshot.val().totalDeposit || 0 : 0;
-                totalDeposit += amount;
-                await update(playerRef, { totalDeposit });
-                await set(depositLimitRef, { total: dailyTotal + amount });
-                const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}`);
-                await push(depositHistoryRef, { amount, timestamp: Date.now(), memo, status: 'pending' });
-                message.textContent = 'Deposit request submitted.';
-            } catch (error) {
-                console.error('Error submitting deposit:', error.message);
-                message.textContent = 'Error submitting deposit: ' + error.message;
-            } finally {
-                depositBtn.disabled = false;
-                amountInput.disabled = false;
-                amountInput.value = '';
-            }
-        });
-
-        cancelBtn.addEventListener('click', () => {
-            clearInterval(countdownInterval);
-            depositPopup.style.display = 'none';
-            depositBtn.disabled = false;
-            amountInput.disabled = false;
-            message.textContent = 'Deposit request cancelled.';
-        });
-    });
-}
-
-// PART 9 //
-import { addSafeClickListener } from './utils.js';
-import { showNotification, langData, currentLang } from './ui.js';
-import { playPlantingSound, playWateringSound, playHarvestingSound } from './audio.js';
-import { savePlayerData, updateWallet } from './game.js';
-import { addToInventory, renderInventory } from './inventory.js';
-import { renderSellSection } from './shop.js';
-import { checkHarvestAchievement } from './achievements.js';
-
-const plotCount = 4;
-
-export function initializePlots() {
+// Initialize farm plots
+function initializePlots() {
     const farmAreaElement = document.getElementById('farm-area');
     if (!farmAreaElement) {
         console.error('farm-area element not found');
@@ -919,9 +797,14 @@ export function initializePlots() {
 
     farmAreaElement.innerHTML = '';
     if (!farmPlots || farmPlots.length === 0) {
-        farmPlots = Array(plotCount).fill().map(() => ({
-            planted: false, vegetable: null, progress: 0, watered: false,
-            currentFrame: 1, countdown: 0, totalCountdown: 0
+        farmPlots = Array.from({ length: plotCount }, () => ({
+            planted: false,
+            vegetable: null,
+            progress: 0,
+            watered: false,
+            currentFrame: 1,
+            countdown: 0,
+            totalCountdown: 0
         }));
     }
 
@@ -943,256 +826,274 @@ export function initializePlots() {
 
             const plantImg = document.createElement('img');
             plantImg.classList.add('plant-img');
-            plantImg.src = `../assets/img/plant/${plot.vegetable.id}/${plot.vegetable.id}_${plot.currentFrame}.png`;
-            plantImg.onerror = () => plantImg.src = '../assets/img/ui/placeholder.png';
+            plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+            plantImg.onerror = () => { plantImg.src = 'assets/img/ui/placeholder.png'; };
             plotContent.appendChild(plantImg);
             plantImg.classList.add('loaded');
 
             if (plot.currentFrame >= plot.vegetable.frames) {
                 plotElement.classList.add('ready');
-                plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
-                countdownFill.style.width = '100%';
+                if (plotStatus) plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
+                if (countdownFill) countdownFill.style.width = '100%';
             } else if (plot.watered) {
-                plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
-                const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
-                countdownFill.style.width = `${progress}%`;
+                updateGrowingUI();
 
-                const countdownInterval = setInterval(() => {
-                    if (!plot.planted) {
-                        clearInterval(countdownInterval);
-                        countdownFill.style.width = '0%';
+                const interval = setInterval(() => {
+                    if (!plot.planted || plot.currentFrame >= plot.vegetable.frames) {
+                        clearInterval(interval);
                         return;
                     }
-                    if (plot.currentFrame >= plot.vegetable.frames) {
-                        clearInterval(countdownInterval);
-                        countdownFill.style.width = '100%';
-                        plotElement.classList.add('ready');
-                        plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
-                        return;
-                    }
+
                     if (plot.watered) {
                         plot.countdown--;
                         const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
-                        countdownFill.style.width = `${progress}%`;
+                        if (countdownFill) countdownFill.style.width = `${progress}%`;
+
                         if (plot.countdown <= 0) {
                             plot.currentFrame++;
                             plot.watered = false;
                             plot.countdown = plot.vegetable.growthTime;
                             plot.totalCountdown = plot.vegetable.growthTime;
-                            let plantImg = plotContent.querySelector('.plant-img');
-                            if (!plantImg) {
-                                plantImg = document.createElement('img');
-                                plantImg.classList.add('plant-img');
-                                plotContent.appendChild(plantImg);
+
+                            let img = plotContent.querySelector('.plant-img');
+                            if (!img) {
+                                img = document.createElement('img');
+                                img.classList.add('plant-img');
+                                plotContent.appendChild(img);
                             }
-                            plantImg.classList.remove('loaded');
-                            plantImg.src = `../assets/img/plant/${plot.vegetable.id}/${plot.vegetable.id}_${plot.currentFrame}.png`;
-                            plantImg.onerror = () => plantImg.src = '../assets/img/ui/placeholder.png';
-                            setTimeout(() => plantImg.classList.add('loaded'), 50);
+
+                            img.classList.remove('loaded');
+                            img.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+                            img.onerror = () => { img.src = 'assets/img/ui/placeholder.png'; };
+
+                            setTimeout(() => {
+                                img.classList.add('loaded');
+                            }, 50);
+
                             if (plot.currentFrame >= plot.vegetable.frames) {
                                 plotElement.classList.add('ready');
-                                plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
-                                clearInterval(countdownInterval);
+                                if (plotStatus) plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
                                 countdownFill.style.width = '100%';
+                                clearInterval(interval);
                             } else {
-                                plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+                                if (plotStatus) plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
                                 countdownFill.style.width = '0%';
                             }
                         } else {
-                            plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
+                            if (plotStatus) plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
                         }
                     } else {
-                        plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
-                        clearInterval(countdownInterval);
+                        if (plotStatus) plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
                         countdownFill.style.width = '0%';
+                        clearInterval(interval);
                     }
+
                     savePlayerData();
                 }, 1000);
+
+                function updateGrowingUI() {
+                    if (plotStatus) plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
+                    const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
+                    if (countdownFill) countdownFill.style.width = `${progress}%`;
+                }
             } else {
-                plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
-                countdownFill.style.width = '0%';
+                if (plotStatus) plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+                if (countdownFill) countdownFill.style.width = '0%';
             }
         }
     });
+
+    updateUIText();
 }
 
+// Handle plot click with manual growth
 function handlePlotClick(index) {
     const plot = farmPlots[index];
     const plotElement = document.querySelectorAll('.plot')[index];
-    const plotContent = plotElement.querySelector('.plot-content');
-    const plotStatus = plotElement.querySelector('.plot-status');
-    const countdownFill = plotElement.querySelector('.countdown-fill');
+    const plotContent = plotElement?.querySelector('.plot-content');
+    const plotStatus = plotElement?.querySelector('.plot-status');
+    const countdownFill = plotElement?.querySelector('.countdown-fill');
 
+    // === Menanam ===
     if (!plot.planted) {
-        const seedIndex = inventory.findIndex(item => item && item.type === 'seed' && item.quantity > 0);
-        if (seedIndex !== -1) {
-            const seed = inventory[seedIndex];
-            const vegetable = seed.vegetable;
-            plot.planted = true;
-            plot.vegetable = vegetable;
-            plot.progress = 0;
-            plot.watered = false;
-            plot.currentFrame = 1;
-            plot.countdown = vegetable.growthTime;
-            plot.totalCountdown = vegetable.growthTime;
+        const seedIndex = inventory.findIndex(item => item?.type === 'seed' && item.quantity > 0);
+        if (seedIndex === -1) {
+            showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
+            return;
+        }
 
-            const flyImage = document.createElement('img');
-            flyImage.src = vegetable.shopImage;
-            flyImage.classList.add('plant-fly');
-            flyImage.style.width = '60px';
-            plotContent.appendChild(flyImage);
+        const seed = inventory[seedIndex];
+        const vegetable = seed.vegetable;
 
-            const amountText = document.createElement('div');
-            amountText.textContent = '-1';
-            amountText.classList.add('amount-text', 'negative');
-            plotContent.appendChild(amountText);
+        Object.assign(plot, {
+            planted: true,
+            vegetable,
+            progress: 0,
+            watered: false,
+            currentFrame: 1,
+            countdown: vegetable.growthTime,
+            totalCountdown: vegetable.growthTime
+        });
 
-            setTimeout(() => {
-                flyImage.remove();
-                amountText.remove();
+        // Animasi tanam
+        const flyImage = document.createElement('img');
+        flyImage.src = vegetable.shopImage;
+        flyImage.className = 'plant-fly';
+        flyImage.style.width = '60px';
+
+        const amountText = document.createElement('div');
+        amountText.textContent = '-1';
+        amountText.className = 'amount-text negative';
+
+        plotContent?.append(flyImage, amountText);
+
+        setTimeout(() => {
+            flyImage.remove();
+            amountText.remove();
+            if (plotContent) {
                 plotContent.innerHTML = '';
                 const plantImg = document.createElement('img');
-                plantImg.classList.add('plant-img');
-                plantImg.src = `../assets/img/plant/${vegetable.id}/${vegetable.id}_${plot.currentFrame}.png`;
-                plantImg.onerror = () => plantImg.src = '../assets/img/ui/placeholder.png';
+                plantImg.className = 'plant-img';
+                plantImg.src = `${vegetable.baseImage}${plot.currentFrame}.png`;
+                plantImg.onerror = () => plantImg.src = 'assets/img/ui/placeholder.png';
                 plotContent.appendChild(plantImg);
                 setTimeout(() => plantImg.classList.add('loaded'), 50);
-            }, 800);
+            }
+        }, 800);
 
-            plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
-            countdownFill.style.width = '0%';
-            inventory[seedIndex].quantity -= 1;
-            if (inventory[seedIndex].quantity <= 0) inventory.splice(seedIndex, 1);
+        plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
+        countdownFill.style.width = '0%';
 
-            savePlayerData();
-            renderInventory();
-            showNotification(langData[currentLang]?.planted || 'Planted!');
-            playPlantingSound();
+        seed.quantity -= 1;
+        if (seed.quantity <= 0) inventory.splice(seedIndex, 1);
+
+        savePlayerData();
+        renderInventory();
+        showNotification(langData[currentLang]?.planted || 'Planted!');
+        playPlantingSound();
+        return;
+    }
+
+    // === Menyiram ===
+    if (plot.planted && !plot.watered && plot.currentFrame < plot.vegetable.frames) {
+        const waterNeeded = plot.vegetable.waterNeeded || 1;
+        if (water < waterNeeded) {
+            showNotification(langData[currentLang]?.notEnoughWater || 'Not Enough Water!');
             return;
-        } else {
-            showNotification(langData[currentLang]?.noSeeds || 'No Seeds in inventory!');
         }
 
-    } else if (plot.planted && !plot.watered && plot.currentFrame < plot.vegetable.frames) {
-        const waterNeeded = plot.vegetable.waterNeeded || 1;
-        if (water >= waterNeeded) {
-            water -= waterNeeded;
-            plot.watered = true;
+        water -= waterNeeded;
+        plot.watered = true;
 
-            const waterImage = document.createElement('img');
-            waterImage.src = '../assets/img/ui/water_icon.png';
-            waterImage.onerror = () => waterImage.src = '../assets/img/ui/placeholder.png';
-            waterImage.classList.add('water-fly');
-            waterImage.style.width = '40px';
-            waterImage.style.top = '40px';
-            plotContent.appendChild(waterImage);
+        const waterImage = document.createElement('img');
+        waterImage.src = 'assets/img/ui/water_icon.png';
+        waterImage.onerror = () => waterImage.src = 'assets/img/ui/placeholder.png';
+        waterImage.className = 'water-fly';
+        waterImage.style.width = '40px';
+        waterImage.style.top = '-40px';
 
-            const amountText = document.createElement('div');
-            amountText.textContent = `-${waterNeeded}`;
-            amountText.classList.add('amount-text', 'negative');
-            plotContent.appendChild(amountText);
+        const amountText = document.createElement('div');
+        amountText.textContent = `-${waterNeeded}`;
+        amountText.className = 'amount-text negative';
 
-            setTimeout(() => {
-                waterImage.remove();
-                amountText.remove();
-            }, 800);
+        plotContent?.append(waterImage, amountText);
 
-            updateWallet();
-            showNotification(langData[currentLang]?.watered || 'Watered!');
-            playWateringSound();
+        setTimeout(() => {
+            waterImage.remove();
+            amountText.remove();
+        }, 800);
 
-            const countdownInterval = setInterval(() => {
-                if (!plot.planted) {
-                    clearInterval(countdownInterval);
-                    countdownFill.style.width = '0%';
-                    return;
+        updateWallet();
+        showNotification(langData[currentLang]?.watered || 'Watered!');
+        playWateringSound();
+
+        const countdownInterval = setInterval(() => {
+            if (!plot.planted || !plot.watered) {
+                clearInterval(countdownInterval);
+                countdownFill.style.width = '0%';
+                return;
+            }
+
+            plot.countdown--;
+            const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
+            countdownFill.style.width = `${progress}%`;
+
+            if (plot.countdown <= 0) {
+                plot.currentFrame++;
+                plot.watered = false;
+                plot.countdown = plot.vegetable.growthTime;
+                plot.totalCountdown = plot.vegetable.growthTime;
+
+                let plantImg = plotContent?.querySelector('.plant-img');
+                if (!plantImg) {
+                    plantImg = document.createElement('img');
+                    plantImg.className = 'plant-img';
+                    plotContent?.appendChild(plantImg);
                 }
+
+                plantImg.classList.remove('loaded');
+                plantImg.src = `${plot.vegetable.baseImage}${plot.currentFrame}.png`;
+                plantImg.onerror = () => plantImg.src = 'assets/img/ui/placeholder.png';
+                setTimeout(() => plantImg.classList.add('loaded'), 50);
+
                 if (plot.currentFrame >= plot.vegetable.frames) {
-                    clearInterval(countdownInterval);
-                    countdownFill.style.width = '100%';
                     plotElement.classList.add('ready');
                     plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
-                    return;
-                }
-
-                if (plot.watered) {
-                    plot.countdown--;
-                    const progress = (1 - plot.countdown / plot.totalCountdown) * 100;
-                    countdownFill.style.width = `${progress}%`;
-                    if (plot.countdown <= 0) {
-                        plot.currentFrame++;
-                        plot.watered = false;
-                        plot.countdown = plot.vegetable.growthTime;
-                        plot.totalCountdown = plot.vegetable.growthTime;
-                        let plantImg = plotContent.querySelector('.plant-img');
-                        if (!plantImg) {
-                            plantImg = document.createElement('img');
-                            plantImg.classList.add('plant-img');
-                            plotContent.appendChild(plantImg);
-                        }
-                        plantImg.classList.remove('loaded');
-                        plantImg.src = `../assets/img/plant/${plot.vegetable.id}/${plot.vegetable.id}_${plot.currentFrame}.png`;
-                        plantImg.onerror = () => plantImg.src = '../assets/img/ui/placeholder.png';
-                        setTimeout(() => plantImg.classList.add('loaded'), 50);
-                        if (plot.currentFrame >= plot.vegetable.frames) {
-                            plotElement.classList.add('ready');
-                            plotStatus.innerHTML = langData[currentLang]?.readyToHarvest || 'Ready to Harvest';
-                            clearInterval(countdownInterval);
-                            countdownFill.style.width = '100%';
-                        } else {
-                            plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
-                            countdownFill.style.width = '0%';
-                        }
-                    } else {
-                        plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
-                    }
+                    countdownFill.style.width = '100%';
+                    clearInterval(countdownInterval);
                 } else {
                     plotStatus.innerHTML = langData[currentLang]?.needsWater || 'Needs Water';
-                    clearInterval(countdownInterval);
                     countdownFill.style.width = '0%';
                 }
-                savePlayerData();
-            }, 1000);
-        } else {
-            showNotification(langData[currentLang]?.notEnoughWater || 'Not Enough Water!');
-        }
+            } else {
+                plotStatus.innerHTML = langData[currentLang]?.growing || 'Growing';
+            }
 
-    } else if (plot.currentFrame >= plot.vegetable.frames || plotElement.classList.contains('ready')) {
+            savePlayerData();
+        }, 1000);
+
+        return;
+    }
+
+    // === Panen ===
+    if (plot.currentFrame >= plot.vegetable.frames || plotElement.classList.contains('ready')) {
         const yieldAmount = plot.vegetable.yield;
         addToInventory('harvest', plot.vegetable, yieldAmount);
-        plot.planted = false;
-        plot.vegetable = null;
-        plot.progress = 0;
-        plot.watered = false;
-        plot.currentFrame = 1;
-        plot.countdown = 0;
-        plot.totalCountdown = 0;
 
+        const imageSrc = plot.vegetable?.shopImage || 'assets/img/ui/placeholder.png';
         const flyImage = document.createElement('img');
-        const imageSrc = plot.vegetable?.shopImage || '../assets/img/ui/placeholder.png';
         flyImage.src = imageSrc;
-        flyImage.onerror = () => flyImage.src = '../assets/img/ui/placeholder.png';
-        flyImage.classList.add('plant-fly');
+        flyImage.className = 'plant-fly';
         flyImage.style.width = '60px';
-        document.body.appendChild(flyImage);
 
-        const rect = plotContent.getBoundingClientRect();
+        const rect = plotContent?.getBoundingClientRect() || { left: 0, top: 0, width: 0 };
         flyImage.style.left = `${rect.left + rect.width / 2 - 30}px`;
         flyImage.style.top = `${rect.top}px`;
+        document.body.appendChild(flyImage);
 
         const amountText = document.createElement('div');
         amountText.textContent = `+${yieldAmount}`;
-        amountText.classList.add('amount-text', 'positive');
-        plotContent.appendChild(amountText);
+        amountText.className = 'amount-text positive';
+        plotContent?.appendChild(amountText);
 
         setTimeout(() => {
             flyImage.remove();
             amountText.remove();
             plotContent.innerHTML = '';
             plotStatus.innerHTML = '';
-            countdownFill.style.width = '';
+            countdownFill.style.width = '0%';
             plotElement.classList.remove('ready');
         }, 800);
+
+        Object.assign(plot, {
+            planted: false,
+            vegetable: null,
+            progress: 0,
+            watered: false,
+            currentFrame: 1,
+            countdown: 0,
+            totalCountdown: 0
+        });
 
         harvestCount++;
         savePlayerData();
@@ -1204,172 +1105,217 @@ function handlePlotClick(index) {
     }
 }
 
-// PART 10 //
-import { addSafeClickListener } from './utils.js';
-import { showNotification, langData, currentLang } from './ui.js';
-import { savePlayerData, updateWallet } from './game.js';
-import { addToInventory, renderInventory } from './inventory.js';
-import { playBuyingSound, playCoinSound } from './audio.js';
+// Fungsi paksa layout agar grid langsung kebentuk
+function forceReflow(el) {
+    void el.offsetHeight;
+}
 
-export function renderShop() {
+// ===================== SHOP RENDER =====================
+function renderShop() {
     const shopContent = document.getElementById('shop-content');
-    if (!shopContent) {
-        console.error('shop-content element not found');
-        return;
-    }
+    if (!shopContent) return console.error('shop-content element not found');
 
-    shopContent.innerHTML = '';
+    forceReflow(shopContent);
+    shopContent.style.display = 'grid';
+
+    const lang = langData[currentLang] || {};
     if (!langData[currentLang]) {
-        shopContent.innerHTML = '<p style="color:red;">Language data not loaded. Please reload.</p>';
+        shopContent.innerHTML = `<p style="color:red;">Language data not loaded. Please reload.</p>`;
         return;
     }
 
     if (!Array.isArray(vegetables) || vegetables.length === 0) {
-        shopContent.innerHTML = `<p>${langData[currentLang]?.noItems || 'No items available in shop.'}</p>`;
+        shopContent.innerHTML = `<p>${lang.noItems || 'No items available in shop.'}</p>`;
         return;
     }
 
+    shopContent.innerHTML = '';
+
+    const createShopItem = (id, name, image, farmPrice, piPrice) => {
+        const div = document.createElement('div');
+        div.classList.add('shop-item');
+        div.innerHTML = `
+            <img src="${image}" alt="${name}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+            <h3>${name}</h3>
+            <p>${lang.farmPriceLabel || 'Farm Price'}: ${farmPrice} Farm Coins</p>
+            <p>${lang.piPriceLabel || 'PI Price'}: ${piPrice} PI</p>
+            <button class="buy-btn" data-id="${id}">${lang.buyLabel || 'Buy'} (Farm)</button>
+            <button class="buy-pi-btn" data-id="${id}">${lang.buyLabel || 'Buy'} (PI)</button>
+        `;
+        return div;
+    };
+
     vegetables.forEach(veg => {
-        const vegItem = document.createElement('div');
-        vegItem.classList.add('shop-item');
+        const name = veg.name[currentLang] || 'Unknown';
         const farmPrice = typeof veg.farmPrice === 'number' ? veg.farmPrice : 0;
         const piPrice = typeof veg.piPrice === 'number' ? veg.piPrice : 0;
-        vegItem.innerHTML = `
-            <img src="${veg.shopImage}" alt="${veg.name[currentLang]}" class="shop-item-img" onerror="this.src='../assets/img/ui/placeholder.png';">
-            <h3>${veg.name[currentLang]}</h3>
-            <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: ${farmPrice} Farm Coins</p>
-            <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: ${piPrice} PI</p>
-            <button class="buy-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
-            <button class="buy-pi-btn" data-id="${veg.id}">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
-        `;
-        shopContent.appendChild(vegItem);
+        const item = createShopItem(veg.id, name, veg.shopImage, farmPrice, piPrice);
+        shopContent.appendChild(item);
     });
 
-    const waterItem = document.createElement('div');
-    waterItem.classList.add('shop-item');
-    waterItem.innerHTML = `
-        <img src="../assets/img/ui/water_icon.png" alt="${langData[currentLang]?.waterLabel || 'Water'}" class="shop-item-img" onerror="this.src='../assets/img/ui/placeholder.png';">
-        <h3>${langData[currentLang]?.waterLabel || 'Water'}</h3>
-        <p>${langData[currentLang]?.farmPriceLabel || 'Farm Price'}: 100 Farm Coins</p>
-        <p>${langData[currentLang]?.piPriceLabel || 'PI Price'}: 0.0001 PI</p>
-        <button class="buy-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (Farm)</button>
-        <button class="buy-pi-btn" data-id="water">${langData[currentLang]?.buyLabel || 'Buy'} (PI)</button>
-    `;
+    // Water item
+    const waterItem = createShopItem('water', lang.waterLabel || 'Water', 'assets/img/ui/water_icon.png', 100, 0.0001);
     shopContent.appendChild(waterItem);
 
+    shopContent.style.display = 'flex';
+
     document.querySelectorAll('.buy-btn').forEach(btn => {
-        addSafeClickListener(btn, () => buyVegetable(btn.getAttribute('data-id'), 'farm'));
+        addSafeClickListener(btn, () => buyVegetable(btn.dataset.id, 'farm'));
     });
 
     document.querySelectorAll('.buy-pi-btn').forEach(btn => {
-        addSafeClickListener(btn, () => buyVegetable(btn.getAttribute('data-id'), 'pi'));
+        addSafeClickListener(btn, () => buyVegetable(btn.dataset.id, 'pi'));
     });
 }
 
+// ===================== ADD TO INVENTORY =====================
+function addToInventory(type, veg, qty = 1) {
+    if (!veg?.id) return;
+
+    const index = inventory.findIndex(item =>
+        item && item.type === type && item.vegetable?.id === veg.id
+    );
+
+    if (index !== -1) {
+        inventory[index].quantity += qty;
+    } else {
+        inventory.push({ type, vegetable: veg, quantity: qty });
+    }
+
+    savePlayerData();
+}
+
+// ===================== BUY VEGETABLE / WATER =====================
 let isSaving = false;
 
-export async function buyVegetable(id, currency) {
+async function buyVegetable(id, currency) {
     if (isSaving) return;
     isSaving = true;
+
     try {
+        const lang = langData[currentLang] || {};
+        const btnSelector = currency === 'farm' ? `.buy-btn[data-id="${id}"]` : `.buy-pi-btn[data-id="${id}"]`;
+        const button = document.querySelector(btnSelector);
+
         if (id === 'water') {
-            if (currency === 'farm') {
-                if (farmCoins >= 100) {
-                    farmCoins -= 100;
-                    water += 10;
-                    updateWallet();
-                    showTransactionAnimation(`-100 ${id}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
-                    playBuyingSound();
-                    await savePlayerData();
-                } else {
-                    showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
-                }
+            const price = currency === 'farm' ? 100 : 0.0001;
+            const hasEnough = currency === 'farm' ? farmCoins >= price : piBalance >= price;
+
+            if (hasEnough) {
+                if (currency === 'farm') farmCoins -= price;
+                else piBalance -= price;
+
+                water += 10;
+                updateWallet();
+                showTransactionAnimation(`-${price}${currency === 'pi' ? ' PI' : ''}`, false, button);
+                playBuyingSound();
+                await savePlayerData();
             } else {
-                if (piBalance >= 0.0001) {
-                    piBalance -= 0.0001;
-                    water += 10;
-                    updateWallet();
-                    showTransactionAnimation(`-0.0001 PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
-                    playBuyingSound();
-                    await savePlayerData();
-                } else {
-                    showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
-                }
+                showNotification(currency === 'farm' ? lang.notEnoughCoins || 'Not Enough Coins!' : lang.notEnoughPi || 'Not Enough PI!');
             }
+
             isSaving = false;
             return;
         }
 
         const veg = vegetables.find(v => v.id === id);
         if (!veg) {
-            console.warn(`Vegetable with id ${id} not found`);
+            console.warn(`Vegetable with id "${id}" not found`);
             isSaving = false;
             return;
         }
 
-        let canBuy = false;
-        if (currency === 'farm') {
-            if (farmCoins >= veg.farmPrice) {
-                farmCoins -= veg.farmPrice;
-                canBuy = true;
-                showTransactionAnimation(`-${veg.farmPrice}`, false, document.querySelector(`.buy-btn[data-id="${id}"]`));
-            } else {
-                showNotification(langData[currentLang]?.notEnoughCoins || 'Not Enough Coins!');
-            }
-        } else {
-            if (piBalance >= veg.piPrice) {
-                piBalance -= veg.piPrice;
-                canBuy = true;
-                showTransactionAnimation(`-${veg.piPrice} PI`, false, document.querySelector(`.buy-pi-btn[data-id="${id}"]`));
-            } else {
-                showNotification(langData[currentLang]?.notEnoughPi || 'Not Enough PI!');
-            }
-        }
+        const price = currency === 'farm' ? veg.farmPrice : veg.piPrice;
+        const hasEnough = currency === 'farm' ? farmCoins >= price : piBalance >= price;
 
-        if (canBuy) {
+        if (hasEnough) {
+            if (currency === 'farm') farmCoins -= price;
+            else piBalance -= price;
+
             addToInventory('seed', veg, 1);
             updateWallet();
             renderInventory();
+            showTransactionAnimation(`-${price}${currency === 'pi' ? ' PI' : ''}`, false, button);
             playBuyingSound();
             await savePlayerData();
+        } else {
+            showNotification(currency === 'farm' ? lang.notEnoughCoins || 'Not Enough Coins!' : lang.notEnoughPi || 'Not Enough PI!');
         }
-    } catch (error) {
-        console.error('Error buying vegetable:', error.message);
-        showNotification('Purchase failed');
+    } catch (e) {
+        console.error('Error in buyVegetable:', e.message);
+        showNotification('Error during purchase');
     }
+
     isSaving = false;
 }
 
-export function showTransactionAnimation(amount, isPositive, element) {
-    const animation = document.createElement('div');
-    animation.classList.add('transaction-animation', isPositive ? 'positive' : 'negative');
-    animation.textContent = amount;
-    document.body.appendChild(animation);
+// ===================== RENDER INVENTORY =====================
+function renderInventory() {
+    const invEl = document.getElementById('inventory-content');
+    if (!invEl) return console.error('inventory-content element not found');
 
-    const rect = element ? element.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
-    animation.style.left = `${rect.left + rect.width / 2}px`;
-    animation.style.top = `${rect.top - 20}px`;
-
-    setTimeout(() => animation.remove(), 1000);
-}
-
-export function renderSellSection() {
-    const sellContent = document.getElementById('sell-section');
-    if (!sellContent) {
-        console.error('sell-section element not found');
-        return;
-    }
-
-    sellContent.innerHTML = '';
-    if (!langData[currentLang]) {
-        sellContent.innerHTML = '<p style="color:red;">Language data not loaded</p>';
-        return;
-    }
+    const lang = langData[currentLang] || {};
+    invEl.innerHTML = '';
 
     let hasItems = false;
+
+    inventory.forEach(item => {
+        if (!item?.vegetable) return;
+
+        const veg = item.vegetable;
+        const isSeed = item.type === 'seed';
+        const title = isSeed ? `${veg.name[currentLang]} Seed` : veg.name[currentLang];
+
+        const div = document.createElement('div');
+        div.classList.add('inventory-item');
+        div.innerHTML = `
+            <img src="${veg.shopImage}" alt="${title}" class="shop-item-img" onerror="this.src='assets/img/ui/placeholder.png';">
+            <h3>${title}</h3>
+            <p>${lang.quantityLabel || 'Quantity'}: ${item.quantity}</p>
+        `;
+        invEl.appendChild(div);
+        hasItems = true;
+    });
+
+    if (!hasItems) {
+        const noItem = document.createElement('p');
+        noItem.textContent = lang.noInventory || 'No items in inventory.';
+        invEl.appendChild(noItem);
+    }
+
+    const sellBtn = document.createElement('button');
+    sellBtn.textContent = lang.sellToShop || 'Sell to Shop';
+    sellBtn.classList.add('sell-to-shop-btn');
+    addSafeClickListener(sellBtn, () => {
+        openSellTab();
+        playMenuSound();
+    });
+
+    invEl.appendChild(sellBtn);
+}
+
+// ===========================
+// RENDER SELL SECTION
+// ===========================
+function renderSellSection() {
+    const sellContentElement = document.getElementById('sell-content');
+    if (!sellContentElement) {
+        console.error('[renderSellSection] Element #sell-content not found');
+        return;
+    }
+
+    const lang = langData[currentLang];
+    if (!lang) {
+        sellContentElement.innerHTML = '<p style="color:red;">Language data not loaded</p>';
+        return;
+    }
+
+    sellContentElement.innerHTML = '';
+
+    // Kelompokkan item hasil panen
     const groupedHarvest = {};
     inventory.forEach((item, index) => {
-        if (item && item.type === 'harvest') {
+        if (item?.type === 'harvest') {
             const vegId = item.vegetable.id;
             if (!groupedHarvest[vegId]) {
                 groupedHarvest[vegId] = { ...item, index };
@@ -1379,39 +1325,44 @@ export function renderSellSection() {
         }
     });
 
-    Object.values(groupedHarvest).forEach(item => {
-        const sellDiv = document.createElement('div');
-        sellDiv.classList.add('sell-item');
-        const sellPrice = item.vegetable.sellPrice;
-        if (typeof sellPrice !== 'number') {
-            console.warn(`Missing sellPrice for ${item.vegetable.id}`);
-            return;
-        }
-        sellDiv.innerHTML = `
-            <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img" onerror="this.src='../assets/img/ui/placeholder.png';">
-            <h3>${item.vegetable.name[currentLang]}</h3>
-            <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-            <p>${langData[currentLang]?.sellPriceLabel || 'Sell Price'}: ${sellPrice} Farm Coins</p>
-            <button class="sell-btn" data-index="${item.index}">${langData[currentLang]?.sellLabel || 'Sell'}</button>
-        `;
-        sellContent.appendChild(sellDiv);
-        hasItems = true;
-    });
-
-    if (!hasItems) {
-        sellContent.innerHTML = `<p>${langData[currentLang]?.noSellableItems || 'No items to sell.'}</p>`;
+    const harvestItems = Object.values(groupedHarvest);
+    if (harvestItems.length === 0) {
+        sellContentElement.innerHTML = `<p>${lang.noSellableItems || 'No items to sell.'}</p>`;
+        return;
     }
 
-    document.querySelectorAll('.sell-btn').forEach(btn => {
-        addSafeClickListener(btn, () => sellItem(parseInt(btn.getAttribute('data-index'))));
+    // Tampilkan setiap item panen yang bisa dijual
+    harvestItems.forEach((item) => {
+        const sellPrice = item.vegetable.sellPrice;
+        if (typeof sellPrice !== 'number') {
+            console.warn(`[renderSellSection] Missing sellPrice for ${item.vegetable.id}, skipping.`);
+            return;
+        }
+
+        const sellDiv = document.createElement('div');
+        sellDiv.className = 'sell-item';
+        sellDiv.innerHTML = `
+            <img src="${item.vegetable.shopImage}" alt="${item.vegetable.name[currentLang]}" class="shop-item-img">
+            <h3>${item.vegetable.name[currentLang]}</h3>
+            <p>${lang.quantityLabel || 'Quantity'}: ${item.quantity}</p>
+            <p>${lang.sellPriceLabel || 'Sell Price'}: ${sellPrice} Farm Coins</p>
+            <button class="sell-btn" data-index="${item.index}">${lang.sellLabel || 'Sell'}</button>
+        `;
+        sellContentElement.appendChild(sellDiv);
+    });
+
+    // Tambahkan event listener ke tombol-tombol jual
+    sellContentElement.querySelectorAll('.sell-btn').forEach(btn => {
+        addSafeClickListener(btn, () => {
+            const index = parseInt(btn.getAttribute('data-index'));
+            if (!isNaN(index)) sellItem(index);
+        });
     });
 }
 
-export function openSellSection() {
-    switchTab('shop');
-    document.getElementById('shop-sell-tab').click();
-}
-
+// ===========================
+// SELL ITEM FUNCTION
+// ===========================
 function sellItem(index) {
     const item = inventory[index];
     if (!item || item.type !== 'harvest') return;
@@ -1427,165 +1378,298 @@ function sellItem(index) {
     xp += 10;
 
     const btnElement = document.querySelector(`.sell-btn[data-index="${index}"]`);
-    if (btnElement) showTransactionAnimation(`+${totalGain}`, true, btnElement);
+    if (btnElement) {
+        showTransactionAnimation(`+${totalGain}`, true, btnElement);
+    }
 
-    inventory.splice(index, 1);
+    inventory.splice(index, 1); // Hapus dari inventori
     savePlayerData();
     updateWallet();
     renderInventory();
     renderSellSection();
     playCoinSound();
+    checkLevelUp();
+    checkCoinAchievement();
 }
 
-// PART 11 //
-import { addSafeClickListener } from './utils.js';
-import { showNotification, langData, currentLang } from './ui.js';
-import { savePlayerData } from './game.js';
-import { renderSellSection, openSellSection } from './shop.js';
-import { playMenuSound } from './audio.js';
+// ===========================
+// BUKA TAB SELL SECARA LANGSUNG
+// ===========================
+function openSellTab() {
+    switchTab('shop');
 
-export function addToInventory(type, veg, qty = 1) {
-    if (!veg || !veg.id) return;
+    const buyTab = document.getElementById('shop-buy-tab');
+    const sellTab = document.getElementById('shop-sell-tab');
+    const shopContent = document.getElementById('shop-content');
+    const sellContent = document.getElementById('sell-section');
 
-    const existingIndex = inventory.findIndex(item =>
-        item && item.type === type && item.vegetable && item.vegetable.id === veg.id
-    );
-
-    if (existingIndex !== -1) {
-        inventory[existingIndex].quantity += qty;
-    } else {
-        inventory.push({
-            type: type,
-            vegetable: veg,
-            quantity: qty
-        });
-    }
-
-    savePlayerData();
-}
-
-export function renderInventory() {
-    const content = document.getElementById('inventory-content');
-    if (!content) {
-        console.error('inventory-content element not found');
-        showNotification('inventory-content not found');
-        return;
-    }
-
-    content.innerHTML = '';
-    if (!langData[currentLang]) {
-        console.error('Language data not loaded');
-        return;
-    }
-
-    let hasItems = false;
-    inventory.forEach(item => {
-        if (!item || !item.vegetable) return;
-        const vegItem = document.createElement('div');
-        vegItem.classList.add('inventory-item');
-        const isSeed = item.type === 'seed';
-        const title = isSeed ? `${item.vegetable.name[currentLang]} Seed` : item.vegetable.name[currentLang];
-        vegItem.innerHTML = `
-            <img src="${item.vegetable.shopImage}" alt="${title}" class="shop-item-img" onerror="this.src='../assets/img/ui/placeholder.png';">
-            <h3>${title}</h3>
-            <p>${langData[currentLang]?.quantityLabel || 'Quantity'}: ${item.quantity}</p>
-        `;
-        content.appendChild(vegItem);
-        hasItems = true;
-    });
-
-    if (!hasItems) {
-        content.innerHTML = `<p>${langData[currentLang]?.noInventory || 'No items in inventory.'}</p>`;
-    }
-
-    const sellButton = document.createElement('button');
-    sellButton.textContent = langData[currentLang]?.sellToShop || 'Sell to Shop';
-    sellButton.classList.add('sell-to-shop-btn');
-    addSafeClickListener(sellButton, () => {
-        openSellSection();
-        playMenuSound();
-    });
-    content.appendChild(sellButton);
-}
-
-// PART 12 //
-import { ref, update, get } from '../firebase/firebase-config.js';
-import { showNotification, langData, currentLang } from './ui.js';
-import { savePlayerData, updateWallet } from './game.js';
-import { playCoinSound } from './audio.js';
-
-export async function checkDailyReward() {
-    if (!username) return;
-    const today = new Date().toISOString().slice(0, 10);
-    const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().slice(0, 10) : null;
-    const button = document.getElementById('claim-reward-btn');
-    if (button) {
-        if (lastClaimDate === today) {
-            button.classList.add('claimed');
-            button.textContent = langData[currentLang]?.claimed || 'Claimed!';
-            button.disabled = true;
-            claimedToday = true;
-        } else {
-            button.classList.remove('claimed');
-            button.textContent = langData[currentLang]?.claimDailyReward || 'Claim Daily Reward';
-            button.disabled = false;
-            claimedToday = false;
-        }
+    if (buyTab && sellTab && shopContent && sellContent) {
+        sellTab.classList.add('active');
+        buyTab.classList.remove('active');
+        shopContent.style.display = 'none';
+        sellContent.style.display = 'block';
+        renderSellSection();
     }
 }
 
-export async function claimDailyReward() {
-    if (!username || isClaiming) return;
-    isClaiming = true;
-    const playerRef = ref(database, `players/${username}`);
-    try {
-        const snapshot = await get(playerRef);
-        lastClaim = snapshot.val()?.lastClaim;
-        const today = new Date().toISOString().split('T')[0];
-        const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().split('T')[0] : null;
-
-        if (lastClaimDate === today) {
-            claimedToday = true;
-            isClaiming = false;
-            return;
-        }
-
-        farmCoins += 100;
-        water += 50;
-        xp += 10;
-        lastClaim = new Date().toISOString();
-        claimedToday = true;
-
-        await update(playerRef, { farmCoins, water, xp, lastClaim, claimedToday });
-        updateWallet();
-        document.getElementById('reward-modal').style.display = 'none';
-        const button = document.getElementById('claim-reward-btn');
-        if (button) {
-            button.classList.add('claimed');
-            button.textContent = langData[currentLang]?.claimed || 'Claimed!';
-            button.disabled = true;
-        }
-        playCoinSound();
-        showNotification(langData[currentLang]?.rewardClaimed || 'Reward Claimed!');
-    } catch (error) {
-        console.error('Error claiming reward:', error.message);
-        showNotification('Error claiming reward: ' + error.message);
-    } finally {
-        isClaiming = false;
-    }
-}
-
-export function checkLevelUp() {
-    const xpRequired = level * 100;
-    while (xp >= xpRequired) {
-        xp -= xpRequired;
+// ===========================
+// LEVEL UP CHECK
+// ===========================
+function checkLevelUp() {
+    const lang = langData[currentLang] || {};
+    while (xp >= level * 100) {
+        xp -= level * 100;
         level++;
-        showNotification(`${langData[currentLang]?.levelUp || 'Level Up!'} ${level}`);
+        showNotification(`${lang.levelUp || 'Level Up!'} ${level}`);
     }
     updateWallet();
 }
 
-export function checkHarvestAchievement() {
+// === Tab Navigation ===
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+    const tabContent = document.getElementById(tab);
+    const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if (tabContent && tabBtn) {
+        tabContent.classList.add('active');
+        tabBtn.classList.add('active');
+    }
+
+    switch (tab) {
+        case 'shop': renderShop(); renderSellSection(); break;
+        case 'inventory': renderInventory(); break;
+        case 'achievements': renderAchievements(); break;
+        case 'exchange': updateExchangeResult(); break;
+    }
+
+    playMenuSound();
+}
+
+// === Exchange System ===
+let currentExchangeRate = 1000000;
+
+function loadExchangeRate() {
+    const rateRef = ref(database, "exchangeRate/liveRate");
+    onValue(rateRef, (snapshot) => {
+        currentExchangeRate = snapshot.val() || currentExchangeRate;
+        const rateEl = document.getElementById("live-rate");
+        if (rateEl) rateEl.textContent = `1 Pi = ${currentExchangeRate.toLocaleString()} FC`;
+        updateExchangeResult();
+    });
+}
+loadExchangeRate();
+
+function updateExchangeResult() {
+    const amountRaw = document.getElementById("exchange-amount")?.value.replace(",", ".") || "0";
+    const amount = parseFloat(amountRaw) || 0;
+    const direction = document.getElementById("exchange-direction").value;
+
+    const result = (direction === "piToFc")
+        ? Math.floor(amount * currentExchangeRate)
+        : amount / currentExchangeRate;
+
+    const resultText = `You will get: ${
+        direction === "piToFc"
+            ? result.toLocaleString()
+            : result.toLocaleString(undefined, { maximumFractionDigits: 6 })
+    }`;
+
+    const resultDiv = document.getElementById("exchange-result");
+    if (resultDiv) {
+        const shortDisplay = resultText.length > 25 ? resultText.substring(0, 25) + "…" : resultText;
+        resultDiv.textContent = shortDisplay;
+        resultDiv.title = resultText;
+    }
+}
+
+async function handleExchange() {
+    const amountRaw = document.getElementById("exchange-amount").value.replace(",", ".");
+    const amount = parseFloat(amountRaw);
+    const direction = document.getElementById("exchange-direction").value;
+
+    if (isNaN(amount) || amount <= 0) return showNotification("Invalid amount!");
+
+    const playerRef = ref(database, `players/${username}`);
+    const snapshot = await get(playerRef);
+    const data = snapshot.val();
+
+    if (!data) return showNotification("Player data not found!");
+
+    let pi = Number(data.piBalance || 0);
+    let fc = Number(data.farmCoins || 0);
+    let resultText = "";
+
+    if (direction === "piToFc") {
+        if (pi < amount) return showNotification("Not enough Pi!");
+        const converted = Math.floor(amount * currentExchangeRate);
+        pi -= amount;
+        fc += converted;
+        resultText = converted.toLocaleString();
+    } else {
+        if (fc < amount) return showNotification("Not enough FC!");
+        const converted = amount / currentExchangeRate;
+        fc -= amount;
+        pi += converted;
+        resultText = converted.toFixed(6);
+    }
+
+    pi = Math.round(pi * 1e6) / 1e6;
+    fc = Math.floor(fc);
+
+    document.getElementById("exchange-loading").style.display = "block";
+
+    setTimeout(async () => {
+        try {
+            await update(playerRef, { piBalance: pi, farmCoins: fc });
+
+            const piEl = document.getElementById("pi-balance");
+            const fcEl = document.getElementById("fc-balance");
+            if (piEl) piEl.textContent = pi.toLocaleString(undefined, { maximumFractionDigits: 6 });
+            if (fcEl) fcEl.textContent = fc.toLocaleString();
+
+            document.getElementById("exchange-amount").value = "";
+            updateExchangeResult(resultText);
+            try { await coinSound.play(); } catch (err) { console.warn("Sound error:", err); }
+
+            showNotification("Exchange success!");
+        } catch (err) {
+            console.error("Exchange failed:", err.message);
+            showNotification("Exchange failed: " + err.message);
+        } finally {
+            document.getElementById("exchange-loading").style.display = "none";
+        }
+    }, 3000);
+}
+
+const exchangeBtn = document.getElementById("exchange-btn");
+const directionSelect = document.getElementById("exchange-direction");
+
+directionSelect.addEventListener("change", () => {
+    exchangeBtn.textContent = directionSelect.value === "piToFc" ? "Exchange to FC" : "Exchange to Pi";
+});
+directionSelect.dispatchEvent(new Event("change"));
+
+// === Daily Reward Modal ===
+if (claimModalBtn) {
+    addSafeClickListener(document.getElementById('claim-reward-btn'), async () => {
+        const playerRef = ref(database, `players/${username}/lastClaim`);
+        try {
+            const snapshot = await get(playerRef);
+            lastClaim = snapshot.val();
+
+            const today = new Date().toISOString().split('T')[0];
+            const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().split('T')[0] : null;
+
+            if (lastClaimDate === today) {
+                const btn = document.getElementById('claim-reward-btn');
+                if (btn) {
+                    btn.classList.add('claimed');
+                    btn.textContent = langData[currentLang]?.claimed || 'Claimed!';
+                    btn.disabled = true;
+                }
+                claimedToday = true;
+                return;
+            }
+
+            if (isClaiming) return;
+            isClaiming = true;
+
+            if (rewardModal) rewardModal.style.display = 'block';
+            const rewardText = document.getElementById('daily-reward-text');
+            if (rewardText) rewardText.textContent = `${langData[currentLang]?.dailyRewardText || 'You got +100 Farm Coins & +50 Water!'}`;
+        } catch (err) {
+            console.error("Check reward failed:", err.message);
+            showNotification("Error checking daily reward.");
+            isClaiming = false;
+        }
+    });
+
+    addSafeClickListener(claimModalBtn, async () => {
+        if (!username) return;
+
+        farmCoins += 100;
+        water += 50;
+        xp += 10;
+
+        const today = new Date().toISOString();
+        lastClaim = today;
+        claimedToday = true;
+
+        const playerRef = ref(database, `players/${username}`);
+        try {
+            await update(playerRef, { farmCoins, water, xp, lastClaim, claimedToday });
+            updateWallet();
+            if (rewardModal) rewardModal.style.display = 'none';
+
+            const btn = document.getElementById('claim-reward-btn');
+            if (btn) {
+                btn.classList.add('claimed');
+                btn.textContent = langData[currentLang]?.claimed || 'Claimed!';
+                btn.disabled = true;
+            }
+
+            checkLevelUp();
+            playCoinSound();
+            showNotification(langData[currentLang]?.rewardClaimed || 'Reward Claimed!');
+        } catch (err) {
+            console.error("Claim reward failed:", err.message);
+            showNotification("Error claiming reward: " + err.message);
+        } finally {
+            isClaiming = false;
+        }
+    });
+}
+
+// === Daily Reward Check ===
+function checkDailyReward() {
+    if (!username) return;
+    const today = new Date().toISOString().split('T')[0];
+    const lastClaimDate = lastClaim ? new Date(lastClaim).toISOString().split('T')[0] : null;
+
+    const btn = document.getElementById('claim-reward-btn');
+    if (!btn) return;
+
+    if (lastClaimDate === today) {
+        btn.classList.add('claimed');
+        btn.textContent = langData[currentLang]?.claimed || 'Claimed!';
+        btn.disabled = true;
+        claimedToday = true;
+    } else {
+        btn.classList.remove('claimed');
+        btn.textContent = langData[currentLang]?.claimDailyReward || 'Claim Daily Reward';
+        btn.disabled = false;
+        claimedToday = false;
+    }
+}
+
+// === Notification Popup ===
+function showNotification(message) {
+    const el = document.getElementById('notification');
+    if (!el) return;
+
+    el.textContent = message;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// === Floating Coin Animation ===
+function showTransactionAnimation(amount, isPositive, buttonElement) {
+    const anim = document.createElement('div');
+    anim.classList.add('transaction-animation', isPositive ? 'positive' : 'negative');
+    anim.textContent = amount;
+
+    document.body.appendChild(anim);
+    const rect = buttonElement?.getBoundingClientRect() || { left: 0, top: 0, width: 0 };
+    anim.style.left = `${rect.left + rect.width / 2}px`;
+    anim.style.top = `${rect.top - 20}px`;
+
+    setTimeout(() => anim.remove(), 1000);
+}
+
+// === Achievements ===
+function checkHarvestAchievement() {
     if (harvestCount >= 100 && !achievements.harvest) {
         achievements.harvest = true;
         farmCoins += 500;
@@ -1595,7 +1679,7 @@ export function checkHarvestAchievement() {
     }
 }
 
-export function checkCoinAchievement() {
+function checkCoinAchievement() {
     if (farmCoins >= 10000 && !achievements.coins) {
         achievements.coins = true;
         water += 100;
@@ -1605,28 +1689,408 @@ export function checkCoinAchievement() {
     }
 }
 
-export function renderAchievements() {
-    const content = document.getElementById('achievements-content');
-    if (!content) return;
-    content.innerHTML = '';
+function renderAchievements() {
+    const container = document.getElementById('achievements-content');
+    if (!container) return;
 
-    const harvestItem = document.createElement('div');
-    harvestItem.classList.add('achievement');
-    harvestItem.innerHTML = `
-        <h3>${langData[currentLang]?.harvestAchievementTitle || 'Harvest Master'}</h3>
-        <p>${langData[currentLang]?.harvestAchievementDesc || 'Harvest 100 crops'}</p>
-        <p>${langData[currentLang]?.statusLabel || 'Status'}: ${achievements.harvest ? langData[currentLang]?.unlocked || 'Unlocked' : langData[currentLang]?.locked || 'Locked'}</p>
-    `;
-    content.appendChild(harvestItem);
+    container.innerHTML = ''; // clear
 
-    const coinItem = document.createElement('div');
-    coinItem.classList.add('achievement');
-    coinItem.innerHTML = `
-        <h3>${langData[currentLang]?.coinAchievementTitle || 'Coin Collector'}</h3>
-        <p>${langData[currentLang]?.coinAchievementDesc || 'Collect 10000 Farm Coins'}</p>
-        <p>${langData[currentLang]?.statusLabel || 'Status'}: ${achievements.coins ? langData[currentLang]?.unlocked || 'Unlocked' : langData[currentLang]?.locked || 'Locked'}</p>
-    `;
-    content.appendChild(coinItem);
+    if (achievements.harvest) {
+        const el = document.createElement('div');
+        el.className = 'achievement unlocked';
+        el.textContent = langData[currentLang]?.harvestAchievement || 'Harvest Master';
+        container.appendChild(el);
+    }
 
-    savePlayerData();
+    if (achievements.coins) {
+        const el = document.createElement('div');
+        el.className = 'achievement unlocked';
+        el.textContent = langData[currentLang]?.coinAchievement || 'Coin Collector';
+        container.appendChild(el);
+    }
+
+    // Tambahkan achievement lainnya di sini...
 }
+
+// Update UI text based on selected language
+function updateUIText() {
+    const lang = langData[currentLang];
+    if (!lang) return;
+
+    const mappings = [
+        { selector: '#title', key: 'title', defaultText: 'Harvest Pi' },
+        { selector: '#game-title', key: 'title', defaultText: 'Harvest Pi' },
+        { selector: '#start-text', key: 'startGame', defaultText: 'Start Game' },
+        { selector: '#lang-toggle', key: 'switchLang', defaultText: 'Switch Language (EN/ID)' },
+        { selector: '#game-lang-toggle', key: 'switchLang', defaultText: 'Switch Language (EN/ID)' },
+        { selector: '#upgrades-title', key: 'upgradesTitle', defaultText: 'Upgrades' },
+        { selector: '#upgrades-content', key: 'comingSoon', defaultText: 'Coming soon...' },
+        { selector: '#exchange-title', key: 'exchangeTitle', defaultText: 'Live Exchange' },
+        { selector: '#exchange-rate', key: 'exchangeRate', defaultText: '1 PI = 1,000,000 Farm Coins' },
+        { selector: '#exchange-amount', key: 'enterPiAmount', attr: 'placeholder', defaultText: 'Enter PI amount' },
+        { selector: '#exchange-result-label', key: 'farmCoinsLabel', prefix: '', suffix: ': ', defaultText: 'Farm Coins: ' },
+        { selector: '#exchange-btn', key: 'exchangeButton', defaultText: 'Exchange to Farm Coins' },
+        { selector: '#leaderboard-title', key: 'leaderboardTitle', defaultText: 'Leaderboard' },
+        { selector: '#leaderboard-content', key: 'comingSoon', defaultText: 'Coming soon...' },
+        { selector: '#settings-title', key: 'settingsTitle', defaultText: 'Settings' },
+        { selector: '#music-volume-label', key: 'musicVolumeLabel', defaultText: 'Music Volume:' },
+        { selector: '#voice-volume-label', key: 'voiceVolumeLabel', defaultText: 'Voice/SFX Volume:' },
+        { selector: '#exit-game-btn', key: 'exitGame', defaultText: 'Exit' },
+        { selector: '#daily-reward-title', key: 'dailyRewardTitle', defaultText: 'Daily Reward' },
+        { selector: '#claim-modal-btn', key: 'claimButton', defaultText: 'Claim' },
+        { selector: '#shop-buy-tab', key: 'buyTab', defaultText: 'Buy' },
+        { selector: '#shop-sell-tab', key: 'sellTab', defaultText: 'Sell' },
+        { selector: '#sell-section-title', key: 'sellSectionTitle', defaultText: 'Sell Items' },
+        { selector: '#finance-title', key: 'financeTitle', defaultText: 'Finance' },
+    ];
+
+    mappings.forEach(({ selector, key, attr, prefix = '', suffix = '', defaultText }) => {
+        const element = document.querySelector(selector);
+        const text = lang[key] || defaultText;
+        if (element) {
+            if (attr === 'placeholder') {
+                element.placeholder = text;
+            } else {
+                element.textContent = prefix + text + suffix;
+            }
+        }
+    });
+
+    // Tab buttons with data-tab attribute
+    const tabLangMap = {
+        farm: 'farmTab',
+        shop: 'shopTab',
+        upgrades: 'upgradesTab',
+        inventory: 'inventoryTab',
+        exchange: 'exchangeTab',
+        finance: 'financeTab',
+        leaderboard: 'leaderboardTab',
+        achievements: 'achievementsTab'
+    };
+
+    Object.entries(tabLangMap).forEach(([tab, key]) => {
+        const tabElement = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+        if (tabElement) {
+            tabElement.textContent = lang[key] || tab.charAt(0).toUpperCase() + tab.slice(1);
+        }
+    });
+
+    // Refresh dynamic components
+    updateWallet();
+    renderShop();
+    renderInventory();
+    renderSellSection();
+    renderAchievements();
+    checkDailyReward();
+}
+
+// ==== Fitur Deposit ====
+const realDepositBtn = document.getElementById("real-deposit-btn");
+const realDepositMsg = document.getElementById("real-deposit-msg");
+const depositAmountInput = document.getElementById("deposit-amount");
+const depositPopup = document.getElementById("deposit-popup");
+const popupAmount = document.getElementById("popup-amount");
+const popupMemo = document.getElementById("popup-memo");
+const popupUsername = document.getElementById("popup-username");
+const popupTransferAmount = document.getElementById("popup-transfer-amount");
+const popupTransferMemo = document.getElementById("popup-transfer-memo");
+const popupWalletAddress = document.getElementById("popup-wallet-address");
+const countdownTimer = document.getElementById("countdown-timer");
+const copyWalletBtn = document.getElementById("copy-wallet-btn");
+const copyMemoBtn = document.getElementById("copy-memo-btn");
+const confirmDepositBtn = document.getElementById("confirm-deposit");
+const cancelDepositBtn = document.getElementById("cancel-deposit");
+
+if (
+  !realDepositBtn || !realDepositMsg || !depositAmountInput || !depositPopup ||
+  !popupAmount || !popupMemo || !popupUsername || !popupTransferAmount ||
+  !popupTransferMemo || !popupWalletAddress || !countdownTimer ||
+  !copyWalletBtn || !copyMemoBtn || !confirmDepositBtn || !cancelDepositBtn
+) {
+  console.error('❌ Salah satu elemen deposit tidak ditemukan.');
+  return;
+}
+
+let countdownInterval = null;
+const countdownDuration = 100;
+const walletAddress = 'GCUPGJNSX6GQDI7MTNBVES6LHDCTP3QHZHPWJG4BKBQVG4L2CW6ZULPN';
+
+// Reset semua listener agar tidak dobel jika diklik berkali-kali
+copyWalletBtn.onclick = null;
+copyMemoBtn.onclick = null;
+confirmDepositBtn.onclick = null;
+cancelDepositBtn.onclick = null;
+
+// Tombol utama deposit
+realDepositBtn.addEventListener('click', async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    realDepositMsg.textContent = 'Please login first.';
+    return;
+  }
+
+  const email = user.email;
+  const encodedEmail = encodeEmail(email);
+  const playersRef = ref(database, 'players');
+  const snapshot = await get(playersRef);
+  const playersData = snapshot.val() || {};
+
+  let username = Object.keys(playersData).find(
+    uname => playersData[uname].email === email
+  );
+
+  if (!username) {
+    realDepositMsg.textContent = 'Username not found. Please register.';
+    return;
+  }
+
+  const amount = parseFloat(depositAmountInput.value);
+  if (!amount || amount < 1) {
+    realDepositMsg.textContent = 'Minimum deposit is 1 PI.';
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const depositLimitRef = ref(database, `depositLimits/${encodedEmail}/${today}`);
+  const depositSnapshot = await get(depositLimitRef);
+  const depositData = depositSnapshot.val();
+  let dailyTotal = depositData ? depositData.total : 0;
+
+  if (dailyTotal + amount > 1000) {
+    realDepositMsg.textContent = 'Daily deposit limit exceeded (1000 PI).';
+    return;
+  }
+
+  const memo = `deposit_${username}_${Date.now()}`;
+
+  // Tampilkan popup konfirmasi
+  popupAmount.textContent = amount;
+  popupMemo.textContent = memo;
+  popupUsername.textContent = username;
+  popupTransferAmount.textContent = amount;
+  popupTransferMemo.textContent = memo;
+  popupWalletAddress.textContent = walletAddress;
+  depositPopup.style.display = 'block';
+
+  realDepositMsg.textContent = '';
+  realDepositBtn.disabled = true;
+  depositAmountInput.disabled = true;
+
+  // Mulai countdown timeout
+  let timeLeft = countdownDuration;
+  countdownTimer.textContent = `Time left: ${timeLeft}s`;
+
+  clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    timeLeft--;
+    countdownTimer.textContent = `Time left: ${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+      depositPopup.style.display = 'none';
+      realDepositMsg.textContent = 'Deposit request timed out.';
+      realDepositBtn.disabled = false;
+      depositAmountInput.disabled = false;
+    }
+  }, 1000);
+
+  // Copy Wallet
+  copyWalletBtn.onclick = () => {
+    copyToClipboard(walletAddress, copyWalletBtn);
+  };
+
+  // Copy Memo
+  copyMemoBtn.onclick = () => {
+    copyToClipboard(memo, copyMemoBtn);
+  };
+
+  // Konfirmasi Deposit
+  confirmDepositBtn.onclick = async () => {
+    clearInterval(countdownInterval);
+    depositPopup.style.display = 'none';
+
+    try {
+      const playerRef = ref(database, `players/${username}`);
+      const snapshot = await get(playerRef);
+      let totalDeposit = amount;
+
+      if (!snapshot.exists()) {
+        await set(playerRef, { totalDeposit: amount, piBalance: 0, farmCoins: 0 });
+      } else {
+        const playerData = snapshot.val();
+        totalDeposit += playerData.totalDeposit || 0;
+        await update(playerRef, { totalDeposit });
+      }
+
+      dailyTotal += amount;
+      await set(depositLimitRef, { total: dailyTotal });
+
+      const depositHistoryRef = ref(database, `depositHistory/${encodedEmail}`);
+      await push(depositHistoryRef, {
+        amount,
+        timestamp: Date.now(),
+        memo,
+        status: 'pending'
+      });
+
+      realDepositMsg.textContent = 'Deposit request submitted. Awaiting confirmation...';
+    } catch (error) {
+      console.error('Deposit error:', error.message);
+      realDepositMsg.textContent = 'Error: ' + error.message;
+    } finally {
+      realDepositBtn.disabled = false;
+      depositAmountInput.disabled = false;
+      depositAmountInput.value = '';
+    }
+  };
+
+  // Batal Deposit
+  cancelDepositBtn.onclick = () => {
+    clearInterval(countdownInterval);
+    depositPopup.style.display = 'none';
+    realDepositMsg.textContent = 'Deposit request cancelled.';
+    realDepositBtn.disabled = false;
+    depositAmountInput.disabled = false;
+  };
+});
+
+// ========================
+// Fitur Withdraw
+// ========================
+
+const withdrawBtn = document.getElementById("withdraw-btn");
+const withdrawAmountInput = document.getElementById("withdraw-amount");
+const withdrawMsg = document.getElementById("withdraw-msg");
+const withdrawPopup = document.getElementById("withdraw-popup");
+const withdrawPopupAmount = document.getElementById("withdraw-popup-amount");
+const withdrawPopupUsername = document.getElementById("withdraw-popup-username");
+const withdrawPopupWallet = document.getElementById("withdraw-popup-wallet");
+const withdrawWalletInput = document.getElementById("withdraw-wallet-input");
+const withdrawCountdownTimer = document.getElementById("withdraw-countdown-timer");
+const confirmWithdrawBtn = document.getElementById("confirm-withdraw");
+const cancelWithdrawBtn = document.getElementById("cancel-withdraw");
+
+let withdrawCountdownInterval = null;
+const withdrawCountdownDuration = 100; // dalam detik
+
+function resetWithdrawUI() {
+  withdrawPopup.style.display = 'none';
+  withdrawBtn.disabled = false;
+  withdrawAmountInput.disabled = false;
+  withdrawWalletInput.disabled = false;
+  withdrawAmountInput.value = '';
+  withdrawWalletInput.value = '';
+}
+
+withdrawBtn?.addEventListener('click', async () => {
+  console.log('Tombol withdraw diklik');
+
+  const user = auth.currentUser;
+  if (!user) {
+    withdrawMsg.textContent = 'Please login first.';
+    return;
+  }
+
+  const email = user.email;
+  const encodedEmail = encodeEmail(email);
+  const playersRef = ref(database, 'players');
+  const snapshot = await get(playersRef);
+  const playersData = snapshot.val() || {};
+
+  let username = null;
+  for (const playerUsername in playersData) {
+    if (playersData[playerUsername].email === email) {
+      username = playerUsername;
+      break;
+    }
+  }
+
+  if (!username) {
+    withdrawMsg.textContent = 'Username not found. Please register.';
+    return;
+  }
+
+  const amount = parseFloat(withdrawAmountInput.value);
+  if (!amount || amount < 1) {
+    withdrawMsg.textContent = 'Minimum withdraw is 1 PI.';
+    return;
+  }
+
+  const playerRef = ref(database, `players/${username}`);
+  const playerSnapshot = await get(playerRef);
+  if (!playerSnapshot.exists()) {
+    withdrawMsg.textContent = 'Player data not found.';
+    return;
+  }
+
+  const playerData = playerSnapshot.val();
+  const piBalance = playerData.piBalance || 0;
+
+  if (amount > piBalance) {
+    withdrawMsg.textContent = 'Insufficient PI balance.';
+    return;
+  }
+
+  const walletAddress = withdrawWalletInput.value.trim();
+  if (!walletAddress) {
+    withdrawMsg.textContent = 'Please enter a valid wallet address.';
+    return;
+  }
+
+  // Tampilkan popup konfirmasi
+  withdrawMsg.textContent = '';
+  withdrawBtn.disabled = true;
+  withdrawAmountInput.disabled = true;
+  withdrawWalletInput.disabled = true;
+
+  withdrawPopupAmount.textContent = amount;
+  withdrawPopupUsername.textContent = username;
+  withdrawPopupWallet.textContent = walletAddress;
+  withdrawPopup.style.display = 'block';
+
+  // Jalankan countdown
+  let timeLeft = withdrawCountdownDuration;
+  withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
+  clearInterval(withdrawCountdownInterval);
+  withdrawCountdownInterval = setInterval(() => {
+    timeLeft--;
+    withdrawCountdownTimer.textContent = `Time left: ${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(withdrawCountdownInterval);
+      resetWithdrawUI();
+      withdrawMsg.textContent = 'Withdraw request timed out.';
+    }
+  }, 1000);
+
+  // Set event handler hanya sekali
+  confirmWithdrawBtn.onclick = async () => {
+    clearInterval(withdrawCountdownInterval);
+    withdrawPopup.style.display = 'none';
+
+    try {
+      const updatedPiBalance = piBalance - amount;
+      await update(playerRef, { piBalance: updatedPiBalance });
+
+      const withdrawHistoryRef = ref(database, `withdrawHistory/${encodedEmail}`);
+      await push(withdrawHistoryRef, {
+        amount,
+        walletAddress,
+        timestamp: Date.now(),
+        status: 'pending'
+      });
+
+      withdrawMsg.textContent = 'Withdraw request submitted. Awaiting confirmation...';
+      console.log('Withdraw request submitted:', { amount, walletAddress });
+    } catch (error) {
+      console.error('Error submitting withdraw:', error.message);
+      withdrawMsg.textContent = 'Error submitting withdraw: ' + error.message;
+    } finally {
+      resetWithdrawUI();
+    }
+  };
+
+  cancelWithdrawBtn.onclick = () => {
+    clearInterval(withdrawCountdownInterval);
+    resetWithdrawUI();
+    withdrawMsg.textContent = 'Withdraw request cancelled.';
+  };
+});

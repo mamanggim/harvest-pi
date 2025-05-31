@@ -300,35 +300,6 @@ function toggleFullScreen() {
     playMenuSound();
 }
 
-// Fungsi untuk switch antara login dan register screen
-function switchToLogin() {
-    const loginScreenElement = document.getElementById('login-screen');
-    const registerScreenElement = document.getElementById('register-screen');
-    if (loginScreenElement && registerScreenElement) {
-        loginScreenElement.style.display = 'flex';
-        loginScreenElement.classList.add('active');
-        registerScreenElement.style.display = 'none';
-        registerScreenElement.classList.remove('active');
-        console.log('switchToLogin called, login screen displayed');
-    } else {
-        console.error('Login or Register screen element not found');
-    }
-}
-
-function switchToRegister() {
-    const loginScreenElement = document.getElementById('login-screen');
-    const registerScreenElement = document.getElementById('register-screen');
-    if (loginScreenElement && registerScreenElement) {
-        loginScreenElement.style.display = 'none';
-        loginScreenElement.classList.remove('active');
-        registerScreenElement.style.display = 'flex';
-        registerScreenElement.classList.add('active');
-        console.log('switchToRegister called, register screen displayed');
-    } else {
-        console.error('Login or Register screen element not found');
-    }
-}
-
 // ========================
 // UI Elements
 // ========================

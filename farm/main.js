@@ -300,18 +300,6 @@ function toggleFullScreen() {
     playMenuSound();
 }
 
-// Deklarasi variabel (jangan hapus)
-const registerEmailBtn = document.getElementById('register-email-btn');
-const registerEmailInput = document.getElementById('register-email-input');
-const registerPasswordInput = document.getElementById('register-password-input');
-const registerError = document.getElementById('register-error');
-const registerUsernameInput = document.getElementById('register-username-input');
-const loginEmailBtn = document.getElementById('login-email-btn');
-const emailInput = document.getElementById('email-input');
-const passwordInput = document.getElementById('password-input');
-const loginError = document.getElementById('login-error');
-const verifyEmailMsg = document.getElementById('verify-status');
-
 // Fungsi untuk switch antara login dan register screen
 function switchToLogin() {
     const loginScreenElement = document.getElementById('login-screen');

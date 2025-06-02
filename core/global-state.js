@@ -1,1 +1,23 @@
+export let isDataLoaded = false;
+export let piInitialized = false;
+export let referralEarnings = 0;
+export let farmCoins = 0;
+export let piBalance = 0;
+export let water = 0;
+export let level = 1;
+export let xp = 0;
+export let inventory = [];
+export let vegetables = [];
+export let langData = {};
+export let currentLang = 'en';
+export let farmPlots = [];
+export let harvestCount = 0;
+export let achievements = { harvest: false, coins: false };
+export let username = null;
+export let lastClaim = null;
+export let claimedToday = false;
+export let isClaiming = false;
+export let isAudioPlaying = false;
 
+export const plotCount = 4;
+export const piToFarmRate = 1000000;

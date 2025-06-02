@@ -1,4 +1,3 @@
-// admin.js
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getDatabase, ref, get, update, onValue, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
@@ -8,7 +7,7 @@ const firebaseConfig = {
   authDomain: "harvest-pi.firebaseapp.com",
   databaseURL: "https://harvest-pi-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "harvest-pi",
-  storageBucket: "harvest-pi.firebasestorage.app",
+  storageBucket: "harvest-pi.appspot.com",
   messagingSenderId: "650006770674",
   appId: "1:650006770674:web:bf6291198fc0a02be7b16b",
   measurementId: "G-HV6J072QQZ"
@@ -19,15 +18,15 @@ const auth = getAuth(app);
 const database = getDatabase(app);
 
 function encodeEmail(email) {
-  return email.replace('@', '_at_').replace('.', '_dot_');
+  return email.replace('@', '_at_').replace(/\./g, '_dot_');
 }
 
 function showUserNotification(message) {
-  const notification = document.getElementById('notification');
-  if (notification) {
-    notification.textContent = message;
-    notification.style.display = 'block';
-    setTimeout(() => (notification.style.display = 'none'), 5000);
+  const el = document.getElementById('notification');
+  if (el) {
+    el.textContent = message;
+    el.style.display = 'block';
+    setTimeout(() => (el.style.display = 'none'), 5000);
   }
 }
 
@@ -35,12 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let isLoggingOut = false;
   let lastNotificationTime = 0;
 
-  // Auth Check
+  // === Auth check ===
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       sessionStorage.setItem('adminRedirect', 'true');
-      window.location.href = '/index.html';
-      return;
+      return window.location.href = '/index.html';
     }
 
     const email = user.email;
@@ -48,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const roleSnap = await get(ref(database, `players/${encodedEmail}/role`));
       const role = roleSnap.exists() ? roleSnap.val() : null;
-      console.log("Role ditemukan:", role);
 
       if (role !== 'admin') {
         showUserNotification('Access denied. Admins only.');
@@ -64,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Logout
+  // === Logout button ===
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
@@ -82,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Listener transaksi
+  // === Transaksi Listener ===
   onValue(ref(database, 'transactions'), (snapshot) => {
     const transactions = snapshot.val();
     const depositItems = document.getElementById('deposit-items');
@@ -90,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const approvedToday = document.getElementById('approved-today');
 
     if (!depositItems || !pendingCount || !approvedToday) return;
+
     depositItems.innerHTML = '';
     let pending = 0;
     let approvedTodayCount = 0;
@@ -106,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
           lastNotificationTime = Date.now();
         }
       }
+
       if (t.status === 'approved' && new Date(t.timestamp).toISOString().split('T')[0] === today) {
         approvedTodayCount++;
       }
@@ -150,8 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
     pendingCount.textContent = pending;
     approvedToday.textContent = approvedTodayCount;
 
-    const buttons = depositItems.querySelectorAll('.game-button');
-    buttons.forEach((btn) => {
+    // Button handlers
+    depositItems.querySelectorAll('.game-button').forEach(btn => {
       const id = btn.dataset.id;
       const action = btn.dataset.action;
       if (action === 'approve') btn.onclick = () => handleApprove(id);
@@ -163,8 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refTrans = ref(database, `transactions/${id}`);
     const snap = await get(refTrans);
     const trans = snap.val();
-    const email = trans.email;
-    const encodedEmail = encodeEmail(email);
+    const encodedEmail = encodeEmail(trans.email);
     const userRef = ref(database, `players/${encodedEmail}`);
     const userSnap = await get(userRef);
     const user = userSnap.val();
@@ -172,7 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (trans.type === 'deposit') {
       await update(userRef, { piBalance: (user.piBalance || 0) + trans.amount });
     } else if (trans.type === 'withdraw') {
-      if ((user.piBalance || 0) < trans.amount) return showUserNotification('Not enough balance.');
+      if ((user.piBalance || 0) < trans.amount) {
+        return showUserNotification('Not enough balance.');
+      }
       await update(userRef, { piBalance: user.piBalance - trans.amount });
     }
 
@@ -182,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
       timestamp: Date.now(),
       read: false
     });
+
     showUserNotification(`${trans.type} approved.`);
   }
 
@@ -189,8 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refTrans = ref(database, `transactions/${id}`);
     const snap = await get(refTrans);
     const trans = snap.val();
-    const email = trans.email;
-    const encodedEmail = encodeEmail(email);
+    const encodedEmail = encodeEmail(trans.email);
 
     await update(refTrans, { status: 'rejected', processedAt: Date.now() });
     await set(ref(database, `notifications/${encodedEmail}/${id}`), {
@@ -198,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
       timestamp: Date.now(),
       read: false
     });
+
     showUserNotification(`${trans.type} rejected.`);
   }
 });

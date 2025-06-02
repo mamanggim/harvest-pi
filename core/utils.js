@@ -1,12 +1,23 @@
-export const encodeEmail = (email) =>
-  email.replace('@', '_at_').replace(/\./g, '_dot_');
-
-export const resolveUserKey = (role, email, username) =>
-  role === 'admin' ? encodeEmail(email) : username;
-
 import { showNotification } from '/ui/notification.js';
 
-export function copyToClipboard(text, button = null) {
+/**
+ * Encode email agar bisa dijadikan key Firebase
+ */
+function encodeEmail(email) {
+  return email.replace('@', '_at_').replace(/\./g, '_dot_');
+}
+
+/**
+ * Tentukan userKey berdasarkan role
+ */
+function resolveUserKey(role, email, username) {
+  return role === 'admin' ? encodeEmail(email) : username;
+}
+
+/**
+ * Salin teks ke clipboard, dengan efek tombol & notifikasi
+ */
+function copyToClipboard(text, button = null) {
   navigator.clipboard.writeText(text).then(() => {
     if (button) {
       const originalText = button.textContent;
@@ -19,3 +30,9 @@ export function copyToClipboard(text, button = null) {
     showNotification('Copy failed.');
   });
 }
+
+export {
+  encodeEmail,
+  resolveUserKey,
+  copyToClipboard
+};

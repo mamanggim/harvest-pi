@@ -1,13 +1,21 @@
-// Import modul awal
 import { initAudioControls, updateVolumes } from '/ui/volume-control.js';
 import { loadData } from '/core/loader.js';
+import { switchToLogin } from '/auth/login.js';
 
-// Inisialisasi audio
-initAudioControls();
-updateVolumes();
+async function initializeGame() {
+  try {
+    initAudioControls();
+    updateVolumes();
+    await loadData();
+    switchToLogin(); // tampilkan login screen
+  } catch (e) {
+    console.error('Init error:', e.message);
+  }
+}
 
-// Load data awal (bahasa & tanaman)
-await loadData(); // pastikan ini dipanggil dalam async function seperti initializeGame()
+document.addEventListener('DOMContentLoaded', () => {
+  initializeGame();
+});
 
 
 

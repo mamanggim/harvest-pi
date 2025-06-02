@@ -20,6 +20,10 @@ export async function initializeGame() {
   try {
     await loadData();
     console.log('Game initialized, data loaded');
+    
+    // ✅ tampilkan start screen
+    document.getElementById('loading-screen')?.classList.remove('active');
+    document.getElementById('start-screen')?.style.display = 'flex';
   } catch (err) {
     console.error('Failed to initialize game:', err.message);
     showNotification('Failed to load game data.');
@@ -27,18 +31,4 @@ export async function initializeGame() {
 
   playBgMusic();
   playBgVoice();
-
-  // ⬇️ Tambahan untuk pastikan loading hilang dan layar muncul
-  const loadingScreen = document.getElementById('loading-screen');
-  const loginScreen = document.getElementById('login-screen');
-  const startScreen = document.getElementById('start-screen');
-
-  if (loadingScreen) loadingScreen.classList.remove('active');
-
-  // Tampilkan screen sesuai apakah user login atau belum
-  if (username && startScreen) {
-    startScreen.style.display = 'flex';
-  } else if (!username && loginScreen) {
-    loginScreen.style.display = 'flex';
-  }
 }

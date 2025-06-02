@@ -1,13 +1,12 @@
 import { addSafeClickListener } from '/core/helpers.js';
-import { startGame } from './language.js';
-import { toggleLanguage } from './language.js';
+import { startGame, toggleLanguage } from './language.js';
 import { showSettings, hideSettings } from './fullscreen.js';
 import { playMenuSound } from '/core/audio.js';
 import { handleExchange, updateExchangeResult } from '/features/exchange.js';
 import { switchTab, updateWallet } from './tab-switcher.js';
 import { renderShop } from '/features/shop.js';
 import { renderSellSection } from '/features/sell.js';
-import { initializeGame } from '/farm/main.js'; // optional circular
+import { updateVolumes } from './volume-control.js'; // Tambahan: supaya slider langsung berefek
 
 export function setupGlobalEventHandlers() {
   const elementsWithHandlers = [
@@ -17,25 +16,38 @@ export function setupGlobalEventHandlers() {
     { id: 'settings-btn', handler: showSettings },
     { id: 'game-settings-btn', handler: showSettings },
     { id: 'close-settings', handler: hideSettings },
-    { id: 'reward-modal-close', handler: () => {
-      const rewardModal = document.getElementById('reward-modal');
-      if (rewardModal) rewardModal.style.display = 'none';
-      playMenuSound();
-    }},
-    { id: 'fullscreen-toggle', handler: () => {
-      document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
-      playMenuSound();
-    }},
-    { id: 'exit-game-btn', handler: () => {
-      const bgMusic = document.getElementById('bg-music');
-      const bgVoice = document.getElementById('bg-voice');
-      if (bgMusic) bgMusic.pause();
-      if (bgVoice) bgVoice.pause();
-      window.location.reload();
-    }},
+    {
+      id: 'reward-modal-close',
+      handler: () => {
+        const rewardModal = document.getElementById('reward-modal');
+        if (rewardModal) rewardModal.style.display = 'none';
+        playMenuSound();
+      }
+    },
+    {
+      id: 'fullscreen-toggle',
+      handler: () => {
+        document.fullscreenElement
+          ? document.exitFullscreen()
+          : document.documentElement.requestFullscreen();
+        playMenuSound();
+      }
+    },
+    {
+      id: 'exit-game-btn',
+      handler: () => {
+        const bgMusic = document.getElementById('bg-music');
+        const bgVoice = document.getElementById('bg-voice');
+        if (bgMusic) bgMusic.pause();
+        if (bgVoice) bgVoice.pause();
+        window.location.reload(); // bisa diganti confirm dulu kalau mau
+      }
+    },
     { id: 'exchange-btn', handler: handleExchange },
-    { id: 'login-email-btn', handler: () => {} },
-    { id: 'register-email-btn', handler: () => {} },
+
+    // Login/Register handled in their own modules
+    // { id: 'login-email-btn', handler: () => {} },
+    // { id: 'register-email-btn', handler: () => {} },
   ];
 
   elementsWithHandlers.forEach(({ id, handler }) => {
@@ -43,11 +55,13 @@ export function setupGlobalEventHandlers() {
     if (el) addSafeClickListener(el, handler);
   });
 
+  // Volume sliders
   const musicSlider = document.getElementById('music-volume');
   if (musicSlider) {
     musicSlider.value = localStorage.getItem('musicVolume') || 50;
     musicSlider.addEventListener('input', () => {
       localStorage.setItem('musicVolume', musicSlider.value);
+      updateVolumes(); // update volume live
     });
   }
 
@@ -56,15 +70,18 @@ export function setupGlobalEventHandlers() {
     voiceSlider.value = localStorage.getItem('voiceVolume') || 50;
     voiceSlider.addEventListener('input', () => {
       localStorage.setItem('voiceVolume', voiceSlider.value);
+      updateVolumes(); // update volume live
     });
   }
 
+  // Exchange input
   const exchangeInput = document.getElementById('exchange-amount');
   if (exchangeInput) exchangeInput.addEventListener('input', updateExchangeResult);
 
   const directionSelect = document.getElementById('exchange-direction');
   if (directionSelect) directionSelect.addEventListener('change', updateExchangeResult);
 
+  // Tab switching
   const tabButtons = document.querySelectorAll('.tab-btn');
   tabButtons.forEach(btn => {
     addSafeClickListener(btn, () => {
@@ -73,6 +90,7 @@ export function setupGlobalEventHandlers() {
     });
   });
 
+  // Shop tab buy/sell toggle
   const buyTab = document.getElementById('shop-buy-tab');
   const sellTab = document.getElementById('shop-sell-tab');
   const shopContent = document.getElementById('shop-content');
@@ -82,8 +100,8 @@ export function setupGlobalEventHandlers() {
     addSafeClickListener(buyTab, () => {
       buyTab.classList.add('active');
       sellTab?.classList.remove('active');
-      shopContent?.style && (shopContent.style.display = 'block');
-      sellSection?.style && (sellSection.style.display = 'none');
+      if (shopContent) shopContent.style.display = 'block';
+      if (sellSection) sellSection.style.display = 'none';
       renderShop();
       playMenuSound();
     });
@@ -93,8 +111,8 @@ export function setupGlobalEventHandlers() {
     addSafeClickListener(sellTab, () => {
       sellTab.classList.add('active');
       buyTab?.classList.remove('active');
-      shopContent?.style && (shopContent.style.display = 'none');
-      sellSection?.style && (sellSection.style.display = 'block');
+      if (shopContent) shopContent.style.display = 'none';
+      if (sellSection) sellSection.style.display = 'block';
       renderSellSection();
       playMenuSound();
     });

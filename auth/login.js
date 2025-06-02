@@ -1,25 +1,17 @@
-const loginEmailBtn = document.getElementById('login-email-btn');
-const emailInput = document.getElementById('email-input');
-const passwordInput = document.getElementById('password-input');
-const loginError = document.getElementById('login-error');
-const verifyEmailMsg = document.getElementById('verify-status');
-
+// Import eksternal
 import {
   signInWithEmailAndPassword,
   sendEmailVerification
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
-import { setupRealtimeNotifications } from '/core/realtime.js';
-setupRealtimeNotifications(userKey);
-
 import { auth, database, ref, get, update, onValue } from '/firebase/firebase-config.js';
-import { addSafeClickListener } from '/core/utils.js';
+import { addSafeClickListener, encodeEmail, resolveUserKey } from '/core/utils.js';
 import { showNotification } from '/ui/notification.js';
 import { loadPlayerData } from '/core/user-loader.js';
 import { updateReferralLink } from '/auth/referral.js';
-import { encodeEmail, resolveUserKey } from '/core/utils.js';
+import { setupRealtimeNotifications } from '/core/realtime.js';
 
-// Elemen DOM
+// Element DOM
 const loginEmailBtn = document.getElementById('login-email-btn');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
@@ -74,23 +66,13 @@ if (loginEmailBtn) {
       localStorage.setItem('encodedEmail', encodedEmail);
       localStorage.setItem('userKey', userKey);
 
-      // Notifikasi realtime
-      const notifRef = ref(database, `notifications/${userKey}`);
-      onValue(notifRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          Object.entries(data).forEach(([id, notif]) => {
-            if (!notif.read) {
-              showNotification(notif.message);
-              update(ref(database, `notifications/${userKey}/${id}`), { read: true });
-            }
-          });
-        }
-      });
+      // Setup notifikasi realtime
+      setupRealtimeNotifications(userKey);
 
+      // Notifikasi masuk
       showNotification(`Logged in as ${email}`);
 
-      // Redirect
+      // Redirect berdasarkan role
       if (role === 'admin') {
         window.location.href = '/admin/admin.html';
       } else {
@@ -98,6 +80,7 @@ if (loginEmailBtn) {
         document.getElementById('start-screen').style.display = 'flex';
       }
 
+      // Load data player dan referral link
       loadPlayerData(userKey);
       updateReferralLink();
 

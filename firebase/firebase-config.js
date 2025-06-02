@@ -1,7 +1,10 @@
-// firebase-config.js
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase, ref, onValue, set, update, get, push } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'; // Tambah semua fungsi
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'; // Tambah fungsi auth
+import { 
+  getDatabase, ref, onValue, set, update, get, push 
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { 
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification 
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getMessaging } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js';
 
 // Konfigurasi Firebase
@@ -16,26 +19,24 @@ const firebaseConfig = {
   measurementId: "G-HV6J072QQZ"
 };
 
-// Inisialisasi Firebase App
+// Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
-
-// Inisialisasi Database, Auth, dan Messaging
 const database = getDatabase(app);
 const auth = getAuth(app);
 const messaging = getMessaging(app);
 
-// Export modul
-export { 
-  database, 
-  auth, 
-  messaging, 
-  ref, 
-  onValue, 
-  set, 
-  update, 
-  get, 
-  push, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  sendEmailVerification 
+// Export
+export {
+  database,
+  auth,
+  messaging,
+  ref,
+  onValue,
+  set,
+  update,
+  get,
+  push,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification
 };

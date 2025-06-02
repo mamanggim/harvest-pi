@@ -1,7 +1,23 @@
-import { ref, onValue, set } from '/firebase/firebase-config.js';
+import { database, ref, onValue, set } from '/firebase/firebase-config.js';
+import { showNotification } from '/ui/notification.js';
 import { updateWallet } from '/ui/tab-switcher.js';
-import { getUsername, setFarmCoins, setPiBalance } from './global-state.js';
 
+import {
+  getUsername,
+  setFarmCoins, setPiBalance, setWater, setLevel, setXp,
+  setInventory, setFarmPlots, setHarvestCount, setAchievements,
+  setReferralEarnings, setIsDataLoaded
+} from './global-state.js';
+
+import { initializePlots } from '/features/farm.js';
+import { renderShop } from '/features/shop.js';
+import { renderInventory } from '/features/inventory.js';
+import { renderSellSection } from '/features/sell.js';
+import { renderAchievements, checkDailyReward } from '/features/achievements.js';
+
+/**
+ * Load hanya balance (pi + farm coins) dari Firebase dan update UI
+ */
 export function loadUserBalances() {
   const username = getUsername();
   if (!username) return;
@@ -15,19 +31,9 @@ export function loadUserBalances() {
   });
 }
 
-import {
-  setFarmCoins, setPiBalance, setWater, setLevel, setXp,
-  setInventory, setFarmPlots, setHarvestCount, setAchievements,
-  setReferralEarnings, setIsDataLoaded
-} from './global-state.js';
-import { updateWallet } from '/ui/tab-switcher.js';
-import { initializePlots } from '/features/farm.js';
-import { renderShop } from '/features/shop.js';
-import { renderInventory } from '/features/inventory.js';
-import { renderSellSection } from '/features/sell.js';
-import { renderAchievements, checkDailyReward } from '/features/achievements.js';
-import { showNotification } from '/ui/notification.js';
-
+/**
+ * Load seluruh data pemain dan update global state + UI
+ */
 export function loadPlayerData(userKey) {
   if (!userKey) {
     showNotification('Login required.');
@@ -38,6 +44,7 @@ export function loadPlayerData(userKey) {
   onValue(playerRef, (snapshot) => {
     const data = snapshot.val();
 
+    // Inisialisasi data baru jika kosong
     if (!data) {
       const role = localStorage.getItem('role');
       if (role === 'admin') {
@@ -73,7 +80,7 @@ export function loadPlayerData(userKey) {
       return;
     }
 
-    // Set ke global state
+    // Assign ke global state
     setFarmCoins(data.farmCoins || 0);
     setPiBalance(data.piBalance || 0);
     setWater(data.water || 0);
@@ -86,7 +93,6 @@ export function loadPlayerData(userKey) {
     setReferralEarnings(data.referralEarnings || 0);
     setIsDataLoaded(true);
 
-    // Update tampilan
     updateWallet();
     initializePlots();
     renderShop();
@@ -95,6 +101,6 @@ export function loadPlayerData(userKey) {
     renderAchievements();
     checkDailyReward();
 
-    console.log('User data loaded for:', userKey);
+    console.log('✅ User data loaded for:', userKey);
   });
 }

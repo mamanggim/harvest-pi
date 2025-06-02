@@ -1,49 +1,58 @@
+import { ref, get, update } from '/firebase/firebase-config.js';
 import { showNotification } from '/ui/notification.js';
 import { copyToClipboard } from '/core/utils.js';
-import { ref, get, update } from '/firebase/firebase-config.js';
-import { getUsername } from '/core/global-state.js';
 
-// Buat link referral dari username
+// === Generate Link ===
 export function generateReferralLink(username) {
   return `https://www.harvestpi.biz.id/?ref=${username}`;
 }
 
-// Tampilkan tombol salin link referral
+// === Inisialisasi Handler Copy & Stat ===
 export function initReferralHandler() {
   const copyBtn = document.getElementById('copy-link-btn');
   const linkEl = document.getElementById('referral-link');
 
-  if (!copyBtn || !linkEl) return;
+  if (copyBtn && linkEl) {
+    copyBtn.addEventListener('click', () => {
+      if (linkEl.textContent) {
+        copyToClipboard(linkEl.textContent);
+        showNotification('Referral link copied!');
+      } else {
+        console.error('Referral link empty or missing');
+      }
+    });
+  }
 
-  copyBtn.addEventListener('click', () => {
-    if (linkEl.textContent) {
-      copyToClipboard(linkEl.textContent);
-      showNotification('Referral link copied!');
-    } else {
-      console.error('Referral link empty or missing');
-    }
-  });
-
-  loadReferralStats();
+  showReferralStats(); // Panggil stat saat inisialisasi
 }
 
-// Ambil total referral & bonus referral dari DB
-async function loadReferralStats() {
-  const username = getUsername();
-  if (!username) return;
+// === Menampilkan Statistik Referral ===
+async function showReferralStats() {
+  const username = localStorage.getItem('username');
+  const encodedEmail = localStorage.getItem('encodedEmail');
+  if (!username || !encodedEmail) return;
 
   const playerRef = ref(database, `players/${username}`);
+  const playersRef = ref(database, 'players');
+
   try {
-    const snapshot = await get(playerRef);
-    const data = snapshot.val() || {};
+    const [playerSnap, allPlayersSnap] = await Promise.all([
+      get(playerRef),
+      get(playersRef)
+    ]);
 
-    const referralCountEl = document.getElementById('referral-count');
-    const referralEarningsEl = document.getElementById('referral-earnings');
+    const playerData = playerSnap.val() || {};
+    const allPlayers = allPlayersSnap.val() || {};
 
-    if (referralCountEl) referralCountEl.textContent = data.referralCount || 0;
-    if (referralEarningsEl) referralEarningsEl.textContent = `${data.referralEarnings || 0} PI`;
+    const referralCount = Object.values(allPlayers).filter(p => p.referrer === username).length;
+    const referralEarnings = parseFloat(playerData.referralEarnings || 0).toFixed(6);
 
-  } catch (err) {
-    console.error('Failed to load referral stats:', err.message);
+    const countEl = document.getElementById('referral-count');
+    const earningsEl = document.getElementById('referral-earnings');
+
+    if (countEl) countEl.textContent = `Total Referrals: ${referralCount}`;
+    if (earningsEl) earningsEl.textContent = `Referral Bonus: ${referralEarnings} PI`;
+  } catch (error) {
+    console.error('Failed to fetch referral stats:', error.message);
   }
 }

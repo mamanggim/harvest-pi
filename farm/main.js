@@ -1,3 +1,18 @@
+// Import modul awal
+import { initAudioControls, updateVolumes } from '/ui/volume-control.js';
+import { loadData } from '/core/loader.js';
+
+// Inisialisasi audio
+initAudioControls();
+updateVolumes();
+
+// Load data awal (bahasa & tanaman)
+await loadData(); // pastikan ini dipanggil dalam async function seperti initializeGame()
+
+
+
+
+
 // Ambil database dan auth dari firebase-config.js
 import {
   auth, database, messaging,

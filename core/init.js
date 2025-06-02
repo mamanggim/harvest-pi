@@ -1,4 +1,4 @@
-import { getCurrentLang, setCurrentLang, setUsername, getUsername } from './global-state.js';
+import { getLang, setLang, setUsername, getUsername } from './global-state.js';
 import { loadPlayerData, updateReferralLink } from './user-loader.js';
 import { loadData } from './loader.js';
 import { checkDailyReward } from '/features/reward.js';
@@ -7,7 +7,7 @@ import { showNotification } from '/ui/notification.js';
 
 export async function initializeGame() {
   const savedLang = localStorage.getItem('lang');
-  if (savedLang) setCurrentLang(savedLang);
+  if (savedLang) setLang(savedLang);
 
   const username = localStorage.getItem('username');
   if (username) {

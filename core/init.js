@@ -27,4 +27,18 @@ export async function initializeGame() {
 
   playBgMusic();
   playBgVoice();
+
+  // ⬇️ Tambahan untuk pastikan loading hilang dan layar muncul
+  const loadingScreen = document.getElementById('loading-screen');
+  const loginScreen = document.getElementById('login-screen');
+  const startScreen = document.getElementById('start-screen');
+
+  if (loadingScreen) loadingScreen.classList.remove('active');
+
+  // Tampilkan screen sesuai apakah user login atau belum
+  if (username && startScreen) {
+    startScreen.style.display = 'flex';
+  } else if (!username && loginScreen) {
+    loginScreen.style.display = 'flex';
+  }
 }

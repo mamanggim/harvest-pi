@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/admin/admin-style.css?v=6">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/admin/admin-styles.css?v=6" />
 </head>
 <body>
   <div id="admin-dashboard">
     <h1 class="neon-title">Admin Dashboard</h1>
     <button id="logout-btn" class="game-button">Logout</button>
+
     <div id="summary">
       <p>Total Pending: <span id="pending-count">0</span></p>
       <p>Total Approved Today: <span id="approved-today">0</span></p>
     </div>
+
     <div class="table-container">
       <table id="deposit-list">
         <thead>
@@ -31,8 +34,10 @@
         <tbody id="deposit-items"></tbody>
       </table>
     </div>
+
     <div id="notification" style="display: none;"></div>
   </div>
+
   <script type="module" src="./admin.js"></script>
 </body>
 </html>

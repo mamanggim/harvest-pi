@@ -4,8 +4,11 @@ import {
   getFarmCoins,
   setFarmCoins,
   getXP,
-  setXP
+  setXP,
+  getLangData,
+  getCurrentLang
 } from '/core/global-state.js';
+
 import { savePlayerData } from '/core/storage.js';
 import { updateWallet } from '/ui/tab-switcher.js';
 import { renderInventory } from './inventory.js';
@@ -27,11 +30,11 @@ export function renderSellSection() {
 
   const inventory = getInventory();
   const groupedHarvest = {};
-  inventory.forEach((item, index) => {
+  inventory.forEach((item) => {
     if (item?.type === 'harvest') {
       const vegId = item.vegetable.id;
       if (!groupedHarvest[vegId]) {
-        groupedHarvest[vegId] = { ...item, index };
+        groupedHarvest[vegId] = { ...item };
       } else {
         groupedHarvest[vegId].quantity += item.quantity;
       }
@@ -55,15 +58,19 @@ export function renderSellSection() {
       <h3>${item.vegetable.name[getCurrentLang()]}</h3>
       <p>${lang.quantityLabel || 'Quantity'}: ${item.quantity}</p>
       <p>${lang.sellPriceLabel || 'Sell Price'}: ${sellPrice} Farm Coins</p>
-      <button class="sell-btn" data-index="${item.index}">${lang.sellLabel || 'Sell'}</button>
+      <button class="sell-btn" data-id="${item.vegetable.id}">${lang.sellLabel || 'Sell'}</button>
     `;
     sellContentElement.appendChild(sellDiv);
   });
 
   sellContentElement.querySelectorAll('.sell-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const index = parseInt(btn.getAttribute('data-index'));
-      if (!isNaN(index)) sellItem(index);
+      const vegId = btn.getAttribute('data-id');
+      const inventory = getInventory();
+      const index = inventory.findIndex(item =>
+        item.type === 'harvest' && item.vegetable?.id === vegId
+      );
+      if (index !== -1) sellItem(index);
     });
   });
 }
@@ -80,7 +87,7 @@ export function sellItem(index) {
   setFarmCoins(getFarmCoins() + totalGain);
   setXP(getXP() + 10);
 
-  const btnElement = document.querySelector(`.sell-btn[data-index="${index}"]`);
+  const btnElement = document.querySelector(`.sell-btn[data-id="${item.vegetable.id}"]`);
   if (btnElement) {
     showTransactionAnimation(`+${totalGain}`, true, btnElement);
   }

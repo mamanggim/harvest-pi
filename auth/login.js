@@ -9,6 +9,9 @@ import {
   sendEmailVerification
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
+import { setupRealtimeNotifications } from '/core/realtime.js';
+setupRealtimeNotifications(userKey);
+
 import { auth, database, ref, get, update, onValue } from '/firebase/firebase-config.js';
 import { addSafeClickListener } from '/core/utils.js';
 import { showNotification } from '/ui/notification.js';

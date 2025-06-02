@@ -1,4 +1,10 @@
-import { getFarmCoins, getPiBalance, getWater, getLevel, getXp } from '/core/global-state.js';
+import {
+  getFarmCoins,
+  getPiBalance,
+  getWater,
+  getLevel,
+  getXp
+} from '/core/global-state.js';
 import { savePlayerData } from '/core/saver.js';
 
 export function updateWallet() {
@@ -8,21 +14,29 @@ export function updateWallet() {
   const level = getLevel();
   const xp = getXp();
 
-  const farmCoinsElement = document.getElementById('farm-coins');
-  const piCoinsElement = document.getElementById('pi-coins');
-  const waterElement = document.getElementById('water');
-  const levelElement = document.getElementById('level');
-  const xpFillElement = document.getElementById('xp-fill');
-  const farmCoinBalanceElement = document.getElementById('farm-coin-balance');
-  const piCoinBalanceElement = document.getElementById('pi-coin-balance');
+  const xpNeeded = level * 100;
+  const xpProgress = Math.min(100, (xp / xpNeeded) * 100);
 
-  if (farmCoinsElement) farmCoinsElement.textContent = `${farmCoins} Farm Coins`;
-  if (piCoinsElement) piCoinsElement.textContent = `${piBalance.toFixed(6)} PI`;
-  if (waterElement) waterElement.textContent = `${water} Water`;
-  if (levelElement) levelElement.textContent = `Level: ${level} | XP: ${xp}`;
-  if (xpFillElement) xpFillElement.style.width = `${(xp / (level * 100)) * 100}%`;
-  if (farmCoinBalanceElement) farmCoinBalanceElement.textContent = farmCoins;
-  if (piCoinBalanceElement) piCoinBalanceElement.textContent = piBalance.toFixed(6);
+  const updateText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
 
-  savePlayerData(); // Simpan otomatis
+  const updateValue = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+
+  updateText('farm-coins', `${farmCoins} Farm Coins`);
+  updateText('pi-coins', `${piBalance.toFixed(6)} PI`);
+  updateText('water', `${water} Water`);
+  updateText('level', `Level: ${level} | XP: ${xp}`);
+
+  const xpFill = document.getElementById('xp-fill');
+  if (xpFill) xpFill.style.width = `${xpProgress}%`;
+
+  updateValue('farm-coin-balance', farmCoins);
+  updateValue('pi-coin-balance', piBalance.toFixed(6));
+
+  savePlayerData();
 }

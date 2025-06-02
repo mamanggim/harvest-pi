@@ -5,7 +5,8 @@ export function initAudioControls() {
   const voiceSlider = document.getElementById('voice-volume');
 
   if (musicSlider) {
-    musicSlider.value = localStorage.getItem('musicVolume') ?? 50;
+    const savedMusic = localStorage.getItem('musicVolume') ?? '50';
+    musicSlider.value = savedMusic;
     musicSlider.addEventListener('input', () => {
       localStorage.setItem('musicVolume', musicSlider.value);
       updateVolumes();
@@ -13,24 +14,32 @@ export function initAudioControls() {
   }
 
   if (voiceSlider) {
-    voiceSlider.value = localStorage.getItem('voiceVolume') ?? 50;
+    const savedVoice = localStorage.getItem('voiceVolume') ?? '50';
+    voiceSlider.value = savedVoice;
     voiceSlider.addEventListener('input', () => {
       localStorage.setItem('voiceVolume', voiceSlider.value);
       updateVolumes();
     });
   }
+
+  // Update awal saat load
+  updateVolumes();
 }
 
 export function updateVolumes() {
-  const musicVol = Math.min(Math.max((parseFloat(localStorage.getItem('musicVolume')) || 50) / 100, 0), 1);
-  const voiceVol = Math.min(Math.max((parseFloat(localStorage.getItem('voiceVolume')) || 50) / 100, 0), 1);
+  const getVolume = (key, defaultVal = 50) =>
+    Math.min(Math.max((parseFloat(localStorage.getItem(key)) || defaultVal) / 100, 0), 1);
+
+  const musicVol = getVolume('musicVolume');
+  const voiceVol = getVolume('voiceVolume');
 
   if (audioElements.music) audioElements.music.volume = musicVol;
   if (audioElements.voice) audioElements.voice.volume = voiceVol;
 
-  ['harvesting', 'watering', 'planting', 'menu', 'buying', 'coin'].forEach(key => {
+  const sfxKeys = ['harvesting', 'watering', 'planting', 'menu', 'buying', 'coin'];
+  sfxKeys.forEach(key => {
     if (audioElements[key]) audioElements[key].volume = voiceVol;
   });
 
-  console.log('Updated Volumes:', { musicVol, voiceVol });
+  console.log('🔊 Volume Updated → Music:', musicVol, '| Voice:', voiceVol);
 }

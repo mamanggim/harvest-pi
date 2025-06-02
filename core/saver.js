@@ -5,13 +5,13 @@ import {
   getPiBalance,
   getWater,
   getLevel,
-  getXp,
+  getXP,
   getInventory,
   getFarmPlots,
   getHarvestCount,
   getAchievements,
   getLastClaim,
-  getClaimedToday
+  isClaimedToday
 } from './global-state.js';
 import { showNotification } from '/ui/notification.js';
 
@@ -26,13 +26,13 @@ export async function savePlayerData() {
     piBalance: getPiBalance(),
     water: getWater(),
     level: getLevel(),
-    xp: getXp(),
+    xp: getXP(),
     inventory: getInventory(),
     farmPlots: getFarmPlots(),
     harvestCount: getHarvestCount(),
     achievements: getAchievements(),
     lastClaim: getLastClaim(),
-    claimedToday: getClaimedToday()
+    claimedToday: isClaimedToday()
   };
 
   try {

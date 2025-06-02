@@ -18,7 +18,7 @@ const auth = getAuth(app);
 const database = getDatabase(app);
 
 function encodeEmail(email) {
-  return email.replace('@', '_at_').replace(/\./g, '_dot_');
+  return email.replace('@', '_at_').replace('.', '_dot_');
 }
 
 function showUserNotification(message) {

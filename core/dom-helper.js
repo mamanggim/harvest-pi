@@ -1,4 +1,6 @@
 export function addSafeClickListener(element, callback) {
+  if (!element) return;
+
   let isLocked = false;
   const handler = (e) => {
     if (isLocked) return;

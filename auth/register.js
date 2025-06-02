@@ -1,17 +1,12 @@
-const registerEmailBtn = document.getElementById('register-email-btn');
-const registerEmailInput = document.getElementById('register-email-input');
-const registerPasswordInput = document.getElementById('register-password-input');
-const registerUsernameInput = document.getElementById('register-username-input');
-const registerError = document.getElementById('register-error');
-
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
-import { ref, set, get } from '/firebase/firebase-config.js';
+import { auth, database, ref, set, get } from '/firebase/firebase-config.js';
 import { showNotification } from '/ui/notification.js';
-import { switchToLogin } from './login.js';
+import { addSafeClickListener } from '/core/utils.js';
+import { switchToLogin } from '/auth/session.js'; // gunakan session, bukan login.js
 
 export function initRegisterHandler() {
   const registerBtn = document.getElementById('register-email-btn');
@@ -22,7 +17,7 @@ export function initRegisterHandler() {
 
   if (!registerBtn) return;
 
-  registerBtn.addEventListener('click', async (e) => {
+  addSafeClickListener(registerBtn, async (e) => {
     e.preventDefault();
 
     const email = emailInput.value.trim();
@@ -38,18 +33,22 @@ export function initRegisterHandler() {
     }
 
     try {
+      // Normalisasi username
       const normalizedUsername = inputUsername.toLowerCase().replace(/[^a-z0-9]/g, '');
       if (normalizedUsername.length < 3) {
         throw new Error('Username must be at least 3 characters and only use letters/numbers.');
       }
 
+      // Cek duplikat username
       const playerRef = ref(database, `players/${normalizedUsername}`);
       const snapshot = await get(playerRef);
       if (snapshot.exists()) throw new Error('Username already taken.');
 
+      // Register ke Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Simpan data awal ke database
       await set(playerRef, {
         email,
         username: normalizedUsername,
@@ -70,16 +69,21 @@ export function initRegisterHandler() {
         referralEarnings: 0
       });
 
+      // Kirim verifikasi email
       await sendEmailVerification(user);
 
+      // Berhasil
       errorEl.style.display = 'block';
       errorEl.textContent = 'Registration successful! Please verify your email.';
       showNotification('Registration successful! Check your email for verification.');
 
+      // Reset input
       emailInput.value = '';
       passwordInput.value = '';
-      if (usernameInput) usernameInput.value = '';
+      usernameInput.value = '';
+
       switchToLogin();
+
     } catch (error) {
       errorEl.style.display = 'block';
       errorEl.textContent = `Registration failed: ${error.message}`;

@@ -20,6 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+// Di akhir main.js
+document.addEventListener('DOMContentLoaded', () => {
+  initializeGame();
+  setupGlobalEventHandlers(); // Import dari ui/event-bindings.js
+});
+
+
+
+
+
+
+
 
 // Ambil database dan auth dari firebase-config.js
 import {

@@ -1,27 +1,27 @@
-// Import eksternal
 import {
   signInWithEmailAndPassword,
   sendEmailVerification
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
-import { auth, database, ref, get, update, onValue } from '/firebase/firebase-config.js';
+import { auth, database, ref, get } from '/firebase/firebase-config.js';
 import { addSafeClickListener, encodeEmail, resolveUserKey } from '/core/utils.js';
 import { showNotification } from '/ui/notification.js';
 import { loadPlayerData } from '/core/user-loader.js';
 import { updateReferralLink } from '/auth/referral.js';
 import { setupRealtimeNotifications } from '/core/realtime.js';
 
-// Element DOM
 const loginEmailBtn = document.getElementById('login-email-btn');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
 const loginError = document.getElementById('login-error');
 const verifyEmailMsg = document.getElementById('verify-status');
 
-// Handler Login
 if (loginEmailBtn) {
   addSafeClickListener(loginEmailBtn, async (e) => {
     e.preventDefault();
+
+    loginError.style.display = 'none';
+    verifyEmailMsg.style.display = 'none';
 
     const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
@@ -46,7 +46,6 @@ if (loginEmailBtn) {
       const playersSnapshot = await get(ref(database, 'players'));
       const players = playersSnapshot.val() || {};
       const foundUsername = Object.keys(players).find(key => players[key].email === email);
-
       if (!foundUsername) throw new Error('User not found in players database.');
 
       const playerData = players[foundUsername];
@@ -59,20 +58,15 @@ if (loginEmailBtn) {
       const encodedEmail = encodeEmail(email);
       const userKey = resolveUserKey(role, email, foundUsername);
 
-      // Simpan ke localStorage
       localStorage.setItem('username', foundUsername);
       localStorage.setItem('email', email);
       localStorage.setItem('role', role);
       localStorage.setItem('encodedEmail', encodedEmail);
       localStorage.setItem('userKey', userKey);
 
-      // Setup notifikasi realtime
       setupRealtimeNotifications(userKey);
-
-      // Notifikasi masuk
       showNotification(`Logged in as ${email}`);
 
-      // Redirect berdasarkan role
       if (role === 'admin') {
         window.location.href = '/admin/admin.html';
       } else {
@@ -80,10 +74,8 @@ if (loginEmailBtn) {
         document.getElementById('start-screen').style.display = 'flex';
       }
 
-      // Load data player dan referral link
       loadPlayerData(userKey);
       updateReferralLink();
-
     } catch (error) {
       console.error('Login error:', error.message);
       loginError.textContent = error.message;

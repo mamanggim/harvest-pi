@@ -64,6 +64,25 @@ export function setupWithdrawFeature() {
 
     const playerData = playerSnapshot.val();
     const piBalance = playerData.piBalance || 0;
+    const totalDeposit = playerData.totalDeposit || 0;
+    const referralEarnings = playerData.referralEarnings || 0;
+    const farmCoins = playerData.farmCoins || 0;
+    const level = playerData.level || 1;
+
+    // === Syarat withdraw ===
+    const hasMinLevel = level > 10;
+    const hasMinFarmCoins = farmCoins >= 10000000;
+    const hasMinPiSource = totalDeposit >= 10 || referralEarnings >= 10;
+
+    if (!hasMinLevel || !hasMinFarmCoins || !hasMinPiSource) {
+      withdrawMsg.innerHTML = `
+        Withdraw locked. You need:<br>
+        - Level > 10<br>
+        - ≥ 10,000,000 Farm Coins<br>
+        - ≥ 10 PI from Deposit or Referral
+      `;
+      return;
+    }
 
     if (amount > piBalance) {
       withdrawMsg.textContent = 'Insufficient PI balance.';
@@ -76,6 +95,7 @@ export function setupWithdrawFeature() {
       return;
     }
 
+    // === Show popup ===
     withdrawMsg.textContent = '';
     withdrawBtn.disabled = true;
     withdrawAmountInput.disabled = true;

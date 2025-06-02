@@ -3,8 +3,13 @@ export function saveToLocal(key, value) {
 }
 
 export function loadFromLocal(key, defaultValue = null) {
-  const raw = localStorage.getItem(key);
-  return raw ? JSON.parse(raw) : defaultValue;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : defaultValue;
+  } catch (e) {
+    console.warn(`⚠️ Failed to parse localStorage key "${key}":`, e.message);
+    return defaultValue;
+  }
 }
 
 export function removeFromLocal(key) {

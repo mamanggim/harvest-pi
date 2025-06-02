@@ -4,7 +4,7 @@ import { showNotification } from '/ui/notification.js';
  * Encode email agar bisa dijadikan key Firebase
  */
 function encodeEmail(email) {
-  return email.replace('@', '_at_').replace(/\./g, '_dot_');
+  return email.replace('@', '_at_').replace('.', '_dot_'); // ✅ cocok dengan Firebase rules
 }
 
 /**

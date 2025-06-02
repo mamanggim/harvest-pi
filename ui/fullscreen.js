@@ -1,6 +1,6 @@
 import { playMenuSound } from '/core/audio.js';
-import { enterFullScreen, exitFullScreen } from './fullscreen-util.js'; // atau core/fullscreen-util.js kalau kamu pecah
 
+// === Tampilan Modal Settings ===
 export function showSettings() {
   const modal = document.getElementById('settings-modal');
   if (modal) {
@@ -17,6 +17,7 @@ export function hideSettings() {
   }
 }
 
+// === Toggle Fullscreen ===
 export function toggleFullScreen() {
   if (!document.fullscreenElement) {
     enterFullScreen();
@@ -26,42 +27,29 @@ export function toggleFullScreen() {
   playMenuSound();
 }
 
+// === Masuk Fullscreen ===
 export function enterFullScreen() {
   const elem = document.documentElement;
   if (elem.requestFullscreen) {
     elem.requestFullscreen();
-  } else if (elem.mozRequestFullScreen) {
+  } else if (elem.mozRequestFullScreen) { // Firefox
     elem.mozRequestFullScreen();
-  } else if (elem.webkitRequestFullscreen) {
+  } else if (elem.webkitRequestFullscreen) { // Chrome, Safari, Opera
     elem.webkitRequestFullscreen();
-  } else if (elem.msRequestFullscreen) {
+  } else if (elem.msRequestFullscreen) { // IE/Edge
     elem.msRequestFullscreen();
   }
 }
 
+// === Keluar Fullscreen ===
 export function exitFullScreen() {
   if (document.exitFullscreen) {
     document.exitFullscreen();
-  } else if (document.mozCancelFullScreen) {
+  } else if (document.mozCancelFullScreen) { // Firefox
     document.mozCancelFullScreen();
-  } else if (document.webkitExitFullscreen) {
+  } else if (document.webkitExitFullscreen) { // Chrome, Safari, Opera
     document.webkitExitFullscreen();
-  } else if (document.msExitFullscreen) {
+  } else if (document.msExitFullscreen) { // IE/Edge
     document.msExitFullscreen();
   }
-}
-
-export function enterFullScreen() {
-  const elem = document.documentElement;
-  if (elem.requestFullscreen) elem.requestFullscreen();
-  else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
-  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-}
-
-export function exitFullScreen() {
-  if (document.exitFullscreen) document.exitFullscreen();
-  else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-  else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  else if (document.msExitFullscreen) document.msExitFullscreen();
 }

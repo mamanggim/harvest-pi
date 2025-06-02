@@ -1,13 +1,14 @@
 import { initAudioControls, updateVolumes } from '/ui/volume-control.js';
 import { loadData } from '/core/loader.js';
-import { switchToLogin } from '/auth/login.js';
+import { switchToLogin } from '/auth/session.js'; // bukan login.js, karena ini logic UI session
+import { setupGlobalEventHandlers } from '/ui/event-bindings.js'; // kamu bikin nanti
 
 async function initializeGame() {
   try {
     initAudioControls();
     updateVolumes();
     await loadData();
-    switchToLogin(); // tampilkan login screen
+    switchToLogin(); // tampilkan login screen default
   } catch (e) {
     console.error('Init error:', e.message);
   }
@@ -15,15 +16,7 @@ async function initializeGame() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeGame();
-});
-
-
-
-
-// Di akhir main.js
-document.addEventListener('DOMContentLoaded', () => {
-  initializeGame();
-  setupGlobalEventHandlers(); // Import dari ui/event-bindings.js
+  setupGlobalEventHandlers(); // misalnya: tab switch, tombol setting, dll
 });
 
 

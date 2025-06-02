@@ -1,1 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referral Page - Harvest Pi</title>
+  <link rel="stylesheet" href="/referral/referral-styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Harvest Pi Referral Program</h1>
+      <p>Invite friends and earn rewards!</p>
+    </header>
 
+    <section class="referral-section">
+      <h2>Your Referral Link</h2>
+      <p>Share your referral link to earn referral bonuses!</p>
+      
+      <div id="referral-link-container">
+        <input id="referral-link" type="text" readonly>
+        <button id="copy-link-btn">Copy Link</button>
+      </div>
+
+      <div id="referral-stats">
+        <h3>Referral Stats</h3>
+        <p id="referral-count">Total Referrals: 0</p>
+        <p id="referral-earnings">Referral Bonus: 0.000000 PI</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>&copy; 2025 Harvest Pi. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script type="module" src="/referral/referral.js"></script>
+</body>
+</html>

@@ -10,26 +10,31 @@ export async function initializeGame() {
   const savedLang = localStorage.getItem('lang');
   if (savedLang) setLang(savedLang);
 
-  const username = localStorage.getItem('username');
-
   try {
-    await loadData(); // load lang + vegetables
+    await loadData(); // lang.json + vegetables.json
 
+    // Jangan muat data user kalau belum login
+    const username = localStorage.getItem('username');
     if (username) {
       setUsername(username);
-      await loadPlayerData(username); // tunggu data user
+      await loadPlayerData(username); // tunggu data player
       updateReferralLink();
       checkDailyReward();
+      setIsDataLoaded(true); // ✅ hanya aktif jika user login
     }
 
-    setIsDataLoaded(true); // penting untuk start screen
-
-    // ✅ Pindah dari loading ke start
+    // Pindah dari loading ke login atau start
     const loadingScreen = document.getElementById('loading-screen');
     const startScreen = document.getElementById('start-screen');
+    const loginScreen = document.getElementById('login-screen');
 
     if (loadingScreen) loadingScreen.classList.remove('active');
-    if (startScreen) startScreen.style.display = 'flex';
+
+    if (username) {
+      if (startScreen) startScreen.style.display = 'flex';
+    } else {
+      if (loginScreen) loginScreen.style.display = 'flex';
+    }
 
     console.log('✅ Game ready.');
   } catch (err) {

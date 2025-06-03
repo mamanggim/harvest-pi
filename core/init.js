@@ -10,18 +10,20 @@ export async function initializeGame() {
   if (savedLang) setLang(savedLang);
 
   const username = localStorage.getItem('username');
-  if (username) {
-    setUsername(username);
-    loadPlayerData(username);
-    updateReferralLink();
-    checkDailyReward();
-  }
 
   try {
-    await loadData();
-    console.log('Game initialized, data loaded');
+    await loadData(); // Load lang & vegetables
+    if (username) {
+      setUsername(username);
+      await loadPlayerData(username); // Tunggu player data selesai
+      updateReferralLink();
+      checkDailyReward();
+    }
+
+    setIsDataLoaded(true); // <-- Ini WAJIB
+    console.log('Game initialized.');
     
-    // ✅ tampilkan start screen
+    // Tampilkan start screen, sembunyikan loading
     document.getElementById('loading-screen')?.classList.remove('active');
     document.getElementById('start-screen')?.style.display = 'flex';
   } catch (err) {

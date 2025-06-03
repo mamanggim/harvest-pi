@@ -44,6 +44,11 @@ export function loadPlayerData(userKey) {
   onValue(playerRef, (snapshot) => {
     const data = snapshot.val();
 
+  import { setIsDataLoaded } from './global-state.js';
+
+// Setelah loadPlayerData selesai:
+setIsDataLoaded(true);
+
     // Inisialisasi data baru jika kosong
     if (!data) {
       const role = localStorage.getItem('role');

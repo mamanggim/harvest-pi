@@ -34,6 +34,15 @@ export function getState() {
   return state;
 }
 
+// Data Loaded //
+export function setIsDataLoaded(value) {
+  isDataLoaded = value;
+}
+
+export function getIsDataLoaded() {
+  return isDataLoaded;
+}
+
 // Langsung Getter/Setter untuk username
 export function getUsername() {
   return state.username;

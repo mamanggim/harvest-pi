@@ -1,9 +1,10 @@
-import { getLang, setLang, setUsername, getUsername } from './global-state.js';
+import { getLang, setLang, setUsername } from './global-state.js';
 import { loadPlayerData, updateReferralLink } from './user-loader.js';
 import { loadData } from './loader.js';
 import { checkDailyReward } from '/features/reward.js';
 import { playBgMusic, playBgVoice } from '/ui/audio.js';
 import { showNotification } from '/ui/notification.js';
+import { setIsDataLoaded } from './global-state.js';
 
 export async function initializeGame() {
   const savedLang = localStorage.getItem('lang');
@@ -12,34 +13,30 @@ export async function initializeGame() {
   const username = localStorage.getItem('username');
 
   try {
-    await loadData(); // Load lang & vegetables
+    await loadData(); // load lang + vegetables
+
     if (username) {
       setUsername(username);
-      await loadPlayerData(username); // Tunggu player data selesai
+      await loadPlayerData(username); // tunggu data user
       updateReferralLink();
       checkDailyReward();
     }
 
-    setIsDataLoaded(true); // <-- Ini WAJIB
-    console.log('Game initialized.');
-    
-    // Tampilkan start screen, sembunyikan loading
-    document.getElementById('loading-screen')?.classList.remove('active');
-    document.getElementById('start-screen')?.style.display = 'flex';
+    setIsDataLoaded(true); // penting untuk start screen
+
+    // ✅ Pindah dari loading ke start
+    const loadingScreen = document.getElementById('loading-screen');
+    const startScreen = document.getElementById('start-screen');
+
+    if (loadingScreen) loadingScreen.classList.remove('active');
+    if (startScreen) startScreen.style.display = 'flex';
+
+    console.log('✅ Game ready.');
   } catch (err) {
-    console.error('Failed to initialize game:', err.message);
+    console.error('❌ Failed to init:', err.message);
     showNotification('Failed to load game data.');
   }
 
   playBgMusic();
   playBgVoice();
-}
-
-// Cek user sudah login atau belum untuk switch tampilan
-if (localStorage.getItem('username')) {
-  document.getElementById('loading-screen')?.classList.remove('active');
-  document.getElementById('start-screen')?.style.display = 'flex';
-} else {
-  document.getElementById('loading-screen')?.classList.remove('active');
-  document.getElementById('login-screen')?.style.display = 'flex';
 }

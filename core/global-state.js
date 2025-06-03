@@ -40,7 +40,7 @@ export function setIsDataLoaded(value) {
 }
 
 export function getIsDataLoaded() {
-  return isDataLoaded;
+  return state.isDataLoaded;
 }
 
 // Langsung Getter/Setter untuk username

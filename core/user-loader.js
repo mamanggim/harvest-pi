@@ -1,9 +1,8 @@
-import { database, ref, onValue, set } from '/firebase/firebase-config.js';
+import { database, ref, get, set } from '/firebase/firebase-config.js';
 import { showNotification } from '/ui/notification.js';
 import { updateWallet } from '/ui/tab-switcher.js';
 
 import {
-  getUsername,
   setFarmCoins, setPiBalance, setWater, setLevel, setXp,
   setInventory, setFarmPlots, setHarvestCount, setAchievements,
   setReferralEarnings, setIsDataLoaded
@@ -15,48 +14,19 @@ import { renderInventory } from '/features/inventory.js';
 import { renderSellSection } from '/features/sell.js';
 import { renderAchievements, checkDailyReward } from '/features/achievements.js';
 
-/**
- * Load hanya balance (pi + farm coins) dari Firebase dan update UI
- */
-export function loadUserBalances() {
-  const username = getUsername();
-  if (!username) return;
-
-  const playerRef = ref(database, `players/${username}`);
-  onValue(playerRef, (snapshot) => {
-    const data = snapshot.val() || {};
-    setFarmCoins(data.farmCoins || 0);
-    setPiBalance(data.piBalance || 0);
-    updateWallet();
-  });
-}
-
-/**
- * Load seluruh data pemain dan update global state + UI
- */
-export function loadPlayerData(userKey) {
+export async function loadPlayerData(userKey) {
   if (!userKey) {
     showNotification('Login required.');
     return;
   }
 
   const playerRef = ref(database, `players/${userKey}`);
-  onValue(playerRef, (snapshot) => {
-    const data = snapshot.val();
 
-  import { setIsDataLoaded } from './global-state.js';
+  try {
+    const snapshot = await get(playerRef);
+    let data = snapshot.val();
 
-// Setelah loadPlayerData selesai:
-setIsDataLoaded(true);
-
-    // Inisialisasi data baru jika kosong
     if (!data) {
-      const role = localStorage.getItem('role');
-      if (role === 'admin') {
-        console.warn('Skip initializing admin data');
-        return;
-      }
-
       const init = {
         farmCoins: 0,
         piBalance: 0,
@@ -76,16 +46,11 @@ setIsDataLoaded(true);
         role: 'user'
       };
 
-      set(playerRef, init)
-        .then(() => console.log('Initialized new user data:', userKey))
-        .catch((err) => {
-          console.error('Failed to init user data:', err.message);
-          showNotification('Failed to init data');
-        });
-      return;
+      await set(playerRef, init);
+      console.log('Initialized new user data:', userKey);
+      data = init;
     }
 
-    // Assign ke global state
     setFarmCoins(data.farmCoins || 0);
     setPiBalance(data.piBalance || 0);
     setWater(data.water || 0);
@@ -96,6 +61,8 @@ setIsDataLoaded(true);
     setHarvestCount(data.harvestCount || 0);
     setAchievements(data.achievements || { harvest: false, coins: false });
     setReferralEarnings(data.referralEarnings || 0);
+
+    // ✅ Baru setelah semua selesai
     setIsDataLoaded(true);
 
     updateWallet();
@@ -107,5 +74,8 @@ setIsDataLoaded(true);
     checkDailyReward();
 
     console.log('✅ User data loaded for:', userKey);
-  });
+  } catch (err) {
+    console.error('❌ Failed to load player data:', err.message);
+    showNotification('Failed to load user data.');
+  }
 }

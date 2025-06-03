@@ -8,77 +8,73 @@
   <link rel="stylesheet" href="farm/style.css?v=42" />
 </head>
 <body>
-
-  <!-- LOADING SCREEN -->
-  <div id="loading-screen" class="active">
-    <h1>Harvest Pi</h1>
-    <div class="spinner"></div>
-    <div class="loading-animation">Loading...</div>
-  </div>
-
+  
+<!-- LOADING SCREEN (DIHILANGKAN UNTUK DEBUG) -->
+<div id="loading-screen" style="display: none;"></div>
+  
   <!-- LOGIN & REGISTER (unchanged) -->
   <!-- ... -->
 
-  <!-- START SCREEN -->
-  <div id="start-screen" style="display: none;">
-    <h1 id="title">Harvest Pi</h1>
-    <div id="start-text" class="start-text">Start Game</div>
-    <div class="corner-buttons">
-      <button id="lang-toggle">Switch Language (EN/ID)</button>
-      <button id="settings-btn">⚙️</button>
-    </div>
-  </div>
+ <!-- START SCREEN -->
+ <div id="start-screen" style="display: none;">
+   <h1 id="title">Harvest Pi</h1>
+   <div id="start-text" class="start-text">Start Game</div>
+   <div class="corner-buttons">
+     <button id="lang-toggle">Switch Language (EN/ID)</button>
+     <button id="settings-btn">⚙️</button>
+   </div>
+ </div>
 
-  <!-- GAME SCREEN -->
-  <div id="game-screen" style="display: none;">
-    <div id="game-header">
-      <div class="corner-buttons">
-        <button id="game-settings-btn">⚙️</button>
-      </div>
+ <!-- GAME SCREEN -->
+ <div id="game-screen" style="display: none;">
+   <div id="game-header">
+     <div class="corner-buttons">
+       <button id="game-settings-btn">⚙️</button>
+     </div>
       <h1 id="game-title">Harvest Pi</h1>
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="farm">Farm</button>
-        <button class="tab-btn" data-tab="shop">Shop</button>
-        <button class="tab-btn" data-tab="upgrades">Upgrades</button>
-        <button class="tab-btn" data-tab="inventory">Inventory</button>
-        <button class="tab-btn" data-tab="exchange">Exchange</button>
-        <button class="tab-btn" data-tab="finance">Finance</button>
-        <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
-        <button class="tab-btn" data-tab="achievements">Achievements</button>
+     <div class="tabs">
+       <button class="tab-btn active" data-tab="farm">Farm</button>
+       <button class="tab-btn" data-tab="shop">Shop</button>
+       <button class="tab-btn" data-tab="upgrades">Upgrades</button>
+       <button class="tab-btn" data-tab="inventory">Inventory</button>
+       <button class="tab-btn" data-tab="exchange">Exchange</button>
+       <button class="tab-btn" data-tab="finance">Finance</button>
+       <button class="tab-btn" data-tab="leaderboard">Leaderboard</button>
+       <button class="tab-btn" data-tab="achievements">Achievements</button>
       </div>
-      <div id="wallet">
-        <span id="farm-coins">0 Farm Coins</span> |
-        <span id="pi-coins">0.000000 PI</span> |
-        <span id="water">0 Water</span>
-        <div id="level">Level: 1 | XP: 0</div>
-        <div id="xp-bar"><div id="xp-fill"></div></div>
-      </div>
-    </div>
+     <div id="wallet">
+       <span id="farm-coins">0 Farm Coins</span> |
+       <span id="pi-coins">0.000000 PI</span> |
+       <span id="water">0 Water</span>
+       <div id="level">Level: 1 | XP: 0</div>
+       <div id="xp-bar"><div id="xp-fill"></div></div>
+     </div>
+   </div>
 
-    <!-- FARM, SHOP, UPGRADES, INVENTORY, EXCHANGE (unchanged) -->
+   <!-- FARM, SHOP, UPGRADES, INVENTORY, EXCHANGE (unchanged) -->
 
-    <!-- FINANCE TAB -->
-    <div id="finance" class="tab-content">
-      <h2 id="finance-title">Finance</h2>
-      <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
-      <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
-      <hr/>
+   <!-- FINANCE TAB -->
+   <div id="finance" class="tab-content">
+     <h2 id="finance-title">Finance</h2>
+     <p>Farm Coin Balance: <span id="farm-coin-balance">0</span></p>
+     <p>Pi Coin Balance: <span id="pi-coin-balance">0</span></p>
+     <hr/>
 
-      <h3>Deposit</h3>
-      <input type="number" id="deposit-amount" placeholder="Enter PI Amount" />
-      <button id="real-deposit-btn">Deposit PI</button>
-      <div id="real-deposit-msg" class="deposit-message"></div>
+     <h3>Deposit</h3>
+     <input type="number" id="deposit-amount" placeholder="Enter PI Amount" />
+     <button id="real-deposit-btn">Deposit PI</button>
+     <div id="real-deposit-msg" class="deposit-message"></div>
 
-      <h3>Withdraw</h3>
-      <button id="withdraw-btn" disabled>Withdraw PI</button>
-      <div id="real-withdraw-msg" class="deposit-message"></div>
+     <h3>Withdraw</h3>
+     <button id="withdraw-btn" disabled>Withdraw PI</button>
+     <div id="real-withdraw-msg" class="deposit-message"></div>
 
-      <p id="withdraw-note" class="note">
-        This feature will unlock when you reach: <br />
-        - Level 10<br />
-        - Farm Coin ≥ 10.000.000<br />
-        - Total Deposit ≥ 10 PI or Referral Bonus ≥ 10 PI
-      </p>
+     <p id="withdraw-note" class="note">
+       This feature will unlock when you reach: <br />
+       - Level 10<br />
+       - Farm Coin ≥ 10.000.000<br />
+       - Total Deposit ≥ 10 PI or Referral Bonus ≥ 10 PI
+     </p>
 
       <!-- DEPOSIT POPUP -->
       <div id="deposit-popup" class="popup" style="display: none;">

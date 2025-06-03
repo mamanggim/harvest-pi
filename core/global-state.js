@@ -36,7 +36,7 @@ export function getState() {
 
 // Data Loaded //
 export function setIsDataLoaded(value) {
-  isDataLoaded = value;
+  state.isDataLoaded = value;
 }
 
 export function getIsDataLoaded() {

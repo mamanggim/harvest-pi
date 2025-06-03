@@ -32,3 +32,12 @@ export async function initializeGame() {
   playBgMusic();
   playBgVoice();
 }
+
+// Cek user sudah login atau belum untuk switch tampilan
+if (localStorage.getItem('username')) {
+  document.getElementById('loading-screen')?.classList.remove('active');
+  document.getElementById('start-screen')?.style.display = 'flex';
+} else {
+  document.getElementById('loading-screen')?.classList.remove('active');
+  document.getElementById('login-screen')?.style.display = 'flex';
+}

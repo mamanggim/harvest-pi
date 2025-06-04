@@ -8,51 +8,50 @@ import { setIsDataLoaded } from './global-state.js';
 
 export async function initializeGame() {
   try {
-    // 1. Load data bahasa & tanaman
-    await loadData().catch(err => {
-      console.error('loadData failed:', err);
-      showNotification('⚠️ Gagal load data game.');
-    });
+    // 1. Sembunyikan loading
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) loadingScreen.style.display = 'none';
 
+    // 2. Cek bahasa
     const savedLang = localStorage.getItem('lang');
     if (savedLang) setLang(savedLang);
 
-    // 2. Hide loading, prepare screen
-    const loadingScreen = document.getElementById('loading-screen');
-    const startScreen = document.getElementById('start-screen');
-    if (loadingScreen) loadingScreen.style.display = 'none';
-
-    // 3. Cek login
+    // 3. Cek apakah sudah login
     const username = localStorage.getItem('username');
-    if (username) {
-      setUsername(username);
-      await loadPlayerData(username).catch(err => {
-        console.error('loadPlayerData failed:', err);
-        showNotification('⚠️ Gagal load user');
-      });
 
+    if (username) {
+      // ✅ Sudah login, lanjut ke start screen
+      setUsername(username);
+      await loadData();
+      await loadPlayerData(username);
       updateReferralLink();
       checkDailyReward();
       setIsDataLoaded(true);
 
+      const startScreen = document.getElementById('start-screen');
+      const loginScreen = document.getElementById('login-screen');
+
+      if (loginScreen) loginScreen.style.display = 'none';
       if (startScreen) startScreen.style.display = 'flex';
-      showNotification('✅ Game Siap Dimulai!');
+
+      showNotification('🎮 Game siap dimainkan!');
     } else {
-      // Belum login, redirect ke /auth/login.html
-      showNotification('🔑 Belum login, redirect ke login...');
-      window.location.href = '/auth/login.html';
-      return;
+      // 🔑 Belum login, tampilkan login screen
+      const loginScreen = document.getElementById('login-screen');
+      if (loginScreen) loginScreen.style.display = 'flex';
+
+      showNotification('🔐 Silakan login untuk mulai');
+    }
+
+    // 4. Jalankan musik
+    try {
+      playBgMusic();
+      playBgVoice();
+    } catch (err) {
+      console.warn('🎵 Gagal play musik:', err);
     }
   } catch (err) {
     console.error('❌ Error init:', err);
-    showNotification('❌ Error saat inisialisasi');
-  }
-
-  // 4. Jalankan audio
-  try {
-    playBgMusic();
-    playBgVoice();
-  } catch (err) {
-    console.warn('Audio failed:', err);
+    showNotification('❌ Gagal memulai game');
   }
 }

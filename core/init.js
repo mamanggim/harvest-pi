@@ -7,47 +7,87 @@ import { showNotification } from '/ui/notification.js';
 import { setIsDataLoaded } from './global-state.js';
 
 export async function initializeGame() {
-  try {
-    // 1. Load bahasa & data awal
-    await loadData();
+  const loadingScreen = document.getElementById('loading-screen');
+  const loginScreen = document.getElementById('login-screen');
+  const startScreen = document.getElementById('start-screen');
 
+  try {
+    // 1. Load bahasa & data awal dengan timeout
+    await Promise.race([
+      loadData(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout loading data')), 5000)
+    ]);
+
+    // 2. Set bahasa dari localStorage (jika ada)
     const savedLang = localStorage.getItem('lang');
     if (savedLang) setLang(savedLang);
 
-    const loadingScreen = document.getElementById('loading-screen');
-    const loginScreen = document.getElementById('login-screen');
-    const startScreen = document.getElementById('start-screen');
-
-    // 2. Sembunyikan loading screen
-    if (loadingScreen) loadingScreen.style.display = 'none';
-
+    // 3. Cek session user
     const username = localStorage.getItem('username');
+    const sessionValid = await checkSessionValidity(username); // Pastikan fungsi ini ada di session.js
 
-    if (username) {
-      // 3. Kalau udah login, lanjut ke start screen
+    if (username && sessionValid) {
+      // 4. Jika session valid, lanjut ke game
       setUsername(username);
-      await loadPlayerData(username);
-      updateReferralLink();
-      checkDailyReward();
-      setIsDataLoaded(true);
+      
+      try {
+        await loadPlayerData(username);
+        updateReferralLink();
+        checkDailyReward();
+        
+        // UI Transition
+        if (loadingScreen) loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          if (loadingScreen) loadingScreen.style.display = 'none';
+          if (startScreen) startScreen.style.display = 'flex';
+          if (loginScreen) loginScreen.style.display = 'none';
+        }, 500);
 
-      if (startScreen) startScreen.style.display = 'flex';
-      if (loginScreen) loginScreen.style.display = 'none';
-
-      showNotification('🎮 Game ready!');
+        showNotification('🎮 Game ready!');
+      } catch (error) {
+        console.error('Player data error:', error);
+        forceLogout(); // Bersihkan session invalid
+      }
     } else {
-      // 4. Belum login → tampilkan login screen
-      if (loginScreen) loginScreen.style.display = 'flex';
-      if (startScreen) startScreen.style.display = 'none';
-
+      // 5. Jika belum login, tampilkan login screen
+      if (loadingScreen) loadingScreen.style.opacity = '0';
+      setTimeout(() => {
+        if (loadingScreen) loadingScreen.style.display = 'none';
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (startScreen) startScreen.style.display = 'none';
+      }, 500);
+      
       showNotification('🔑 Silakan login terlebih dahulu');
     }
 
-    // 5. Mainkan audio
-    playBgMusic();
-    playBgVoice();
+    // 6. Audio akan play setelah user interaction (untuk mobile compliance)
+    document.body.addEventListener('click', () => {
+      playBgMusic();
+      playBgVoice();
+    }, { once: true });
+
+    setIsDataLoaded(true);
   } catch (err) {
-    console.error('❌ Error init:', err);
-    showNotification('❌ Gagal inisialisasi game');
+    console.error('❌ Init error:', err);
+    
+    // Fallback UI
+    if (loadingScreen) loadingScreen.style.display = 'none';
+    if (loginScreen) loginScreen.style.display = 'flex';
+    
+    showNotification(err.message.includes('Timeout') ? 
+      '⚠️ Koneksi lambat, coba refresh' : 
+      '❌ Gagal memuat game');
   }
+}
+
+// Helper functions (taruh di file terpisah atau bagian bawah)
+async function checkSessionValidity(username) {
+  if (!username) return false;
+  // Implementasi cek session ke Firebase/backend
+  return true; // Ganti dengan logic sesungguhnya
+}
+
+function forceLogout() {
+  localStorage.removeItem('username');
+  window.location.reload();
 }

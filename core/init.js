@@ -8,50 +8,46 @@ import { setIsDataLoaded } from './global-state.js';
 
 export async function initializeGame() {
   try {
-    // 1. Sembunyikan loading
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) loadingScreen.style.display = 'none';
+    // 1. Load bahasa & data awal
+    await loadData();
 
-    // 2. Cek bahasa
     const savedLang = localStorage.getItem('lang');
     if (savedLang) setLang(savedLang);
 
-    // 3. Cek apakah sudah login
+    const loadingScreen = document.getElementById('loading-screen');
+    const loginScreen = document.getElementById('login-screen');
+    const startScreen = document.getElementById('start-screen');
+
+    // 2. Sembunyikan loading screen
+    if (loadingScreen) loadingScreen.style.display = 'none';
+
     const username = localStorage.getItem('username');
 
     if (username) {
-      // ✅ Sudah login, lanjut ke start screen
+      // 3. Kalau udah login, lanjut ke start screen
       setUsername(username);
-      await loadData();
       await loadPlayerData(username);
       updateReferralLink();
       checkDailyReward();
       setIsDataLoaded(true);
 
-      const startScreen = document.getElementById('start-screen');
-      const loginScreen = document.getElementById('login-screen');
-
-      if (loginScreen) loginScreen.style.display = 'none';
       if (startScreen) startScreen.style.display = 'flex';
+      if (loginScreen) loginScreen.style.display = 'none';
 
-      showNotification('🎮 Game siap dimainkan!');
+      showNotification('🎮 Game ready!');
     } else {
-      // 🔑 Belum login, tampilkan login screen
-      const loginScreen = document.getElementById('login-screen');
+      // 4. Belum login → tampilkan login screen
       if (loginScreen) loginScreen.style.display = 'flex';
+      if (startScreen) startScreen.style.display = 'none';
 
-      showNotification('🔐 Silakan login untuk mulai');
+      showNotification('🔑 Silakan login terlebih dahulu');
     }
 
-    // 4. Jalankan musik
-    try {
-      playBgMusic();
-      playBgVoice();
-    } catch (err) {
-      console.warn('🎵 Gagal play musik:', err);
-    }
+    // 5. Mainkan audio
+    playBgMusic();
+    playBgVoice();
   } catch (err) {
     console.error('❌ Error init:', err);
-    showNotification('❌ Gagal memulai game');
+    showNotification('❌ Gagal inisialisasi game');
   }
 }

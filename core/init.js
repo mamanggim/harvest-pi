@@ -11,8 +11,12 @@ export async function initializeGame() {
   const startScreen = document.getElementById('start-screen');
   const loginScreen = document.getElementById('login-screen');
 
-  // ⏩ Skip loading screen
-  if (loadingScreen) loadingScreen.classList.remove('active');
+  if (loadingScreen) {
+    loadingScreen.style.display = 'none';
+    console.log('Loading screen hidden');
+  } else {
+    console.log('Loading screen NOT FOUND!');
+  }
   if (startScreen) {
     startScreen.style.display = 'flex';
     showNotification('✅ Start screen muncul');
@@ -24,28 +28,39 @@ export async function initializeGame() {
     const savedLang = localStorage.getItem('lang');
     if (savedLang) setLang(savedLang);
 
-    await loadData();
+    await loadData().catch(err => {
+      console.error('loadData failed:', err);
+      showNotification('⚠ Data gagal dimuat, pakai default');
+    });
 
     const username = localStorage.getItem('username');
     if (username) {
       setUsername(username);
-      await loadPlayerData(username);
+      await Promise.race([
+        loadPlayerData(username),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+      ]).catch(err => {
+        console.error('loadPlayerData failed:', err);
+        showNotification('⚠ Gagal load data user');
+      });
       updateReferralLink();
-      checkDailyReward();
+      await checkDailyReward().catch(err => console.error('Reward check failed:', err));
       setIsDataLoaded(true);
       showNotification('🎮 Game data siap');
     } else {
       showNotification('🔑 Belum login');
-      if (loginScreen && startScreen) {
-        startScreen.style.display = 'none';
-        loginScreen.style.display = 'flex';
-      }
+      if (loginScreen) loginScreen.style.display = 'flex';
+      if (startScreen) startScreen.style.display = 'none';
     }
   } catch (err) {
     console.error('❌ Error init:', err);
     showNotification('❌ Error saat inisialisasi');
   }
 
-  playBgMusic();
-  playBgVoice();
+  try {
+    playBgMusic();
+    playBgVoice();
+  } catch (err) {
+    console.warn('Audio failed:', err);
+  }
 }

@@ -7,66 +7,54 @@ import { showNotification } from '/ui/notification.js';
 import { setIsDataLoaded } from './global-state.js';
 
 export async function initializeGame() {
+  const loadingScreen = document.getElementById('loading-screen');
+  const loginScreen = document.getElementById('login-screen');
+  const startScreen = document.getElementById('start-screen');
+
+  // 1. Tampilkan loading screen dulu
+  if (loadingScreen) loadingScreen.classList.add('active');
+
   try {
-    showNotification('🔁 Mulai inisialisasi game...');
+    // 2. Load data bahasa dan tanaman
+    await loadData();
+    showNotification('✅ Data berhasil dimuat');
 
-    // 1. Load data bahasa & tanaman
-    await loadData().catch(err => {
-      console.error('❌ loadData error:', err);
-      showNotification('⚠ Gagal load data dasar (bahasa/tanaman)');
-    });
-
-    // 2. Set bahasa dari localStorage
+    // 3. Cek bahasa tersimpan
     const savedLang = localStorage.getItem('lang');
-    if (savedLang) {
-      setLang(savedLang);
-      showNotification('🌐 Bahasa aktif: ' + savedLang);
-    }
+    if (savedLang) setLang(savedLang);
 
-    // 3. Sembunyikan loading, tampilkan login
-    const loadingScreen = document.getElementById('loading-screen');
-    const loginScreen = document.getElementById('login-screen');
-    const startScreen = document.getElementById('start-screen');
-
-    if (loadingScreen) {
-      loadingScreen.classList.remove('active');
-      showNotification('✅ Loading selesai, lanjut...');
-    }
-
+    // 4. Cek login user
     const username = localStorage.getItem('username');
     if (username) {
-      // 4. Jika sudah login sebelumnya, load data user
       setUsername(username);
-      await loadPlayerData(username).catch(err => {
-        console.error('❌ Gagal load user:', err);
-        showNotification('⚠ Gagal ambil data user');
-      });
-
+      await loadPlayerData(username);
       updateReferralLink();
       checkDailyReward();
       setIsDataLoaded(true);
 
-      // 5. Tampilkan start screen
-      if (startScreen) {
-        startScreen.style.display = 'flex';
-        showNotification('🎮 Game siap dimainkan');
-      }
+      // 5. Munculkan start screen
+      if (loadingScreen) loadingScreen.style.display = 'none';
+      if (startScreen) startScreen.style.display = 'flex';
+
+      showNotification('🎮 Selamat datang kembali!');
     } else {
       // 6. Kalau belum login, munculkan login screen
+      if (loadingScreen) loadingScreen.style.display = 'none';
       if (loginScreen) loginScreen.style.display = 'flex';
-      showNotification('🔑 Belum login. Munculkan login screen.');
+      showNotification('🔑 Silakan login');
     }
-
-    // 7. Audio
-    try {
-      playBgMusic();
-      playBgVoice();
-    } catch (err) {
-      console.warn('🔇 Audio gagal dimuat:', err);
-    }
-
   } catch (err) {
-    console.error('❌ Error utama:', err);
-    showNotification('❌ Error saat inisialisasi game');
+    console.error('❌ Error saat init:', err);
+    showNotification('❌ Gagal inisialisasi: ' + err.message);
+    if (loadingScreen) loadingScreen.style.display = 'none';
+    if (loginScreen) loginScreen.style.display = 'flex';
+  }
+
+  // 7. Mainkan audio (jika tidak diblok browser)
+  try {
+    playBgMusic();
+    playBgVoice();
+  } catch (err) {
+    console.warn('⚠ Audio gagal dimuat:', err);
   }
 }

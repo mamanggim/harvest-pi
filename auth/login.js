@@ -8,7 +8,7 @@ import { addSafeClickListener } from '/core/dom-helper.js';
 import { encodeEmail, resolveUserKey } from '/core/utils.js';
 import { showNotification } from '/ui/notification.js';
 import { loadPlayerData } from '/core/user-loader.js';
-import { updateReferralLink } from '/auth/referral.js';
+import { updateReferralLink } from '/referral/referral.js';
 import { setupRealtimeNotifications } from '/core/realtime.js';
 
 const loginEmailBtn = document.getElementById('login-email-btn');

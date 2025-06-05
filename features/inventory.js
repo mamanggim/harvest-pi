@@ -5,7 +5,7 @@ import {
 
 import { savePlayerData } from '/core/saver.js';
 import { showNotification } from '/ui/notification.js';
-import { addSafeClickListener } from '/core/utils.js';
+import { addSafeClickListener } from '/core/dom-helper.js';
 import { openSellTab } from '/features/sell.js';
 import { playMenuSound } from '/core/audio.js';
 

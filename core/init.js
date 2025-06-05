@@ -2,7 +2,7 @@ import { getLang, setLang, setUsername } from './global-state.js';
 import { loadPlayerData, updateReferralLink } from './user-loader.js';
 import { loadData } from './loader.js';
 import { checkDailyReward } from '/features/reward.js';
-import { playBgMusic, playBgVoice } from '/ui/audio.js';
+import { playBgMusic, playBgVoice } from './audio.js';
 import { showNotification } from '/ui/notification.js';
 import { setIsDataLoaded } from './global-state.js';
 

@@ -1,4 +1,4 @@
-import { addSafeClickListener } from '/core/helpers.js';
+import { addSafeClickListener } from '/core/dom-helpers.js';
 import { startGame, toggleLanguage } from './language.js';
 import { showSettings, hideSettings } from './fullscreen.js';
 import { playMenuSound } from '/core/audio.js';

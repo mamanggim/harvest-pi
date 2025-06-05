@@ -1,6 +1,6 @@
 import { getFarmPlots, setFarmPlots } from '/core/global-state.js';
 import { savePlayerData } from '/core/saver.js';
-import { addSafeClickListener } from '/core/utils.js';
+import { addSafeClickListener } from '/core/dom-helper.js';
 import { updateUIText } from '/ui/language.js';
 
 export function initializePlots() {

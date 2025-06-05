@@ -5,7 +5,7 @@ import {
 
 import { auth, database, ref, set, get } from '/firebase/firebase-config.js';
 import { showNotification } from '/ui/notification.js';
-import { addSafeClickListener } from '/core/utils.js';
+import { addSafeClickListener } from '/core/dom-helper.js';
 import { switchToLogin } from '/auth/session.js'; // gunakan session, bukan login.js
 
 export function initRegisterHandler() {

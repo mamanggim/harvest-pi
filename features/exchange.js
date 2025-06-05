@@ -2,7 +2,7 @@ import { ref, get, onValue, update } from '/firebase/firebase-config.js';
 import { getUsername, getFarmCoins, getPiBalance, setFarmCoins, setPiBalance } from '/core/global-state.js';
 import { updateWallet } from '/ui/tab-switcher.js';
 import { showNotification } from '/ui/notification.js';
-import { playCoinSound } from '/ui/audio.js';
+import { playCoinSound } from '/core/audio.js';
 
 let currentExchangeRate = 1000000;
 export function loadExchangeRate() {

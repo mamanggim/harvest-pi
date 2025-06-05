@@ -4,6 +4,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 import { auth, database, ref, get } from '/firebase/firebase-config.js';
+import { addSafeClickListener } from '/core/dom-helper.js';
 import { addSafeClickListener, encodeEmail, resolveUserKey } from '/core/utils.js';
 import { showNotification } from '/ui/notification.js';
 import { loadPlayerData } from '/core/user-loader.js';

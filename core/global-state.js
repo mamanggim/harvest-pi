@@ -1,6 +1,5 @@
-import { ref, update } from '/firebase/firebase-config.js';
-import { updateWallet } from '../ui/tab-switcher.js'; // Ubah jika updateWallet ada di file lain
 import { ref, update, database } from '/firebase/firebase-config.js';
+import { updateWallet } from '../ui/tab-switcher.js'; // Ubah jika updateWallet ada di file lain
 
 // ========== Internal State ========== //
 const state = {

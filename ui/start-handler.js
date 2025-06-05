@@ -1,4 +1,4 @@
-import { addSafeClickListener } from '/core/utils.js';
+import { addSafeClickListener } from '/core/dom-helper.js';
 import { playBgMusic, playBgVoice } from '/core/audio.js';
 import { showNotification } from '/ui/notification.js';
 import { switchTab } from '/ui/tab-switcher.js';

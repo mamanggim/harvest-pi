@@ -5,6 +5,7 @@ import { checkDailyReward } from '/features/reward.js';
 import { playBgMusic, playBgVoice } from './audio.js';
 import { showNotification } from '/ui/notification.js';
 import { setIsDataLoaded } from './global-state.js';
+import { checkSessionValidity, forceLogout } from '/auth/session.js';
 
 export async function initializeGame() {
   const loadingScreen = document.getElementById('loading-screen');

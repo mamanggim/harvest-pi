@@ -1,6 +1,5 @@
 // auth/session.js
 // Session Manager untuk Harvest Pi
-// Fitur: Login/Register toggle, Session persistence, Auto-redirect, dan session checker
 
 // ===== UI TOGGLES ===== //
 export function switchToLogin() {
@@ -20,7 +19,9 @@ export function switchToLogin() {
     if (loadingIndicator) loadingIndicator.style.display = 'none';
 
     const usernameField = document.getElementById('login-username');
-    if (usernameField) setTimeout(() => usernameField.focus(), 100);
+    if (usernameField) {
+      setTimeout(() => usernameField.focus(), 100);
+    }
   } catch (err) {
     console.error('Failed to switch to login:', err);
   }
@@ -43,7 +44,9 @@ export function switchToRegister() {
     if (loadingIndicator) loadingIndicator.style.display = 'none';
 
     const emailField = document.getElementById('register-email');
-    if (emailField) setTimeout(() => emailField.focus(), 100);
+    if (emailField) {
+      setTimeout(() => emailField.focus(), 100);
+    }
   } catch (err) {
     console.error('Failed to switch to register:', err);
   }
@@ -78,21 +81,19 @@ export function clearSession() {
 export function createSession(userKey, username, rememberMe = false) {
   const expiryTime = rememberMe
     ? Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 hari
-    : Date.now() + 2 * 60 * 60 * 1000; // 2 jam
+    : Date.now() + 2 * 60 * 60 * 1000;     // 2 jam
 
   localStorage.setItem('userKey', userKey);
   localStorage.setItem('username', username);
   localStorage.setItem('sessionExpiry', expiryTime.toString());
 }
 
-// Digunakan oleh init.js untuk validasi awal
+// Untuk dipanggil dari init.js
 export async function checkSessionValidity(username) {
   if (!username) return false;
 
   const expiry = localStorage.getItem('sessionExpiry');
   if (!expiry || Date.now() > Number(expiry)) return false;
-
-  // Jika perlu, tambahkan pengecekan Firebase user di sini
 
   return true;
 }
@@ -131,10 +132,10 @@ export function initSessionToggle() {
       switchToLogin();
     });
 
-    // Default ke login saat pertama kali
+    // Default tampilkan login
     switchToLogin();
 
-    // Cek sesi aktif
+    // Cek session saat pertama
     checkActiveSession().then(({ isValid }) => {
       if (isValid) {
         const loading = document.getElementById('loading-screen');
@@ -146,11 +147,10 @@ export function initSessionToggle() {
   }
 }
 
-// Auto jalankan saat DOM siap
+// Auto-jalankan saat DOM siap
 document.addEventListener('DOMContentLoaded', () => {
   initSessionToggle();
 
-  // Handle tombol kembali di Android
   window.addEventListener('popstate', () => {
     const registerScreen = document.getElementById('register-screen');
     if (registerScreen && !registerScreen.classList.contains('hidden')) {

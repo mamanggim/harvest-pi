@@ -1,5 +1,6 @@
+// session.js
 // Session Manager untuk Harvest Pi
-// Fitur: Login/Register toggle, Session persistence, dan Auto-redirect
+// Fitur: Login/Register toggle, Session persistence, Auto-redirect, dan session checker
 
 // ===== UI TOGGLES ===== //
 export function switchToLogin() {
@@ -7,15 +8,14 @@ export function switchToLogin() {
     const loginScreen = document.getElementById('login-screen');
     const registerScreen = document.getElementById('register-screen');
     const loadingIndicator = document.getElementById('auth-loading');
-    
+
     if (loginScreen) {
       loginScreen.style.display = 'flex';
       loginScreen.classList.remove('hidden');
     }
     if (registerScreen) registerScreen.classList.add('hidden');
     if (loadingIndicator) loadingIndicator.style.display = 'none';
-    
-    // Auto-focus ke username field
+
     const usernameField = document.getElementById('login-username');
     if (usernameField) setTimeout(() => usernameField.focus(), 100);
   } catch (err) {
@@ -28,15 +28,14 @@ export function switchToRegister() {
     const loginScreen = document.getElementById('login-screen');
     const registerScreen = document.getElementById('register-screen');
     const loadingIndicator = document.getElementById('auth-loading');
-    
+
     if (registerScreen) {
       registerScreen.style.display = 'flex';
       registerScreen.classList.remove('hidden');
     }
     if (loginScreen) loginScreen.classList.add('hidden');
     if (loadingIndicator) loadingIndicator.style.display = 'none';
-    
-    // Auto-focus ke email field
+
     const emailField = document.getElementById('register-email');
     if (emailField) setTimeout(() => emailField.focus(), 100);
   } catch (err) {
@@ -50,8 +49,7 @@ export function checkActiveSession() {
     try {
       const userKey = localStorage.getItem('userKey');
       const sessionExpiry = localStorage.getItem('sessionExpiry');
-      
-      // Validasi session expiry
+
       if (userKey && sessionExpiry && Date.now() < Number(sessionExpiry)) {
         resolve({ isValid: true, userKey });
       } else {
@@ -72,27 +70,42 @@ export function clearSession() {
 }
 
 export function createSession(userKey, username, rememberMe = false) {
-  const expiryTime = rememberMe ? 
-    Date.now() + (30 * 24 * 60 * 60 * 1000) : // 30 hari
-    Date.now() + (2 * 60 * 60 * 1000); // 2 jam
-  
+  const expiryTime = rememberMe
+    ? Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 hari
+    : Date.now() + 2 * 60 * 60 * 1000; // 2 jam
+
   localStorage.setItem('userKey', userKey);
   localStorage.setItem('username', username);
   localStorage.setItem('sessionExpiry', expiryTime.toString());
 }
 
+// Untuk validasi session di init.js
+export async function checkSessionValidity(username) {
+  if (!username) return false;
+
+  const sessionExpiry = localStorage.getItem('sessionExpiry');
+  if (!sessionExpiry || Date.now() > Number(sessionExpiry)) return false;
+
+  // Kamu bisa tambahkan validasi backend di sini
+  return true;
+}
+
+export function forceLogout() {
+  clearSession();
+  location.reload();
+}
+
 // ===== INITIALIZATION ===== //
 export function initSessionToggle() {
   try {
-    // Event listeners untuk toggle form
     const registerLink = document.getElementById('register-link');
     const loginLink = document.getElementById('login-link');
     const backToLogin = document.getElementById('back-to-login');
 
-    const safeAddListener = (element, event, handler) => {
-      if (element) {
-        element.removeEventListener(event, handler);
-        element.addEventListener(event, handler);
+    const safeAddListener = (el, evt, handler) => {
+      if (el) {
+        el.removeEventListener(evt, handler);
+        el.addEventListener(evt, handler);
       }
     };
 
@@ -111,14 +124,13 @@ export function initSessionToggle() {
       switchToLogin();
     });
 
-    // Default state
+    // Default ke login
     switchToLogin();
-    
-    // Cek session saat init
+
     checkActiveSession().then(({ isValid }) => {
       if (isValid) {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) loadingScreen.style.display = 'none';
+        const loading = document.getElementById('loading-screen');
+        if (loading) loading.style.display = 'none';
       }
     });
   } catch (err) {
@@ -126,11 +138,10 @@ export function initSessionToggle() {
   }
 }
 
-// Mobile-friendly touch events
+// Auto setup saat DOM siap
 document.addEventListener('DOMContentLoaded', () => {
   initSessionToggle();
-  
-  // Handle Android back button
+
   window.addEventListener('popstate', () => {
     const registerScreen = document.getElementById('register-screen');
     if (registerScreen && !registerScreen.classList.contains('hidden')) {

@@ -3,22 +3,26 @@ import { showNotification } from '/ui/notification.js';
 
 export async function loadData() {
   try {
-    // Fetch dan validasi file bahasa
+    console.log('🔁 Mulai fetch lang.json');
     const langRes = await fetch('/data/lang.json');
-    if (!langRes.ok) throw new Error(`Failed to load lang.json: ${langRes.status}`);
+    console.log('✅ lang.json status:', langRes.status);
+    if (!langRes.ok) throw new Error(`lang.json gagal: ${langRes.status}`);
     const langJson = await langRes.json();
+    console.log('✅ lang.json loaded:', langJson);
     setLangData(langJson);
-    console.log('✅ Language data loaded');
 
-    // Fetch dan validasi file tanaman
+    console.log('🔁 Mulai fetch vegetables.json');
     const vegRes = await fetch('/data/vegetables.json');
-    if (!vegRes.ok) throw new Error(`Failed to load vegetables.json: ${vegRes.status}`);
+    console.log('✅ vegetables.json status:', vegRes.status);
+    if (!vegRes.ok) throw new Error(`vegetables.json gagal: ${vegRes.status}`);
     const vegJson = await vegRes.json();
+    console.log('✅ vegetables.json loaded:', vegJson);
     setVegetables(vegJson.vegetables);
-    console.log('✅ Vegetables data loaded');
+
+    console.log('🌱 Semua data berhasil dimuat');
   } catch (error) {
-    console.error('❌ Error loading game data:', error.message);
-    showNotification('Error loading game data.');
-    throw error; // Lempar error ke atas biar init tahu
+    console.error('❌ Gagal load data:', error);
+    showNotification('❌ Gagal load data game!');
+    throw error;
   }
 }

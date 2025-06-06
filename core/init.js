@@ -80,15 +80,3 @@ export async function initializeGame() {
       '❌ Gagal memuat game');
   }
 }
-
-// Helper functions (taruh di file terpisah atau bagian bawah)
-async function checkSessionValidity(username) {
-  if (!username) return false;
-  // Implementasi cek session ke Firebase/backend
-  return true; // Ganti dengan logic sesungguhnya
-}
-
-function forceLogout() {
-  localStorage.removeItem('username');
-  window.location.reload();
-}

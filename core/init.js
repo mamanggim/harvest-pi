@@ -16,7 +16,7 @@ export async function initializeGame() {
     // 1. Load bahasa & data awal dengan timeout
     await Promise.race([
       loadData(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout loading data')), 5000)
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout loading data')), 5000))
     ]);
 
     // 2. Set bahasa dari localStorage (jika ada)

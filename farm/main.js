@@ -4,6 +4,7 @@ import { loadExchangeRate } from '/features/exchange.js';
 import { setupGlobalEventHandlers } from '/ui/event-bindings.js';
 import { setupStartGameHandler } from '/ui/start-handler.js';
 import { setupLoginHandler } from '/ui/login-handler.js';
+import { initSessionToggle } from '/auth/session.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initAudioControls();             // Inisialisasi slider audio
